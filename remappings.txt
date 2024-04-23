@@ -1,0 +1,17 @@
+ds-test/=node_modules/ds-test/src/
+forge-std/=node_modules/forge-std/src/
+modulekit/=node_modules/@rhinestone/modulekit/packages/modulekit/src/
+@rhinestone/sessionkeymanager/=node_modules/@rhinestone/modulekit/packages/SessionKeyManager
+@rhinestone/safe7579/=node_modules/@rhinestone/modulekit/accounts/safe7579
+@ERC4337/=node_modules/@ERC4337/
+account-abstraction/=node_modules/@ERC4337/account-abstraction/contracts/
+account-abstraction-v0.6/=node_modules/@ERC4337/account-abstraction-v0.6/contracts/
+erc7579/=node_modules/erc7579/src/
+sentinellist/=node_modules/sentinellist/src/
+solmate/=node_modules/solmate/src/
+solady/=node_modules/solady/
+solarray/=node_modules/solarray/src/
+@openzeppelin/=node_modules/@openzeppelin/
+@prb/math/=node_modules/@prb/math/
+erc4337-validation/=node_modules/erc4337-validation/src/
+@safe-global/=node_modules/@safe-global/

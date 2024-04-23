@@ -1,0 +1,20 @@
+# Compiler files
+cache/
+out/
+broadcast
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+node_modules
+
+# Samples
+/src/validators/SimpleValidator.sol
+/src/executors/SimpleExecutor.sol
+/src/hooks/SimpleHook.sol
+
+/test/validators/SimpleValidator.t.sol
+/test/executors/SimpleExecutor.t.sol
+/test/hooks/SimpleHook.t.sol
