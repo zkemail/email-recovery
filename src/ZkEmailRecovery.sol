@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ERC7579ValidatorBase } from "modulekit/Modules.sol";
-import { PackedUserOperation } from "modulekit/external/ERC4337.sol";
+import {ERC7579ValidatorBase} from "modulekit/Modules.sol";
+import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
 
-contract ValidatorTemplate is ERC7579ValidatorBase {
+contract ZkEmailRecovery is ERC7579ValidatorBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -17,20 +17,20 @@ contract ValidatorTemplate is ERC7579ValidatorBase {
      * Initialize the module with the given data
      * @param data The data to initialize the module with
      */
-    function onInstall(bytes calldata data) external override { }
+    function onInstall(bytes calldata data) external override {}
 
     /**
      * De-initialize the module with the given data
      * @param data The data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external override { }
+    function onUninstall(bytes calldata data) external override {}
 
     /**
      * Check if the module is initialized
      * @param smartAccount The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) external view returns (bool) { }
+    function isInitialized(address smartAccount) external view returns (bool) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
@@ -49,12 +49,7 @@ contract ValidatorTemplate is ERC7579ValidatorBase {
     function validateUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash
-    )
-        external
-        view
-        override
-        returns (ValidationData)
-    {
+    ) external view override returns (ValidationData) {
         return ValidationData.wrap(0);
     }
 
@@ -71,13 +66,7 @@ contract ValidatorTemplate is ERC7579ValidatorBase {
         address sender,
         bytes32 hash,
         bytes calldata signature
-    )
-        external
-        view
-        virtual
-        override
-        returns (bytes4 sigValidationResult)
-    {
+    ) external view virtual override returns (bytes4 sigValidationResult) {
         return EIP1271_FAILED;
     }
 
@@ -106,7 +95,9 @@ contract ValidatorTemplate is ERC7579ValidatorBase {
      * @param typeID The type ID to check
      * @return true if the module is of the given type, false otherwise
      */
-    function isModuleType(uint256 typeID) external pure override returns (bool) {
+    function isModuleType(
+        uint256 typeID
+    ) external pure override returns (bool) {
         return typeID == TYPE_VALIDATOR;
     }
 }

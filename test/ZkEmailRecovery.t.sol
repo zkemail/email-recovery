@@ -1,34 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { Test } from "forge-std/Test.sol";
-import {
-    RhinestoneModuleKit,
-    ModuleKitHelpers,
-    ModuleKitUserOp,
-    AccountInstance,
-    UserOpData
-} from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
-import { ValidatorTemplate } from "src/ValidatorTemplate.sol";
+import {Test} from "forge-std/Test.sol";
+import {RhinestoneModuleKit, ModuleKitHelpers, ModuleKitUserOp, AccountInstance, UserOpData} from "modulekit/ModuleKit.sol";
+import {MODULE_TYPE_VALIDATOR} from "modulekit/external/ERC7579.sol";
+import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
 
-contract ValidatorTemplateTest is RhinestoneModuleKit, Test {
+contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
     // account and modules
     AccountInstance internal instance;
-    ValidatorTemplate internal validator;
+    ZkEmailRecovery internal validator;
 
     function setUp() public {
         init();
 
         // Create the validator
-        validator = new ValidatorTemplate();
-        vm.label(address(validator), "ValidatorTemplate");
+        validator = new ZkEmailRecovery();
+        vm.label(address(validator), "ZkEmailRecovery");
 
         // Create the account and install the validator
-        instance = makeAccountInstance("ValidatorTemplate");
+        instance = makeAccountInstance("ZkEmailRecovery");
         vm.deal(address(instance.account), 10 ether);
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
