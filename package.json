@@ -11,9 +11,11 @@
     "url": "https://github.com/rhinestonewtf/module-template/issues"
   },
   "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@prb/math": "^4.0.2",
     "@rhinestone/modulekit": "^0.3.4",
     "@safe-global/safe-contracts": "1.4.1-build.0",
+    "@zk-email/contracts": "^6.0.2",
     "erc4337-validation": "github:rhinestonewtf/erc4337-validation"
   },
   "devDependencies": {
