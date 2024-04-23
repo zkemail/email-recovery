@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {RhinestoneModuleKit, ModuleKitHelpers, ModuleKitUserOp, AccountInstance, UserOpData} from "modulekit/ModuleKit.sol";
-import {MODULE_TYPE_VALIDATOR} from "modulekit/external/ERC7579.sol";
+import {MODULE_TYPE_EXECUTOR} from "modulekit/external/ERC7579.sol";
 import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
 
 contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
@@ -12,21 +12,21 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
     // account and modules
     AccountInstance internal instance;
-    ZkEmailRecovery internal validator;
+    ZkEmailRecovery internal executor;
 
     function setUp() public {
         init();
 
-        // Create the validator
-        validator = new ZkEmailRecovery();
-        vm.label(address(validator), "ZkEmailRecovery");
+        // Create the executor
+        executor = new ZkEmailRecovery(address(0), address(0), address(0));
+        vm.label(address(executor), "ZkEmailRecovery");
 
-        // Create the account and install the validator
+        // Create the account and install the executor
         instance = makeAccountInstance("ZkEmailRecovery");
         vm.deal(address(instance.account), 10 ether);
         instance.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: address(executor),
             data: ""
         });
     }
@@ -39,19 +39,18 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         // Get the current balance of the target
         uint256 prevBalance = target.balance;
 
-        // Get the UserOp data (UserOperation and UserOperationHash)
+        // Execute the call
+        // EntryPoint -> Account -> Executor -> Account -> Swap
         UserOpData memory userOpData = instance.getExecOps({
-            target: target,
-            value: value,
-            callData: "",
-            txValidator: address(validator)
+            target: address(executor),
+            value: 0,
+            callData: abi.encodeWithSelector(
+                ZkEmailRecovery.completeRecovery.selector
+            ),
+            txValidator: address(instance.defaultValidator)
         });
 
-        // Set the signature
-        bytes memory signature = hex"414141";
-        userOpData.userOp.signature = signature;
-
-        // Execute the UserOp
+        // Execute the userOp
         userOpData.execUserOps();
 
         // Check if the balance of the target has increased
