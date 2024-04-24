@@ -2,12 +2,16 @@
 pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console2.sol";
 import {RhinestoneModuleKit, ModuleKitHelpers, ModuleKitUserOp, AccountInstance, UserOpData} from "modulekit/ModuleKit.sol";
 import {MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR} from "modulekit/external/ERC7579.sol";
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
 import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
+import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
+import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
+import {IEmailAccountRecovery} from "src/EmailAccountRecoveryRouter.sol";
 
 import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -23,6 +27,7 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
     OwnableValidator internal validator;
 
     address public owner;
+    address public newOwner;
 
     // ZK Email contracts and variables
     address zkEmailDeployer = vm.addr(1);
@@ -33,6 +38,8 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
     address guardian1;
     address guardian2;
+    uint256 recoveryDelay;
+    uint256 threshold;
 
     string selector = "12345";
     string domainName = "gmail.com";
@@ -68,8 +75,10 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         EmailAuth emailAuthImpl = new EmailAuth();
         vm.stopPrank();
 
+        owner = vm.createWallet("owner").addr;
+        newOwner = vm.createWallet("newOwner").addr;
+
         address[] memory owners = new address[](1);
-        owner = vm.createWallet("Alice").addr;
         owners[0] = owner;
 
         // Create the executor
@@ -88,46 +97,192 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         guardian1 = executor.computeEmailAuthAddress(accountSalt1);
         guardian2 = executor.computeEmailAuthAddress(accountSalt2);
 
-        address[] memory guardians;
+        address[] memory guardians = new address[](2);
         guardians[0] = guardian1;
         guardians[1] = guardian2;
-        uint256 recoveryDelay = 1 seconds;
-        uint256 threshold = 2;
+        recoveryDelay = 1 seconds;
+        threshold = 2;
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: address(executor),
-            data: abi.encode(guardians, recoveryDelay, threshold)
+            data: abi.encode(
+                guardians,
+                recoveryDelay,
+                threshold,
+                address(validator)
+            )
         });
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
-            data: abi.encode(owner, owner)
+            data: abi.encode(owner, address(executor))
         });
     }
 
+    function generateMockEmailProof(
+        string memory subject,
+        bytes32 nullifier,
+        bytes32 accountSalt
+    ) public returns (EmailProof memory) {
+        EmailProof memory emailProof;
+        emailProof.domainName = "gmail.com";
+        emailProof.publicKeyHash = bytes32(
+            vm.parseUint(
+                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
+            )
+        );
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedSubject = subject;
+        emailProof.emailNullifier = nullifier;
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
+        emailProof.proof = bytes("0");
+
+        return emailProof;
+    }
+
+    function acceptGuardian(
+        address account,
+        address router,
+        string memory subject,
+        bytes32 nullifier,
+        bytes32 accountSalt,
+        uint256 templateIdx
+    ) public {
+        EmailProof memory emailProof = generateMockEmailProof(
+            subject,
+            nullifier,
+            accountSalt
+        );
+
+        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
+        subjectParamsForAcceptance[0] = abi.encode(account);
+        EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
+            templateId: executor.computeAcceptanceTemplateId(templateIdx),
+            subjectParams: subjectParamsForAcceptance,
+            skipedSubjectPrefix: 0,
+            proof: emailProof
+        });
+        IEmailAccountRecovery(router).handleAcceptance(
+            emailAuthMsg,
+            templateIdx
+        );
+    }
+
+    function handleRecovery(
+        address account,
+        address newOwner,
+        address router,
+        string memory subject,
+        bytes32 nullifier,
+        bytes32 accountSalt,
+        uint256 templateIdx
+    ) public {
+        EmailProof memory emailProof = generateMockEmailProof(
+            subject,
+            nullifier,
+            accountSalt
+        );
+
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
+        subjectParamsForRecovery[0] = abi.encode(owner);
+        subjectParamsForRecovery[1] = abi.encode(newOwner);
+        subjectParamsForRecovery[2] = abi.encode(account);
+
+        EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
+            templateId: executor.computeRecoveryTemplateId(templateIdx),
+            subjectParams: subjectParamsForRecovery,
+            skipedSubjectPrefix: 0,
+            proof: emailProof
+        });
+        IEmailAccountRecovery(router).handleRecovery(emailAuthMsg, templateIdx);
+    }
+
     function testRecover() public {
-        // Functions we need to call without going through a validator and instead would be called via a relayer
-        //
-        // 1.
-        // IZkEmailRecovery(routerAddress).handleAcceptance(
-        //     emailAuthMsg,
-        //     templateIdx
-        // );
-        //
-        // 2.
-        // IZkEmailRecovery(routerAddress).handleRecovery(
-        //     emailAuthMsg,
-        //     templateIdx
-        // );
-        //
-        // 3.
-        // IZkEmailRecovery(routerAddress).completeRecovery();
-        //
-        // Assert owner has changed
-        //
-        // assertTrue(isOwner);
-        // assertFalse(oldOwnerIsOwner);
+        address accountAddress = instance.account;
+        address router = executor.getRouterForAccount(instance.account);
+        uint templateIdx = 0;
+
+        // Accept guardian 1
+        acceptGuardian(
+            instance.account,
+            router,
+            "Accept guardian request for 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            keccak256(abi.encode("nullifier 1")),
+            accountSalt1,
+            templateIdx
+        );
+        IGuardianManager.GuardianStatus guardianStatus1 = executor
+            .getGuardianStatus(accountAddress, guardian1);
+        assertEq(
+            uint256(guardianStatus1),
+            uint256(IGuardianManager.GuardianStatus.ACCEPTED)
+        );
+
+        // Accept guardian 2
+        acceptGuardian(
+            instance.account,
+            router,
+            "Accept guardian request for 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            keccak256(abi.encode("nullifier 1")),
+            accountSalt2,
+            templateIdx
+        );
+        IGuardianManager.GuardianStatus guardianStatus2 = executor
+            .getGuardianStatus(accountAddress, guardian2);
+        assertEq(
+            uint256(guardianStatus2),
+            uint256(IGuardianManager.GuardianStatus.ACCEPTED)
+        );
+
+        // Time travel so that EmailAuth timestamp is valid
+        vm.warp(12 seconds);
+
+        // handle recovery request for guardian 1
+        handleRecovery(
+            accountAddress,
+            newOwner,
+            router,
+            "Update owner from 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to 0x7240b687730BE024bcfD084621f794C2e4F8408f on account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            keccak256(abi.encode("nullifier 2")),
+            accountSalt1,
+            templateIdx
+        );
+        IZkEmailRecovery.RecoveryRequest memory recoveryRequest = executor
+            .getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.recoveryData, abi.encode(newOwner, validator));
+        assertEq(recoveryRequest.approvalCount, 1);
+
+        // handle recovery request for guardian 2
+        uint256 executeAfter = block.timestamp + recoveryDelay;
+        handleRecovery(
+            accountAddress,
+            newOwner,
+            router,
+            "Update owner from 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to 0x7240b687730BE024bcfD084621f794C2e4F8408f on account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            keccak256(abi.encode("nullifier 2")),
+            accountSalt2,
+            templateIdx
+        );
+        recoveryRequest = executor.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, executeAfter);
+        assertEq(recoveryRequest.recoveryData, abi.encode(newOwner, validator));
+        assertEq(recoveryRequest.approvalCount, 2);
+
+        vm.warp(block.timestamp + recoveryDelay);
+
+        // Complete recovery
+        IEmailAccountRecovery(router).completeRecovery();
+
+        recoveryRequest = executor.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.recoveryData, new bytes(0));
+        assertEq(recoveryRequest.approvalCount, 0);
+
+        address updatedOwner = validator.owners(accountAddress);
+        assertEq(updatedOwner, newOwner);
     }
 }

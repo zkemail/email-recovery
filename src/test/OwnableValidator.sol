@@ -74,8 +74,9 @@ contract OwnableValidator is ERC7579ValidatorBase {
 
     function changeOwner(
         address account,
+        address authorizedAccount,
         address newOwner
-    ) external onlyAuthorized(account) {
+    ) external onlyAuthorized(authorizedAccount) {
         owners[account] = newOwner;
     }
 
@@ -89,11 +90,12 @@ contract OwnableValidator is ERC7579ValidatorBase {
      * authorize itself before the recovery attempt succeeds.
      */
     function authorizeAccount(address accountToAuthorize) public {
+        // TODO: Add timelock protection
         authorized[msg.sender][accountToAuthorize] = true;
     }
 
     modifier onlyAuthorized(address account) {
-        if (authorized[account][msg.sender] == false) revert NotAuthorized();
+        if (authorized[msg.sender][account] == false) revert NotAuthorized();
         _;
     }
 

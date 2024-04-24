@@ -27,6 +27,10 @@ contract ZkEmailRecovery is
     /** Mapping of account address to recovery delay */
     mapping(address => uint256) public recoveryDelays;
 
+    // TODO: Temporary mapping to get integration test working - this can be moved to upcoming "owner rotation module" later
+    /** Mapping of account address to validator to recover */
+    mapping(address => address) public accountToValidator;
+
     /** Mapping of account address to recovery request */
     mapping(address => RecoveryRequest) public recoveryRequests;
 
@@ -53,8 +57,9 @@ contract ZkEmailRecovery is
         (
             address[] memory guardians,
             uint256 recoveryDelay,
-            uint256 threshold
-        ) = abi.decode(data, (address[], uint256, uint256));
+            uint256 threshold,
+            address validator
+        ) = abi.decode(data, (address[], uint256, uint256, address));
 
         setupGuardians(account, guardians, threshold);
 
@@ -65,6 +70,7 @@ contract ZkEmailRecovery is
         address router = deployRouterForAccount(account);
 
         recoveryDelays[account] = recoveryDelay;
+        accountToValidator[account] = validator; // TODO: This can be stored as part of the upcoming "rotate owner module"
 
         emit RecoveryConfigured(
             account,
@@ -215,9 +221,12 @@ contract ZkEmailRecovery is
             revert RecoveryAlreadyInitiated();
         }
 
+        address validator = accountToValidator[accountInEmail];
+
         recoveryRequests[accountInEmail].approvalCount++;
         recoveryRequests[accountInEmail].recoveryData = abi.encode(
-            newOwnerInEmail
+            newOwnerInEmail,
+            validator
         );
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
@@ -254,9 +263,19 @@ contract ZkEmailRecovery is
     }
 
     function changeOwner(address account, bytes memory data) private {
-        address newOwner = abi.decode(data, (address));
+        (address newOwner, address validator) = abi.decode(
+            data,
+            (address, address)
+        );
 
-        IOwnableValidator(account).changeOwner(newOwner);
+        bytes memory encodedCall = abi.encodeWithSignature(
+            "changeOwner(address,address,address)",
+            account,
+            address(this),
+            newOwner
+        );
+
+        _execute(account, validator, 0, encodedCall);
 
         // TODO: define this outside of interface as newOwner is account implementation specific?
         emit RecoveryCompleted(account, newOwner);
