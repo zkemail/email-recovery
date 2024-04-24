@@ -37,11 +37,7 @@ interface IZkEmailRecovery {
         address newOwner,
         uint256 executeAfter
     );
-    event OwnerRecovered(
-        address indexed account,
-        address oldOwner,
-        address newOwner
-    );
+    event RecoveryCompleted(address indexed account, address newOwner);
     event RecoveryCancelled(address indexed account);
 
     /** Functions */

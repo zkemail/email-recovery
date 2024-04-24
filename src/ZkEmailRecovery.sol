@@ -9,6 +9,10 @@ import {GuardianManager} from "./GuardianManager.sol";
 import {RouterManager} from "./RouterManager.sol";
 import {IZkEmailRecovery} from "./interfaces/IZkEmailRecovery.sol";
 
+interface IOwnableValidator {
+    function changeOwner(address newOwner) external;
+}
+
 contract ZkEmailRecovery is
     GuardianManager,
     RouterManager,
@@ -212,7 +216,9 @@ contract ZkEmailRecovery is
         }
 
         recoveryRequests[accountInEmail].approvalCount++;
-        recoveryRequests[accountInEmail].recoveryData = bytes("0"); // FIXME: define this
+        recoveryRequests[accountInEmail].recoveryData = abi.encode(
+            newOwnerInEmail
+        );
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
         if (recoveryRequests[accountInEmail].approvalCount >= threshold) {
@@ -231,7 +237,7 @@ contract ZkEmailRecovery is
 
     // TODO: add natspec to interface or inherit from EmailAccountRecovery
     function completeRecovery() public override {
-        address account = getAccountForRouter(msg.sender); // TODO: rename this?
+        address account = getAccountForRouter(msg.sender);
 
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
@@ -244,22 +250,16 @@ contract ZkEmailRecovery is
 
         delete recoveryRequests[account];
 
-        rotateSigner(recoveryRequest.recoveryData);
-
-        // emit OwnerRecovered(
-        //     account,
-        //     recoveryRequest.ownerToSwap,
-        //     recoveryRequest.pendingNewOwner
-        // );
+        changeOwner(account, recoveryRequest.recoveryData);
     }
 
-    function rotateSigner(bytes memory data) private {
-        (address newOwner, address oldOwner) = abi.decode(
-            data,
-            (address, address)
-        );
+    function changeOwner(address account, bytes memory data) private {
+        address newOwner = abi.decode(data, (address));
 
-        // TODO: implement
+        IOwnableValidator(account).changeOwner(newOwner);
+
+        // TODO: define this outside of interface as newOwner is account implementation specific?
+        emit RecoveryCompleted(account, newOwner);
     }
 
     /// @inheritdoc IZkEmailRecovery
