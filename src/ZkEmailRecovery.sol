@@ -252,15 +252,10 @@ contract ZkEmailRecovery is
 
         delete recoveryRequests[account];
 
-        changeOwner(account, recoveryRequest.recoveryData);
-    }
-
-    function changeOwner(address account, bytes memory data) private {
         (address newOwner, address validator) = abi.decode(
-            data,
+            recoveryRequest.recoveryData,
             (address, address)
         );
-
         bytes memory encodedCall = abi.encodeWithSignature(
             "changeOwner(address,address,address)",
             account,
@@ -270,7 +265,6 @@ contract ZkEmailRecovery is
 
         _execute(account, validator, 0, encodedCall);
 
-        // TODO: define this outside of interface as newOwner is account implementation specific?
         emit RecoveryCompleted(account, newOwner);
     }
 
