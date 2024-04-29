@@ -27,10 +27,6 @@ contract ZkEmailRecovery is
     /** Mapping of account address to recovery delay */
     mapping(address => uint256) public recoveryDelays;
 
-    // TODO: Temporary mapping to get integration test working - this can be moved to upcoming "owner rotation module" later
-    /** Mapping of account address to validator to recover */
-    mapping(address => address) public accountToValidator;
-
     /** Mapping of account address to recovery request */
     mapping(address => RecoveryRequest) public recoveryRequests;
 
@@ -57,9 +53,8 @@ contract ZkEmailRecovery is
         (
             address[] memory guardians,
             uint256 recoveryDelay,
-            uint256 threshold,
-            address validator
-        ) = abi.decode(data, (address[], uint256, uint256, address));
+            uint256 threshold
+        ) = abi.decode(data, (address[], uint256, uint256));
 
         setupGuardians(account, guardians, threshold);
 
@@ -70,7 +65,6 @@ contract ZkEmailRecovery is
         address router = deployRouterForAccount(account);
 
         recoveryDelays[account] = recoveryDelay;
-        accountToValidator[account] = validator; // TODO: This can be stored as part of the upcoming "rotate owner module"
 
         emit RecoveryConfigured(
             account,
@@ -139,16 +133,17 @@ contract ZkEmailRecovery is
         returns (string[][] memory)
     {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](9);
+        templates[0] = new string[](10);
         templates[0][0] = "Update";
         templates[0][1] = "owner";
-        templates[0][2] = "from";
+        templates[0][2] = "to";
         templates[0][3] = "{ethAddr}";
-        templates[0][4] = "to";
-        templates[0][5] = "{ethAddr}";
-        templates[0][6] = "on";
-        templates[0][7] = "account";
-        templates[0][8] = "{ethAddr}";
+        templates[0][4] = "on";
+        templates[0][5] = "module";
+        templates[0][6] = "{ethAddr}";
+        templates[0][7] = "for";
+        templates[0][8] = "account";
+        templates[0][9] = "{ethAddr}";
         return templates;
     }
 
@@ -193,8 +188,8 @@ contract ZkEmailRecovery is
         if (templateIdx != 0) revert InvalidTemplateIndex();
         if (subjectParams.length != 3) revert InvalidSubjectParams();
 
-        address ownerToSwapInEmail = abi.decode(subjectParams[0], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
+        address newOwnerInEmail = abi.decode(subjectParams[0], (address));
+        address moduleInEmail = abi.decode(subjectParams[1], (address));
         address accountInEmail = abi.decode(subjectParams[2], (address));
 
         address accountForRouter = getAccountForRouter(msg.sender);
@@ -221,12 +216,10 @@ contract ZkEmailRecovery is
             revert RecoveryAlreadyInitiated();
         }
 
-        address validator = accountToValidator[accountInEmail];
-
         recoveryRequests[accountInEmail].approvalCount++;
         recoveryRequests[accountInEmail].recoveryData = abi.encode(
             newOwnerInEmail,
-            validator
+            moduleInEmail
         );
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;

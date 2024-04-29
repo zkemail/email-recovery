@@ -106,12 +106,7 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: address(executor),
-            data: abi.encode(
-                guardians,
-                recoveryDelay,
-                threshold,
-                address(validator)
-            )
+            data: abi.encode(guardians, recoveryDelay, threshold)
         });
 
         instance.installModule({
@@ -173,6 +168,7 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
     function handleRecovery(
         address account,
+        address module,
         address newOwner,
         address router,
         string memory subject,
@@ -187,8 +183,8 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         );
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(owner);
-        subjectParamsForRecovery[1] = abi.encode(newOwner);
+        subjectParamsForRecovery[0] = abi.encode(newOwner);
+        subjectParamsForRecovery[1] = abi.encode(module);
         subjectParamsForRecovery[2] = abi.encode(account);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
@@ -243,9 +239,10 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         // handle recovery request for guardian 1
         handleRecovery(
             accountAddress,
+            address(validator),
             newOwner,
             router,
-            "Update owner from 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to 0x7240b687730BE024bcfD084621f794C2e4F8408f on account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Update owner to 0x7240b687730BE024bcfD084621f794C2e4F8408f on module 0x0d9937747341468E77AdBcaddfA8B779Bcde8b98 for account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx
@@ -260,9 +257,10 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         uint256 executeAfter = block.timestamp + recoveryDelay;
         handleRecovery(
             accountAddress,
+            address(validator),
             newOwner,
             router,
-            "Update owner from 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to 0x7240b687730BE024bcfD084621f794C2e4F8408f on account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Update owner to 0x7240b687730BE024bcfD084621f794C2e4F8408f on module 0x0d9937747341468E77AdBcaddfA8B779Bcde8b98 for account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
             keccak256(abi.encode("nullifier 2")),
             accountSalt2,
             templateIdx
