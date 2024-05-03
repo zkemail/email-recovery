@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IGuardianManager} from "./interfaces/IGuardianManager.sol";
+import {IGuardianManager} from "../interfaces/IGuardianManager.sol";
 
 abstract contract GuardianManager is IGuardianManager {
     /** Account to guardian to guardian status */
@@ -13,25 +13,28 @@ abstract contract GuardianManager is IGuardianManager {
     /**
      * @notice Sets the initial storage of the contract.
      * @param account The account.
-     * @param _guardians List of account guardians.
-     * @param threshold Number of required confirmations for successful recovery request.
+     * @param guardianData Encoded data to setup guardians for this guardian manager.
      */
     function setupGuardians(
         address account,
-        address[] memory _guardians,
-        uint256 threshold
+        bytes calldata guardianData
     ) internal {
+        (address[] memory _guardians, uint256 _threshold) = abi.decode(
+            guardianData,
+            (address[], uint256)
+        );
+
         uint256 guardianCount = _guardians.length;
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function can only be called once.
         if (guardianConfigs[account].threshold > 0) revert SetupAlreadyCalled();
 
         // Validate that threshold is smaller than number of added owners.
-        if (threshold > guardianCount)
+        if (_threshold > guardianCount)
             revert ThresholdCannotExceedGuardianCount();
 
         // There has to be at least one Account owner.
-        if (threshold == 0) revert ThresholdCannotBeZero();
+        if (_threshold == 0) revert ThresholdCannotBeZero();
 
         for (uint256 i = 0; i < guardianCount; i++) {
             address guardian = _guardians[i];
@@ -49,7 +52,7 @@ abstract contract GuardianManager is IGuardianManager {
             guardians[account][guardian] = GuardianStatus.REQUESTED;
         }
 
-        guardianConfigs[account] = GuardianConfig(guardianCount, threshold);
+        guardianConfigs[account] = GuardianConfig(guardianCount, _threshold);
     }
 
     // @inheritdoc IGuardianManager

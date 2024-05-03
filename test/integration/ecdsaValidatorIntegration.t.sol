@@ -7,24 +7,26 @@ import {RhinestoneModuleKit, ModuleKitHelpers, ModuleKitUserOp, AccountInstance,
 import {MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR} from "modulekit/external/ERC7579.sol";
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
-import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
+import {ZkEmailRecovery} from "src/zkEmailRecovery/ZkEmailRecovery.sol";
 import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
 import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
-import {IEmailAccountRecovery} from "src/EmailAccountRecoveryRouter.sol";
+import {IEmailAccountRecovery} from "src/zkEmailRecovery/EmailAccountRecoveryRouter.sol";
+import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+import {EcdsaValidatorRecoveryAdapter} from "src/modules/EcdsaValidatorRecoveryAdapter.sol";
 
 import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import {MockGroth16Verifier} from "../src/test/MockGroth16Verifier.sol";
 
-contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
+contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
     // account and modules
     AccountInstance internal instance;
-    ZkEmailRecovery internal executor;
+    EcdsaValidatorRecoveryAdapter internal recoveryAdapter;
     OwnableValidator internal validator;
+    ZkEmailRecovery internal zkEmailRecovery;
 
     address public owner;
     address public newOwner;
@@ -36,6 +38,7 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
     bytes32 accountSalt1;
     bytes32 accountSalt2;
 
+    address[] guardians;
     address guardian1;
     address guardian2;
     uint256 recoveryDelay;
@@ -81,23 +84,27 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         address[] memory owners = new address[](1);
         owners[0] = owner;
 
-        // Create the executor
-        executor = new ZkEmailRecovery(
+        // Create the zkEmailRecovery
+        zkEmailRecovery = new ZkEmailRecovery(
             address(verifier),
             address(ecdsaOwnedDkimRegistry),
             address(emailAuthImpl)
         );
-        vm.label(address(executor), "ZkEmailRecovery");
+        vm.label(address(zkEmailRecovery), "ZkEmailRecovery");
         validator = new OwnableValidator();
 
-        // Create the account and install the executor
+        recoveryAdapter = new EcdsaValidatorRecoveryAdapter(
+            address(zkEmailRecovery)
+        );
+
+        // Create the account and install the zkEmailRecovery
         instance = makeAccountInstance("ZkEmailRecovery");
         vm.deal(address(instance.account), 10 ether);
 
-        guardian1 = executor.computeEmailAuthAddress(accountSalt1);
-        guardian2 = executor.computeEmailAuthAddress(accountSalt2);
+        guardian1 = zkEmailRecovery.computeEmailAuthAddress(accountSalt1);
+        guardian2 = zkEmailRecovery.computeEmailAuthAddress(accountSalt2);
 
-        address[] memory guardians = new address[](2);
+        guardians = new address[](2);
         guardians[0] = guardian1;
         guardians[1] = guardian2;
         recoveryDelay = 1 seconds;
@@ -105,14 +112,14 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: address(executor),
-            data: abi.encode(guardians, recoveryDelay, threshold)
+            module: address(recoveryAdapter),
+            data: abi.encode(newOwner, validator)
         });
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
-            data: abi.encode(owner, address(executor))
+            data: abi.encode(owner, address(recoveryAdapter))
         });
     }
 
@@ -155,11 +162,14 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(account);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: executor.computeAcceptanceTemplateId(templateIdx),
+            templateId: zkEmailRecovery.computeAcceptanceTemplateId(
+                templateIdx
+            ),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
+
         IEmailAccountRecovery(router).handleAcceptance(
             emailAuthMsg,
             templateIdx
@@ -168,8 +178,7 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
     function handleRecovery(
         address account,
-        address module,
-        address newOwner,
+        address recoveryModule,
         address router,
         string memory subject,
         bytes32 nullifier,
@@ -182,13 +191,12 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
             accountSalt
         );
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(newOwner);
-        subjectParamsForRecovery[1] = abi.encode(module);
-        subjectParamsForRecovery[2] = abi.encode(account);
+        bytes[] memory subjectParamsForRecovery = new bytes[](2);
+        subjectParamsForRecovery[0] = abi.encode(account);
+        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: executor.computeRecoveryTemplateId(templateIdx),
+            templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
@@ -198,19 +206,27 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
 
     function testRecover() public {
         address accountAddress = instance.account;
-        address router = executor.getRouterForAccount(instance.account);
+
         uint templateIdx = 0;
+
+        // Setup recovery
+        vm.startPrank(accountAddress);
+        bytes memory guardianData = abi.encode(guardians, threshold);
+        zkEmailRecovery.configureRecovery(guardianData, recoveryDelay);
+        vm.stopPrank();
+
+        address router = zkEmailRecovery.getRouterForAccount(instance.account);
 
         // Accept guardian 1
         acceptGuardian(
             instance.account,
             router,
-            "Accept guardian request for 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Accept guardian request for 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4",
             keccak256(abi.encode("nullifier 1")),
             accountSalt1,
             templateIdx
         );
-        IGuardianManager.GuardianStatus guardianStatus1 = executor
+        IGuardianManager.GuardianStatus guardianStatus1 = zkEmailRecovery
             .getGuardianStatus(accountAddress, guardian1);
         assertEq(
             uint256(guardianStatus1),
@@ -221,12 +237,12 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         acceptGuardian(
             instance.account,
             router,
-            "Accept guardian request for 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Accept guardian request for 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4",
             keccak256(abi.encode("nullifier 1")),
             accountSalt2,
             templateIdx
         );
-        IGuardianManager.GuardianStatus guardianStatus2 = executor
+        IGuardianManager.GuardianStatus guardianStatus2 = zkEmailRecovery
             .getGuardianStatus(accountAddress, guardian2);
         assertEq(
             uint256(guardianStatus2),
@@ -239,35 +255,33 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         // handle recovery request for guardian 1
         handleRecovery(
             accountAddress,
-            address(validator),
-            newOwner,
+            address(recoveryAdapter),
             router,
-            "Update owner to 0x7240b687730BE024bcfD084621f794C2e4F8408f on module 0x0d9937747341468E77AdBcaddfA8B779Bcde8b98 for account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Recover account 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4 using recovery module 0xc49EE46F2A084fCDb45cED07B501E2b543b58139",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx
         );
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest = executor
-            .getRecoveryRequest(accountAddress);
+        IZkEmailRecovery.RecoveryRequest
+            memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
+                accountAddress
+            );
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.recoveryData, abi.encode(newOwner, validator));
         assertEq(recoveryRequest.approvalCount, 1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + recoveryDelay;
         handleRecovery(
             accountAddress,
-            address(validator),
-            newOwner,
+            address(recoveryAdapter),
             router,
-            "Update owner to 0x7240b687730BE024bcfD084621f794C2e4F8408f on module 0x0d9937747341468E77AdBcaddfA8B779Bcde8b98 for account 0xA585Ae5039aa1248b64368bf63d24F06f8723d96",
+            "Recover account 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4 using recovery module 0xc49EE46F2A084fCDb45cED07B501E2b543b58139",
             keccak256(abi.encode("nullifier 2")),
             accountSalt2,
             templateIdx
         );
-        recoveryRequest = executor.getRecoveryRequest(accountAddress);
+        recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
-        assertEq(recoveryRequest.recoveryData, abi.encode(newOwner, validator));
         assertEq(recoveryRequest.approvalCount, 2);
 
         vm.warp(block.timestamp + recoveryDelay);
@@ -275,9 +289,8 @@ contract ZkEmailRecoveryTest is RhinestoneModuleKit, Test {
         // Complete recovery
         IEmailAccountRecovery(router).completeRecovery();
 
-        recoveryRequest = executor.getRecoveryRequest(accountAddress);
+        recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.recoveryData, new bytes(0));
         assertEq(recoveryRequest.approvalCount, 0);
 
         address updatedOwner = validator.owners(accountAddress);

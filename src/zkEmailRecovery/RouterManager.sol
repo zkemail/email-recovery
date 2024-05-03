@@ -1,7 +1,7 @@
 // SPDX-License.Idenitifer: MIT
 pragma solidity ^0.8.0;
 
-import {IRouterManager} from "./interfaces/IRouterManager.sol";
+import {IRouterManager} from "../interfaces/IRouterManager.sol";
 import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
 
 abstract contract RouterManager is IRouterManager {

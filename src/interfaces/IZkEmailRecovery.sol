@@ -5,7 +5,7 @@ interface IZkEmailRecovery {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 approvalCount; // number of guardian approvals for the recovery request
-        bytes recoveryData; // the data required to execute the recovery request. This may include data such as the new owner.
+        address recoveryModule; // the trusted recovery module that has permission to recover an account
     }
 
     /** Errors */
@@ -27,8 +27,6 @@ interface IZkEmailRecovery {
     /** Events */
     event RecoveryConfigured(
         address indexed account,
-        uint256 guardianCount,
-        uint256 threshold,
         uint256 recoveryDelay,
         address router
     );

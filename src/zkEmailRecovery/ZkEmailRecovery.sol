@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ERC7579ExecutorBase} from "modulekit/Modules.sol";
 import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
 import {EmailAccountRecovery} from "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 
 import {GuardianManager} from "./GuardianManager.sol";
 import {RouterManager} from "./RouterManager.sol";
-import {IZkEmailRecovery} from "./interfaces/IZkEmailRecovery.sol";
+import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 
-interface IOwnableValidator {
-    function changeOwner(address newOwner) external;
+interface IZkEmailRecoveryAdapter {
+    function recover(bytes calldata data) external;
 }
 
 contract ZkEmailRecovery is
     GuardianManager,
     RouterManager,
     EmailAccountRecovery,
-    IZkEmailRecovery,
-    ERC7579ExecutorBase
+    IZkEmailRecovery
 {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
@@ -46,17 +44,15 @@ contract ZkEmailRecovery is
 
     /**
      * Initialize the module with the given data
-     * @param data The data to initialize the module with
+     * @param guardianData The guardian data to setup the guardian manager with
      */
-    function onInstall(bytes calldata data) external override {
+    function configureRecovery(
+        bytes calldata guardianData,
+        uint256 recoveryDelay
+    ) external {
         address account = msg.sender;
-        (
-            address[] memory guardians,
-            uint256 recoveryDelay,
-            uint256 threshold
-        ) = abi.decode(data, (address[], uint256, uint256));
 
-        setupGuardians(account, guardians, threshold);
+        setupGuardians(account, guardianData);
 
         if (recoveryRequests[account].executeAfter > 0) {
             revert RecoveryAlreadyInitiated();
@@ -66,30 +62,7 @@ contract ZkEmailRecovery is
 
         recoveryDelays[account] = recoveryDelay;
 
-        emit RecoveryConfigured(
-            account,
-            guardians.length,
-            threshold,
-            recoveryDelay,
-            router
-        );
-    }
-
-    /**
-     * De-initialize the module with the given data
-     * @param data The data to de-initialize the module with
-     */
-    function onUninstall(bytes calldata data) external override {
-        // TODO:
-    }
-
-    /**
-     * Check if the module is initialized
-     * @param smartAccount The smart account to check
-     * @return true if the module is initialized, false otherwise
-     */
-    function isInitialized(address smartAccount) external view returns (bool) {
-        return getGuardianConfig(smartAccount).guardianCount > 0;
+        emit RecoveryConfigured(account, recoveryDelay, router);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -133,21 +106,17 @@ contract ZkEmailRecovery is
         returns (string[][] memory)
     {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](10);
-        templates[0][0] = "Update";
-        templates[0][1] = "owner";
-        templates[0][2] = "to";
-        templates[0][3] = "{ethAddr}";
-        templates[0][4] = "on";
+        templates[0] = new string[](7);
+        templates[0][0] = "Recover";
+        templates[0][1] = "account";
+        templates[0][2] = "{ethAddr}";
+        templates[0][3] = "using";
+        templates[0][4] = "recovery";
         templates[0][5] = "module";
         templates[0][6] = "{ethAddr}";
-        templates[0][7] = "for";
-        templates[0][8] = "account";
-        templates[0][9] = "{ethAddr}";
         return templates;
     }
 
-    // TODO: add natspec to interface or inherit from EmailAccountRecovery
     function acceptGuardian(
         address guardian,
         uint templateIdx,
@@ -177,7 +146,6 @@ contract ZkEmailRecovery is
         updateGuardian(accountInEmail, guardian, GuardianStatus.ACCEPTED);
     }
 
-    // TODO: add natspec to interface or inherit from EmailAccountRecovery
     function processRecovery(
         address guardian,
         uint templateIdx,
@@ -186,11 +154,10 @@ contract ZkEmailRecovery is
     ) internal override {
         if (guardian == address(0)) revert InvalidGuardian();
         if (templateIdx != 0) revert InvalidTemplateIndex();
-        if (subjectParams.length != 3) revert InvalidSubjectParams();
+        if (subjectParams.length != 2) revert InvalidSubjectParams();
 
-        address newOwnerInEmail = abi.decode(subjectParams[0], (address));
-        address moduleInEmail = abi.decode(subjectParams[1], (address));
-        address accountInEmail = abi.decode(subjectParams[2], (address));
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
 
         address accountForRouter = getAccountForRouter(msg.sender);
         if (accountForRouter != accountInEmail)
@@ -206,9 +173,6 @@ contract ZkEmailRecovery is
         if (guardianStatus == GuardianStatus.REQUESTED)
             revert GuardianHasNotAccepted();
 
-        // bool isExistingOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail); // FIXME: re-add check if needed
-        // if (isExistingOwner) revert InvalidNewOwner();
-
         RecoveryRequest memory recoveryRequest = recoveryRequests[
             accountInEmail
         ];
@@ -217,10 +181,6 @@ contract ZkEmailRecovery is
         }
 
         recoveryRequests[accountInEmail].approvalCount++;
-        recoveryRequests[accountInEmail].recoveryData = abi.encode(
-            newOwnerInEmail,
-            moduleInEmail
-        );
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
         if (recoveryRequests[accountInEmail].approvalCount >= threshold) {
@@ -228,16 +188,13 @@ contract ZkEmailRecovery is
                 recoveryDelays[accountInEmail];
 
             recoveryRequests[accountInEmail].executeAfter = executeAfter;
+            recoveryRequests[accountInEmail]
+                .recoveryModule = recoveryModuleInEmail;
 
-            emit RecoveryInitiated(
-                accountInEmail,
-                newOwnerInEmail,
-                executeAfter
-            );
+            // emit RecoveryInitiated(accountInEmail, executeAfter);
         }
     }
 
-    // TODO: add natspec to interface or inherit from EmailAccountRecovery
     function completeRecovery() public override {
         address account = getAccountForRouter(msg.sender);
 
@@ -252,20 +209,11 @@ contract ZkEmailRecovery is
 
         delete recoveryRequests[account];
 
-        (address newOwner, address validator) = abi.decode(
-            recoveryRequest.recoveryData,
-            (address, address)
-        );
-        bytes memory encodedCall = abi.encodeWithSignature(
-            "changeOwner(address,address,address)",
-            account,
-            address(this),
-            newOwner
+        IZkEmailRecoveryAdapter(recoveryRequest.recoveryModule).recover(
+            abi.encode(account)
         );
 
-        _execute(account, validator, 0, encodedCall);
-
-        emit RecoveryCompleted(account, newOwner);
+        // emit RecoveryCompleted(account);
     }
 
     /// @inheritdoc IZkEmailRecovery
@@ -278,36 +226,5 @@ contract ZkEmailRecovery is
     /// @inheritdoc IZkEmailRecovery
     function updateRecoveryDelay(uint256 recoveryDelay) external {
         // TODO: add implementation
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                     METADATA
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * The name of the module
-     * @return name The name of the module
-     */
-    function name() external pure returns (string memory) {
-        return "ZkEmailRecovery";
-    }
-
-    /**
-     * The version of the module
-     * @return version The version of the module
-     */
-    function version() external pure returns (string memory) {
-        return "0.0.1";
-    }
-
-    /**
-     * Check if the module is of a certain type
-     * @param typeID The type ID to check
-     * @return true if the module is of the given type, false otherwise
-     */
-    function isModuleType(
-        uint256 typeID
-    ) external pure override returns (bool) {
-        return typeID == TYPE_EXECUTOR;
     }
 }
