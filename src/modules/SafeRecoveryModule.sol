@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ZkEmailRecoveryAdapterBase} from "./ZkEmailRecoveryAdapterBase.sol";
+import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
 import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";
 import {ModeLib} from "erc7579/lib/ModeLib.sol";
@@ -10,16 +10,14 @@ interface ISafe {
     function getOwners() external view returns (address[] memory);
 }
 
-contract ZkEmailRecoveryAdapter is ZkEmailRecoveryAdapterBase {
+contract SafeRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
     mapping(address => bytes) public recoveryData;
 
-    constructor(
-        address _recoveryModule
-    ) ZkEmailRecoveryAdapterBase(_recoveryModule) {}
+    constructor(address _recoveryModule) RecoveryModuleBase(_recoveryModule) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -108,7 +106,7 @@ contract ZkEmailRecoveryAdapter is ZkEmailRecoveryAdapterBase {
      * @return name The name of the module
      */
     function name() external pure override returns (string memory) {
-        return "ZkEmailRecoveryAdapter";
+        return "SafeRecoveryModule";
     }
 
     /**

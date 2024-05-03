@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ZkEmailRecoveryAdapterBase} from "./ZkEmailRecoveryAdapterBase.sol";
+import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 
-contract EcdsaValidatorRecoveryAdapter is ZkEmailRecoveryAdapterBase {
+contract EcdsaValidatorRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -17,7 +17,7 @@ contract EcdsaValidatorRecoveryAdapter is ZkEmailRecoveryAdapterBase {
 
     constructor(
         address _zkEmailRecovery
-    ) ZkEmailRecoveryAdapterBase(_zkEmailRecovery) {}
+    ) RecoveryModuleBase(_zkEmailRecovery) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -89,7 +89,7 @@ contract EcdsaValidatorRecoveryAdapter is ZkEmailRecoveryAdapterBase {
      * @return name The name of the module
      */
     function name() external pure override returns (string memory) {
-        return "EcdsaValidatorRecoveryAdapter";
+        return "EcdsaValidatorRecoveryModule";
     }
 
     /**

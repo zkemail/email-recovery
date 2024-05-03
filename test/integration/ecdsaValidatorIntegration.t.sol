@@ -13,7 +13,7 @@ import {OwnableValidator} from "src/test/OwnableValidator.sol";
 import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
 import {IEmailAccountRecovery} from "src/zkEmailRecovery/EmailAccountRecoveryRouter.sol";
 import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
-import {EcdsaValidatorRecoveryAdapter} from "src/modules/EcdsaValidatorRecoveryAdapter.sol";
+import {EcdsaValidatorRecoveryModule} from "src/modules/EcdsaValidatorRecoveryModule.sol";
 
 import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -24,7 +24,7 @@ contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
 
     // account and modules
     AccountInstance internal instance;
-    EcdsaValidatorRecoveryAdapter internal recoveryAdapter;
+    EcdsaValidatorRecoveryModule internal recoveryModule;
     OwnableValidator internal validator;
     ZkEmailRecovery internal zkEmailRecovery;
 
@@ -93,7 +93,7 @@ contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
         vm.label(address(zkEmailRecovery), "ZkEmailRecovery");
         validator = new OwnableValidator();
 
-        recoveryAdapter = new EcdsaValidatorRecoveryAdapter(
+        recoveryModule = new EcdsaValidatorRecoveryModule(
             address(zkEmailRecovery)
         );
 
@@ -112,14 +112,14 @@ contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: address(recoveryAdapter),
+            module: address(recoveryModule),
             data: abi.encode(newOwner, validator)
         });
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
-            data: abi.encode(owner, address(recoveryAdapter))
+            data: abi.encode(owner, address(recoveryModule))
         });
     }
 
@@ -255,7 +255,7 @@ contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
         // handle recovery request for guardian 1
         handleRecovery(
             accountAddress,
-            address(recoveryAdapter),
+            address(recoveryModule),
             router,
             "Recover account 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4 using recovery module 0xc49EE46F2A084fCDb45cED07B501E2b543b58139",
             keccak256(abi.encode("nullifier 2")),
@@ -273,7 +273,7 @@ contract EcdsaValidatorIntegrationTest is RhinestoneModuleKit, Test {
         uint256 executeAfter = block.timestamp + recoveryDelay;
         handleRecovery(
             accountAddress,
-            address(recoveryAdapter),
+            address(recoveryModule),
             router,
             "Recover account 0x67A511FFc926D39e43F1E2Dd7730820A64543BF4 using recovery module 0xc49EE46F2A084fCDb45cED07B501E2b543b58139",
             keccak256(abi.encode("nullifier 2")),

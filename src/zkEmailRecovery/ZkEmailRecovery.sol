@@ -8,7 +8,7 @@ import {GuardianManager} from "./GuardianManager.sol";
 import {RouterManager} from "./RouterManager.sol";
 import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 
-interface IZkEmailRecoveryAdapter {
+interface IRecoveryModule {
     function recover(bytes calldata data) external;
 }
 
@@ -209,7 +209,7 @@ contract ZkEmailRecovery is
 
         delete recoveryRequests[account];
 
-        IZkEmailRecoveryAdapter(recoveryRequest.recoveryModule).recover(
+        IRecoveryModule(recoveryRequest.recoveryModule).recover(
             abi.encode(account)
         );
 

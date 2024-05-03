@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {ERC7579ExecutorBase} from "modulekit/Modules.sol";
 
-abstract contract ZkEmailRecoveryAdapterBase is ERC7579ExecutorBase {
+abstract contract RecoveryModuleBase is ERC7579ExecutorBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
