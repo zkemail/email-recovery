@@ -6,7 +6,7 @@ import {ModuleKitHelpers, ModuleKitUserOp} from "modulekit/ModuleKit.sol";
 import {MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR} from "modulekit/external/ERC7579.sol";
 
 import {IEmailAccountRecovery} from "src/zkEmailRecovery/EmailAccountRecoveryRouter.sol";
-import {EcdsaValidatorRecoveryModule} from "src/modules/EcdsaValidatorRecoveryModule.sol";
+import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
 import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
 import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
@@ -17,26 +17,26 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
-    EcdsaValidatorRecoveryModule recoveryModule;
     OwnableValidator validator;
+    OwnableValidatorRecoveryModule recoveryModule;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule = new EcdsaValidatorRecoveryModule(
+        recoveryModule = new OwnableValidatorRecoveryModule(
             address(zkEmailRecovery)
         );
 
         instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: address(recoveryModule),
-            data: abi.encode(newOwner, validator)
-        });
-        instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
             data: abi.encode(owner, address(recoveryModule))
+        });
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: address(recoveryModule),
+            data: abi.encode(newOwner, validator)
         });
     }
 

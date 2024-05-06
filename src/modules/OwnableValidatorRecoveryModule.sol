@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 
-contract EcdsaValidatorRecoveryModule is RecoveryModuleBase {
+contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -89,7 +89,7 @@ contract EcdsaValidatorRecoveryModule is RecoveryModuleBase {
      * @return name The name of the module
      */
     function name() external pure override returns (string memory) {
-        return "EcdsaValidatorRecoveryModule";
+        return "OwnableValidatorRecoveryModule";
     }
 
     /**
