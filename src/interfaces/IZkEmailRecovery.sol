@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IGuardianManager} from "./IGuardianManager.sol";
+
 interface IZkEmailRecovery {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
@@ -17,7 +19,10 @@ interface IZkEmailRecovery {
     error InvalidNewOwner();
     error InvalidAccountForRouter();
     error GuardianInvalidForAccountInEmail();
-    error GuardianAlreadyAccepted();
+    error InvalidGuardianStatus(
+        IGuardianManager.GuardianStatus guardianStatus,
+        IGuardianManager.GuardianStatus expectedGuardianStatus
+    );
     error GuardianHasNotAccepted();
     error RecoveryAlreadyInitiated();
     error RecoveryNotInitiated();

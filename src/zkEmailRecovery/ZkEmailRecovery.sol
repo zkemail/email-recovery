@@ -129,19 +129,15 @@ contract ZkEmailRecovery is
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
 
-        address accountForRouter = getAccountForRouter(msg.sender);
-        if (accountForRouter != accountInEmail)
-            revert InvalidAccountForRouter();
-
-        if (!isGuardian(guardian, accountInEmail))
-            revert GuardianInvalidForAccountInEmail();
-
         GuardianStatus guardianStatus = getGuardianStatus(
             accountInEmail,
             guardian
         );
-        if (guardianStatus == GuardianStatus.ACCEPTED)
-            revert GuardianAlreadyAccepted();
+        if (guardianStatus != GuardianStatus.REQUESTED)
+            revert InvalidGuardianStatus(
+                guardianStatus,
+                GuardianStatus.REQUESTED
+            );
 
         updateGuardian(accountInEmail, guardian, GuardianStatus.ACCEPTED);
     }
