@@ -54,8 +54,8 @@ contract ZkEmailRecovery is
 
         setupGuardians(account, guardianData);
 
-        if (recoveryRequests[account].executeAfter > 0) {
-            revert RecoveryAlreadyInitiated();
+        if (recoveryRequests[account].approvalCount > 0) {
+            revert RecoveryInProcess();
         }
 
         address router = deployRouterForAccount(account);
@@ -129,6 +129,10 @@ contract ZkEmailRecovery is
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
 
+        if (recoveryRequests[accountInEmail].approvalCount > 0) {
+            revert RecoveryInProcess();
+        }
+
         GuardianStatus guardianStatus = getGuardianStatus(
             accountInEmail,
             guardian
@@ -153,47 +157,50 @@ contract ZkEmailRecovery is
         if (subjectParams.length != 2) revert InvalidSubjectParams();
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
-
-        address accountForRouter = getAccountForRouter(msg.sender);
-        if (accountForRouter != accountInEmail)
-            revert InvalidAccountForRouter();
-
-        if (!isGuardian(guardian, accountInEmail))
-            revert GuardianInvalidForAccountInEmail();
+        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address)); // TODO: Add check for module address
 
         GuardianStatus guardianStatus = getGuardianStatus(
             accountInEmail,
             guardian
         );
-        if (guardianStatus == GuardianStatus.REQUESTED)
-            revert GuardianHasNotAccepted();
+        if (guardianStatus != GuardianStatus.ACCEPTED)
+            revert InvalidGuardianStatus(
+                guardianStatus,
+                GuardianStatus.ACCEPTED
+            );
+        if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
 
-        RecoveryRequest memory recoveryRequest = recoveryRequests[
+        RecoveryRequest storage recoveryRequest = recoveryRequests[
             accountInEmail
         ];
-        if (recoveryRequest.executeAfter > 0) {
-            revert RecoveryAlreadyInitiated();
-        }
 
-        recoveryRequests[accountInEmail].approvalCount++;
+        recoveryRequest.approvalCount++;
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
-        if (recoveryRequests[accountInEmail].approvalCount >= threshold) {
+        if (recoveryRequest.approvalCount >= threshold) {
             uint256 executeAfter = block.timestamp +
                 recoveryDelays[accountInEmail];
 
-            recoveryRequests[accountInEmail].executeAfter = executeAfter;
-            recoveryRequests[accountInEmail]
-                .recoveryModule = recoveryModuleInEmail;
+            recoveryRequest.executeAfter = executeAfter;
+            recoveryRequest.recoveryModule = recoveryModuleInEmail;
 
-            // emit RecoveryInitiated(accountInEmail, executeAfter);
+            emit RecoveryInitiated(accountInEmail, executeAfter);
+
+            // TODO: What if an account wants to do a check such as "if max votes received, then complete recovery"?
+            // Justification for VoteManager.sol?
+
+            if (executeAfter == block.timestamp) {
+                _completeRecovery(accountInEmail);
+            }
         }
     }
 
     function completeRecovery() public override {
         address account = getAccountForRouter(msg.sender);
+        _completeRecovery(account);
+    }
 
+    function _completeRecovery(address account) internal {
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = getGuardianConfig(account).threshold;
@@ -209,7 +216,7 @@ contract ZkEmailRecovery is
             abi.encode(account)
         );
 
-        // emit RecoveryCompleted(account);
+        emit RecoveryCompleted(account);
     }
 
     /// @inheritdoc IZkEmailRecovery

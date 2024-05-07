@@ -11,21 +11,15 @@ interface IZkEmailRecovery {
     }
 
     /** Errors */
-    error ModuleNotEnabled();
-    error InvalidOwner(address owner);
     error InvalidGuardian();
+    error InvalidRecoveryModule();
     error InvalidTemplateIndex();
     error InvalidSubjectParams();
-    error InvalidNewOwner();
-    error InvalidAccountForRouter();
-    error GuardianInvalidForAccountInEmail();
     error InvalidGuardianStatus(
         IGuardianManager.GuardianStatus guardianStatus,
         IGuardianManager.GuardianStatus expectedGuardianStatus
     );
-    error GuardianHasNotAccepted();
-    error RecoveryAlreadyInitiated();
-    error RecoveryNotInitiated();
+    error RecoveryInProcess();
     error NotEnoughApprovals();
     error DelayNotPassed();
 
@@ -35,12 +29,8 @@ interface IZkEmailRecovery {
         uint256 recoveryDelay,
         address router
     );
-    event RecoveryInitiated(
-        address indexed account,
-        address newOwner,
-        uint256 executeAfter
-    );
-    event RecoveryCompleted(address indexed account, address newOwner);
+    event RecoveryInitiated(address indexed account, uint256 executeAfter);
+    event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
 
     /** Functions */
