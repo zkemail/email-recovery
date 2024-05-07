@@ -106,7 +106,7 @@ contract ZkEmailRecovery is
         returns (string[][] memory)
     {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](7);
+        templates[0] = new string[](11);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
         templates[0][2] = "{ethAddr}";
@@ -114,6 +114,10 @@ contract ZkEmailRecovery is
         templates[0][4] = "recovery";
         templates[0][5] = "module";
         templates[0][6] = "{ethAddr}";
+        templates[0][7] = "with";
+        templates[0][8] = "request";
+        templates[0][9] = "ID";
+        templates[0][10] = "{ethAddr}";
         return templates;
     }
 
@@ -154,10 +158,11 @@ contract ZkEmailRecovery is
     ) internal override {
         if (guardian == address(0)) revert InvalidGuardian();
         if (templateIdx != 0) revert InvalidTemplateIndex();
-        if (subjectParams.length != 2) revert InvalidSubjectParams();
+        if (subjectParams.length != 3) revert InvalidSubjectParams();
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address)); // TODO: Add check for module address
+        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
+        address recoveryIdInEmail = abi.decode(subjectParams[2], (address));
 
         GuardianStatus guardianStatus = getGuardianStatus(
             accountInEmail,
@@ -169,6 +174,7 @@ contract ZkEmailRecovery is
                 GuardianStatus.ACCEPTED
             );
         if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
+        if (recoveryIdInEmail == address(0)) revert InvalidRecoveryId();
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[
             accountInEmail
@@ -183,6 +189,7 @@ contract ZkEmailRecovery is
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.recoveryModule = recoveryModuleInEmail;
+            recoveryRequest.recoveryId = recoveryIdInEmail;
 
             emit RecoveryInitiated(accountInEmail, executeAfter);
 
@@ -213,7 +220,7 @@ contract ZkEmailRecovery is
         delete recoveryRequests[account];
 
         IRecoveryModule(recoveryRequest.recoveryModule).recover(
-            abi.encode(account)
+            abi.encode(account, recoveryRequest.recoveryId)
         );
 
         emit RecoveryCompleted(account);

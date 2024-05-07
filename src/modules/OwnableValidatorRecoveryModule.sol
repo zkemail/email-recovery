@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
 contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
@@ -12,6 +13,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         address newOwner;
         address validator;
     }
+    error InvalidRecoveryId();
 
     mapping(address => RecoveryData) public recoveryData;
 
@@ -66,9 +68,19 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     }
 
     function recover(bytes memory data) external override onlyRecovery {
-        address account = abi.decode(data, (address));
+        (address account, address recoveryId) = abi.decode(
+            data,
+            (address, address)
+        );
 
         RecoveryData memory recoveryData = getRecoveryData(account);
+
+        bytes32 salt = keccak256(abi.encodePacked(account));
+        bytes32 recoveryHash = keccak256(
+            abi.encodePacked(recoveryData.newOwner)
+        );
+        address expectedRecoveryId = computeRecoveryId(salt, recoveryHash);
+        if (expectedRecoveryId != recoveryId) revert InvalidRecoveryId();
 
         bytes memory encodedCall = abi.encodeWithSignature(
             "changeOwner(address,address,address)",
@@ -78,6 +90,13 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         );
 
         _execute(account, recoveryData.validator, 0, encodedCall);
+    }
+
+    function computeRecoveryId(
+        bytes32 salt,
+        bytes32 recoveryHash
+    ) public view returns (address) {
+        return Create2.computeAddress(salt, recoveryHash);
     }
 
     /*//////////////////////////////////////////////////////////////////////////

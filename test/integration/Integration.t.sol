@@ -155,6 +155,7 @@ abstract contract Integration_Test is RhinestoneModuleKit, Test {
     function handleRecovery(
         address account,
         address recoveryModule,
+        address recoveryId,
         address router,
         string memory subject,
         bytes32 nullifier,
@@ -167,9 +168,10 @@ abstract contract Integration_Test is RhinestoneModuleKit, Test {
             accountSalt
         );
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](2);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(account);
         subjectParamsForRecovery[1] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[2] = abi.encode(recoveryId);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),

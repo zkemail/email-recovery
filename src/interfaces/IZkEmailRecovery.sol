@@ -8,11 +8,13 @@ interface IZkEmailRecovery {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 approvalCount; // number of guardian approvals for the recovery request
         address recoveryModule; // the trusted recovery module that has permission to recover an account
+        address recoveryId;
     }
 
     /** Errors */
     error InvalidGuardian();
     error InvalidRecoveryModule();
+    error InvalidRecoveryId();
     error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidGuardianStatus(
