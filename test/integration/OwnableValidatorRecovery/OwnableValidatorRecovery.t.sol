@@ -49,7 +49,11 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
 
         // Setup recovery
         vm.startPrank(accountAddress);
-        bytes memory guardianData = abi.encode(guardians, threshold);
+        bytes memory guardianData = abi.encode(
+            guardians,
+            guardianWeights,
+            threshold
+        );
         zkEmailRecovery.configureRecovery(guardianData, recoveryDelay);
         vm.stopPrank();
 
@@ -64,12 +68,16 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             accountSalt1,
             templateIdx
         );
-        IGuardianManager.GuardianStatus guardianStatus1 = zkEmailRecovery
-            .getGuardianStatus(accountAddress, guardian1);
+        IGuardianManager.GuardianStorage
+            memory guardianStorage1 = zkEmailRecovery.getGuardian(
+                accountAddress,
+                guardian1
+            );
         assertEq(
-            uint256(guardianStatus1),
+            uint256(guardianStorage1.status),
             uint256(IGuardianManager.GuardianStatus.ACCEPTED)
         );
+        assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian 2
         acceptGuardian(
@@ -80,12 +88,16 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             accountSalt2,
             templateIdx
         );
-        IGuardianManager.GuardianStatus guardianStatus2 = zkEmailRecovery
-            .getGuardianStatus(accountAddress, guardian2);
+        IGuardianManager.GuardianStorage
+            memory guardianStorage2 = zkEmailRecovery.getGuardian(
+                accountAddress,
+                guardian2
+            );
         assertEq(
-            uint256(guardianStatus2),
+            uint256(guardianStorage2.status),
             uint256(IGuardianManager.GuardianStatus.ACCEPTED)
         );
+        assertEq(guardianStorage2.weight, uint256(1));
 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
@@ -106,7 +118,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
                 accountAddress
             );
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.approvalCount, 1);
+        assertEq(recoveryRequest.totalWeight, 1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + recoveryDelay;
@@ -122,7 +134,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         );
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
-        assertEq(recoveryRequest.approvalCount, 2);
+        assertEq(recoveryRequest.totalWeight, 2);
 
         // Time travel so that the recovery delay has passed
         vm.warp(block.timestamp + recoveryDelay);
@@ -134,7 +146,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         address updatedOwner = validator.owners(accountAddress);
 
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.approvalCount, 0);
+        assertEq(recoveryRequest.totalWeight, 0);
         assertEq(updatedOwner, newOwner);
     }
 }

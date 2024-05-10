@@ -6,7 +6,7 @@ import {IGuardianManager} from "./IGuardianManager.sol";
 interface IZkEmailRecovery {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
-        uint256 approvalCount; // number of guardian approvals for the recovery request
+        uint256 totalWeight; // total weight of all guardian approvals for the recovery request
         address recoveryModule; // the trusted recovery module that has permission to recover an account
         address recoveryId;
     }

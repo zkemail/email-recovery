@@ -11,6 +11,11 @@ interface IGuardianManager {
         ACCEPTED
     }
 
+    struct GuardianStorage {
+        GuardianStatus status;
+        uint256 weight;
+    }
+
     struct GuardianConfig {
         uint256 guardianCount;
         uint256 threshold;
@@ -34,23 +39,25 @@ interface IGuardianManager {
      * @dev TODO: comment on access control
      * @param account The Account account that the guardians should recover.
      * @param guardian Guardian address to be remoupdatedved.
-     * @param guardianStatus enum.
+     * @param guardianStorage guardian storage struct.
      */
     function updateGuardian(
         address account,
         address guardian,
-        GuardianStatus guardianStatus
+        GuardianStorage memory guardianStorage
     ) external;
 
     /**
      * @notice Adds the guardian `guardian` to the Account and updates the threshold to `_threshold`.
      * @dev TODO: comment on access control
      * @param guardian New guardian address.
+     * @param weight New weight.
      * @param _threshold New threshold.
      * @param account The Account account that the guardians should recover.
      */
     function addGuardianWithThreshold(
         address guardian,
+        uint256 weight,
         uint256 _threshold,
         address account
     ) external;
@@ -104,10 +111,10 @@ interface IGuardianManager {
      * @param guardian The guardian to query the status for.
      * @return GuardianStatus enum.
      */
-    function getGuardianStatus(
+    function getGuardian(
         address account,
         address guardian
-    ) external view returns (GuardianStatus);
+    ) external view returns (GuardianStorage memory);
 
     /**
      * @notice Returns if `guardian` is an guardian of the Account.

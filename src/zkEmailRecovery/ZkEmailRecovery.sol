@@ -54,7 +54,7 @@ contract ZkEmailRecovery is
 
         setupGuardians(account, guardianData);
 
-        if (recoveryRequests[account].approvalCount > 0) {
+        if (recoveryRequests[account].totalWeight > 0) {
             revert RecoveryInProcess();
         }
 
@@ -133,21 +133,25 @@ contract ZkEmailRecovery is
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
 
-        if (recoveryRequests[accountInEmail].approvalCount > 0) {
+        if (recoveryRequests[accountInEmail].totalWeight > 0) {
             revert RecoveryInProcess();
         }
 
-        GuardianStatus guardianStatus = getGuardianStatus(
+        GuardianStorage memory guardianStorage = getGuardian(
             accountInEmail,
             guardian
         );
-        if (guardianStatus != GuardianStatus.REQUESTED)
+        if (guardianStorage.status != GuardianStatus.REQUESTED)
             revert InvalidGuardianStatus(
-                guardianStatus,
+                guardianStorage.status,
                 GuardianStatus.REQUESTED
             );
 
-        updateGuardian(accountInEmail, guardian, GuardianStatus.ACCEPTED);
+        updateGuardian(
+            accountInEmail,
+            guardian,
+            GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
+        );
     }
 
     function processRecovery(
@@ -164,13 +168,10 @@ contract ZkEmailRecovery is
         address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
         address recoveryIdInEmail = abi.decode(subjectParams[2], (address));
 
-        GuardianStatus guardianStatus = getGuardianStatus(
-            accountInEmail,
-            guardian
-        );
-        if (guardianStatus != GuardianStatus.ACCEPTED)
+        GuardianStorage memory guardian = getGuardian(accountInEmail, guardian);
+        if (guardian.status != GuardianStatus.ACCEPTED)
             revert InvalidGuardianStatus(
-                guardianStatus,
+                guardian.status,
                 GuardianStatus.ACCEPTED
             );
         if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
@@ -180,10 +181,10 @@ contract ZkEmailRecovery is
             accountInEmail
         ];
 
-        recoveryRequest.approvalCount++;
+        recoveryRequest.totalWeight += guardian.weight;
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
-        if (recoveryRequest.approvalCount >= threshold) {
+        if (recoveryRequest.totalWeight >= threshold) {
             uint256 executeAfter = block.timestamp +
                 recoveryDelays[accountInEmail];
 
@@ -197,21 +198,21 @@ contract ZkEmailRecovery is
             // Justification for VoteManager.sol?
 
             if (executeAfter == block.timestamp) {
-                _completeRecovery(accountInEmail);
+                completeRecovery(accountInEmail);
             }
         }
     }
 
     function completeRecovery() public override {
         address account = getAccountForRouter(msg.sender);
-        _completeRecovery(account);
+        completeRecovery(account);
     }
 
-    function _completeRecovery(address account) internal {
+    function completeRecovery(address account) public {
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = getGuardianConfig(account).threshold;
-        if (recoveryRequest.approvalCount < threshold)
+        if (recoveryRequest.totalWeight < threshold)
             revert NotEnoughApprovals();
 
         if (block.timestamp < recoveryRequest.executeAfter)

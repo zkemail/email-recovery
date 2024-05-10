@@ -3,9 +3,12 @@ pragma solidity ^0.8.0;
 
 import {IGuardianManager} from "../interfaces/IGuardianManager.sol";
 
+// TODO: validate weights
+
 abstract contract GuardianManager is IGuardianManager {
     /** Account to guardian to guardian status */
-    mapping(address => mapping(address => GuardianStatus)) internal guardians;
+    mapping(address => mapping(address => GuardianStorage))
+        internal guardianStorage;
 
     /** Account to guardian storage */
     mapping(address => GuardianConfig) internal guardianConfigs;
@@ -19,10 +22,11 @@ abstract contract GuardianManager is IGuardianManager {
         address account,
         bytes calldata guardianData
     ) internal {
-        (address[] memory _guardians, uint256 _threshold) = abi.decode(
-            guardianData,
-            (address[], uint256)
-        );
+        (
+            address[] memory _guardians,
+            uint256[] memory weights,
+            uint256 threshold
+        ) = abi.decode(guardianData, (address[], uint256[], uint256));
 
         uint256 guardianCount = _guardians.length;
         // Threshold can only be 0 at initialization.
@@ -30,29 +34,35 @@ abstract contract GuardianManager is IGuardianManager {
         if (guardianConfigs[account].threshold > 0) revert SetupAlreadyCalled();
 
         // Validate that threshold is smaller than number of added owners.
-        if (_threshold > guardianCount)
+        if (threshold > guardianCount)
             revert ThresholdCannotExceedGuardianCount();
 
         // There has to be at least one Account owner.
-        if (_threshold == 0) revert ThresholdCannotBeZero();
+        if (threshold == 0) revert ThresholdCannotBeZero();
 
         for (uint256 i = 0; i < guardianCount; i++) {
-            address guardian = _guardians[i];
-            GuardianStatus guardianStatus = guardians[account][guardian];
+            address _guardian = _guardians[i];
+            uint256 weight = weights[i];
+            GuardianStorage memory _guardianStorage = guardianStorage[account][
+                _guardian
+            ];
 
-            if (guardian == address(0) || guardian == address(this))
+            if (_guardian == address(0) || _guardian == address(this))
                 revert InvalidGuardianAddress();
 
-            if (guardianStatus == GuardianStatus.REQUESTED)
+            if (_guardianStorage.status == GuardianStatus.REQUESTED)
                 revert AddressAlreadyRequested();
 
-            if (guardianStatus == GuardianStatus.ACCEPTED)
+            if (_guardianStorage.status == GuardianStatus.ACCEPTED)
                 revert AddressAlreadyGuardian();
 
-            guardians[account][guardian] = GuardianStatus.REQUESTED;
+            guardianStorage[account][_guardian] = GuardianStorage(
+                GuardianStatus.REQUESTED,
+                weight
+            );
         }
 
-        guardianConfigs[account] = GuardianConfig(guardianCount, _threshold);
+        guardianConfigs[account] = GuardianConfig(guardianCount, threshold);
     }
 
     // @inheritdoc IGuardianManager
@@ -60,7 +70,7 @@ abstract contract GuardianManager is IGuardianManager {
     function updateGuardian(
         address account,
         address guardian,
-        GuardianStatus guardianStatus
+        GuardianStorage memory _guardianStorage
     ) public override {
         if (account == address(0) || account == address(this))
             revert InvalidAccountAddress();
@@ -68,33 +78,42 @@ abstract contract GuardianManager is IGuardianManager {
         if (guardian == address(0) || guardian == address(this))
             revert InvalidGuardianAddress();
 
-        GuardianStatus oldGuardianStatus = guardians[account][guardian];
-        if (guardianStatus == oldGuardianStatus)
+        GuardianStorage memory oldGuardian = guardianStorage[account][guardian];
+        if (_guardianStorage.status == oldGuardian.status)
             revert GuardianStatusMustBeDifferent();
 
-        guardians[account][guardian] = guardianStatus;
+        guardianStorage[account][guardian] = GuardianStorage(
+            _guardianStorage.status,
+            _guardianStorage.weight
+        );
     }
 
     // @inheritdoc IGuardianManager
     // FIXME: replace authorized modifier with proper access control
     function addGuardianWithThreshold(
         address guardian,
+        uint256 weight,
         uint256 threshold,
         address account
     ) public override {
-        GuardianStatus guardianStatus = guardians[account][guardian];
+        GuardianStorage memory _guardianStorage = guardianStorage[account][
+            guardian
+        ];
 
         // Guardian address cannot be null, the sentinel or the Account itself.
         if (guardian == address(0) || guardian == address(this))
             revert InvalidGuardianAddress();
 
-        if (guardianStatus == GuardianStatus.REQUESTED)
+        if (_guardianStorage.status == GuardianStatus.REQUESTED)
             revert AddressAlreadyRequested();
 
-        if (guardianStatus == GuardianStatus.ACCEPTED)
+        if (_guardianStorage.status == GuardianStatus.ACCEPTED)
             revert AddressAlreadyGuardian();
 
-        guardians[account][guardian] = GuardianStatus.REQUESTED;
+        guardianStorage[account][guardian] = GuardianStorage(
+            GuardianStatus.REQUESTED,
+            weight
+        );
         guardianConfigs[account].guardianCount++;
 
         emit AddedGuardian(guardian);
@@ -117,7 +136,7 @@ abstract contract GuardianManager is IGuardianManager {
 
         if (guardian == address(0)) revert InvalidGuardianAddress();
 
-        guardians[account][guardian] = GuardianStatus.NONE;
+        guardianStorage[account][guardian].status = GuardianStatus.NONE;
         guardianConfigs[account].guardianCount--;
 
         emit RemovedGuardian(guardian);
@@ -134,7 +153,8 @@ abstract contract GuardianManager is IGuardianManager {
         address newGuardian,
         address account
     ) public override {
-        GuardianStatus newGuardianStatus = guardians[account][newGuardian];
+        GuardianStatus newGuardianStatus = guardianStorage[account][newGuardian]
+            .status;
 
         if (
             newGuardian == address(0) ||
@@ -148,15 +168,21 @@ abstract contract GuardianManager is IGuardianManager {
         if (newGuardianStatus == GuardianStatus.ACCEPTED)
             revert AddressAlreadyGuardian();
 
-        GuardianStatus oldGuardianStatus = guardians[account][oldGuardian];
+        GuardianStorage memory oldGuardianStorage = guardianStorage[account][
+            oldGuardian
+        ];
 
-        if (oldGuardian == address(0)) revert InvalidGuardianAddress();
-
-        if (oldGuardianStatus == GuardianStatus.REQUESTED)
+        if (oldGuardianStorage.status == GuardianStatus.REQUESTED)
             revert AddressAlreadyRequested();
 
-        guardians[account][newGuardian] = GuardianStatus.REQUESTED;
-        guardians[account][oldGuardian] = GuardianStatus.NONE;
+        guardianStorage[account][newGuardian] = GuardianStorage(
+            GuardianStatus.REQUESTED,
+            oldGuardianStorage.weight
+        );
+        guardianStorage[account][oldGuardian] = GuardianStorage(
+            GuardianStatus.NONE,
+            0
+        );
 
         emit RemovedGuardian(oldGuardian);
         emit AddedGuardian(newGuardian);
@@ -187,11 +213,11 @@ abstract contract GuardianManager is IGuardianManager {
     }
 
     // @inheritdoc IGuardianManager
-    function getGuardianStatus(
+    function getGuardian(
         address account,
         address guardian
-    ) public view returns (GuardianStatus) {
-        return guardians[account][guardian];
+    ) public view returns (GuardianStorage memory) {
+        return guardianStorage[account][guardian];
     }
 
     // @inheritdoc IGuardianManager
@@ -199,6 +225,6 @@ abstract contract GuardianManager is IGuardianManager {
         address guardian,
         address account
     ) public view override returns (bool) {
-        return guardians[account][guardian] != GuardianStatus.NONE;
+        return guardianStorage[account][guardian].status != GuardianStatus.NONE;
     }
 }
