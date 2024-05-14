@@ -23,7 +23,7 @@ contract ZkEmailRecovery is
     //////////////////////////////////////////////////////////////////////////*/
 
     /** Mapping of account address to recovery delay */
-    mapping(address => uint256) public recoveryDelays;
+    mapping(address => RecoveryConfig) public recoveryConfigs;
 
     /** Mapping of account address to recovery request */
     mapping(address => RecoveryRequest) public recoveryRequests;
@@ -48,7 +48,8 @@ contract ZkEmailRecovery is
      */
     function configureRecovery(
         bytes calldata guardianData,
-        uint256 recoveryDelay
+        uint256 recoveryDelay,
+        uint256 recoveryExpiry
     ) external {
         address account = msg.sender;
 
@@ -60,9 +61,9 @@ contract ZkEmailRecovery is
 
         address router = deployRouterForAccount(account);
 
-        recoveryDelays[account] = recoveryDelay;
+        recoveryConfigs[account] = RecoveryConfig(recoveryDelay, recoveryExpiry);
 
-        emit RecoveryConfigured(account, recoveryDelay, router);
+        emit RecoveryConfigured(account, recoveryDelay, recoveryExpiry, router);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -70,8 +71,10 @@ contract ZkEmailRecovery is
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IZkEmailRecovery
-    function getRecoveryDelay(address account) external view returns (uint256) {
-        return recoveryDelays[account];
+    function getRecoveryConfig(
+        address account
+    ) external view returns (RecoveryConfig memory) {
+        return recoveryConfigs[account];
     }
 
     /// @inheritdoc IZkEmailRecovery
@@ -186,9 +189,12 @@ contract ZkEmailRecovery is
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
         if (recoveryRequest.totalWeight >= threshold) {
             uint256 executeAfter = block.timestamp +
-                recoveryDelays[accountInEmail];
+                recoveryConfigs[accountInEmail].recoveryDelay;
+            uint256 executeBefore = block.timestamp +
+                recoveryConfigs[accountInEmail].recoveryExpiry;
 
             recoveryRequest.executeAfter = executeAfter;
+            recoveryRequest.executeBefore = executeBefore;
             recoveryRequest.newOwner = newOwnerInEmail;
             recoveryRequest.recoveryModule = recoveryModuleInEmail;
 
@@ -217,6 +223,11 @@ contract ZkEmailRecovery is
 
         if (block.timestamp < recoveryRequest.executeAfter)
             revert DelayNotPassed();
+
+        if (block.timestamp >= recoveryRequest.executeBefore) {
+            delete recoveryRequests[account];
+            revert RecoveryRequestExpired();
+        }
 
         delete recoveryRequests[account];
 

@@ -33,6 +33,7 @@ abstract contract Integration_Test is RhinestoneModuleKit, Test {
     address guardian2;
     uint256[] guardianWeights;
     uint256 recoveryDelay;
+    uint256 recoveryExpiry;
     uint256 threshold;
 
     string selector = "12345";
@@ -98,6 +99,7 @@ abstract contract Integration_Test is RhinestoneModuleKit, Test {
         guardianWeights[0] = 1;
         guardianWeights[1] = 1;
         recoveryDelay = 1 seconds;
+        recoveryExpiry = 2 weeks;
         threshold = 2;
     }
 

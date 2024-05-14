@@ -4,8 +4,13 @@ pragma solidity ^0.8.0;
 import {IGuardianManager} from "./IGuardianManager.sol";
 
 interface IZkEmailRecovery {
+    struct RecoveryConfig {
+        uint256 recoveryDelay; // the time from when recovery is started until the recovery request can be executed
+        uint256 recoveryExpiry; // the time from when recovery is started until the recovery request becomes invalid
+    }
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
+        uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 totalWeight; // total weight of all guardian approvals for the recovery request
         address newOwner;
         address recoveryModule; // the trusted recovery module that has permission to recover an account
@@ -24,11 +29,13 @@ interface IZkEmailRecovery {
     error RecoveryInProcess();
     error NotEnoughApprovals();
     error DelayNotPassed();
+    error RecoveryRequestExpired();
 
     /** Events */
     event RecoveryConfigured(
         address indexed account,
         uint256 recoveryDelay,
+        uint256 recoveryExpiry,
         address router
     );
     event RecoveryInitiated(address indexed account, uint256 executeAfter);
@@ -49,7 +56,9 @@ interface IZkEmailRecovery {
      * @notice Returns the recovery delay that corresponds to the specified account
      * @param account address to query storage with
      */
-    function getRecoveryDelay(address account) external view returns (uint256);
+    function getRecoveryConfig(
+        address account
+    ) external view returns (RecoveryConfig memory);
 
     /**
      * @notice Cancels the recovery process of the sender if it exits.

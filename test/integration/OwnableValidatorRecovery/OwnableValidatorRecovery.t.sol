@@ -50,7 +50,11 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             guardianWeights,
             threshold
         );
-        zkEmailRecovery.configureRecovery(guardianData, recoveryDelay);
+        zkEmailRecovery.configureRecovery(
+            guardianData,
+            recoveryDelay,
+            recoveryExpiry
+        );
         vm.stopPrank();
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
