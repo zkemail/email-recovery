@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {IGuardianManager} from "../interfaces/IGuardianManager.sol";
-
 // TODO: validate weights
 
 abstract contract GuardianManager is IGuardianManager {
@@ -16,18 +15,13 @@ abstract contract GuardianManager is IGuardianManager {
     /**
      * @notice Sets the initial storage of the contract.
      * @param account The account.
-     * @param guardianData Encoded data to setup guardians for this guardian manager.
      */
     function setupGuardians(
         address account,
-        bytes calldata guardianData
+        address[] memory _guardians,
+        uint256[] memory weights,
+        uint256 threshold
     ) internal {
-        (
-            address[] memory _guardians,
-            uint256[] memory weights,
-            uint256 threshold
-        ) = abi.decode(guardianData, (address[], uint256[], uint256));
-
         uint256 guardianCount = _guardians.length;
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function can only be called once.
@@ -66,12 +60,18 @@ abstract contract GuardianManager is IGuardianManager {
     }
 
     // @inheritdoc IGuardianManager
-    // FIXME: replace authorized modifier with proper access control
     function updateGuardian(
+        address guardian,
+        GuardianStorage memory _guardianStorage
+    ) external override onlyConfiguredAccount {
+        _updateGuardian(msg.sender, guardian, _guardianStorage);
+    }
+
+    function _updateGuardian(
         address account,
         address guardian,
         GuardianStorage memory _guardianStorage
-    ) public override {
+    ) internal {
         if (account == address(0) || account == address(this))
             revert InvalidAccountAddress();
 
@@ -89,13 +89,12 @@ abstract contract GuardianManager is IGuardianManager {
     }
 
     // @inheritdoc IGuardianManager
-    // FIXME: replace authorized modifier with proper access control
     function addGuardianWithThreshold(
         address guardian,
         uint256 weight,
-        uint256 threshold,
-        address account
-    ) public override {
+        uint256 threshold
+    ) public override onlyConfiguredAccount {
+        address account = msg.sender;
         GuardianStorage memory _guardianStorage = guardianStorage[account][
             guardian
         ];
@@ -120,16 +119,15 @@ abstract contract GuardianManager is IGuardianManager {
 
         // Change threshold if threshold was changed.
         if (guardianConfigs[account].threshold != threshold)
-            changeThreshold(threshold, account);
+            _changeThreshold(account, threshold);
     }
 
     // @inheritdoc IGuardianManager
-    // FIXME: replace authorized modifier with proper access control
     function removeGuardian(
         address guardian,
-        uint256 threshold,
-        address account
-    ) public override {
+        uint256 threshold
+    ) public override onlyConfiguredAccount {
+        address account = msg.sender;
         // Only allow to remove an guardian, if threshold can still be reached.
         if (guardianConfigs[account].threshold - 1 < threshold)
             revert ThresholdCannotExceedGuardianCount();
@@ -143,16 +141,16 @@ abstract contract GuardianManager is IGuardianManager {
 
         // Change threshold if threshold was changed.
         if (guardianConfigs[account].threshold != threshold)
-            changeThreshold(threshold, account);
+            _changeThreshold(account, threshold);
     }
 
     // @inheritdoc IGuardianManager
-    // FIXME: replace authorized modifier with proper access control
     function swapGuardian(
         address oldGuardian,
-        address newGuardian,
-        address account
-    ) public override {
+        address newGuardian
+    ) public override onlyConfiguredAccount {
+        address account = msg.sender;
+
         GuardianStatus newGuardianStatus = guardianStorage[account][newGuardian]
             .status;
 
@@ -189,11 +187,14 @@ abstract contract GuardianManager is IGuardianManager {
     }
 
     // @inheritdoc IGuardianManager
-    // FIXME: replace authorized modifier with proper access control
     function changeThreshold(
-        uint256 threshold,
-        address account
-    ) public override {
+        uint256 threshold
+    ) public override onlyConfiguredAccount {
+        address account = msg.sender;
+        _changeThreshold(account, threshold);
+    }
+
+    function _changeThreshold(address account, uint256 threshold) private {
         // Validate that threshold is smaller than number of guardians.
         if (threshold > guardianConfigs[account].guardianCount)
             revert ThresholdCannotExceedGuardianCount();
@@ -226,5 +227,15 @@ abstract contract GuardianManager is IGuardianManager {
         address account
     ) public view override returns (bool) {
         return guardianStorage[account][guardian].status != GuardianStatus.NONE;
+    }
+
+    modifier onlyConfiguredAccount() {
+        checkConfigured(msg.sender);
+        _;
+    }
+
+    function checkConfigured(address account) internal {
+        bool authorized = guardianConfigs[account].guardianCount > 0;
+        if (!authorized) revert AccountNotConfigured();
     }
 }

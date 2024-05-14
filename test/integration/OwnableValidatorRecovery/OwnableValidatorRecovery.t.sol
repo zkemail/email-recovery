@@ -45,13 +45,10 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
 
         // Setup recovery
         vm.startPrank(accountAddress);
-        bytes memory guardianData = abi.encode(
+        zkEmailRecovery.configureRecovery(
             guardians,
             guardianWeights,
-            threshold
-        );
-        zkEmailRecovery.configureRecovery(
-            guardianData,
+            threshold,
             recoveryDelay,
             recoveryExpiry
         );

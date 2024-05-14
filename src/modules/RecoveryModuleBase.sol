@@ -45,12 +45,7 @@ abstract contract RecoveryModuleBase is ERC7579ExecutorBase {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(bytes memory data) external virtual onlyRecovery {}
-
-    modifier onlyRecovery() {
-        if (msg.sender != zkEmailRecovery) revert NotAuthorizedToRecover();
-        _;
-    }
+    function recover(address account, address newOwner) external virtual {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA

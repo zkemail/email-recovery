@@ -26,6 +26,7 @@ interface IGuardianManager {
     error ThresholdCannotBeZero();
     error InvalidAccountAddress();
     error InvalidGuardianAddress();
+    error AccountNotConfigured();
     error AddressAlreadyRequested();
     error AddressAlreadyGuardian();
     error GuardianStatusMustBeDifferent();
@@ -37,12 +38,10 @@ interface IGuardianManager {
     /**
      * @notice Updates the guardian `guardian` for the Account.
      * @dev TODO: comment on access control
-     * @param account The Account account that the guardians should recover.
      * @param guardian Guardian address to be remoupdatedved.
      * @param guardianStorage guardian storage struct.
      */
     function updateGuardian(
-        address account,
         address guardian,
         GuardianStorage memory guardianStorage
     ) external;
@@ -53,13 +52,11 @@ interface IGuardianManager {
      * @param guardian New guardian address.
      * @param weight New weight.
      * @param _threshold New threshold.
-     * @param account The Account account that the guardians should recover.
      */
     function addGuardianWithThreshold(
         address guardian,
         uint256 weight,
-        uint256 _threshold,
-        address account
+        uint256 _threshold
     ) external;
 
     /**
@@ -67,34 +64,23 @@ interface IGuardianManager {
      * @dev TODO: comment on access control
      * @param guardian Guardian address to be removed.
      * @param _threshold New threshold.
-     * @param account The Account account that the guardians should recover.
      */
-    function removeGuardian(
-        address guardian,
-        uint256 _threshold,
-        address account
-    ) external;
+    function removeGuardian(address guardian, uint256 _threshold) external;
 
     /**
      * @notice Replaces the guardian `oldGuardian` in the Account with `newGuardian`.
      * @dev TODO: comment on access control
      * @param oldGuardian Guardian address to be replaced.
      * @param newGuardian New guardian address.
-     * @param account The Account account that the guardians should recover.
      */
-    function swapGuardian(
-        address oldGuardian,
-        address newGuardian,
-        address account
-    ) external;
+    function swapGuardian(address oldGuardian, address newGuardian) external;
 
     /**
      * @notice Changes the threshold of the Account to `_threshold`.
      * @dev TODO: comment on access control
      * @param _threshold New threshold.
-     * @param account The Account account that the guardians should recover.
      */
-    function changeThreshold(uint256 _threshold, address account) external;
+    function changeThreshold(uint256 _threshold) external;
 
     /**
      * @notice Returns the number of required confirmations for a Account transaction aka the threshold.

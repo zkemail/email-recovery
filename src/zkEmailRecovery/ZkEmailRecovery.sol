@@ -9,7 +9,7 @@ import {RouterManager} from "./RouterManager.sol";
 import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 
 interface IRecoveryModule {
-    function recover(bytes calldata data) external;
+    function recover(address account, address newOwner) external;
 }
 
 contract ZkEmailRecovery is
@@ -44,16 +44,17 @@ contract ZkEmailRecovery is
 
     /**
      * Initialize the module with the given data
-     * @param guardianData The guardian data to setup the guardian manager with
      */
     function configureRecovery(
-        bytes calldata guardianData,
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold,
         uint256 recoveryDelay,
         uint256 recoveryExpiry
     ) external {
         address account = msg.sender;
 
-        setupGuardians(account, guardianData);
+        setupGuardians(account, guardians, weights, threshold);
 
         if (recoveryRequests[account].totalWeight > 0) {
             revert RecoveryInProcess();
@@ -61,7 +62,10 @@ contract ZkEmailRecovery is
 
         address router = deployRouterForAccount(account);
 
-        recoveryConfigs[account] = RecoveryConfig(recoveryDelay, recoveryExpiry);
+        recoveryConfigs[account] = RecoveryConfig(
+            recoveryDelay,
+            recoveryExpiry
+        );
 
         emit RecoveryConfigured(account, recoveryDelay, recoveryExpiry, router);
     }
@@ -150,7 +154,7 @@ contract ZkEmailRecovery is
                 GuardianStatus.REQUESTED
             );
 
-        updateGuardian(
+        _updateGuardian(
             accountInEmail,
             guardian,
             GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
@@ -200,9 +204,6 @@ contract ZkEmailRecovery is
 
             emit RecoveryInitiated(accountInEmail, executeAfter);
 
-            // TODO: What if an account wants to do a check such as "if max votes received, then complete recovery"?
-            // Justification for VoteManager.sol?
-
             if (executeAfter == block.timestamp) {
                 completeRecovery(accountInEmail);
             }
@@ -232,7 +233,8 @@ contract ZkEmailRecovery is
         delete recoveryRequests[account];
 
         IRecoveryModule(recoveryRequest.recoveryModule).recover(
-            abi.encode(account, recoveryRequest.newOwner)
+            account,
+            recoveryRequest.newOwner
         );
 
         emit RecoveryCompleted(account);

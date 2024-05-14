@@ -52,7 +52,7 @@ contract SafeRecoveryModule is RecoveryModuleBase {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(bytes memory data) external override onlyRecovery {
+    function recover(bytes memory data) external {
         (address account, address newOwner, address oldOwner) = abi.decode(
             data,
             (address, address, address)

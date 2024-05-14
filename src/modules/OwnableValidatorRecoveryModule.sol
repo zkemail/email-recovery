@@ -67,12 +67,10 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         return recoveryData[account];
     }
 
-    function recover(bytes memory data) external override onlyRecovery {
-        (address account, address newOwner) = abi.decode(
-            data,
-            (address, address)
-        );
-
+    function recover(
+        address account,
+        address newOwner
+    ) external override onlyRecovery {
         RecoveryData memory recoveryData = getRecoveryData(account);
 
         bytes memory encodedCall = abi.encodeWithSignature(
@@ -83,6 +81,11 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         );
 
         _execute(account, recoveryData.validator, 0, encodedCall);
+    }
+
+    modifier onlyRecovery() {
+        if (msg.sender != zkEmailRecovery) revert NotAuthorizedToRecover();
+        _;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
