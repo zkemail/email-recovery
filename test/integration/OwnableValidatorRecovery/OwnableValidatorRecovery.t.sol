@@ -42,10 +42,6 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
 
     function testRecover() public {
         uint templateIdx = 0;
-        address expectedRecoveryId = recoveryModule.computeRecoveryId(
-            keccak256(abi.encodePacked(accountAddress)),
-            keccak256(abi.encodePacked(newOwner))
-        );
 
         // Setup recovery
         vm.startPrank(accountAddress);
@@ -101,14 +97,13 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
-
         // handle recovery request for guardian 1
         handleRecovery(
             accountAddress,
+            newOwner,
             address(recoveryModule),
-            expectedRecoveryId,
             router,
-            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe with request ID 0x78545Bf63Fa4AE73eDfDDe7F12C8b22966D81A22",
+            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx
@@ -124,10 +119,10 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         uint256 executeAfter = block.timestamp + recoveryDelay;
         handleRecovery(
             accountAddress,
+            newOwner,
             address(recoveryModule),
-            expectedRecoveryId,
             router,
-            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe with request ID 0x78545Bf63Fa4AE73eDfDDe7F12C8b22966D81A22",
+            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe",
             keccak256(abi.encode("nullifier 2")),
             accountSalt2,
             templateIdx
