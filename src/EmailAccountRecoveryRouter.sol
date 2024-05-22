@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {EmailAuthMsg} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import {IEmailAccountRecovery} from "../interfaces/IEmailAccountRecovery.sol";
+import {IEmailAccountRecovery} from "./interfaces/IEmailAccountRecovery.sol";
 
 /** Helper contract that routes relayer calls to correct EmailAccountRecovery implementation */
 contract EmailAccountRecoveryRouter {

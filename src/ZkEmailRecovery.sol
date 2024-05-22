@@ -4,8 +4,8 @@ pragma solidity ^0.8.23;
 import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
 import {EmailAccountRecovery} from "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
-import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
-import {IRecoveryModule} from "../interfaces/IRecoveryModule.sol";
+import {IZkEmailRecovery} from "./interfaces/IZkEmailRecovery.sol";
+import {IRecoveryModule} from "./interfaces/IRecoveryModule.sol";
 import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
 
 contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {

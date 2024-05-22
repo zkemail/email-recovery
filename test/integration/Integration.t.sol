@@ -8,7 +8,7 @@ import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/con
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
-import {ZkEmailRecovery} from "src/zkEmailRecovery/ZkEmailRecovery.sol";
+import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
 import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
 import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
 
