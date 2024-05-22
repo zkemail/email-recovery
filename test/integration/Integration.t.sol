@@ -9,7 +9,7 @@ import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/ut
 import {ECDSA} from "solady/src/utils/ECDSA.sol";
 
 import {ZkEmailRecovery} from "src/zkEmailRecovery/ZkEmailRecovery.sol";
-import {IEmailAccountRecovery} from "src/zkEmailRecovery/EmailAccountRecoveryRouter.sol";
+import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
 import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
 
 abstract contract Integration_Test is RhinestoneModuleKit, Test {
@@ -129,6 +129,7 @@ abstract contract Integration_Test is RhinestoneModuleKit, Test {
 
     function acceptGuardian(
         address account,
+        // ZkEmailRecovery zkEmailRecovery,
         address router,
         string memory subject,
         bytes32 nullifier,
