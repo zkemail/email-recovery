@@ -71,7 +71,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
     /** @dev Modifier to check recovery status. Reverts if recovery is in process for the account */
     modifier onlyWhenNotRecovering() {
-        if (recoveryRequests[msg.sender].totalWeight > 0) {
+        if (recoveryRequests[msg.sender].currentWeight > 0) {
             revert RecoveryInProcess();
         }
         _;
@@ -366,10 +366,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             accountInEmail
         ];
 
-        recoveryRequest.totalWeight += guardian.weight;
+        recoveryRequest.currentWeight += guardian.weight;
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
-        if (recoveryRequest.totalWeight >= threshold) {
+        if (recoveryRequest.currentWeight >= threshold) {
             uint256 executeAfter = block.timestamp +
                 recoveryConfigs[accountInEmail].delay;
             uint256 executeBefore = block.timestamp +
@@ -409,7 +409,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = getGuardianConfig(account).threshold;
-        if (recoveryRequest.totalWeight < threshold) {
+        if (recoveryRequest.currentWeight < threshold) {
             revert NotEnoughApprovals();
         }
 
@@ -526,7 +526,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         return guardianStorage[account][guardian].status != GuardianStatus.NONE;
     }
 
-    // TODO: consider simplifying this function
     /**
      * @notice Sets up guardians for a given account with specified weights and threshold
      * @dev This function can only be called once and ensures the guardians, weights, and threshold are correctly configured
@@ -549,20 +548,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         uint256 guardianCount = _guardians.length;
 
-        // Validate that threshold is smaller than number of added owners.
-        if (threshold > guardianCount) {
-            revert ThresholdCannotExceedGuardianCount();
-        }
-
         if (guardianCount != weights.length) {
             revert IncorrectNumberOfWeights();
         }
 
-        // There has to be at least one Account owner.
         if (threshold == 0) {
             revert ThresholdCannotBeZero();
         }
 
+        uint256 totalWeight = 0;
         for (uint256 i = 0; i < guardianCount; i++) {
             address _guardian = _guardians[i];
             uint256 weight = weights[i];
@@ -570,7 +564,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 _guardian
             ];
 
-            if (_guardian == address(0) || _guardian == address(this)) {
+            if (_guardian == address(0)) {
                 revert InvalidGuardianAddress();
             }
 
@@ -581,11 +575,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 revert InvalidGuardianWeight();
             }
 
-            if (_guardianStorage.status == GuardianStatus.REQUESTED) {
-                revert AddressAlreadyRequested();
-            }
-
-            if (_guardianStorage.status == GuardianStatus.ACCEPTED) {
+            if (_guardianStorage.status != GuardianStatus.NONE) {
                 revert AddressAlreadyGuardian();
             }
 
@@ -593,9 +583,18 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 GuardianStatus.REQUESTED,
                 weight
             );
+            totalWeight += weight;
         }
 
-        guardianConfigs[account] = GuardianConfig(guardianCount, threshold);
+        if (threshold > totalWeight) {
+            revert ThresholdCannotExceedTotalWeight();
+        }
+
+        guardianConfigs[account] = GuardianConfig(
+            guardianCount,
+            totalWeight,
+            threshold
+        );
     }
 
     /**
@@ -622,11 +621,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         address guardian,
         GuardianStorage memory _guardianStorage
     ) internal {
-        if (account == address(0) || account == address(this)) {
+        if (account == address(0)) {
             revert InvalidAccountAddress();
         }
 
-        if (guardian == address(0) || guardian == address(this)) {
+        if (guardian == address(0)) {
             revert InvalidGuardianAddress();
         }
 
@@ -652,7 +651,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param weight The weight assigned to the guardian
      * @param threshold The new threshold for guardian approvals
      */
-    function addGuardianWithThreshold(
+    function addGuardian(
         address guardian,
         uint256 weight,
         uint256 threshold
@@ -662,16 +661,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             guardian
         ];
 
-        // Guardian address cannot be null, the sentinel or the Account itself.
-        if (guardian == address(0) || guardian == address(this)) {
+        if (guardian == address(0)) {
             revert InvalidGuardianAddress();
         }
 
-        if (_guardianStorage.status == GuardianStatus.REQUESTED) {
-            revert AddressAlreadyRequested();
-        }
-
-        if (_guardianStorage.status == GuardianStatus.ACCEPTED) {
+        if (_guardianStorage.status != GuardianStatus.NONE) {
             revert AddressAlreadyGuardian();
         }
 
@@ -689,7 +683,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         // Change threshold if threshold was changed.
         if (guardianConfigs[account].threshold != threshold) {
-            _changeThreshold(account, threshold);
+            changeThreshold(threshold);
         }
     }
 
@@ -707,7 +701,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         // Only allow to remove an guardian, if threshold can still be reached.
         // TODO: change error name and assess whether guardian count could be lowered below threshold
         if (guardianConfigs[account].threshold - 1 < threshold) {
-            revert ThresholdCannotExceedGuardianCount();
+            revert ThresholdCannotExceedTotalWeight();
         }
 
         if (guardian == address(0)) {
@@ -721,53 +715,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         // Change threshold if threshold was changed.
         if (guardianConfigs[account].threshold != threshold) {
-            _changeThreshold(account, threshold);
+            changeThreshold(threshold);
         }
     }
 
-    // TODO: Consider removing this function to simplify contract
-    /**
-     * @notice Swaps an old guardian with a new guardian for the caller's account
-     * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
-     * @param oldGuardian The address of the guardian to be replaced
-     * @param newGuardian The address of the new guardian
-     */
-    function swapGuardian(
-        address oldGuardian,
-        address newGuardian
-    ) public onlyAccountForGuardian(oldGuardian) onlyWhenNotRecovering {
-        address account = msg.sender;
-
-        GuardianStatus newGuardianStatus = guardianStorage[account][newGuardian]
-            .status;
-
-        if (
-            newGuardian == address(0) ||
-            newGuardian == address(this) ||
-            newGuardian == oldGuardian
-        ) {
-            revert InvalidGuardianAddress();
-        }
-
-        if (newGuardianStatus != GuardianStatus.NONE) {
-            revert AddressAlreadyGuardian();
-        }
-
-        GuardianStorage memory oldGuardianStorage = guardianStorage[account][
-            oldGuardian
-        ];
-
-        guardianStorage[account][newGuardian] = GuardianStorage(
-            GuardianStatus.REQUESTED,
-            oldGuardianStorage.weight
-        );
-        delete guardianStorage[account][oldGuardian];
-
-        emit RemovedGuardian(oldGuardian);
-        emit AddedGuardian(newGuardian);
-    }
-
-    // TODO: Consider consolidating both change threshold functions to simplify contract
     /**
      * @notice Changes the threshold for guardian approvals for the caller's account
      * @dev This function can only be called if no recovery is in process
@@ -775,21 +726,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      */
     function changeThreshold(uint256 threshold) public onlyWhenNotRecovering {
         address account = msg.sender;
-        if (guardianConfigs[account].guardianCount == 0) {
-            revert AccountNotConfigured();
-        }
-        _changeThreshold(account, threshold);
-    }
 
-    /**
-     * @dev Internal function to change the threshold for guardian approvals
-     * @param account The address of the account for which the threshold is being changed
-     * @param threshold The new threshold for guardian approvals
-     */
-    function _changeThreshold(address account, uint256 threshold) private {
-        // Validate that threshold is smaller than number of guardians.
-        if (threshold > guardianConfigs[account].guardianCount) {
-            revert ThresholdCannotExceedGuardianCount();
+        // Validate that threshold is smaller than the total weight.
+        if (threshold > guardianConfigs[account].totalWeight) {
+            revert ThresholdCannotExceedTotalWeight();
         }
 
         // There has to be at least one Account guardian.

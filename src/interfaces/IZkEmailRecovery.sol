@@ -17,7 +17,7 @@ interface IZkEmailRecovery {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
-        uint256 totalWeight; // total weight of all guardian approvals for the recovery request
+        uint256 currentWeight; // total weight of all guardian approvals for the recovery request
         bytes[] subjectParams; // The bytes array of encoded subject params. The types of the
         // subject params are unknown according to this struct so that the struct can be re-used
         // for different recovery implementations with different email subjects
@@ -25,6 +25,7 @@ interface IZkEmailRecovery {
 
     struct GuardianConfig {
         uint256 guardianCount;
+        uint256 totalWeight;
         uint256 threshold;
     }
 
@@ -85,7 +86,7 @@ interface IZkEmailRecovery {
 
     /** Guardian logic errors */
     error SetupAlreadyCalled();
-    error ThresholdCannotExceedGuardianCount();
+    error ThresholdCannotExceedTotalWeight();
     error IncorrectNumberOfWeights();
     error ThresholdCannotBeZero();
     error InvalidGuardianAddress();
@@ -151,17 +152,15 @@ interface IZkEmailRecovery {
         GuardianStorage memory guardianStorage
     ) external;
 
-    function addGuardianWithThreshold(
+    function addGuardian(
         address guardian,
         uint256 weight,
-        uint256 _threshold
+        uint256 threshold
     ) external;
 
-    function removeGuardian(address guardian, uint256 _threshold) external;
+    function removeGuardian(address guardian, uint256 threshold) external;
 
-    function swapGuardian(address oldGuardian, address newGuardian) external;
-
-    function changeThreshold(uint256 _threshold) external;
+    function changeThreshold(uint256 threshold) external;
 
     /*//////////////////////////////////////////////////////////////////////////
                                 ROUTER LOGIC
