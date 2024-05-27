@@ -827,21 +827,26 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     /**
      * @notice Deploys a new router for the specified account
      * @dev Deploys a new EmailAccountRecoveryRouter contract using Create2 and associates it with the account
-     * Reverts if a router has already been deployed for the account // TODO: check create2 instead?
      * @param account The address of the account for which the router is being deployed
      * @return address The address of the deployed router
      */
     function deployRouterForAccount(
         address account
     ) internal returns (address) {
-        if (accountToRouter[account] != address(0)) {
-            revert RouterAlreadyDeployed();
+        bytes32 salt = keccak256(abi.encode(account));
+        address routerAddress = computeRouterAddress(salt);
+
+        if (routerAddress.code.length > 0) {
+            routerToAccount[routerAddress] = account;
+            accountToRouter[account] = routerAddress;
+
+            return routerAddress;
         }
 
         EmailAccountRecoveryRouter emailAccountRecoveryRouter = new EmailAccountRecoveryRouter{
-                salt: keccak256(abi.encode(account))
+                salt: salt
             }(address(this));
-        address routerAddress = address(emailAccountRecoveryRouter);
+        routerAddress = address(emailAccountRecoveryRouter);
 
         routerToAccount[routerAddress] = account;
         accountToRouter[account] = routerAddress;
