@@ -149,8 +149,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         address newOwnerInEmail = abi.decode(subjectParams[1], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
 
-        if (newOwnerInEmail == address(0)) revert InvalidNewOwner();
-        if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
+        if (newOwnerInEmail == address(0)) {
+            revert InvalidNewOwner();
+        }
+
+        address expectedRecoveryModule = recoveryConfigs[accountInEmail]
+            .recoveryModule;
+        if (recoveryModuleInEmail != expectedRecoveryModule) {
+            revert InvalidRecoveryModule();
+        }
 
         return (accountInEmail, recoveryModuleInEmail);
     }
@@ -160,6 +167,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     //////////////////////////////////////////////////////////////////////////*/
 
     function configureRecovery(
+        address recoveryModule,
         address[] memory guardians,
         uint256[] memory weights,
         uint256 threshold,
@@ -172,11 +180,20 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         address router = deployRouterForAccount(account);
 
-        RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
+        RecoveryConfig memory recoveryConfig = RecoveryConfig(
+            recoveryModule,
+            delay,
+            expiry
+        );
         validateRecoveryConfig(recoveryConfig);
         recoveryConfigs[account] = recoveryConfig;
 
-        emit RecoveryConfigured(account, guardians.length, router);
+        emit RecoveryConfigured(
+            account,
+            recoveryModule,
+            guardians.length,
+            router
+        );
     }
 
     function acceptGuardian(
@@ -256,8 +273,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
             recoveryRequest.subjectParams = subjectParams;
-            // TODO: consider setting this in configuration
-            recoveryRequest.recoveryModule = recoveryModuleInEmail;
 
             emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
 
@@ -291,7 +306,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         delete recoveryRequests[account];
 
-        IRecoveryModule(recoveryRequest.recoveryModule).recover(
+        address recoveryModule = recoveryConfigs[account].recoveryModule;
+
+        IRecoveryModule(recoveryModule).recover(
             account,
             recoveryRequest.subjectParams
         );
@@ -318,6 +335,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     function validateRecoveryConfig(
         RecoveryConfig memory recoveryConfig
     ) internal {
+        if (recoveryConfig.recoveryModule == address(0)) {
+            revert InvalidRecoveryModule();
+        }
         if (recoveryConfig.delay > recoveryConfig.expiry) {
             revert DelayLessThanExpiry();
         }

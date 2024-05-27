@@ -6,9 +6,11 @@ interface IZkEmailRecovery {
                                 TYPE DELARATIONS
     //////////////////////////////////////////////////////////////////////////*/
     struct RecoveryConfig {
+        address recoveryModule; // the trusted recovery module that has permission to recover an account
         uint256 delay; // the time from when recovery is started until the recovery request can be executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes invalid
     }
+
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
@@ -39,6 +41,7 @@ interface IZkEmailRecovery {
 
     event RecoveryConfigured(
         address indexed account,
+        address indexed recoveryModule,
         uint256 guardianCount,
         address router
     );
@@ -115,6 +118,7 @@ interface IZkEmailRecovery {
     ) external view returns (RecoveryConfig memory);
 
     function configureRecovery(
+        address recoveryModule,
         address[] memory guardians,
         uint256[] memory weights,
         uint256 threshold,

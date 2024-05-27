@@ -35,23 +35,19 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: address(recoveryModule),
-            data: abi.encode(validator)
+            data: abi.encode(
+                address(validator),
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
         });
     }
 
     function testRecover() public {
         uint templateIdx = 0;
-
-        // Setup recovery
-        vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            guardians,
-            guardianWeights,
-            threshold,
-            recoveryDelay,
-            recoveryExpiry
-        );
-        vm.stopPrank();
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
@@ -116,7 +112,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         assertEq(recoveryRequest.totalWeight, 1);
 
         // handle recovery request for guardian 2
-        uint256 executeAfter = block.timestamp + recoveryDelay;
+        uint256 executeAfter = block.timestamp + delay;
         handleRecovery(
             accountAddress,
             newOwner,
@@ -132,7 +128,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         assertEq(recoveryRequest.totalWeight, 2);
 
         // Time travel so that the recovery delay has passed
-        vm.warp(block.timestamp + recoveryDelay);
+        vm.warp(block.timestamp + delay);
 
         // Complete recovery
         IEmailAccountRecovery(router).completeRecovery();

@@ -40,7 +40,8 @@ contract SafeRecoveryModule is RecoveryModuleBase {
         ) = abi.decode(data, (address[], uint256[], uint256, uint256, uint256));
 
         bytes memory encodedCall = abi.encodeWithSignature(
-            "configureRecovery(address[],uint256[],uint256,uint256,uint256)",
+            "configureRecovery(address,address[],uint256[],uint256,uint256,uint256)",
+            address(this),
             guardians,
             weights,
             threshold,

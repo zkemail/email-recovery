@@ -27,9 +27,31 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * @param data The data to initialize the module with
      */
     function onInstall(bytes calldata data) external override {
-        address validator = abi.decode(data, (address));
+        (
+            address validator,
+            address[] memory guardians,
+            uint256[] memory weights,
+            uint256 threshold,
+            uint256 delay,
+            uint256 expiry
+        ) = abi.decode(
+                data,
+                (address, address[], uint256[], uint256, uint256, uint256)
+            );
 
         validators[msg.sender] = validator;
+
+        bytes memory encodedCall = abi.encodeWithSignature(
+            "configureRecovery(address,address[],uint256[],uint256,uint256,uint256)",
+            address(this),
+            guardians,
+            weights,
+            threshold,
+            delay,
+            expiry
+        );
+
+        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
     }
 
     /**
