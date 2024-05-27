@@ -91,6 +91,9 @@ interface IZkEmailRecovery {
     /** Router errors */
     error RouterAlreadyDeployed();
 
+    /** Email Auth access control errors */
+    error UnauthorizedAccountForGuardian();
+
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
@@ -208,7 +211,7 @@ interface IZkEmailRecovery {
      * @param account The Account account that the guardians should recover.
      * @return Boolean if guardian is an guardian of the Account.
      */
-    function isGuardian(
+    function isGuardianForAccount(
         address guardian,
         address account
     ) external view returns (bool);
