@@ -45,7 +45,10 @@ abstract contract RecoveryModuleBase is ERC7579ExecutorBase {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(address account, address newOwner) external virtual {}
+    function recover(
+        address account,
+        bytes[] memory subjectParams
+    ) external virtual {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA

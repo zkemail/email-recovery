@@ -13,7 +13,7 @@ interface IZkEmailRecovery {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 totalWeight; // total weight of all guardian approvals for the recovery request
-        address newOwner;
+        bytes[] subjectParams;
         address recoveryModule; // the trusted recovery module that has permission to recover an account
     }
 

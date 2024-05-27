@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
 import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";
 import {ModeLib} from "erc7579/lib/ModeLib.sol";
+import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
+import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 
 interface ISafe {
     function getOwners() external view returns (address[] memory);
@@ -14,10 +17,13 @@ contract SafeRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
+    error NotTrustedRecoveryContract();
+    error InvalidOldOwner();
+    error InvalidNewOwner();
 
-    mapping(address => bytes) public recoveryData;
-
-    constructor(address _recoveryModule) RecoveryModuleBase(_recoveryModule) {}
+    constructor(
+        address _zkEmailRecovery
+    ) RecoveryModuleBase(_zkEmailRecovery) {}
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -28,7 +34,24 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * @param data The data to initialize the module with
      */
     function onInstall(bytes calldata data) external override {
-        recoveryData[msg.sender] = data;
+        (
+            address[] memory guardians,
+            uint256[] memory weights,
+            uint256 threshold,
+            uint256 delay,
+            uint256 expiry
+        ) = abi.decode(data, (address[], uint256[], uint256, uint256, uint256));
+
+        bytes memory encodedCall = abi.encodeWithSignature(
+            "configureRecovery(address[],uint256[],uint256,uint256,uint256)",
+            guardians,
+            weights,
+            threshold,
+            delay,
+            expiry
+        );
+
+        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
     }
 
     /**
@@ -52,11 +75,23 @@ contract SafeRecoveryModule is RecoveryModuleBase {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(bytes memory data) external {
-        (address account, address newOwner, address oldOwner) = abi.decode(
-            data,
-            (address, address, address)
-        );
+    function recover(
+        address account,
+        bytes[] memory subjectParams
+    ) external override {
+        if (msg.sender != zkEmailRecovery) {
+            revert NotTrustedRecoveryContract();
+        }
+
+        address oldOwner = abi.decode(subjectParams[1], (address));
+        address newOwner = abi.decode(subjectParams[2], (address));
+        if (oldOwner == address(0)) {
+            revert InvalidOldOwner();
+        }
+        if (newOwner == address(0)) {
+            revert InvalidNewOwner();
+        }
+
         address previousOwnerInLinkedList = getPreviousOwnerInLinkedList(
             account,
             oldOwner

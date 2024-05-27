@@ -83,6 +83,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     function acceptanceSubjectTemplates()
         public
         pure
+        virtual
         override
         returns (string[][] memory)
     {
@@ -99,6 +100,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     function recoverySubjectTemplates()
         public
         pure
+        virtual
         override
         returns (string[][] memory)
     {
@@ -116,6 +118,31 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         templates[0][9] = "module";
         templates[0][10] = "{ethAddr}";
         return templates;
+    }
+
+    function validateAcceptanceSubjectTemplates(
+        bytes[] memory subjectParams
+    ) internal virtual returns (address) {
+        if (subjectParams.length != 1) revert InvalidSubjectParams();
+
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+
+        return accountInEmail;
+    }
+
+    function validateRecoverySubjectTemplates(
+        bytes[] memory subjectParams
+    ) internal virtual returns (address, address) {
+        if (subjectParams.length != 3) revert InvalidSubjectParams();
+
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
+        address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
+
+        if (newOwnerInEmail == address(0)) revert InvalidNewOwner();
+        if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
+
+        return (accountInEmail, recoveryModuleInEmail);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -154,12 +181,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
         }
-        if (subjectParams.length != 1) {
-            revert InvalidSubjectParams();
-        }
+        address accountInEmail = validateAcceptanceSubjectTemplates(
+            subjectParams
+        );
 
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-
+        // This check ensures the guardian status is correct and also that the account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(
             accountInEmail,
             guardian
@@ -190,13 +216,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
         }
-        if (subjectParams.length != 3) {
-            revert InvalidSubjectParams();
-        }
 
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
+        (
+            address accountInEmail,
+            address recoveryModuleInEmail
+        ) = validateRecoverySubjectTemplates(subjectParams);
 
         GuardianStorage memory guardian = getGuardian(accountInEmail, guardian);
         if (guardian.status != GuardianStatus.ACCEPTED) {
@@ -204,12 +228,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 guardian.status,
                 GuardianStatus.ACCEPTED
             );
-        }
-        if (newOwnerInEmail == address(0)) {
-            revert InvalidNewOwner();
-        }
-        if (recoveryModuleInEmail == address(0)) {
-            revert InvalidRecoveryModule();
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[
@@ -227,7 +245,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.newOwner = newOwnerInEmail;
+            recoveryRequest.subjectParams = subjectParams;
             // TODO: consider setting this in configuration
             recoveryRequest.recoveryModule = recoveryModuleInEmail;
 
@@ -265,7 +283,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         IRecoveryModule(recoveryRequest.recoveryModule).recover(
             account,
-            recoveryRequest.newOwner
+            recoveryRequest.subjectParams
         );
 
         emit RecoveryCompleted(account);

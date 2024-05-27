@@ -35,7 +35,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: address(recoveryModule),
-            data: abi.encode(newOwner, validator)
+            data: abi.encode(validator)
         });
     }
 

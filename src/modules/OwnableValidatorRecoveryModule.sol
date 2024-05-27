@@ -3,19 +3,16 @@ pragma solidity ^0.8.23;
 
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import "forge-std/console2.sol";
 
 contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    struct RecoveryData {
-        address newOwner;
-        address validator;
-    }
     error InvalidNewOwner();
 
-    mapping(address => RecoveryData) public recoveryData;
+    mapping(address => address) public validators;
 
     constructor(
         address _zkEmailRecovery
@@ -30,12 +27,9 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * @param data The data to initialize the module with
      */
     function onInstall(bytes calldata data) external override {
-        (address newOwner, address validator) = abi.decode(
-            data,
-            (address, address)
-        );
+        address validator = abi.decode(data, (address));
 
-        recoveryData[msg.sender] = RecoveryData(newOwner, validator);
+        validators[msg.sender] = validator;
     }
 
     /**
@@ -43,7 +37,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * @param data The data to de-initialize the module with
      */
     function onUninstall(bytes calldata data) external override {
-        delete recoveryData[msg.sender];
+        delete validators[msg.sender];
     }
 
     /**
@@ -61,18 +55,14 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function getRecoveryData(
-        address account
-    ) public returns (RecoveryData memory) {
-        return recoveryData[account];
-    }
-
     function recover(
         address account,
-        address newOwner
+        bytes[] memory subjectParams
     ) external override onlyRecovery {
-        RecoveryData memory recoveryData = getRecoveryData(account);
-
+        address newOwner = abi.decode(subjectParams[1], (address));
+        if (newOwner == address(0)) {
+            revert InvalidNewOwner();
+        }
         bytes memory encodedCall = abi.encodeWithSignature(
             "changeOwner(address,address,address)",
             account,
@@ -80,7 +70,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
             newOwner
         );
 
-        _execute(account, recoveryData.validator, 0, encodedCall);
+        _execute(account, validators[account], 0, encodedCall);
     }
 
     modifier onlyRecovery() {
