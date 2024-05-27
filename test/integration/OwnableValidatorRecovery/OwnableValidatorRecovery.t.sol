@@ -11,14 +11,15 @@ import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
 import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
 
-import {Integration_Test} from "../Integration.t.sol";
+import {OwnableValidatorBase} from "./OwnableValidatorBase.t.sol";
 
-contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
+contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
     OwnableValidatorRecoveryModule recoveryModule;
+    address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
@@ -27,12 +28,14 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         recoveryModule = new OwnableValidatorRecoveryModule(
             address(zkEmailRecovery)
         );
+        recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
             data: abi.encode(owner, address(recoveryModule))
         });
+        // Install recovery module - configureRecovery is called on `onInstall`
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: address(recoveryModule),
@@ -48,15 +51,13 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
     }
 
     function testRecover() public {
-        uint templateIdx = 0;
-
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         // Accept guardian 1
         acceptGuardian(
             accountAddress,
             router,
-            "Accept guardian request for 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE",
+            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38",
             keccak256(abi.encode("nullifier 1")),
             accountSalt1,
             templateIdx
@@ -75,7 +76,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         acceptGuardian(
             accountAddress,
             router,
-            "Accept guardian request for 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE",
+            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38",
             keccak256(abi.encode("nullifier 1")),
             accountSalt2,
             templateIdx
@@ -98,7 +99,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             newOwner,
             address(recoveryModule),
             router,
-            "Recover account 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx
@@ -117,7 +118,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             newOwner,
             address(recoveryModule),
             router,
-            "Recover account 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
             accountSalt2,
             templateIdx

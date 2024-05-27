@@ -68,7 +68,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         //     "deInitializeRecovery(address)",
         //     msg.sender
         // );
-        // FIXME: this call fails
+        // // FIXME: this call fails
         // _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
         IZkEmailRecovery(zkEmailRecovery).deInitializeRecovery(msg.sender);
     }

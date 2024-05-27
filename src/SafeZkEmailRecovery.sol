@@ -61,5 +61,7 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
         if (recoveryModuleInEmail == address(0)) {
             revert InvalidRecoveryModule();
         }
+
+        return (accountInEmail, recoveryModuleInEmail);
     }
 }
