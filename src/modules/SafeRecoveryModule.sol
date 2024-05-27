@@ -8,10 +8,7 @@ import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
-
-interface ISafe {
-    function getOwners() external view returns (address[] memory);
-}
+import {ISafe} from "../interfaces/ISafe.sol";
 
 contract SafeRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
@@ -85,7 +82,8 @@ contract SafeRecoveryModule is RecoveryModuleBase {
 
         address oldOwner = abi.decode(subjectParams[1], (address));
         address newOwner = abi.decode(subjectParams[2], (address));
-        if (oldOwner == address(0)) {
+        bool isOwner = ISafe(account).isOwner(oldOwner);
+        if (!isOwner) {
             revert InvalidOldOwner();
         }
         if (newOwner == address(0)) {

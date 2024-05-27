@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {ZkEmailRecovery} from "./ZkEmailRecovery.sol";
+import {ISafe} from "./interfaces/ISafe.sol";
 
 contract SafeZkEmailRecovery is ZkEmailRecovery {
     error InvalidOldOwner();
@@ -41,17 +42,24 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
     function validateRecoverySubjectTemplates(
         bytes[] memory subjectParams
     ) internal override returns (address, address) {
-        if (subjectParams.length != 4) revert InvalidSubjectParams();
+        if (subjectParams.length != 4) {
+            revert InvalidSubjectParams();
+        }
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
         address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
         address newOwnerInEmail = abi.decode(subjectParams[2], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[3], (address));
 
-        if (oldOwnerInEmail == address(0)) revert InvalidOldOwner();
-        if (newOwnerInEmail == address(0)) revert InvalidNewOwner();
-        if (recoveryModuleInEmail == address(0)) revert InvalidRecoveryModule();
-
-        return (accountInEmail, recoveryModuleInEmail);
+        bool isOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
+        if (!isOwner) {
+            revert InvalidOldOwner();
+        }
+        if (newOwnerInEmail == address(0)) {
+            revert InvalidNewOwner();
+        }
+        if (recoveryModuleInEmail == address(0)) {
+            revert InvalidRecoveryModule();
+        }
     }
 }
