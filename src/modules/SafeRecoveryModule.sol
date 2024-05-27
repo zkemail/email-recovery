@@ -9,6 +9,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 import {ISafe} from "../interfaces/ISafe.sol";
+import "forge-std/console2.sol";
 
 contract SafeRecoveryModule is RecoveryModuleBase {
     /*//////////////////////////////////////////////////////////////////////////
@@ -17,10 +18,11 @@ contract SafeRecoveryModule is RecoveryModuleBase {
     error NotTrustedRecoveryContract();
     error InvalidOldOwner();
     error InvalidNewOwner();
+    error AccountNotConfigured();
 
-    constructor(
-        address _zkEmailRecovery
-    ) RecoveryModuleBase(_zkEmailRecovery) {}
+    constructor(address _zkEmailRecovery) {
+        zkEmailRecovery = _zkEmailRecovery;
+    }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -56,7 +58,12 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * De-initialize the module with the given data
      * @param data The data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external override {}
+    function onUninstall(bytes calldata data) external override {
+        bytes memory encodedCall = abi.encodeWithSignature(
+            "deInitializeRecovery()"
+        );
+        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
+    }
 
     /**
      * Check if the module is initialized

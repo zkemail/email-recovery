@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
-
 import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
 import {EmailAccountRecovery} from "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
@@ -9,6 +8,7 @@ import {IEmailAuth} from "./interfaces/IEmailAuth.sol";
 import {IUUPSUpgradable} from "./interfaces/IUUPSUpgradable.sol";
 import {IRecoveryModule} from "./interfaces/IRecoveryModule.sol";
 import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
+import {EnumerableGuardianMap, GuardianStorage, GuardianStatus} from "./libraries/EnumerableGuardianMap.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -38,12 +38,17 @@ import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
  * additional considerations into account, but does not provide them by default.
  */
 contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
+    using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
+
     /*//////////////////////////////////////////////////////////////////////////
                                 STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/
 
     /** Minimum required time window between when a recovery attempt becomes valid and when it becomes invalid */
     uint256 constant MINIMUM_RECOVERY_WINDOW = 1 days;
+
+    /** Maximum number of guardians that can be added */
+    uint256 constant MAXIMUM_NUMBER_OF_GUARDIANS = 32;
 
     /** Account address to recovery config */
     mapping(address => RecoveryConfig) public recoveryConfigs;
@@ -52,7 +57,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     mapping(address => RecoveryRequest) public recoveryRequests;
 
     /** Account address to guardian address to guardian storage */
-    mapping(address => mapping(address => GuardianStorage))
+    mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
         internal guardianStorage;
 
     /** Account to guardian config */
@@ -277,6 +282,36 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             guardians.length,
             router
         );
+    }
+
+    error NotRecoveryModule(); // temp error
+
+    function deInitializeRecovery(
+        address account
+    ) external onlyWhenNotRecovering {
+        address recoveryModule = recoveryConfigs[account].recoveryModule;
+        if (recoveryModule != msg.sender) {
+            revert NotRecoveryModule();
+        }
+        // FIXME: Can we use executeFromExecutor and have access to the account msg.sender?
+        // address account = msg.sender;
+
+        delete recoveryConfigs[account];
+        delete recoveryRequests[account];
+
+        EnumerableGuardianMap.AddressToGuardianMap
+            storage guardians = guardianStorage[account];
+
+        address[] memory keys = guardians.keys();
+        for (uint256 i = 0; i < keys.length; i++) {
+            guardians.remove(keys[i]);
+        }
+
+        delete guardianConfigs[account];
+
+        address accountToRouterAddr = accountToRouter[account];
+        delete accountToRouter[account];
+        delete routerToAccount[accountToRouterAddr];
     }
 
     /**
@@ -510,7 +545,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         address account,
         address guardian
     ) public view returns (GuardianStorage memory) {
-        return guardianStorage[account][guardian];
+        return guardianStorage[account].get(guardian);
     }
 
     /**
@@ -523,7 +558,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         address guardian,
         address account
     ) public view returns (bool) {
-        return guardianStorage[account][guardian].status != GuardianStatus.NONE;
+        return
+            guardianStorage[account].get(guardian).status !=
+            GuardianStatus.NONE;
     }
 
     /**
@@ -560,9 +597,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         for (uint256 i = 0; i < guardianCount; i++) {
             address _guardian = _guardians[i];
             uint256 weight = weights[i];
-            GuardianStorage memory _guardianStorage = guardianStorage[account][
-                _guardian
-            ];
+            GuardianStorage memory _guardianStorage = guardianStorage[account]
+                .get(_guardian);
 
             if (_guardian == address(0)) {
                 revert InvalidGuardianAddress();
@@ -579,9 +615,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 revert AddressAlreadyGuardian();
             }
 
-            guardianStorage[account][_guardian] = GuardianStorage(
-                GuardianStatus.REQUESTED,
-                weight
+            guardianStorage[account].set(
+                _guardian,
+                GuardianStorage(GuardianStatus.REQUESTED, weight)
             );
             totalWeight += weight;
         }
@@ -629,7 +665,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidGuardianAddress();
         }
 
-        GuardianStorage memory oldGuardian = guardianStorage[account][guardian];
+        GuardianStorage memory oldGuardian = guardianStorage[account].get(
+            guardian
+        );
         if (_guardianStorage.status == oldGuardian.status) {
             revert GuardianStatusMustBeDifferent();
         }
@@ -638,9 +676,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidGuardianWeight();
         }
 
-        guardianStorage[account][guardian] = GuardianStorage(
-            _guardianStorage.status,
-            _guardianStorage.weight
+        guardianStorage[account].set(
+            guardian,
+            GuardianStorage(_guardianStorage.status, _guardianStorage.weight)
         );
     }
 
@@ -657,9 +695,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         uint256 threshold
     ) public onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
         address account = msg.sender;
-        GuardianStorage memory _guardianStorage = guardianStorage[account][
+        GuardianStorage memory _guardianStorage = guardianStorage[account].get(
             guardian
-        ];
+        );
 
         if (guardian == address(0)) {
             revert InvalidGuardianAddress();
@@ -673,9 +711,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidGuardianWeight();
         }
 
-        guardianStorage[account][guardian] = GuardianStorage(
-            GuardianStatus.REQUESTED,
-            weight
+        guardianStorage[account].set(
+            guardian,
+            GuardianStorage(GuardianStatus.REQUESTED, weight)
         );
         guardianConfigs[account].guardianCount++;
 
@@ -708,7 +746,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidGuardianAddress();
         }
 
-        delete guardianStorage[account][guardian];
+        guardianStorage[account].remove(guardian);
         guardianConfigs[account].guardianCount--;
 
         emit RemovedGuardian(guardian);

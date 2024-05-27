@@ -3,6 +3,8 @@ pragma solidity ^0.8.23;
 
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
+
 import "forge-std/console2.sol";
 
 contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
@@ -11,12 +13,13 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     //////////////////////////////////////////////////////////////////////////*/
 
     error InvalidNewOwner();
+    error NotTrustedRecoveryContract();
 
     mapping(address => address) public validators;
 
-    constructor(
-        address _zkEmailRecovery
-    ) RecoveryModuleBase(_zkEmailRecovery) {}
+    constructor(address _zkEmailRecovery) {
+        zkEmailRecovery = _zkEmailRecovery;
+    }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -60,6 +63,14 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      */
     function onUninstall(bytes calldata data) external override {
         delete validators[msg.sender];
+
+        // bytes memory encodedCall = abi.encodeWithSignature(
+        //     "deInitializeRecovery(address)",
+        //     msg.sender
+        // );
+        // FIXME: this call fails
+        // _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
+        IZkEmailRecovery(zkEmailRecovery).deInitializeRecovery(msg.sender);
     }
 
     /**
@@ -80,7 +91,11 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
     function recover(
         address account,
         bytes[] memory subjectParams
-    ) external override onlyRecovery {
+    ) external override {
+        if (msg.sender != zkEmailRecovery) {
+            revert NotTrustedRecoveryContract();
+        }
+
         address newOwner = abi.decode(subjectParams[1], (address));
         if (newOwner == address(0)) {
             revert InvalidNewOwner();
@@ -93,11 +108,6 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         );
 
         _execute(account, validators[account], 0, encodedCall);
-    }
-
-    modifier onlyRecovery() {
-        if (msg.sender != zkEmailRecovery) revert NotAuthorizedToRecover();
-        _;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

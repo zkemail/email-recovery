@@ -8,6 +8,7 @@ import {MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR} from "modulekit/external/ER
 import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
 import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
 import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
+import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
 
 import {Integration_Test} from "../Integration.t.sol";
@@ -60,14 +61,13 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             accountSalt1,
             templateIdx
         );
-        IZkEmailRecovery.GuardianStorage
-            memory guardianStorage1 = zkEmailRecovery.getGuardian(
-                accountAddress,
-                guardian1
-            );
+        GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
+            accountAddress,
+            guardian1
+        );
         assertEq(
             uint256(guardianStorage1.status),
-            uint256(IZkEmailRecovery.GuardianStatus.ACCEPTED)
+            uint256(GuardianStatus.ACCEPTED)
         );
         assertEq(guardianStorage1.weight, uint256(1));
 
@@ -80,14 +80,13 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             accountSalt2,
             templateIdx
         );
-        IZkEmailRecovery.GuardianStorage
-            memory guardianStorage2 = zkEmailRecovery.getGuardian(
-                accountAddress,
-                guardian2
-            );
+        GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
+            accountAddress,
+            guardian2
+        );
         assertEq(
             uint256(guardianStorage2.status),
-            uint256(IZkEmailRecovery.GuardianStatus.ACCEPTED)
+            uint256(GuardianStatus.ACCEPTED)
         );
         assertEq(guardianStorage2.weight, uint256(1));
 
@@ -139,5 +138,29 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(updatedOwner, newOwner);
+
+        // FIXME: This is reverts when `onUninstall` calls `_execute` to deinit
+        // the module
+        vm.prank(accountAddress);
+        instance.uninstallModule(
+            MODULE_TYPE_EXECUTOR,
+            address(recoveryModule),
+            ""
+        );
+        vm.stopPrank();
+
+        bool isModuleInstalled = instance.isModuleInstalled(
+            MODULE_TYPE_EXECUTOR,
+            address(recoveryModule),
+            ""
+        );
+        assertFalse(isModuleInstalled);
+
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = zkEmailRecovery
+            .getRecoveryConfig(accountAddress);
+        assertEq(recoveryConfig.recoveryModule, address(0));
+        assertEq(recoveryConfig.delay, 0);
+        assertEq(recoveryConfig.expiry, 0);
+        // TODO: add more cases once fixme is resolved and consider breaking into separate test
     }
 }

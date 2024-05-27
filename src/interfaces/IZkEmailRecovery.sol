@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {GuardianStorage, GuardianStatus} from "../libraries/EnumerableGuardianMap.sol";
+
 interface IZkEmailRecovery {
     /*//////////////////////////////////////////////////////////////////////////
                                 TYPE DELARATIONS
@@ -27,17 +29,6 @@ interface IZkEmailRecovery {
         uint256 guardianCount;
         uint256 totalWeight;
         uint256 threshold;
-    }
-
-    struct GuardianStorage {
-        GuardianStatus status;
-        uint256 weight;
-    }
-
-    enum GuardianStatus {
-        NONE,
-        REQUESTED,
-        ACCEPTED
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -122,6 +113,8 @@ interface IZkEmailRecovery {
         uint256 delay,
         uint256 expiry
     ) external;
+
+    function deInitializeRecovery(address account) external;
 
     function cancelRecovery(bytes calldata data) external;
 
