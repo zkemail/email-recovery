@@ -41,14 +41,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*/
 
-    modifier onlyConfiguredAccount() {
-        if (guardianConfigs[msg.sender].guardianCount == 0) {
-            revert AccountNotConfigured();
-        }
-        _;
-    }
-
-    // TODO: consider using a dedicated state variable instead of a proxy
     modifier onlyWhenNotRecovering() {
         if (recoveryRequests[msg.sender].totalWeight > 0) {
             revert RecoveryInProcess();
@@ -212,7 +204,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             subjectParams
         );
 
-        // This check ensures the guardian status is correct and also that the account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(
             accountInEmail,
             guardian
@@ -316,14 +307,12 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         emit RecoveryCompleted(account);
     }
 
-    /// @inheritdoc IZkEmailRecovery
     function cancelRecovery(bytes calldata) external virtual {
         address account = msg.sender;
         delete recoveryRequests[account];
         emit RecoveryCancelled(account);
     }
 
-    /// @inheritdoc IZkEmailRecovery
     function updateRecoveryConfig(
         RecoveryConfig calldata recoveryConfig
     ) external onlyWhenNotRecovering {
@@ -440,11 +429,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         guardianConfigs[account] = GuardianConfig(guardianCount, threshold);
     }
 
-    // @inheritdoc IZkEmailRecovery
     function updateGuardian(
         address guardian,
         GuardianStorage memory _guardianStorage
-    ) external override onlyConfiguredAccount onlyWhenNotRecovering {
+    ) external override onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
         _updateGuardian(msg.sender, guardian, _guardianStorage);
     }
 
@@ -476,12 +464,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         );
     }
 
-    // @inheritdoc IZkEmailRecovery
     function addGuardianWithThreshold(
         address guardian,
         uint256 weight,
         uint256 threshold
-    ) public override onlyConfiguredAccount onlyWhenNotRecovering {
+    ) public override onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
         address account = msg.sender;
         GuardianStorage memory _guardianStorage = guardianStorage[account][
             guardian
@@ -518,13 +505,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
     }
 
-    // @inheritdoc IZkEmailRecovery
     function removeGuardian(
         address guardian,
         uint256 threshold
-    ) public override onlyConfiguredAccount onlyWhenNotRecovering {
+    ) public override onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
         address account = msg.sender;
         // Only allow to remove an guardian, if threshold can still be reached.
+        // TODO: change error name and assess whether guardian count could be lowered below threshold
         if (guardianConfigs[account].threshold - 1 < threshold) {
             revert ThresholdCannotExceedGuardianCount();
         }
@@ -544,11 +531,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
     }
 
-    // @inheritdoc IZkEmailRecovery
     function swapGuardian(
         address oldGuardian,
         address newGuardian
-    ) public override onlyConfiguredAccount onlyWhenNotRecovering {
+    )
+        public
+        override
+        onlyAccountForGuardian(oldGuardian)
+        onlyWhenNotRecovering
+    {
         address account = msg.sender;
 
         GuardianStatus newGuardianStatus = guardianStorage[account][newGuardian]
@@ -580,11 +571,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         emit AddedGuardian(newGuardian);
     }
 
-    // @inheritdoc IZkEmailRecovery
     function changeThreshold(
         uint256 threshold
-    ) public override onlyConfiguredAccount onlyWhenNotRecovering {
+    ) public override onlyWhenNotRecovering {
         address account = msg.sender;
+        if (guardianConfigs[account].guardianCount == 0) {
+            revert AccountNotConfigured();
+        }
         _changeThreshold(account, threshold);
     }
 
@@ -607,14 +600,12 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                                 ROUTER LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    /// @inheritdoc IZkEmailRecovery
     function getAccountForRouter(
         address recoveryRouter
     ) public view override returns (address) {
         return routerToAccount[recoveryRouter];
     }
 
-    /// @inheritdoc IZkEmailRecovery
     function getRouterForAccount(
         address account
     ) public view override returns (address) {
