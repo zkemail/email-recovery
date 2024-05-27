@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 interface IZkEmailRecovery {
+    /*//////////////////////////////////////////////////////////////////////////
+                                TYPE DELARATIONS
+    //////////////////////////////////////////////////////////////////////////*/
     struct RecoveryConfig {
         uint256 delay; // the time from when recovery is started until the recovery request can be executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes invalid
@@ -14,10 +17,9 @@ interface IZkEmailRecovery {
         address recoveryModule; // the trusted recovery module that has permission to recover an account
     }
 
-    enum GuardianStatus {
-        NONE,
-        REQUESTED,
-        ACCEPTED
+    struct GuardianConfig {
+        uint256 guardianCount;
+        uint256 threshold;
     }
 
     struct GuardianStorage {
@@ -25,53 +27,26 @@ interface IZkEmailRecovery {
         uint256 weight;
     }
 
-    struct GuardianConfig {
-        uint256 guardianCount;
-        uint256 threshold;
+    enum GuardianStatus {
+        NONE,
+        REQUESTED,
+        ACCEPTED
     }
 
-    /** Errors */
-    error InvalidGuardian();
-    error InvalidRecoveryModule();
-    error InvalidNewOwner();
-    error InvalidTemplateIndex();
-    error InvalidSubjectParams();
-    error InvalidGuardianStatus(
-        GuardianStatus guardianStatus,
-        GuardianStatus expectedGuardianStatus
-    );
-    error RecoveryInProcess();
-    error NotEnoughApprovals();
-    error DelayNotPassed();
-    error RecoveryRequestExpired();
+    /*//////////////////////////////////////////////////////////////////////////
+                                    EVENTS
+    //////////////////////////////////////////////////////////////////////////*/
 
-    error DelayLessThanExpiry();
-    error RecoveryWindowTooShort();
-
-    /** Guardian logic errors */
-    error SetupAlreadyCalled();
-    error IncorrectNumberOfWeights();
-    error ThresholdCannotExceedGuardianCount();
-    error ThresholdCannotBeZero();
-    error InvalidAccountAddress();
-    error InvalidGuardianAddress();
-    error InvalidGuardianWeight();
-    error AccountNotConfigured();
-    error AddressAlreadyRequested();
-    error AddressAlreadyGuardian();
-    error GuardianStatusMustBeDifferent();
-
-    /** Router errors */
-    error RouterAlreadyDeployed();
-
-    /** Events */
     event RecoveryConfigured(
         address indexed account,
-        uint256 delay,
-        uint256 expiry,
+        uint256 guardianCount,
         address router
     );
-    event RecoveryInitiated(address indexed account, uint256 executeAfter);
+    event RecoveryProcessed(
+        address indexed account,
+        uint256 executeAfter,
+        uint256 executeBefore
+    );
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
 
@@ -80,7 +55,45 @@ interface IZkEmailRecovery {
     event RemovedGuardian(address indexed guardian);
     event ChangedThreshold(uint256 threshold);
 
-    /** Functions */
+    /*//////////////////////////////////////////////////////////////////////////
+                                    ERRORS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    error AccountNotConfigured();
+    error RecoveryInProcess();
+    error InvalidGuardian();
+    error InvalidTemplateIndex();
+    error InvalidSubjectParams();
+    error InvalidGuardianStatus(
+        GuardianStatus guardianStatus,
+        GuardianStatus expectedGuardianStatus
+    );
+    error InvalidNewOwner();
+    error InvalidRecoveryModule();
+    error NotEnoughApprovals();
+    error DelayNotPassed();
+    error RecoveryRequestExpired();
+    error DelayLessThanExpiry();
+    error RecoveryWindowTooShort();
+
+    /** Guardian logic errors */
+    error SetupAlreadyCalled();
+    error ThresholdCannotExceedGuardianCount();
+    error IncorrectNumberOfWeights();
+    error ThresholdCannotBeZero();
+    error InvalidGuardianAddress();
+    error InvalidGuardianWeight();
+    error AddressAlreadyRequested();
+    error AddressAlreadyGuardian();
+    error InvalidAccountAddress();
+    error GuardianStatusMustBeDifferent();
+
+    /** Router errors */
+    error RouterAlreadyDeployed();
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Returns recovery request accociated with a account address

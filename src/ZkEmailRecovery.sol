@@ -10,30 +10,53 @@ import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
 
 contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     /*//////////////////////////////////////////////////////////////////////////
-                                    CONSTANTS
+                                STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/
 
     uint256 constant MINIMUM_RECOVERY_WINDOW = 1 days;
 
-    /** Mapping of account address to recovery delay */
+    /** Account address to recovery config */
     mapping(address => RecoveryConfig) public recoveryConfigs;
 
-    /** Mapping of account address to recovery request */
+    /** Account address to recovery request */
     mapping(address => RecoveryRequest) public recoveryRequests;
 
-    /** Account to guardian to guardian status */
+    /** Account address to guardian address to guardian storage */
     mapping(address => mapping(address => GuardianStorage))
         internal guardianStorage;
 
-    /** Account to guardian storage */
+    /** Account to guardian config */
     mapping(address => GuardianConfig) internal guardianConfigs;
 
-    /** Mapping of email account recovery router contracts to account */
+    /** Email account recovery router address to account address */
     mapping(address => address) internal routerToAccount;
 
-    /** Mapping of account account addresses to email account recovery router contracts**/
-    /** These are stored for frontends to easily find the router contract address from the given account account address**/
+    /** Account address to email account recovery router address */
+    /** These are stored for frontends to easily find the router contract address from the given account account address */
     mapping(address => address) internal accountToRouter;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    modifier onlyConfiguredAccount() {
+        if (guardianConfigs[msg.sender].guardianCount == 0) {
+            revert AccountNotConfigured();
+        }
+        _;
+    }
+
+    // TODO: consider using a dedicated state variable instead of a proxy
+    modifier onlyWhenNotRecovering() {
+        if (recoveryRequests[msg.sender].totalWeight > 0) {
+            revert RecoveryInProcess();
+        }
+        _;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                    FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     constructor(
         address _verifier,
@@ -45,53 +68,18 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         emailAuthImplementationAddr = _emailAuthImpl;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                    CONFIG
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * Initialize the module with the given data
-     */
-    /// @inheritdoc IZkEmailRecovery
-    function configureRecovery(
-        address[] memory guardians,
-        uint256[] memory weights,
-        uint256 threshold,
-        uint256 delay,
-        uint256 expiry
-    ) external onlyWhenNotRecovering {
-        address account = msg.sender;
-
-        setupGuardians(account, guardians, weights, threshold);
-
-        address router = deployRouterForAccount(account);
-
-        RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
-        validateRecoveryConfig(recoveryConfig);
-        recoveryConfigs[account] = recoveryConfig;
-
-        emit RecoveryConfigured(account, delay, expiry, router);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                    MODULE LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IZkEmailRecovery
     function getRecoveryConfig(
         address account
     ) external view returns (RecoveryConfig memory) {
         return recoveryConfigs[account];
     }
 
-    /// @inheritdoc IZkEmailRecovery
     function getRecoveryRequest(
         address account
     ) external view returns (RecoveryRequest memory) {
         return recoveryRequests[account];
     }
 
-    /// @inheritdoc EmailAccountRecovery
     function acceptanceSubjectTemplates()
         public
         pure
@@ -108,7 +96,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         return templates;
     }
 
-    /// @inheritdoc EmailAccountRecovery
     function recoverySubjectTemplates()
         public
         pure
@@ -129,6 +116,30 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         templates[0][9] = "module";
         templates[0][10] = "{ethAddr}";
         return templates;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                CORE RECOVERY LOGIC
+    //////////////////////////////////////////////////////////////////////////*/
+
+    function configureRecovery(
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold,
+        uint256 delay,
+        uint256 expiry
+    ) external onlyWhenNotRecovering {
+        address account = msg.sender;
+
+        setupGuardians(account, guardians, weights, threshold);
+
+        address router = deployRouterForAccount(account);
+
+        RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
+        validateRecoveryConfig(recoveryConfig);
+        recoveryConfigs[account] = recoveryConfig;
+
+        emit RecoveryConfigured(account, guardians.length, router);
     }
 
     function acceptGuardian(
@@ -220,7 +231,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             // TODO: consider setting this in configuration
             recoveryRequest.recoveryModule = recoveryModuleInEmail;
 
-            emit RecoveryInitiated(accountInEmail, executeAfter);
+            emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
 
             if (executeAfter == block.timestamp) {
                 completeRecovery(accountInEmail);
@@ -293,6 +304,26 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     /*//////////////////////////////////////////////////////////////////////////
                                 GUARDIAN LOGIC
     //////////////////////////////////////////////////////////////////////////*/
+
+    function getGuardianConfig(
+        address account
+    ) public view override returns (GuardianConfig memory) {
+        return guardianConfigs[account];
+    }
+
+    function getGuardian(
+        address account,
+        address guardian
+    ) public view returns (GuardianStorage memory) {
+        return guardianStorage[account][guardian];
+    }
+
+    function isGuardian(
+        address guardian,
+        address account
+    ) public view override returns (bool) {
+        return guardianStorage[account][guardian].status != GuardianStatus.NONE;
+    }
 
     /**
      * @notice Sets the initial storage of the contract.
@@ -522,48 +553,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         guardianConfigs[account].threshold = threshold;
         emit ChangedThreshold(threshold);
-    }
-
-    // @inheritdoc IZkEmailRecovery
-    function getGuardianConfig(
-        address account
-    ) public view override returns (GuardianConfig memory) {
-        return guardianConfigs[account];
-    }
-
-    // @inheritdoc IZkEmailRecovery
-    function getGuardian(
-        address account,
-        address guardian
-    ) public view returns (GuardianStorage memory) {
-        return guardianStorage[account][guardian];
-    }
-
-    // @inheritdoc IZkEmailRecovery
-    function isGuardian(
-        address guardian,
-        address account
-    ) public view override returns (bool) {
-        return guardianStorage[account][guardian].status != GuardianStatus.NONE;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                MODIFIERS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    modifier onlyConfiguredAccount() {
-        if (guardianConfigs[msg.sender].guardianCount == 0) {
-            revert AccountNotConfigured();
-        }
-        _;
-    }
-
-    // TODO: consider using a dedicated state variable instead of a proxy
-    modifier onlyWhenNotRecovering() {
-        if (recoveryRequests[msg.sender].totalWeight > 0) {
-            revert RecoveryInProcess();
-        }
-        _;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
