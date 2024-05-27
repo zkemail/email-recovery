@@ -6,7 +6,7 @@ import "forge-std/console2.sol";
 import {RhinestoneModuleKit, AccountInstance} from "modulekit/ModuleKit.sol";
 import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import {ECDSA} from "solady/src/utils/ECDSA.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
 
 import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
 import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";

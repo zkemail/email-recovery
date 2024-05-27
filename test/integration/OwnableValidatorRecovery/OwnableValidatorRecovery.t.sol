@@ -59,7 +59,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         acceptGuardian(
             accountAddress,
             router,
-            "Accept guardian request for 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A",
+            "Accept guardian request for 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE",
             keccak256(abi.encode("nullifier 1")),
             accountSalt1,
             templateIdx
@@ -79,7 +79,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
         acceptGuardian(
             accountAddress,
             router,
-            "Accept guardian request for 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A",
+            "Accept guardian request for 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE",
             keccak256(abi.encode("nullifier 1")),
             accountSalt2,
             templateIdx
@@ -103,7 +103,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             newOwner,
             address(recoveryModule),
             router,
-            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe",
+            "Recover account 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx
@@ -122,7 +122,7 @@ contract OwnableValidatorRecovery_Integration_Test is Integration_Test {
             newOwner,
             address(recoveryModule),
             router,
-            "Recover account 0xA5555EE8D73dB453Ae85f23Cccd765417E35600A to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xCe7eD0a0e29D6d889D5AFEDc877225f7428DDcfe",
+            "Recover account 0x0BAc55E7646c3a4B3e89bfe9847DEB998431e1FE to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
             accountSalt2,
             templateIdx

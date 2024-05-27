@@ -1,55 +1,12 @@
 {
   "name": "@rhinestone/module-template",
+  "version": "0.4.1",
   "description": "A Foundry template for building modules using the ModuleKit",
-  "license": "MIT",
-  "version": "0.3",
+  "license": "GPL-3.0",
   "author": {
-    "name": "kopy-kat",
+    "name": "Rhinestone",
     "url": "https://rhinestone.wtf"
   },
-  "bugs": {
-    "url": "https://github.com/rhinestonewtf/module-template/issues"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "v5.0.1",
-    "@prb/math": "^4.0.2",
-    "@rhinestone/modulekit": "^0.3.4",
-    "@safe-global/safe-contracts": "1.4.1-build.0",
-    "@zk-email/contracts": "^6.0.2",
-    "erc4337-validation": "github:rhinestonewtf/erc4337-validation"
-  },
-  "devDependencies": {
-    "@ERC4337/account-abstraction": "github:kopy-kat/account-abstraction#develop",
-    "@ERC4337/account-abstraction-v0.6": "github:eth-infinitism/account-abstraction#v0.6.0",
-    "@openzeppelin/contracts": "5.0.1",
-    "ds-test": "github:dapphub/ds-test",
-    "erc7579": "github:erc7579/erc7579-implementation",
-    "forge-std": "github:foundry-rs/forge-std",
-    "prettier": "^2.8.8",
-    "sentinellist": "github:zeroknots/sentinellist",
-    "solady": "github:vectorized/solady",
-    "solarray": "github:sablier-labs/solarray",
-    "solhint": "^4.1.1",
-    "solmate": "github:transmissions11/solmate"
-  },
-  "files": [
-    "src",
-    "test",
-    "script"
-  ],
-  "homepage": "https://github.com/rhinestonewtf/module-template/#readme",
-  "keywords": [
-    "blockchain",
-    "ethereum",
-    "foundry",
-    "smart-contracts",
-    "solidity",
-    "web3"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": "github.com/rhinestonewtf/module-template",
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
@@ -66,5 +23,34 @@
     "test": "forge test",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
+  },
+  "dependencies": {
+    "@rhinestone/modulekit": "^0.4.1",
+    "@openzeppelin/contracts-upgradeable": "v5.0.1",
+    "@zk-email/contracts": "^6.0.2"
+  },
+  "files": [
+    "src",
+    "test",
+    "script",
+    "package.json",
+    "foundry.toml",
+    "remappings.txt"
+  ],
+  "homepage": "https://docs.rhinestone.wtf/module-template",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rhinestonewtf/module-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rhinestonewtf/module-template/issues"
+  },
+  "keywords": [
+    "account abstraction",
+    "smart account modules",
+    "module template"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
