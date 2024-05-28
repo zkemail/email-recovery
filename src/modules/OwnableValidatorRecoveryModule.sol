@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
-import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
+import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
 
+import {IRecoveryModule} from "../interfaces/IRecoveryModule.sol";
+import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 import "forge-std/console2.sol";
 
-contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
+contract OwnableValidatorRecoveryModule is
+    ERC7579ExecutorBase,
+    IRecoveryModule
+{
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    error InvalidNewOwner();
-    error NotTrustedRecoveryContract();
+    address public immutable zkEmailRecovery;
 
     mapping(address => address) public validators;
+
+    error InvalidNewOwner();
+    error NotTrustedRecoveryContract();
 
     constructor(address _zkEmailRecovery) {
         zkEmailRecovery = _zkEmailRecovery;
@@ -29,7 +34,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * Initialize the module with the given data
      * @param data The data to initialize the module with
      */
-    function onInstall(bytes calldata data) external override {
+    function onInstall(bytes calldata data) external {
         (
             address validator,
             address[] memory guardians,
@@ -61,7 +66,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * De-initialize the module with the given data
      * @param data The data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external override {
+    function onUninstall(bytes calldata data) external {
         delete validators[msg.sender];
         IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
     }
@@ -71,20 +76,15 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * @param smartAccount The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(
-        address smartAccount
-    ) external view override returns (bool) {
-        return false;
+    function isInitialized(address smartAccount) external view returns (bool) {
+        return validators[smartAccount] != address(0);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(
-        address account,
-        bytes[] memory subjectParams
-    ) external override {
+    function recover(address account, bytes[] memory subjectParams) external {
         if (msg.sender != zkEmailRecovery) {
             revert NotTrustedRecoveryContract();
         }
@@ -103,6 +103,10 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
         _execute(account, validators[account], 0, encodedCall);
     }
 
+    function getTrustedContract() external returns (address) {
+        return zkEmailRecovery;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA
     //////////////////////////////////////////////////////////////////////////*/
@@ -111,7 +115,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * The name of the module
      * @return name The name of the module
      */
-    function name() external pure override returns (string memory) {
+    function name() external pure returns (string memory) {
         return "OwnableValidatorRecoveryModule";
     }
 
@@ -119,7 +123,16 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      * The version of the module
      * @return version The version of the module
      */
-    function version() external pure override returns (string memory) {
+    function version() external pure returns (string memory) {
         return "0.0.1";
+    }
+
+    /**
+     * Check if the module is of a certain type
+     * @param typeID The type ID to check
+     * @return true if the module is of the given type, false otherwise
+     */
+    function isModuleType(uint256 typeID) external pure returns (bool) {
+        return typeID == TYPE_EXECUTOR;
     }
 }

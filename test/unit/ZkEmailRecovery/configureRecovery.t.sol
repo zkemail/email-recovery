@@ -59,7 +59,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
             recoveryModuleAddress,
             router,
             zkEmailRecovery,
-            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x94Ebc11100A3c5741500D3fe6d16EEDEa254EADe",
+            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xba3137d856cF201622A2aC83CCd4556982224972",
             keccak256(abi.encode("nullifier 2")),
             accountSalt1,
             templateIdx

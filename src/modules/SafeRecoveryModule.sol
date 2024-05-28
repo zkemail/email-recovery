@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
 import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
 import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";
 import {ModeLib} from "erc7579/lib/ModeLib.sol";
-import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
-import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
+
+import {IRecoveryModule} from "../interfaces/IRecoveryModule.sol";
 import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
 import {ISafe} from "../interfaces/ISafe.sol";
 import "forge-std/console2.sol";
 
-contract SafeRecoveryModule is RecoveryModuleBase {
+contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
+
+    address public immutable zkEmailRecovery;
+
     error NotTrustedRecoveryContract();
     error InvalidOldOwner();
     error InvalidNewOwner();
@@ -31,7 +34,7 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * Initialize the module with the given data
      * @param data The data to initialize the module with
      */
-    function onInstall(bytes calldata data) external override {
+    function onInstall(bytes calldata data) external {
         (
             address[] memory guardians,
             uint256[] memory weights,
@@ -57,7 +60,7 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * De-initialize the module with the given data
      * @param data The data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external override {
+    function onUninstall(bytes calldata data) external {
         IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
     }
 
@@ -66,20 +69,15 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * @param smartAccount The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(
-        address smartAccount
-    ) external view override returns (bool) {
-        return false;
+    function isInitialized(address smartAccount) external view returns (bool) {
+        return false; // TODO: implement
     }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(
-        address account,
-        bytes[] memory subjectParams
-    ) external override {
+    function recover(address account, bytes[] memory subjectParams) external {
         if (msg.sender != zkEmailRecovery) {
             revert NotTrustedRecoveryContract();
         }
@@ -134,6 +132,10 @@ contract SafeRecoveryModule is RecoveryModuleBase {
         return oldOwnerIndex == 0 ? sentinelOwner : owners[oldOwnerIndex - 1];
     }
 
+    function getTrustedContract() external returns (address) {
+        return zkEmailRecovery;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA
     //////////////////////////////////////////////////////////////////////////*/
@@ -142,7 +144,7 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * The name of the module
      * @return name The name of the module
      */
-    function name() external pure override returns (string memory) {
+    function name() external pure returns (string memory) {
         return "SafeRecoveryModule";
     }
 
@@ -150,7 +152,16 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * The version of the module
      * @return version The version of the module
      */
-    function version() external pure override returns (string memory) {
+    function version() external pure returns (string memory) {
         return "0.0.1";
+    }
+
+    /**
+     * Check if the module is of a certain type
+     * @param typeID The type ID to check
+     * @return true if the module is of the given type, false otherwise
+     */
+    function isModuleType(uint256 typeID) external pure returns (bool) {
+        return typeID == TYPE_EXECUTOR;
     }
 }
