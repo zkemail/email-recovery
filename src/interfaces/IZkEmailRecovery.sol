@@ -128,7 +128,7 @@ interface IZkEmailRecovery {
         uint256 expiry
     ) external;
 
-    function deInitializeRecovery(address account) external;
+    function deInitRecoveryFromModule(address account) external;
 
     function cancelRecovery(bytes calldata data) external;
 

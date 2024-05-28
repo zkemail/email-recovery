@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
+
 import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
 import {EmailAccountRecovery} from "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
@@ -288,7 +289,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * should be deinitialized. This should include remove state accociated with an account.
      * @param account The account to delete state for
      */
-    function deInitializeRecovery(
+    function deInitRecoveryFromModule(
         address account
     ) external onlyWhenNotRecovering {
         address recoveryModule = recoveryConfigs[account].recoveryModule;

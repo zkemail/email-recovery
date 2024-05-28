@@ -18,7 +18,6 @@ contract SafeRecoveryModule is RecoveryModuleBase {
     error NotTrustedRecoveryContract();
     error InvalidOldOwner();
     error InvalidNewOwner();
-    error AccountNotConfigured();
 
     constructor(address _zkEmailRecovery) {
         zkEmailRecovery = _zkEmailRecovery;
@@ -59,10 +58,7 @@ contract SafeRecoveryModule is RecoveryModuleBase {
      * @param data The data to de-initialize the module with
      */
     function onUninstall(bytes calldata data) external override {
-        bytes memory encodedCall = abi.encodeWithSignature(
-            "deInitializeRecovery()"
-        );
-        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
+        IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
     }
 
     /**

@@ -33,12 +33,12 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(validator),
-            data: abi.encode(owner, address(recoveryModule))
+            data: abi.encode(owner, recoveryModuleAddress)
         });
         // Install recovery module - configureRecovery is called on `onInstall`
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: address(recoveryModule),
+            module: recoveryModuleAddress,
             data: abi.encode(
                 address(validator),
                 guardians,
@@ -50,7 +50,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         });
     }
 
-    function testRecover() public {
+    function test_Recover_RotatesOwnerSuccessfully() public {
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         // Accept guardian 1
@@ -97,7 +97,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         handleRecovery(
             accountAddress,
             newOwner,
-            address(recoveryModule),
+            recoveryModuleAddress,
             router,
             "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
@@ -116,7 +116,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         handleRecovery(
             accountAddress,
             newOwner,
-            address(recoveryModule),
+            recoveryModuleAddress,
             router,
             "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
             keccak256(abi.encode("nullifier 2")),
@@ -139,40 +139,50 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(updatedOwner, newOwner);
+    }
 
-        // Uninstall the module and assert state has been cleared correctly
-        // TODO: consider moving this to separate test
+    function test_OnUninstall_DeInitsStateSuccessfully() public {
+        // configure and complete an entire recovery request
+        test_Recover_RotatesOwnerSuccessfully();
+        address router = zkEmailRecovery.computeRouterAddress(
+            keccak256(abi.encode(accountAddress))
+        );
 
         // Uninstall module
         vm.prank(accountAddress);
         instance.uninstallModule(
             MODULE_TYPE_EXECUTOR,
-            address(recoveryModule),
+            recoveryModuleAddress,
             ""
         );
         vm.stopPrank();
 
         bool isModuleInstalled = instance.isModuleInstalled(
             MODULE_TYPE_EXECUTOR,
-            address(recoveryModule),
+            recoveryModuleAddress,
             ""
         );
         assertFalse(isModuleInstalled);
 
-        // assert state has been cleared successfully
+        // assert that recovery config has been cleared successfully
         IZkEmailRecovery.RecoveryConfig memory recoveryConfig = zkEmailRecovery
             .getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.recoveryModule, address(0));
         assertEq(recoveryConfig.delay, 0);
         assertEq(recoveryConfig.expiry, 0);
 
-        recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
+        // assert that the recovery request has been cleared successfully
+        IZkEmailRecovery.RecoveryRequest
+            memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
+                accountAddress
+            );
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(recoveryRequest.subjectParams.length, 0);
 
-        guardianStorage1 = zkEmailRecovery.getGuardian(
+        // assert that guardian storage has been cleared successfully for guardian 1
+        GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian1
         );
@@ -182,7 +192,8 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         );
         assertEq(guardianStorage1.weight, uint256(0));
 
-        guardianStorage2 = zkEmailRecovery.getGuardian(
+        // assert that guardian storage has been cleared successfully for guardian 2
+        GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian2
         );
@@ -192,18 +203,19 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         );
         assertEq(guardianStorage2.weight, uint256(0));
 
+        // assert that guardian config has been cleared successfully
         IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
             .getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, 0);
         assertEq(guardianConfig.totalWeight, 0);
         assertEq(guardianConfig.threshold, 0);
 
+        // assert that the recovery router mappings have been cleared successfully
         address accountForRouter = zkEmailRecovery.getAccountForRouter(router);
-        assertEq(accountForRouter, address(0));
-
         address routerForAccount = zkEmailRecovery.getRouterForAccount(
             accountAddress
         );
+        assertEq(accountForRouter, address(0));
         assertEq(routerForAccount, address(0));
     }
 }

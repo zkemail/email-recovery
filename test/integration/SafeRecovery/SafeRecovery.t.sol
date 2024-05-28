@@ -23,7 +23,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         recoveryModuleAddress = address(recoveryModule);
     }
 
-    function testRecover() public {
+    function test_Recover_RotatesOwnerSuccessfully() public {
         IERC7579Account account = IERC7579Account(accountAddress);
 
         // Install recovery module - configureRecovery is called on `onInstall`
@@ -147,4 +147,84 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         bool oldOwnerIsOwner = Safe(payable(accountAddress)).isOwner(owner);
         assertFalse(oldOwnerIsOwner);
     }
+
+    // FIXME: This test cannot uninstall the module - reverts with no error message
+    // function test_OnUninstall_DeInitsStateSuccessfully() public {
+    //     // configure and complete an entire recovery request
+    //     test_Recover_RotatesOwnerSuccessfully();
+    //     address router = zkEmailRecovery.computeRouterAddress(
+    //         keccak256(abi.encode(accountAddress))
+    //     );
+    //     IERC7579Account account = IERC7579Account(accountAddress);
+
+    //     // Uninstall module
+    //     vm.prank(accountAddress);
+    //     account.uninstallModule(
+    //         MODULE_TYPE_EXECUTOR,
+    //         recoveryModuleAddress,
+    //         ""
+    //     );
+    //     vm.stopPrank();
+
+    //     // bool isModuleInstalled = account.isModuleInstalled(
+    //     //     MODULE_TYPE_EXECUTOR,
+    //     //     address(recoveryModule),
+    //     //     ""
+    //     // );
+    //     // assertFalse(isModuleInstalled);
+
+    //     // assert that recovery config has been cleared successfully
+    //     IZkEmailRecovery.RecoveryConfig memory recoveryConfig = zkEmailRecovery
+    //         .getRecoveryConfig(accountAddress);
+    //     assertEq(recoveryConfig.recoveryModule, address(0));
+    //     assertEq(recoveryConfig.delay, 0);
+    //     assertEq(recoveryConfig.expiry, 0);
+
+    //     // assert that the recovery request has been cleared successfully
+    //     IZkEmailRecovery.RecoveryRequest
+    //         memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
+    //             accountAddress
+    //         );
+    //     assertEq(recoveryRequest.executeAfter, 0);
+    //     assertEq(recoveryRequest.executeBefore, 0);
+    //     assertEq(recoveryRequest.currentWeight, 0);
+    //     assertEq(recoveryRequest.subjectParams.length, 0);
+
+    //     // assert that guardian storage has been cleared successfully for guardian 1
+    //     GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
+    //         accountAddress,
+    //         guardian1
+    //     );
+    //     assertEq(
+    //         uint256(guardianStorage1.status),
+    //         uint256(GuardianStatus.NONE)
+    //     );
+    //     assertEq(guardianStorage1.weight, uint256(0));
+
+    //     // assert that guardian storage has been cleared successfully for guardian 2
+    //     GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
+    //         accountAddress,
+    //         guardian2
+    //     );
+    //     assertEq(
+    //         uint256(guardianStorage2.status),
+    //         uint256(GuardianStatus.NONE)
+    //     );
+    //     assertEq(guardianStorage2.weight, uint256(0));
+
+    //     // assert that guardian config has been cleared successfully
+    //     IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
+    //         .getGuardianConfig(accountAddress);
+    //     assertEq(guardianConfig.guardianCount, 0);
+    //     assertEq(guardianConfig.totalWeight, 0);
+    //     assertEq(guardianConfig.threshold, 0);
+
+    //     // assert that the recovery router mappings have been cleared successfully
+    //     address accountForRouter = zkEmailRecovery.getAccountForRouter(router);
+    //     address routerForAccount = zkEmailRecovery.getRouterForAccount(
+    //         accountAddress
+    //     );
+    //     assertEq(accountForRouter, address(0));
+    //     assertEq(routerForAccount, address(0));
+    // }
 }

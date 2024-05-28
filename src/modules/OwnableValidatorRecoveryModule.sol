@@ -63,7 +63,7 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      */
     function onUninstall(bytes calldata data) external override {
         delete validators[msg.sender];
-        IZkEmailRecovery(zkEmailRecovery).deInitializeRecovery(msg.sender);
+        IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
     }
 
     /**
