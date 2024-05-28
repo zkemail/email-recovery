@@ -10,18 +10,18 @@ contract ZkEmailRecovery_constructor_Test is UnitBase {
         super.setUp();
     }
 
-    // function test_Constructor() public {
-    //     ZkEmailRecovery zkEmailRecovery = new ZkEmailRecovery(
-    //         address(verifier),
-    //         address(ecdsaOwnedDkimRegistry),
-    //         address(emailAuthImpl)
-    //     );
+    function test_Constructor() public {
+        ZkEmailRecovery zkEmailRecovery = new ZkEmailRecovery(
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl)
+        );
 
-    //     assertEq(address(verifier), zkEmailRecovery.verifier());
-    //     assertEq(address(ecdsaOwnedDkimRegistry), zkEmailRecovery.dkim());
-    //     assertEq(
-    //         address(emailAuthImpl),
-    //         zkEmailRecovery.emailAuthImplementation()
-    //     );
-    // }
+        assertEq(address(verifier), zkEmailRecovery.verifier());
+        assertEq(address(ecdsaOwnedDkimRegistry), zkEmailRecovery.dkim());
+        assertEq(
+            address(emailAuthImpl),
+            zkEmailRecovery.emailAuthImplementation()
+        );
+    }
 }
