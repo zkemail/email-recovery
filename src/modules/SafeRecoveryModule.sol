@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
 import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";

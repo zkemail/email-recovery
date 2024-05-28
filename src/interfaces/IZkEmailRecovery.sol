@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.25;
 
 import {GuardianStorage, GuardianStatus} from "../libraries/EnumerableGuardianMap.sol";
 
@@ -8,6 +8,10 @@ interface IZkEmailRecovery {
                                 TYPE DELARATIONS
     //////////////////////////////////////////////////////////////////////////*/
 
+    /**
+     * A struct representing the values required for recovery configuration
+     * Config should be maintained over subsequent recovery attempts unless explicitly modified
+     */
     struct RecoveryConfig {
         address recoveryModule; // the trusted recovery module that has permission to recover an account
         uint256 delay; // the time from when recovery is started until the recovery request can be executed
@@ -16,6 +20,11 @@ interface IZkEmailRecovery {
         // the risk of unauthorized access through stale or outdated requests.
     }
 
+    /**
+     * A struct representing the values required for a recovery request
+     * The request state should be maintained over a single recovery attempts unless
+     * explicitly modified. It should be deleted after a recovery attempt has been processed
+     */
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
@@ -25,6 +34,10 @@ interface IZkEmailRecovery {
         // for different recovery implementations with different email subjects
     }
 
+    /**
+     * A struct representing the values required for guardian configuration
+     * Config should be maintained over subsequent recovery attempts unless explicitly modified
+     */
     struct GuardianConfig {
         uint256 guardianCount;
         uint256 totalWeight;
@@ -41,6 +54,7 @@ interface IZkEmailRecovery {
         uint256 guardianCount,
         address router
     );
+    event RecoveryDeInitialized(address indexed account);
     event RecoveryProcessed(
         address indexed account,
         uint256 executeAfter,
@@ -86,7 +100,6 @@ interface IZkEmailRecovery {
     error AddressAlreadyRequested();
     error AddressAlreadyGuardian();
     error InvalidAccountAddress();
-    error GuardianStatusMustBeDifferent();
 
     /** Router errors */
     error RouterAlreadyDeployed();
@@ -136,14 +149,10 @@ interface IZkEmailRecovery {
         address guardian
     ) external view returns (GuardianStorage memory);
 
-    function isGuardianForAccount(
-        address guardian,
-        address account
-    ) external view returns (bool);
-
     function updateGuardian(
         address guardian,
-        GuardianStorage memory guardianStorage
+        GuardianStatus status,
+        uint256 weight
     ) external;
 
     function addGuardian(

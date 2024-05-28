@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
 

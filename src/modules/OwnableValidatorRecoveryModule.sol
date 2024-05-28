@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import {RecoveryModuleBase} from "./RecoveryModuleBase.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";

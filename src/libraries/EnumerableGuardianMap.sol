@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.25;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+/**
+ * A struct representing the values required for a guardian
+ */
 struct GuardianStorage {
     GuardianStatus status;
     uint256 weight;
 }
 
+/**
+ * An enum representing the possible status of a guardian
+ * The default status is NONE status. It should be REQUESTED
+ * when adding a guardian before the guardian has accepted.
+ * Once the guardian has accepted, the status should be ACCEPTED.
+ */
 enum GuardianStatus {
     NONE,
     REQUESTED,
@@ -74,7 +83,7 @@ library EnumerableGuardianMap {
     }
 
     /**
-     * @dev Removes all key-value pairs from a map. O(n).
+     * @dev Removes all key-value pairs from a map. O(n) where n <= 32
      *
      * Returns true if the key was removed from the map, that is if it was present.
      *

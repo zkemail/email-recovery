@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.25;
 
 import {EmailAuthMsg} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {IEmailAccountRecovery} from "./interfaces/IEmailAccountRecovery.sol";

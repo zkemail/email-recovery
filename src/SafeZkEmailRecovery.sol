@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import {ZkEmailRecovery} from "./ZkEmailRecovery.sol";
 import {ISafe} from "./interfaces/ISafe.sol";
