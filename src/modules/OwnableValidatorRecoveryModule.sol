@@ -63,13 +63,6 @@ contract OwnableValidatorRecoveryModule is RecoveryModuleBase {
      */
     function onUninstall(bytes calldata data) external override {
         delete validators[msg.sender];
-
-        // bytes memory encodedCall = abi.encodeWithSignature(
-        //     "deInitializeRecovery(address)",
-        //     msg.sender
-        // );
-        // // FIXME: this call fails
-        // _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
         IZkEmailRecovery(zkEmailRecovery).deInitializeRecovery(msg.sender);
     }
 

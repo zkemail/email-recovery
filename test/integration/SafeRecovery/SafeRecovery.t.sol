@@ -146,22 +146,5 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
         bool oldOwnerIsOwner = Safe(payable(accountAddress)).isOwner(owner);
         assertFalse(oldOwnerIsOwner);
-
-        // FIXME: This is reverting and I'm not sure why - even when all logic is commented out inside `onUninstall`
-        // Uninstall and clear up state
-        // vm.prank(accountAddress);
-        // account.uninstallModule(
-        //     MODULE_TYPE_EXECUTOR,
-        //     recoveryModuleAddress,
-        //     ""
-        // );
-        // vm.stopPrank();
-
-        // isModuleInstalled = account.isModuleInstalled(
-        //     MODULE_TYPE_EXECUTOR,
-        //     recoveryModuleAddress,
-        //     ""
-        // );
-        // assertFalse(isModuleInstalled);
     }
 }

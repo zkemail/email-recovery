@@ -35,7 +35,7 @@ contract OwnableValidator is ERC7579ValidatorBase {
         authorized[msg.sender][authorizedAccount] = true;
     }
 
-    // FIXME: attacker could overcome authorized timelock by uninstalling and installing the module again
+    /** An attacker could overcome authorized timelock by uninstalling and installing the module again */
     function onUninstall(bytes calldata) external override {
         delete owners[msg.sender];
         // delete authorized[msg.sender][authorizedAccount];
