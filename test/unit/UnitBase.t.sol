@@ -9,7 +9,7 @@ import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/ut
 import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
-import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
+import {ZkEmailRecoveryHarness} from "./ZkEmailRecoveryHarness.sol";
 import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
 import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
 
@@ -20,7 +20,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     MockGroth16Verifier verifier;
     EmailAuth emailAuthImpl;
 
-    ZkEmailRecovery zkEmailRecovery;
+    ZkEmailRecoveryHarness zkEmailRecovery;
 
     // account and owners
     AccountInstance instance;
@@ -82,7 +82,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         owners[0] = owner;
 
         // Deploy ZkEmailRecovery
-        zkEmailRecovery = new ZkEmailRecovery(
+        zkEmailRecovery = new ZkEmailRecoveryHarness(
             address(verifier),
             address(ecdsaOwnedDkimRegistry),
             address(emailAuthImpl)
@@ -144,7 +144,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     function acceptGuardian(
         address account,
-        ZkEmailRecovery zkEmailRecovery,
+        ZkEmailRecoveryHarness zkEmailRecovery,
         address router,
         string memory subject,
         bytes32 nullifier,
@@ -179,7 +179,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         address newOwner,
         address recoveryModule,
         address router,
-        ZkEmailRecovery zkEmailRecovery,
+        ZkEmailRecoveryHarness zkEmailRecovery,
         string memory subject,
         bytes32 nullifier,
         bytes32 accountSalt,

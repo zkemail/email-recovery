@@ -10,6 +10,7 @@ import {IUUPSUpgradable} from "./interfaces/IUUPSUpgradable.sol";
 import {IRecoveryModule} from "./interfaces/IRecoveryModule.sol";
 import {EmailAccountRecoveryRouter} from "./EmailAccountRecoveryRouter.sol";
 import {EnumerableGuardianMap, GuardianStorage, GuardianStatus} from "./libraries/EnumerableGuardianMap.sol";
+import "forge-std/console2.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -289,12 +290,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * should be deinitialized. This should include remove state accociated with an account.
      * @param account The account to delete state for
      */
-    function deInitRecoveryFromModule(
-        address account
-    ) external onlyWhenNotRecovering {
+    // FIXME: This is not secure as a recovery module could call this function via _execute and pass in an account that wasn't theirs
+    function deInitRecoveryFromModule(address account) external {
         address recoveryModule = recoveryConfigs[account].recoveryModule;
         if (recoveryModule != msg.sender) {
             revert NotRecoveryModule();
+        }
+
+        if (recoveryRequests[account].currentWeight > 0) {
+            revert RecoveryInProcess();
         }
 
         delete recoveryConfigs[account];
@@ -329,16 +333,21 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         uint templateIdx,
         bytes[] memory subjectParams,
         bytes32
-    ) internal override onlyWhenNotRecovering {
+    ) internal override {
         if (guardian == address(0)) {
             revert InvalidGuardian();
         }
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
         }
+
         address accountInEmail = validateAcceptanceSubjectTemplates(
             subjectParams
         );
+
+        if (recoveryRequests[accountInEmail].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
