@@ -47,9 +47,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     /** Minimum required time window between when a recovery attempt becomes valid and when it becomes invalid */
     uint256 constant MINIMUM_RECOVERY_WINDOW = 1 days;
 
-    /** Maximum number of guardians that can be added */
-    uint256 constant MAXIMUM_NUMBER_OF_GUARDIANS = 32;
-
     /** Account address to recovery config */
     mapping(address => RecoveryConfig) public recoveryConfigs;
 
@@ -298,10 +295,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         EnumerableGuardianMap.AddressToGuardianMap
             storage guardians = guardianStorage[account];
 
-        address[] memory keys = guardians.keys();
-        for (uint256 i = 0; i < keys.length; i++) {
-            guardians.remove(keys[i]);
-        }
+        guardians.removeAll(guardians.keys());
 
         delete guardianConfigs[account];
 

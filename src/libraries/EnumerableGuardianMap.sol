@@ -17,14 +17,19 @@ enum GuardianStatus {
 /**
  * Enumerable Map library based on Open Zeppelin's EnumerableMap library.
  * Modified to map from an address to a custom struct: GuardianStorage
+ *
+ * All functions have been modified to support mapping to the GuardianStorage
+ * struct. Any additional modifications are documented in the natspec for
+ * each function
  */
 library EnumerableGuardianMap {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    /**
-     * @dev Query for a nonexistent map key.
-     */
-    error EnumerableMapNonexistentKey(address key);
+    /** Maximum number of guardians that can be added */
+    uint256 constant MAX_NUMBER_OF_GUARDIANS = 32;
+
+    error MaxNumberOfGuardiansReached();
+    error TooManyValuesToRemove();
 
     struct AddressToGuardianMap {
         // Storage of keys
@@ -38,12 +43,19 @@ library EnumerableGuardianMap {
      *
      * Returns true if the key was added to the map, that is if it was not
      * already present.
+     *
+     * @custom:modification Modifed from the OpenZeppelin implementation to support a max number of guardians.
+     * This prevents the library having unbounded costs when clearing up state
      */
     function set(
         AddressToGuardianMap storage map,
         address key,
         GuardianStorage memory value
     ) internal returns (bool) {
+        uint256 length = map._keys.length();
+        if (length > MAX_NUMBER_OF_GUARDIANS) {
+            revert MaxNumberOfGuardiansReached();
+        }
         map._values[key] = value;
         return map._keys.add(key);
     }
@@ -62,45 +74,35 @@ library EnumerableGuardianMap {
     }
 
     /**
-     * @dev Returns true if the key is in the map. O(1).
+     * @dev Removes all key-value pairs from a map. O(n).
+     *
+     * Returns true if the key was removed from the map, that is if it was present.
+     *
+     * @custom:modification This is a new function that did not exist on the
+     * original Open Zeppelin library.
      */
-    function contains(
+    function removeAll(
         AddressToGuardianMap storage map,
-        address key
-    ) internal view returns (bool) {
-        return map._keys.contains(key);
+        address[] memory keys
+    ) internal returns (bool) {
+        if (keys.length > MAX_NUMBER_OF_GUARDIANS) {
+            revert TooManyValuesToRemove();
+        }
+        for (uint256 i = 0; i < keys.length; i++) {
+            delete map._values[keys[i]];
+            map._keys.remove(keys[i]);
+        }
     }
 
     /**
-     * @dev Returns the number of key-value pairs in the map. O(1).
-     */
-    function length(
-        AddressToGuardianMap storage map
-    ) internal view returns (uint256) {
-        return map._keys.length();
-    }
-
-    /**
-     * @dev Returns the key-value pair stored at position `index` in the map. O(1).
+     * @dev Returns the value associated with `key`. O(1).
+     * Does not revert if `key` is not in the map
      *
-     * Note that there are no guarantees on the ordering of entries inside the
-     * array, and it may change when more entries are added or removed.
-     *
-     * Requirements:
-     *
-     * - `index` must be strictly less than {length}.
-     */
-    function at(
-        AddressToGuardianMap storage map,
-        uint256 index
-    ) internal view returns (address, GuardianStorage memory) {
-        address key = map._keys.at(index);
-        return (key, map._values[key]);
-    }
-
-    /**
-     * @dev Tries to returns the value associated with `key`. O(1).
-     * Does not revert if `key` is not in the map.
+     * @custom:modification The original
+     * Open Zeppelin implementation threw an error if the value
+     * could not be found. This implementation behaves as if you
+     * were retrieving a value from an actual mapping i.e. returns
+     * default solidity values
      */
     function get(
         AddressToGuardianMap storage map,
@@ -110,12 +112,10 @@ library EnumerableGuardianMap {
     }
 
     /**
-     * @dev Return the an array containing all the keys
+     * @dev Return an array containing all the keys. O(n) where n <= 32
      *
-     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
-     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
-     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
-     * uncallable if the map grows to a point where copying to memory consumes too much gas to fit in a block.
+     * WARNING: This operation will copy the entire storage to memory, which could
+     * be quite expensive.
      */
     function keys(
         AddressToGuardianMap storage map
