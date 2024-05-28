@@ -25,7 +25,7 @@ import {SafeZkEmailRecovery} from "src/SafeZkEmailRecovery.sol";
 import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
 import {IntegrationBase} from "../IntegrationBase.t.sol";
 
-contract SafeIntegrationBase is IntegrationBase {
+abstract contract SafeIntegrationBase is IntegrationBase {
     SafeZkEmailRecovery zkEmailRecovery;
 
     Safe7579 safe7579;
