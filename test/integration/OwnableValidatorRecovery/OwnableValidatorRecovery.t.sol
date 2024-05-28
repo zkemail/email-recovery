@@ -140,8 +140,10 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(updatedOwner, newOwner);
 
-        // FIXME: This is reverts when `onUninstall` calls `_execute` to deinit
-        // the module
+        // Uninstall the module and assert state has been cleared correctly
+        // TODO: consider moving this to separate test
+
+        // Uninstall module
         vm.prank(accountAddress);
         instance.uninstallModule(
             MODULE_TYPE_EXECUTOR,
@@ -157,11 +159,51 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         );
         assertFalse(isModuleInstalled);
 
+        // assert state has been cleared successfully
         IZkEmailRecovery.RecoveryConfig memory recoveryConfig = zkEmailRecovery
             .getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.recoveryModule, address(0));
         assertEq(recoveryConfig.delay, 0);
         assertEq(recoveryConfig.expiry, 0);
-        // TODO: add more cases once fixme is resolved and consider breaking into separate test
+
+        recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.subjectParams.length, 0);
+
+        guardianStorage1 = zkEmailRecovery.getGuardian(
+            accountAddress,
+            guardian1
+        );
+        assertEq(
+            uint256(guardianStorage1.status),
+            uint256(GuardianStatus.NONE)
+        );
+        assertEq(guardianStorage1.weight, uint256(0));
+
+        guardianStorage2 = zkEmailRecovery.getGuardian(
+            accountAddress,
+            guardian2
+        );
+        assertEq(
+            uint256(guardianStorage2.status),
+            uint256(GuardianStatus.NONE)
+        );
+        assertEq(guardianStorage2.weight, uint256(0));
+
+        IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
+            .getGuardianConfig(accountAddress);
+        assertEq(guardianConfig.guardianCount, 0);
+        assertEq(guardianConfig.totalWeight, 0);
+        assertEq(guardianConfig.threshold, 0);
+
+        address accountForRouter = zkEmailRecovery.getAccountForRouter(router);
+        assertEq(accountForRouter, address(0));
+
+        address routerForAccount = zkEmailRecovery.getRouterForAccount(
+            accountAddress
+        );
+        assertEq(routerForAccount, address(0));
     }
 }

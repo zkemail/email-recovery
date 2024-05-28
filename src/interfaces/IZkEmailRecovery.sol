@@ -59,6 +59,7 @@ interface IZkEmailRecovery {
     //////////////////////////////////////////////////////////////////////////*/
 
     error AccountNotConfigured();
+    error NotRecoveryModule();
     error RecoveryInProcess();
     error InvalidGuardian();
     error InvalidTemplateIndex();

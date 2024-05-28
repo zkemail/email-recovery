@@ -284,8 +284,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         );
     }
 
-    error NotRecoveryModule(); // temp error
-
     function deInitializeRecovery(
         address account
     ) external onlyWhenNotRecovering {
@@ -293,8 +291,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         if (recoveryModule != msg.sender) {
             revert NotRecoveryModule();
         }
-        // FIXME: Can we use executeFromExecutor and have access to the account msg.sender?
-        // address account = msg.sender;
 
         delete recoveryConfigs[account];
         delete recoveryRequests[account];

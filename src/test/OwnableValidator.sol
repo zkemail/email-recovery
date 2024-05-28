@@ -90,7 +90,6 @@ contract OwnableValidator is ERC7579ValidatorBase {
      * authorize itself before the recovery attempt succeeds.
      */
     function authorizeAccount(address accountToAuthorize) public {
-        // TODO: Add timelock protection
         authorized[msg.sender][accountToAuthorize] = true;
     }
 
