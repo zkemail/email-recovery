@@ -18,4 +18,13 @@ contract ZkEmailRecoveryHarness is ZkEmailRecovery {
     ) external {
         acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
     }
+
+    function exposed_setupGuardians(
+        address account,
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold
+    ) external {
+        setupGuardians(account, guardians, weights, threshold);
+    }
 }

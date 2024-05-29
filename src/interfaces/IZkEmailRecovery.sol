@@ -92,6 +92,7 @@ interface IZkEmailRecovery {
 
     /** Guardian logic errors */
     error SetupAlreadyCalled();
+    error SetupNotCalled();
     error ThresholdCannotExceedTotalWeight();
     error IncorrectNumberOfWeights();
     error ThresholdCannotBeZero();

@@ -595,10 +595,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
                 revert InvalidGuardianWeight();
             }
 
-            if (_guardianStorage.status != GuardianStatus.NONE) {
-                revert AddressAlreadyGuardian();
-            }
-
             guardianStorage[account].set({
                 key: _guardian,
                 value: GuardianStorage(GuardianStatus.REQUESTED, weight)
@@ -680,6 +676,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         uint256 threshold
     ) external onlyWhenNotRecovering {
         address account = msg.sender;
+
+        // Threshold can only be 0 at initialization.
+        // Check ensures that setup function should be called first
+        if (guardianConfigs[account].threshold == 0) {
+            revert SetupNotCalled();
+        }
+
         GuardianStorage memory _guardianStorage = guardianStorage[account].get(
             guardian
         );
@@ -749,6 +752,12 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      */
     function changeThreshold(uint256 threshold) public onlyWhenNotRecovering {
         address account = msg.sender;
+
+        // Threshold can only be 0 at initialization.
+        // Check ensures that setup function should be called first
+        if (guardianConfigs[account].threshold == 0) {
+            revert SetupNotCalled();
+        }
 
         // Validate that threshold is smaller than the total weight.
         if (threshold > guardianConfigs[account].totalWeight) {
