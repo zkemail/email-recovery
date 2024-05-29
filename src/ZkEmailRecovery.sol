@@ -704,6 +704,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             value: GuardianStorage(GuardianStatus.REQUESTED, weight)
         });
         guardianConfigs[account].guardianCount++;
+        guardianConfigs[account].totalWeight += weight;
 
         emit AddedGuardian(guardian);
 

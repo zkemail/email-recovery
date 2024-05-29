@@ -39,8 +39,6 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
         );
         vm.stopPrank();
 
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-
         acceptGuardian(accountSalt1);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, accountSalt1);

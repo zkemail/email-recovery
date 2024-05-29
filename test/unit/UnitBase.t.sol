@@ -34,6 +34,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     address guardian2;
     address guardian3;
     uint256[] guardianWeights;
+    uint256 totalWeight;
     uint256 delay;
     uint256 expiry;
     uint256 threshold;
@@ -112,6 +113,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         guardianWeights[0] = 1;
         guardianWeights[1] = 1;
         guardianWeights[2] = 1;
+        totalWeight = 3;
         delay = 1 seconds;
         expiry = 2 weeks;
         threshold = 2;
