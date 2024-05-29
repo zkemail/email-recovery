@@ -143,6 +143,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after certain changes
+        // console2.log("accountAddress: ", accountAddress);
+
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string
             memory subject = "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
@@ -176,9 +179,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         address recoveryModule,
         bytes32 accountSalt
     ) public {
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after certain changes
+        // console2.log("accountAddress: ", accountAddress);
+        // console2.log("newOwner:       ", newOwner);
+        // console2.log("recoveryModule: ", recoveryModule);
+
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string
-            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xba3137d856cF201622A2aC83CCd4556982224972";
+            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x1D4F8D2f80BA1fe1DE5296cb7084e0E0A8996b19";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(
