@@ -75,7 +75,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.0.6
+          version: 9.1.2
           run_install: false
 
       - name: "Restore the cached build and the node modules"
