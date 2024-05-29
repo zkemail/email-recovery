@@ -57,15 +57,13 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         return emailProof;
     }
 
-    function acceptGuardian(
-        address account,
-        // ZkEmailRecovery zkEmailRecovery,
-        address router,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
-    ) public {
+    function acceptGuardian(bytes32 accountSalt) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
+        uint256 templateIdx = 0;
+
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -73,7 +71,7 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         );
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
+        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeAcceptanceTemplateId(
                 templateIdx
@@ -90,15 +88,16 @@ abstract contract OwnableValidatorBase is IntegrationBase {
     }
 
     function handleRecovery(
-        address account,
         address newOwner,
         address recoveryModule,
-        address router,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
+        bytes32 accountSalt
     ) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
+        uint256 templateIdx = 0;
+
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -106,7 +105,7 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         );
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(account);
+        subjectParamsForRecovery[0] = abi.encode(accountAddress);
         subjectParamsForRecovery[1] = abi.encode(newOwner);
         subjectParamsForRecovery[2] = abi.encode(recoveryModule);
 

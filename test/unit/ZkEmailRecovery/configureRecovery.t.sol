@@ -41,29 +41,9 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
-        acceptGuardian(
-            accountAddress,
-            zkEmailRecovery,
-            router,
-            "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52",
-            keccak256(abi.encode("nullifier 1")),
-            accountSalt1,
-            templateIdx
-        );
-
+        acceptGuardian(accountSalt1);
         vm.warp(12 seconds);
-
-        handleRecovery(
-            accountAddress,
-            newOwner,
-            recoveryModuleAddress,
-            router,
-            zkEmailRecovery,
-            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xba3137d856cF201622A2aC83CCd4556982224972",
-            keccak256(abi.encode("nullifier 2")),
-            accountSalt1,
-            templateIdx
-        );
+        handleRecovery(recoveryModuleAddress, accountSalt1);
 
         vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
         vm.startPrank(accountAddress);

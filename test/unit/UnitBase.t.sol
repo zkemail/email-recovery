@@ -142,15 +142,13 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         return emailProof;
     }
 
-    function acceptGuardian(
-        address account,
-        ZkEmailRecoveryHarness zkEmailRecovery,
-        address router,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
-    ) public {
+    function acceptGuardian(bytes32 accountSalt) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
+        uint256 templateIdx = 0;
+
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -158,7 +156,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         );
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
+        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeAcceptanceTemplateId(
                 templateIdx
@@ -175,16 +173,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     }
 
     function handleRecovery(
-        address account,
-        address newOwner,
         address recoveryModule,
-        address router,
-        ZkEmailRecoveryHarness zkEmailRecovery,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
+        bytes32 accountSalt
     ) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xba3137d856cF201622A2aC83CCd4556982224972";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
+        uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -192,7 +188,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         );
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(account);
+        subjectParamsForRecovery[0] = abi.encode(accountAddress);
         subjectParamsForRecovery[1] = abi.encode(newOwner);
         subjectParamsForRecovery[2] = abi.encode(recoveryModule);
 

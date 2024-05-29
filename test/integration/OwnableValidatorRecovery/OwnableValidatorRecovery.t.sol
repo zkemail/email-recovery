@@ -54,14 +54,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         // Accept guardian 1
-        acceptGuardian(
-            accountAddress,
-            router,
-            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38",
-            keccak256(abi.encode("nullifier 1")),
-            accountSalt1,
-            templateIdx
-        );
+        acceptGuardian(accountSalt1);
         GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian1
@@ -73,14 +66,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian 2
-        acceptGuardian(
-            accountAddress,
-            router,
-            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38",
-            keccak256(abi.encode("nullifier 1")),
-            accountSalt2,
-            templateIdx
-        );
+        acceptGuardian(accountSalt2);
         GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian2
@@ -94,16 +80,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
         // handle recovery request for guardian 1
-        handleRecovery(
-            accountAddress,
-            newOwner,
-            recoveryModuleAddress,
-            router,
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
-            keccak256(abi.encode("nullifier 2")),
-            accountSalt1,
-            templateIdx
-        );
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt1);
         IZkEmailRecovery.RecoveryRequest
             memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
                 accountAddress
@@ -113,16 +90,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
-        handleRecovery(
-            accountAddress,
-            newOwner,
-            recoveryModuleAddress,
-            router,
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5",
-            keccak256(abi.encode("nullifier 2")),
-            accountSalt2,
-            templateIdx
-        );
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt2);
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.currentWeight, 2);

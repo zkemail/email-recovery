@@ -39,15 +39,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         // Accept guardian
-        acceptGuardian(
-            accountAddress,
-            zkEmailRecovery,
-            router,
-            "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095",
-            keccak256(abi.encode("nullifier 1")),
-            accountSalt1,
-            templateIdx
-        );
+        acceptGuardian(accountSalt1);
         GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian1
@@ -59,15 +51,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
-        acceptGuardian(
-            accountAddress,
-            zkEmailRecovery,
-            router,
-            "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095",
-            keccak256(abi.encode("nullifier 1")),
-            accountSalt2,
-            templateIdx
-        );
+        acceptGuardian(accountSalt2);
         GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
             accountAddress,
             guardian2
@@ -82,18 +66,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         vm.warp(12 seconds);
 
         // handle recovery request for guardian 1
-        handleRecovery(
-            accountAddress,
-            owner,
-            newOwner,
-            recoveryModuleAddress,
-            router,
-            zkEmailRecovery,
-            "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 from old owner 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x6d2Fa6974Ef18eB6da842D3c7ab3150326feaEEC",
-            keccak256(abi.encode("nullifier 2")),
-            accountSalt1,
-            templateIdx
-        );
+        handleRecovery(owner, newOwner, recoveryModuleAddress, accountSalt1);
         IZkEmailRecovery.RecoveryRequest
             memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
                 accountAddress
@@ -103,18 +76,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
-        handleRecovery(
-            accountAddress,
-            owner,
-            newOwner,
-            recoveryModuleAddress,
-            router,
-            zkEmailRecovery,
-            "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 from old owner 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x6d2Fa6974Ef18eB6da842D3c7ab3150326feaEEC",
-            keccak256(abi.encode("nullifier 2")),
-            accountSalt2,
-            templateIdx
-        );
+        handleRecovery(owner, newOwner, recoveryModuleAddress, accountSalt2);
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);

@@ -226,15 +226,12 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         return emailProof;
     }
 
-    function acceptGuardian(
-        address account,
-        SafeZkEmailRecovery zkEmailRecovery,
-        address router,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
-    ) public {
+    function acceptGuardian(bytes32 accountSalt) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
+        uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -242,7 +239,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         );
 
         bytes[] memory subjectParamsForAcceptance = subjectParamsForAcceptance(
-            account
+            accountAddress
         );
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
@@ -260,17 +257,17 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     }
 
     function handleRecovery(
-        address account,
         address oldOwner,
         address newOwner,
         address recoveryModule,
-        address router,
-        SafeZkEmailRecovery zkEmailRecovery,
-        string memory subject,
-        bytes32 nullifier,
-        bytes32 accountSalt,
-        uint256 templateIdx
+        bytes32 accountSalt
     ) public {
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        string
+            memory subject = "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 from old owner 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x6d2Fa6974Ef18eB6da842D3c7ab3150326feaEEC";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
+        uint256 templateIdx = 0;
+
         EmailProof memory emailProof = generateMockEmailProof(
             subject,
             nullifier,
@@ -278,7 +275,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         );
 
         bytes[] memory subjectParamsForRecovery = subjectParamsForRecovery(
-            account,
+            accountAddress,
             oldOwner,
             newOwner,
             recoveryModule
