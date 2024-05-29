@@ -167,16 +167,6 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
 
         vm.expectRevert(IZkEmailRecovery.RecoveryRequestExpired.selector);
         zkEmailRecovery.completeRecovery(accountAddress);
-
-        IZkEmailRecovery.RecoveryRequest
-            memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
-                accountAddress
-            );
-
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampMoreThanExpiry()
@@ -192,16 +182,6 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
 
         vm.expectRevert(IZkEmailRecovery.RecoveryRequestExpired.selector);
         zkEmailRecovery.completeRecovery(accountAddress);
-
-        IZkEmailRecovery.RecoveryRequest
-            memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
-                accountAddress
-            );
-
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 
     function test_CompleteRecovery_CompleteRecovery_Succeeds() public {

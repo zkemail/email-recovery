@@ -465,7 +465,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         if (block.timestamp >= recoveryRequest.executeBefore) {
-            delete recoveryRequests[account]; // allows stale recovery requests to be deleted
             revert RecoveryRequestExpired();
         }
 
