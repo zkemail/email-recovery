@@ -25,9 +25,9 @@
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
   "dependencies": {
-    "@rhinestone/modulekit": "^0.4.1",
+    "@rhinestone/modulekit": "v0.4.2",
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
-    "@zk-email/contracts": "^6.0.2"
+    "@zk-email/contracts": "v6.0.3"
   },
   "files": [
     "src",

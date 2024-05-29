@@ -3,7 +3,7 @@ emv_version = "paris"
 src = "src"
 out = "out"
 script = "script"
-libs = ["node_modules"]
+libs = ["node_modules", "lib"]
 fs_permissions = [{ access = "read", path = "out-optimized" }, { access = "read-write", path = "gas_calculations" }]
 allow_paths = ["*", "/"]
 
