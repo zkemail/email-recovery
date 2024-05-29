@@ -450,6 +450,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param account The address of the account for which the recovery is being completed
      */
     function completeRecovery(address account) public {
+        if (account == address(0)) {
+            revert InvalidAccountAddress();
+        }
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = getGuardianConfig(account).threshold;
@@ -462,7 +465,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         if (block.timestamp >= recoveryRequest.executeBefore) {
-            delete recoveryRequests[account];
+            delete recoveryRequests[account]; // allows stale recovery requests to be deleted
             revert RecoveryRequestExpired();
         }
 
