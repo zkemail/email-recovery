@@ -30,6 +30,7 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     address guardian2;
     address guardian3;
     uint256[] guardianWeights;
+    uint256 totalWeight;
     uint256 delay;
     uint256 expiry;
     uint256 threshold;
@@ -89,11 +90,12 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
         // Set recovery config variables
         guardianWeights = new uint256[](3);
         guardianWeights[0] = 1;
-        guardianWeights[1] = 1;
+        guardianWeights[1] = 2;
         guardianWeights[2] = 1;
+        totalWeight = 4;
         delay = 1 seconds;
         expiry = 2 weeks;
-        threshold = 2;
+        threshold = 3;
         templateIdx = 0;
     }
 }

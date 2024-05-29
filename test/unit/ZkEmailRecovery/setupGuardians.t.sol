@@ -83,7 +83,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_ThresholdExceedsTotalWeight()
         public
     {
-        uint256 invalidThreshold = 4;
+        uint256 invalidThreshold = totalWeight + 1;
 
         vm.expectRevert(
             IZkEmailRecovery.ThresholdCannotExceedTotalWeight.selector

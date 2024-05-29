@@ -60,7 +60,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
             uint256(guardianStorage2.status),
             uint256(GuardianStatus.ACCEPTED)
         );
-        assertEq(guardianStorage2.weight, uint256(1));
+        assertEq(guardianStorage2.weight, uint256(2));
 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
@@ -89,7 +89,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
                 recoveryModuleAddress
             )
         );
-        assertEq(recoveryRequest.currentWeight, 2);
+        assertEq(recoveryRequest.currentWeight, 3);
 
         vm.warp(block.timestamp + delay);
 

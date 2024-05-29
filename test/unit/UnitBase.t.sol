@@ -111,12 +111,12 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // Set recovery config variables
         guardianWeights = new uint256[](3);
         guardianWeights[0] = 1;
-        guardianWeights[1] = 1;
+        guardianWeights[1] = 2;
         guardianWeights[2] = 1;
-        totalWeight = 3;
+        totalWeight = 4;
         delay = 1 seconds;
         expiry = 2 weeks;
-        threshold = 2;
+        threshold = 3;
         templateIdx = 0;
     }
 

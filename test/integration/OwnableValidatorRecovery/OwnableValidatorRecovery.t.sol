@@ -75,7 +75,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
             uint256(guardianStorage2.status),
             uint256(GuardianStatus.ACCEPTED)
         );
-        assertEq(guardianStorage2.weight, uint256(1));
+        assertEq(guardianStorage2.weight, uint256(2));
 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
@@ -93,7 +93,7 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         handleRecovery(newOwner, recoveryModuleAddress, accountSalt2);
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
-        assertEq(recoveryRequest.currentWeight, 2);
+        assertEq(recoveryRequest.currentWeight, 3);
 
         // Time travel so that the recovery delay has passed
         vm.warp(block.timestamp + delay);
