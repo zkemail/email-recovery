@@ -381,10 +381,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         internal
         override
     {
-        if (guardian == address(0)) {
-            revert InvalidGuardian();
-        }
-
         address accountInEmail = validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
 
         if (recoveryRequests[accountInEmail].currentWeight > 0) {
@@ -422,10 +418,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         internal
         override
     {
-        if (guardian == address(0)) {
-            revert InvalidGuardian();
-        }
-
         address accountInEmail = validateRecoverySubjectTemplates(templateIdx, subjectParams);
 
         // This check ensures GuardianStatus is correct and also that the
@@ -621,7 +613,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             address guardian = guardians[i];
             uint256 weight = weights[i];
 
-            if (guardian == address(0)) {
+            if (guardian == address(0) || guardian == account) {
                 revert InvalidGuardianAddress();
             }
 
@@ -678,7 +670,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
 
-        if (guardian == address(0)) {
+        if (guardian == address(0) || guardian == account) {
             revert InvalidGuardianAddress();
         }
 

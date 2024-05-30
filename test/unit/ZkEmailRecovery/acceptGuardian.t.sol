@@ -19,19 +19,6 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
         recoveryModuleAddress = address(recoveryModule);
     }
 
-    function test_AcceptGuardian_RevertWhen_InvalidGuardianAddress() public {
-        address invalidGuardian = address(0);
-
-        bytes[] memory subjectParams = new bytes[](1);
-        subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
-
-        vm.expectRevert(IZkEmailRecovery.InvalidGuardian.selector);
-        zkEmailRecovery.exposed_acceptGuardian(
-            invalidGuardian, templateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_AcceptGuardian_RevertWhen_AlreadyRecovering() public {
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
@@ -51,7 +38,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
         zkEmailRecovery.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
     }
 
-    function test_AcceptGuardian_RevertWhen_InvalidGuardianStatus() public {
+    function test_AcceptGuardian_RevertWhen_GuardianStatusIsNONE() public {
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
@@ -60,6 +47,29 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
             abi.encodeWithSelector(
                 IZkEmailRecovery.InvalidGuardianStatus.selector,
                 uint256(GuardianStatus.NONE),
+                uint256(GuardianStatus.REQUESTED)
+            )
+        );
+        zkEmailRecovery.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+    }
+
+    function test_AcceptGuardian_RevertWhen_GuardianStatusIsACCEPTED() public {
+        bytes[] memory subjectParams = new bytes[](1);
+        subjectParams[0] = abi.encode(accountAddress);
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
+
+        vm.startPrank(accountAddress);
+        zkEmailRecovery.configureRecovery(
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        zkEmailRecovery.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IZkEmailRecovery.InvalidGuardianStatus.selector,
+                uint256(GuardianStatus.ACCEPTED),
                 uint256(GuardianStatus.REQUESTED)
             )
         );

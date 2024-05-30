@@ -53,6 +53,15 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
         );
     }
 
+    function test_SetupGuardians_RevertWhen_GuardianAddressIsAccountAddress() public {
+        guardians[1] = accountAddress;
+
+        vm.expectRevert(IZkEmailRecovery.InvalidGuardianAddress.selector);
+        zkEmailRecovery.exposed_setupGuardians(
+            accountAddress, guardians, guardianWeights, threshold
+        );
+    }
+
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
         guardianWeights[1] = 0;
 

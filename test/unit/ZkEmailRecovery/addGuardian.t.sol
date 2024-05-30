@@ -53,6 +53,18 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
         zkEmailRecovery.addGuardian(invalidGuardianAddress, guardianWeights[0], threshold);
     }
 
+    function test_AddGuardian_RevertWhen_GuardianAddressIsAccountAddress() public {
+        address invalidGuardianAddress = accountAddress;
+
+        vm.startPrank(accountAddress);
+        zkEmailRecovery.configureRecovery(
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
+        );
+
+        vm.expectRevert(IZkEmailRecovery.InvalidGuardianAddress.selector);
+        zkEmailRecovery.addGuardian(invalidGuardianAddress, guardianWeights[0], threshold);
+    }
+
     function test_AddGuardian_RevertWhen_AddressAlreadyGuardian() public {
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
