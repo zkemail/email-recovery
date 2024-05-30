@@ -727,23 +727,27 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         uint256 threshold
     ) external onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
         address account = msg.sender;
-        // Only allow to remove an guardian, if threshold can still be reached.
-        // TODO: change error name and assess whether guardian count could be lowered below threshold
-        if (guardianConfigs[account].threshold - 1 < threshold) {
-            revert ThresholdCannotExceedTotalWeight();
-        }
+        GuardianConfig memory guardianConfig = guardianConfigs[account];
+        GuardianStorage memory _guardian = guardianStorage[account].get(
+            guardian
+        );
 
-        if (guardian == address(0)) {
-            revert InvalidGuardianAddress();
+        // Only allow guardian removal if threshold can still be reached.
+        if (
+            guardianConfig.totalWeight - _guardian.weight <
+            guardianConfig.threshold
+        ) {
+            revert ThresholdCannotExceedTotalWeight();
         }
 
         guardianStorage[account].remove(guardian);
         guardianConfigs[account].guardianCount--;
+        guardianConfigs[account].totalWeight -= _guardian.weight;
 
         emit RemovedGuardian(guardian);
 
         // Change threshold if threshold was changed.
-        if (guardianConfigs[account].threshold != threshold) {
+        if (guardianConfig.threshold != threshold) {
             changeThreshold(threshold);
         }
     }
