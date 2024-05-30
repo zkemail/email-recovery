@@ -25,7 +25,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
 
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = "";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
         vm.expectRevert(IZkEmailRecovery.InvalidGuardian.selector);
         zkEmailRecovery.exposed_acceptGuardian(
@@ -41,7 +41,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
 
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = "";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
         vm.expectRevert(IZkEmailRecovery.InvalidTemplateIndex.selector);
         zkEmailRecovery.exposed_acceptGuardian(
@@ -72,7 +72,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
 
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = "";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
         vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
         zkEmailRecovery.exposed_acceptGuardian(
@@ -86,7 +86,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
     function test_AcceptGuardian_RevertWhen_InvalidGuardianStatus() public {
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = "";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -106,7 +106,7 @@ contract ZkEmailRecovery_acceptGuardian_Test is UnitBase {
     function test_AcceptGuardian_Succeeds() public {
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
-        bytes32 nullifier = "";
+        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(

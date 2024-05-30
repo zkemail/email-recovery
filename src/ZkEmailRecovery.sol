@@ -398,10 +398,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
-        GuardianStorage memory guardian = getGuardian(accountInEmail, guardian);
-        if (guardian.status != GuardianStatus.ACCEPTED) {
+        GuardianStorage memory guardianStorage = getGuardian(
+            accountInEmail,
+            guardian
+        );
+        if (guardianStorage.status != GuardianStatus.ACCEPTED) {
             revert InvalidGuardianStatus(
-                guardian.status,
+                guardianStorage.status,
                 GuardianStatus.ACCEPTED
             );
         }
@@ -410,7 +413,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             accountInEmail
         ];
 
-        recoveryRequest.currentWeight += guardian.weight;
+        recoveryRequest.currentWeight += guardianStorage.weight;
 
         uint256 threshold = getGuardianConfig(accountInEmail).threshold;
         if (recoveryRequest.currentWeight >= threshold) {
@@ -425,6 +428,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
             emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
 
+            // If delay is set to zero, an account can complete recovery straight away without
+            // needing an additional call to completeRecovery
             if (executeAfter == block.timestamp) {
                 completeRecovery(accountInEmail);
             }

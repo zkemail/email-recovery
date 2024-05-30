@@ -19,10 +19,13 @@ contract ZkEmailRecoveryHarness is ZkEmailRecovery {
         acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
     }
 
-    function exposed_deployRouterForAccount(
-        address account
-    ) external returns (address) {
-        return deployRouterForAccount(account);
+    function exposed_processRecovery(
+        address guardian,
+        uint templateIdx,
+        bytes[] memory subjectParams,
+        bytes32 nullifier
+    ) external {
+        processRecovery(guardian, templateIdx, subjectParams, nullifier);
     }
 
     function exposed_setupGuardians(
@@ -32,5 +35,11 @@ contract ZkEmailRecoveryHarness is ZkEmailRecovery {
         uint256 threshold
     ) external {
         setupGuardians(account, guardians, weights, threshold);
+    }
+
+    function exposed_deployRouterForAccount(
+        address account
+    ) external returns (address) {
+        return deployRouterForAccount(account);
     }
 }
