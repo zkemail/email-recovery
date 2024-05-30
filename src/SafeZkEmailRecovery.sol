@@ -15,6 +15,16 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
         ZkEmailRecovery(_verifier, _dkimRegistry, _emailAuthImpl)
     { }
 
+    /**
+     * @notice Returns a two-dimensional array of strings representing the subject templates for
+     * email recovery.
+     * @dev This function is overridden from ZkEmailRecovery. It is
+     * re-implemented by this contract to support a different subject template for recovering Safe
+     * accounts.
+     * in the subject or if the email should be in a language that is not English.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
     function recoverySubjectTemplates() public pure override returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](15);
@@ -36,12 +46,30 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
         return templates;
     }
 
-    function validateRecoverySubjectTemplates(bytes[] memory subjectParams)
+    /**
+     * @notice Validates the recovery subject templates and extracts the account address
+     * @dev This function is overridden from ZkEmailRecovery. It is re-implemented by
+     * this contract to support a different subject template for recovering Safe accounts.
+     * This function reverts if the subject parameters are invalid. The function
+     * should extract and return the account address as that is required by
+     * the core recovery logic.
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams An array of bytes containing the subject parameters
+     * @return accountInEmail The extracted account address from the subject parameters
+     */
+    function validateRecoverySubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
         internal
         view
         override
         returns (address)
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
         }

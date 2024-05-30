@@ -24,6 +24,28 @@ contract ZkEmailRecoveryHarness is ZkEmailRecovery {
         acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
     }
 
+    function exposed_validateAcceptanceSubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
+        external
+        pure
+        returns (address)
+    {
+        return validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
+    }
+
+    function exposed_validateRecoverySubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
+        external
+        view
+        returns (address)
+    {
+        return validateRecoverySubjectTemplates(templateIdx, subjectParams);
+    }
+
     function exposed_processRecovery(
         address guardian,
         uint256 templateIdx,

@@ -94,9 +94,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     mapping(address => address) internal routerToAccount;
 
     /**
-     * Account address to email account recovery router address
-     */
-    /**
+     * Account address to email account recovery router address.
      * These are stored for frontends to easily find the router contract address from the given
      * account account address
      */
@@ -220,14 +218,23 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @dev Can be overridden by an inheriting contract if using different acceptance subject
      * templates. This function reverts if the subject parameters are invalid. The function
      * should extract and return the account address as this is required by the core recovery logic.
+     * @param templateIdx The index of the template used for acceptance
      * @param subjectParams An array of bytes containing the subject parameters
      * @return accountInEmail The extracted account address from the subject parameters
      */
-    function validateAcceptanceSubjectTemplates(bytes[] memory subjectParams)
+    function validateAcceptanceSubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
         internal
+        pure
         virtual
         returns (address)
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
         if (subjectParams.length != 1) revert InvalidSubjectParams();
 
         // The GuardianStatus check in acceptGuardian implicitly
@@ -244,14 +251,23 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * templates. This function reverts if the subject parameters are invalid. The function
      * should extract and return the account address and the recovery module as they are required by
      * the core recovery logic.
+     * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams An array of bytes containing the subject parameters
      * @return accountInEmail The extracted account address from the subject parameters
      */
-    function validateRecoverySubjectTemplates(bytes[] memory subjectParams)
+    function validateRecoverySubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
         internal
+        view
         virtual
         returns (address)
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
         if (subjectParams.length != 3) revert InvalidSubjectParams();
 
         // The GuardianStatus check in processRecovery implicitly
@@ -265,7 +281,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         address expectedRecoveryModule = recoveryConfigs[accountInEmail].recoveryModule;
-        if (recoveryModuleInEmail != expectedRecoveryModule) {
+        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
+        {
             revert InvalidRecoveryModule();
         }
 
@@ -368,11 +385,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         if (guardian == address(0)) {
             revert InvalidGuardian();
         }
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
 
-        address accountInEmail = validateAcceptanceSubjectTemplates(subjectParams);
+        address accountInEmail = validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
 
         if (recoveryRequests[accountInEmail].currentWeight > 0) {
             revert RecoveryInProcess();
@@ -412,11 +426,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         if (guardian == address(0)) {
             revert InvalidGuardian();
         }
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
 
-        address accountInEmail = validateRecoverySubjectTemplates(subjectParams);
+        address accountInEmail = validateRecoverySubjectTemplates(templateIdx, subjectParams);
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account

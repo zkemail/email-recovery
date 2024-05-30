@@ -55,21 +55,6 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_InvalidTemplateIndex() public {
-        uint256 invalidTemplateIdx = 1;
-
-        bytes[] memory subjectParams = new bytes[](3);
-        subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(newOwner);
-        subjectParams[2] = abi.encode(recoveryModuleAddress);
-        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
-
-        vm.expectRevert(IZkEmailRecovery.InvalidTemplateIndex.selector);
-        zkEmailRecovery.exposed_processRecovery(
-            guardian1, invalidTemplateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_ProcessRecovery_RevertWhen_GuardianStatusIsNONE() public {
         address invalidGuardian = address(1);
 
