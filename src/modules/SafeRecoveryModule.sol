@@ -70,7 +70,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address smartAccount) external view returns (bool) {
-        return false; // TODO: implement
+        return IZkEmailRecovery(zkEmailRecovery).getGuardianConfig(smartAccount).threshold != 0;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

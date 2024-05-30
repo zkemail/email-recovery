@@ -246,13 +246,11 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * the core recovery logic.
      * @param subjectParams An array of bytes containing the subject parameters
      * @return accountInEmail The extracted account address from the subject parameters
-     * @return recoveryModuleInEmail The extracted recovery module address from the subject
-     * parameters
      */
     function validateRecoverySubjectTemplates(bytes[] memory subjectParams)
         internal
         virtual
-        returns (address, address)
+        returns (address)
     {
         if (subjectParams.length != 3) revert InvalidSubjectParams();
 
@@ -271,7 +269,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidRecoveryModule();
         }
 
-        return (accountInEmail, recoveryModuleInEmail);
+        return accountInEmail;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -418,8 +416,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert InvalidTemplateIndex();
         }
 
-        (address accountInEmail, address recoveryModuleInEmail) =
-            validateRecoverySubjectTemplates(subjectParams);
+        address accountInEmail = validateRecoverySubjectTemplates(subjectParams);
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account

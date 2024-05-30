@@ -38,8 +38,9 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
 
     function validateRecoverySubjectTemplates(bytes[] memory subjectParams)
         internal
+        view
         override
-        returns (address, address)
+        returns (address)
     {
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
@@ -61,6 +62,6 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
             revert InvalidRecoveryModule();
         }
 
-        return (accountInEmail, recoveryModuleInEmail);
+        return accountInEmail;
     }
 }
