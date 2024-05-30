@@ -350,22 +350,20 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
-        GuardianStorage memory guardianStorage = getGuardian(
+        GuardianStorage memory _guardian = getGuardian(
             accountInEmail,
             guardian
         );
-        if (guardianStorage.status != GuardianStatus.REQUESTED) {
+        if (_guardian.status != GuardianStatus.REQUESTED) {
             revert InvalidGuardianStatus(
-                guardianStorage.status,
+                _guardian.status,
                 GuardianStatus.REQUESTED
             );
         }
 
-        _updateGuardian({
-            account: accountInEmail,
-            guardian: guardian,
-            status: GuardianStatus.ACCEPTED,
-            weight: guardianStorage.weight
+        guardianStorage[accountInEmail].set({
+            key: guardian,
+            value: GuardianStorage(GuardianStatus.ACCEPTED, _guardian.weight)
         });
     }
 
@@ -617,56 +615,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             totalWeight,
             threshold
         );
-    }
-
-    /**
-     * @notice Updates the storage details for a specified guardian of the caller's account
-     * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
-     * @param guardian The address of the guardian to update
-     * @param status The new (if changed) status for the guardian
-     * @param weight The new (if changed) weight for the guardian
-     */
-    function updateGuardian(
-        address guardian,
-        GuardianStatus status,
-        uint256 weight
-    ) external onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
-        _updateGuardian(msg.sender, guardian, status, weight);
-    }
-
-    /**
-     * @notice Internal function to update the storage details for a specified guardian of a given account
-     * @param account The address of the account associated with the guardian
-     * @param guardian The address of the guardian to update
-     * @param status The new (if changed) status for the guardian
-     * @param weight The new (if changed) weight for the guardian
-     */
-    function _updateGuardian(
-        address account,
-        address guardian,
-        GuardianStatus status,
-        uint256 weight
-    ) internal {
-        if (account == address(0)) {
-            revert InvalidAccountAddress();
-        }
-
-        if (guardian == address(0)) {
-            revert InvalidGuardianAddress();
-        }
-
-        GuardianStorage memory oldGuardian = guardianStorage[account].get(
-            guardian
-        );
-
-        if (weight == 0) {
-            revert InvalidGuardianWeight();
-        }
-
-        guardianStorage[account].set({
-            key: guardian,
-            value: GuardianStorage(status, weight)
-        });
     }
 
     /**

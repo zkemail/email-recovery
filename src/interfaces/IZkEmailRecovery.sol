@@ -150,12 +150,6 @@ interface IZkEmailRecovery {
         address guardian
     ) external view returns (GuardianStorage memory);
 
-    function updateGuardian(
-        address guardian,
-        GuardianStatus status,
-        uint256 weight
-    ) external;
-
     function addGuardian(
         address guardian,
         uint256 weight,

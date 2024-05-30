@@ -188,7 +188,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string
-            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x4eA1A8f068aF05a4A7D4BFCdeEEC96c9028CC96a";
+            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x8Bdd7d657275a48e5214c5B086Ba5b0f92DBD73f";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(
