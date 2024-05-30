@@ -19,6 +19,12 @@ contract ZkEmailRecoveryHarness is ZkEmailRecovery {
         acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
     }
 
+    function exposed_deployRouterForAccount(
+        address account
+    ) external returns (address) {
+        return deployRouterForAccount(account);
+    }
+
     function exposed_setupGuardians(
         address account,
         address[] memory guardians,

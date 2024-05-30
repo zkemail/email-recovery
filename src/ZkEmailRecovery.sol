@@ -845,17 +845,17 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             accountToRouter[account] = routerAddress;
 
             return routerAddress;
+        } else {
+            EmailAccountRecoveryRouter emailAccountRecoveryRouter = new EmailAccountRecoveryRouter{
+                    salt: salt
+                }(address(this));
+            routerAddress = address(emailAccountRecoveryRouter);
+
+            routerToAccount[routerAddress] = account;
+            accountToRouter[account] = routerAddress;
+
+            return routerAddress;
         }
-
-        EmailAccountRecoveryRouter emailAccountRecoveryRouter = new EmailAccountRecoveryRouter{
-                salt: salt
-            }(address(this));
-        routerAddress = address(emailAccountRecoveryRouter);
-
-        routerToAccount[routerAddress] = account;
-        accountToRouter[account] = routerAddress;
-
-        return routerAddress;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
