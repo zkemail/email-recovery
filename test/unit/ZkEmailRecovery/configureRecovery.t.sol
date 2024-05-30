@@ -37,7 +37,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
-        vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
+        vm.expectRevert(IZkEmailRecovery.SetupAlreadyCalled.selector);
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
             recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry

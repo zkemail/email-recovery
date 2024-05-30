@@ -62,6 +62,15 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
         );
     }
 
+    function test_SetupGuardians_RevertWhen_AddressAlreadyGuardian() public {
+        guardians[0] = guardians[1];
+
+        vm.expectRevert(IZkEmailRecovery.AddressAlreadyGuardian.selector);
+        zkEmailRecovery.exposed_setupGuardians(
+            accountAddress, guardians, guardianWeights, threshold
+        );
+    }
+
     function test_SetupGuardians_RevertWhen_ThresholdExceedsTotalWeight() public {
         uint256 invalidThreshold = totalWeight + 1;
 
@@ -71,7 +80,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
         );
     }
 
-    function test_SetupGuardians_SetupGuardians_Succeeds() public {
+    function test_SetupGuardians_Succeeds() public {
         uint256 expectedGuardianCount = guardians.length;
         uint256 expectedTotalWeight = totalWeight;
         uint256 expectedThreshold = threshold;
