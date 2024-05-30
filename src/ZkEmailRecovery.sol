@@ -290,7 +290,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * should be deinitialized. This should include remove state accociated with an account.
      * @param account The account to delete state for
      */
-    // FIXME: This is not secure as a recovery module could call this function via _execute and pass in an account that wasn't theirs
     function deInitRecoveryFromModule(address account) external {
         address recoveryModule = recoveryConfigs[account].recoveryModule;
         if (recoveryModule != msg.sender) {
