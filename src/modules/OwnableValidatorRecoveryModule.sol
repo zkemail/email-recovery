@@ -58,9 +58,9 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
 
     /**
      * De-initialize the module with the given data
-     * @param data The data to de-initialize the module with
+     * @custom:unusedparam data - the data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external {
+    function onUninstall(bytes calldata /* data */ ) external {
         delete validators[msg.sender];
         IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
     }
@@ -94,7 +94,7 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
         _execute(account, validators[account], 0, encodedCall);
     }
 
-    function getTrustedContract() external returns (address) {
+    function getTrustedContract() external view returns (address) {
         return zkEmailRecovery;
     }
 

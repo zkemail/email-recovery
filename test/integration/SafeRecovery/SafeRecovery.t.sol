@@ -15,6 +15,7 @@ import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     SafeRecoveryModule recoveryModule;
+
     address recoveryModuleAddress;
 
     function setUp() public override {
@@ -25,6 +26,12 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     function test_Recover_RotatesOwnerSuccessfully() public {
         IERC7579Account account = IERC7579Account(accountAddress);
+
+        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        subjectParamsForRecovery[0] = abi.encode(accountAddress);
+        subjectParamsForRecovery[1] = abi.encode(owner);
+        subjectParamsForRecovery[2] = abi.encode(newOwner);
+        subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
         // Install recovery module - configureRecovery is called on `onInstall`
         vm.prank(accountAddress);
@@ -68,10 +75,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
-        assertEq(
-            recoveryRequest.subjectParams,
-            subjectParamsForRecovery(accountAddress, owner, newOwner, recoveryModuleAddress)
-        );
+        assertEq(recoveryRequest.subjectParams, subjectParamsForRecovery);
         assertEq(recoveryRequest.currentWeight, 3);
 
         vm.warp(block.timestamp + delay);

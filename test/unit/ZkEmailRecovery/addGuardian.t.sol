@@ -110,8 +110,6 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
         uint256 newGuardianWeight = 1;
         uint256 newThreshold = 3;
 
-        uint256 expectedGuardianCount = guardians.length + 1;
-        uint256 expectedTotalWeight = totalWeight + newGuardianWeight;
         uint256 expectedThreshold = newThreshold; // new threshold
 
         vm.startPrank(accountAddress);

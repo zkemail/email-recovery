@@ -8,55 +8,60 @@ import { IEmailAccountRecovery } from "./interfaces/IEmailAccountRecovery.sol";
  * Helper contract that routes relayer calls to correct EmailAccountRecovery implementation
  */
 contract EmailAccountRecoveryRouter {
-    address public immutable emailAccountRecoveryImpl;
+    address public immutable EMAIL_ACCOUNT_RECOVERY_IMPL;
 
     constructor(address _emailAccountRecoveryImpl) {
-        emailAccountRecoveryImpl = _emailAccountRecoveryImpl;
+        EMAIL_ACCOUNT_RECOVERY_IMPL = _emailAccountRecoveryImpl;
     }
 
     function verifier() external view returns (address) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).verifier();
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).verifier();
     }
 
     function dkim() external view returns (address) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).dkim();
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).dkim();
     }
 
     function emailAuthImplementation() external view returns (address) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).emailAuthImplementation();
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).emailAuthImplementation();
     }
 
     function acceptanceSubjectTemplates() external view returns (string[][] memory) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).acceptanceSubjectTemplates();
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).acceptanceSubjectTemplates();
     }
 
     function recoverySubjectTemplates() external view returns (string[][] memory) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).recoverySubjectTemplates();
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).recoverySubjectTemplates();
     }
 
     function computeEmailAuthAddress(bytes32 accountSalt) external view returns (address) {
-        return IEmailAccountRecovery(emailAccountRecoveryImpl).computeEmailAuthAddress(accountSalt);
+        return
+            IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).computeEmailAuthAddress(accountSalt);
     }
 
     function computeAcceptanceTemplateId(uint256 templateIdx) external view returns (uint256) {
-        return
-            IEmailAccountRecovery(emailAccountRecoveryImpl).computeAcceptanceTemplateId(templateIdx);
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).computeAcceptanceTemplateId(
+            templateIdx
+        );
     }
 
     function computeRecoveryTemplateId(uint256 templateIdx) external view returns (uint256) {
-        return
-            IEmailAccountRecovery(emailAccountRecoveryImpl).computeRecoveryTemplateId(templateIdx);
+        return IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).computeRecoveryTemplateId(
+            templateIdx
+        );
     }
 
     function handleAcceptance(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
-        IEmailAccountRecovery(emailAccountRecoveryImpl).handleAcceptance(emailAuthMsg, templateIdx);
+        IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).handleAcceptance(
+            emailAuthMsg, templateIdx
+        );
     }
 
     function handleRecovery(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
-        IEmailAccountRecovery(emailAccountRecoveryImpl).handleRecovery(emailAuthMsg, templateIdx);
+        IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function completeRecovery() external {
-        IEmailAccountRecovery(emailAccountRecoveryImpl).completeRecovery();
+        IEmailAccountRecovery(EMAIL_ACCOUNT_RECOVERY_IMPL).completeRecovery();
     }
 }

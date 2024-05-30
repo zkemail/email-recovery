@@ -25,7 +25,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         address guardian = guardian1;
 
         MockGroth16Verifier newVerifier = new MockGroth16Verifier();
-        address newVerifierAddr = address(verifier);
+        address newVerifierAddr = address(newVerifier);
 
         vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
         zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
@@ -35,7 +35,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         address guardian = guardian1;
 
         MockGroth16Verifier newVerifier = new MockGroth16Verifier();
-        address newVerifierAddr = address(verifier);
+        address newVerifierAddr = address(newVerifier);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
@@ -52,12 +52,12 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
     }
 
-    function test_UpdateGuardianVerifier_UpdateGuardianVerifier_Succeeds() public {
+    function test_UpdateGuardianVerifier_Succeeds() public {
         address guardian = guardian1;
         EmailAuth guardianEmailAuth = EmailAuth(guardian);
 
         MockGroth16Verifier newVerifier = new MockGroth16Verifier();
-        address newVerifierAddr = address(verifier);
+        address newVerifierAddr = address(newVerifier);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(

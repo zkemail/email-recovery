@@ -122,6 +122,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         bytes32 accountSalt
     )
         public
+        view
         returns (EmailProof memory)
     {
         EmailProof memory emailProof;
@@ -150,7 +151,6 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         string memory subject =
             "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
-        uint256 templateIdx = 0;
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
@@ -175,9 +175,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string memory subject =
-            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x1e56eF2bF12ea5a6e74F5cA4020Df640698fB5A3";
+            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x9c6607079f14bc9b9234eF94D136d6e371399d43";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
-        uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);

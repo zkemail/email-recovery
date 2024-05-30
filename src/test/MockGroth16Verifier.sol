@@ -16,7 +16,7 @@ struct EmailProof {
  * @notice Mock snarkjs Groth16 Solidity verifier
  */
 contract MockGroth16Verifier {
-    function verifyEmailProof(EmailProof memory proof) public view returns (bool) {
+    function verifyEmailProof(EmailProof memory proof) public pure returns (bool) {
         proof;
 
         return true;

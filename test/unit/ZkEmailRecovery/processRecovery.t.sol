@@ -165,9 +165,6 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
     function test_ProcessRecovery_CompletesRecoveryIfDelayIsZero() public {
         uint256 zeroDelay = 0 seconds;
 
-        uint256 guardian1Weight = guardianWeights[0];
-        uint256 guardian2Weight = guardianWeights[1];
-
         bytes[] memory subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(newOwner);

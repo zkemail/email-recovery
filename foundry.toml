@@ -3,9 +3,23 @@ emv_version = "paris"
 src = "src"
 out = "out"
 script = "script"
-libs = ["node_modules", "lib"]
-fs_permissions = [{ access = "read", path = "out-optimized" }, { access = "read-write", path = "gas_calculations" }]
-allow_paths = ["*", "/"]
+libs = [
+    "node_modules",
+    "lib",
+]
+fs_permissions = [
+    { access = "read", path = "out-optimized" },
+    { access = "read-write", path = "gas_calculations" },
+]
+allow_paths = [
+    "*",
+    "/",
+]
+ignored_warnings_from = [
+    "node_modules",
+    "node_modules/@rhinestone/modulekit/src/**/*.sol",
+    "lib",
+]
 
 [rpc_endpoints]
 baseSepolia = "${BASE_SEPOLIA_RPC_URL}"

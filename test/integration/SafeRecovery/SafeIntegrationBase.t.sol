@@ -146,7 +146,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
             uint48(0), uint48(type(uint48).max), hex"4141414141414141414141414141414141"
         );
 
-        bytes32 userOpHash = entrypoint.getUserOpHash(userOp);
+        entrypoint.getUserOpHash(userOp);
         PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         deal(address(userOp.sender), 1 ether);
@@ -162,9 +162,9 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     )
         internal
         view
-        returns (bytes memory _initCode)
+        returns (bytes memory initCode)
     {
-        _initCode = abi.encodePacked(
+        initCode = abi.encodePacked(
             address(safeProxyFactory),
             abi.encodeCall(
                 SafeProxyFactory.createProxyWithNonce,
@@ -200,6 +200,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         bytes32 accountSalt
     )
         public
+        view
         returns (EmailProof memory)
     {
         EmailProof memory emailProof;
@@ -227,7 +228,8 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForAcceptance = subjectParamsForAcceptance(accountAddress);
+        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
+        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
@@ -254,8 +256,11 @@ abstract contract SafeIntegrationBase is IntegrationBase {
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery =
-            subjectParamsForRecovery(accountAddress, oldOwner, newOwner, recoveryModule);
+        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        subjectParamsForRecovery[0] = abi.encode(accountAddress);
+        subjectParamsForRecovery[1] = abi.encode(oldOwner);
+        subjectParamsForRecovery[2] = abi.encode(newOwner);
+        subjectParamsForRecovery[3] = abi.encode(recoveryModule);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
@@ -264,28 +269,5 @@ abstract contract SafeIntegrationBase is IntegrationBase {
             proof: emailProof
         });
         IEmailAccountRecovery(router).handleRecovery(emailAuthMsg, templateIdx);
-    }
-
-    function subjectParamsForAcceptance(address account) public returns (bytes[] memory) {
-        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
-        return subjectParamsForAcceptance;
-    }
-
-    function subjectParamsForRecovery(
-        address account,
-        address oldOwner,
-        address newOwner,
-        address recoveryModule
-    )
-        public
-        returns (bytes[] memory)
-    {
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
-        subjectParamsForRecovery[0] = abi.encode(account);
-        subjectParamsForRecovery[1] = abi.encode(oldOwner);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
-        subjectParamsForRecovery[3] = abi.encode(recoveryModule);
-        return subjectParamsForRecovery;
     }
 }

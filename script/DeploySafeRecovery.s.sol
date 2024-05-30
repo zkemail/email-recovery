@@ -17,7 +17,7 @@ contract DeploySafeRecoveryScript is Script {
 
         SafeZkEmailRecovery safeZkEmailRecovery =
             new SafeZkEmailRecovery{ salt: salt }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
-        SafeRecoveryModule safeRecoveryModule = new SafeRecoveryModule(address(safeZkEmailRecovery));
+        new SafeRecoveryModule(address(safeZkEmailRecovery));
 
         vm.stopBroadcast();
     }

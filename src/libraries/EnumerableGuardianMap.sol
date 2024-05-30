@@ -93,19 +93,13 @@ library EnumerableGuardianMap {
      * @custom:modification This is a new function that did not exist on the
      * original Open Zeppelin library.
      */
-    function removeAll(
-        AddressToGuardianMap storage map,
-        address[] memory keys
-    )
-        internal
-        returns (bool)
-    {
-        if (keys.length > MAX_NUMBER_OF_GUARDIANS) {
+    function removeAll(AddressToGuardianMap storage map, address[] memory guardianKeys) internal {
+        if (guardianKeys.length > MAX_NUMBER_OF_GUARDIANS) {
             revert TooManyValuesToRemove();
         }
-        for (uint256 i = 0; i < keys.length; i++) {
-            delete map._values[keys[i]];
-            map._keys.remove(keys[i]);
+        for (uint256 i = 0; i < guardianKeys.length; i++) {
+            delete map._values[guardianKeys[i]];
+            map._keys.remove(guardianKeys[i]);
         }
     }
 

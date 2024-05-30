@@ -39,6 +39,7 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         bytes32 accountSalt
     )
         public
+        view
         returns (EmailProof memory)
     {
         EmailProof memory emailProof;

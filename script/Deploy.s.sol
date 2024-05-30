@@ -14,8 +14,7 @@ contract DeployScript is Script {
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        ZkEmailRecovery zkEmailRecovery =
-            new ZkEmailRecovery{ salt: salt }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
+        new ZkEmailRecovery{ salt: salt }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
 
         vm.stopBroadcast();
     }
