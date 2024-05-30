@@ -87,7 +87,7 @@ interface IZkEmailRecovery {
     error NotEnoughApprovals();
     error DelayNotPassed();
     error RecoveryRequestExpired();
-    error DelayLessThanExpiry();
+    error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
 
     /** Guardian logic errors */

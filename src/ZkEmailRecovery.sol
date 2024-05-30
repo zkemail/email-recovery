@@ -506,11 +506,17 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     function updateRecoveryConfig(
         RecoveryConfig memory recoveryConfig
     ) public onlyWhenNotRecovering {
+        address account = msg.sender;
+
+        if (guardianConfigs[account].threshold == 0) {
+            revert AccountNotConfigured();
+        }
+
         if (recoveryConfig.recoveryModule == address(0)) {
             revert InvalidRecoveryModule();
         }
         if (recoveryConfig.delay > recoveryConfig.expiry) {
-            revert DelayLessThanExpiry();
+            revert DelayMoreThanExpiry();
         }
         if (
             recoveryConfig.expiry - recoveryConfig.delay <
@@ -519,7 +525,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             revert RecoveryWindowTooShort();
         }
 
-        address account = msg.sender;
         recoveryConfigs[account] = recoveryConfig;
     }
 
