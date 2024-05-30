@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {UnitBase} from "../UnitBase.t.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { UnitBase } from "../UnitBase.t.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
 
 contract ZkEmailRecovery_computeRouterAddress_Test is UnitBase {
     OwnableValidatorRecoveryModule recoveryModule;
@@ -13,9 +13,8 @@ contract ZkEmailRecovery_computeRouterAddress_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryModule = new OwnableValidatorRecoveryModule{salt: "test salt"}(
-            address(zkEmailRecovery)
-        );
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
     }
 
@@ -25,42 +24,26 @@ contract ZkEmailRecovery_computeRouterAddress_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
-        address expectedRouter = zkEmailRecovery.getRouterForAccount(
-            accountAddress
-        );
+        address expectedRouter = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         assertNotEq(router, expectedRouter);
     }
 
-    function test_ComputeRouterAddress_FailsWhen_CorrectSaltValueButWrongEncoding()
-        public
-    {
+    function test_ComputeRouterAddress_FailsWhen_CorrectSaltValueButWrongEncoding() public {
         bytes32 salt = keccak256(abi.encodePacked(accountAddress));
         address router = zkEmailRecovery.computeRouterAddress(salt);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
-        address expectedRouter = zkEmailRecovery.getRouterForAccount(
-            accountAddress
-        );
+        address expectedRouter = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         assertNotEq(router, expectedRouter);
     }
@@ -71,18 +54,11 @@ contract ZkEmailRecovery_computeRouterAddress_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
-        address expectedRouter = zkEmailRecovery.getRouterForAccount(
-            accountAddress
-        );
+        address expectedRouter = zkEmailRecovery.getRouterForAccount(accountAddress);
 
         assertEq(router, expectedRouter);
     }

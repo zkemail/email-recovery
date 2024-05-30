@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
+import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 
-import {IRecoveryModule} from "../interfaces/IRecoveryModule.sol";
-import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
+import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
+import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
 import "forge-std/console2.sol";
 
-contract OwnableValidatorRecoveryModule is
-    ERC7579ExecutorBase,
-    IRecoveryModule
-{
+contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -42,10 +39,7 @@ contract OwnableValidatorRecoveryModule is
             uint256 threshold,
             uint256 delay,
             uint256 expiry
-        ) = abi.decode(
-                data,
-                (address, address[], uint256[], uint256, uint256, uint256)
-            );
+        ) = abi.decode(data, (address, address[], uint256[], uint256, uint256, uint256));
 
         validators[msg.sender] = validator;
 
@@ -94,10 +88,7 @@ contract OwnableValidatorRecoveryModule is
             revert InvalidNewOwner();
         }
         bytes memory encodedCall = abi.encodeWithSignature(
-            "changeOwner(address,address,address)",
-            account,
-            address(this),
-            newOwner
+            "changeOwner(address,address,address)", account, address(this), newOwner
         );
 
         _execute(account, validators[account], 0, encodedCall);

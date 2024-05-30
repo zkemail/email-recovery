@@ -2,16 +2,21 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {RhinestoneModuleKit, AccountInstance} from "modulekit/ModuleKit.sol";
-import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import {EmailAuth, EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
+import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
+import { ECDSAOwnedDKIMRegistry } from
+    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import {
+    EmailAuth,
+    EmailAuthMsg,
+    EmailProof
+} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import {ZkEmailRecoveryHarness} from "./ZkEmailRecoveryHarness.sol";
-import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
-import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+import { ZkEmailRecoveryHarness } from "./ZkEmailRecoveryHarness.sol";
+import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
+import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
 abstract contract UnitBase is RhinestoneModuleKit, Test {
     // ZK Email contracts and variables
@@ -38,7 +43,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     uint256 delay;
     uint256 expiry;
     uint256 threshold;
-    uint templateIdx;
+    uint256 templateIdx;
 
     // Account salts
     bytes32 accountSalt1;
@@ -47,8 +52,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     string selector = "12345";
     string domainName = "gmail.com";
-    bytes32 publicKeyHash =
-        0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+    bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
 
     function setUp() public virtual {
         init();
@@ -57,20 +61,12 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         vm.startPrank(zkEmailDeployer);
         ecdsaOwnedDkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
         string memory signedMsg = ecdsaOwnedDkimRegistry.computeSignedMsg(
-            ecdsaOwnedDkimRegistry.SET_PREFIX(),
-            selector,
-            domainName,
-            publicKeyHash
+            ecdsaOwnedDkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
         );
         bytes32 digest = ECDSA.toEthSignedMessageHash(bytes(signedMsg));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
-        ecdsaOwnedDkimRegistry.setDKIMPublicKeyHash(
-            selector,
-            domainName,
-            publicKeyHash,
-            signature
-        );
+        ecdsaOwnedDkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
 
         verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();
@@ -84,9 +80,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         // Deploy ZkEmailRecovery
         zkEmailRecovery = new ZkEmailRecoveryHarness(
-            address(verifier),
-            address(ecdsaOwnedDkimRegistry),
-            address(emailAuthImpl)
+            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
         );
 
         // Deploy and fund the account
@@ -126,7 +120,10 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         string memory subject,
         bytes32 nullifier,
         bytes32 accountSalt
-    ) public returns (EmailProof memory) {
+    )
+        public
+        returns (EmailProof memory)
+    {
         EmailProof memory emailProof;
         emailProof.domainName = "gmail.com";
         emailProof.publicKeyHash = bytes32(
@@ -145,57 +142,43 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after certain changes
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // certain changes
         // console2.log("accountAddress: ", accountAddress);
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-        string
-            memory subject = "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
+        string memory subject =
+            "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
 
-        EmailProof memory emailProof = generateMockEmailProof(
-            subject,
-            nullifier,
-            accountSalt
-        );
+        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeAcceptanceTemplateId(
-                templateIdx
-            ),
+            templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        IEmailAccountRecovery(router).handleAcceptance(
-            emailAuthMsg,
-            templateIdx
-        );
+        IEmailAccountRecovery(router).handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address recoveryModule,
-        bytes32 accountSalt
-    ) public {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after certain changes
+    function handleRecovery(address recoveryModule, bytes32 accountSalt) public {
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // certain changes
         // console2.log("accountAddress: ", accountAddress);
         // console2.log("newOwner:       ", newOwner);
         // console2.log("recoveryModule: ", recoveryModule);
 
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-        string
-            memory subject = "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x1e56eF2bF12ea5a6e74F5cA4020Df640698fB5A3";
+        string memory subject =
+            "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x1e56eF2bF12ea5a6e74F5cA4020Df640698fB5A3";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
-        EmailProof memory emailProof = generateMockEmailProof(
-            subject,
-            nullifier,
-            accountSalt
-        );
+        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);

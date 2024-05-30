@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {ZkEmailRecovery} from "./ZkEmailRecovery.sol";
-import {ISafe} from "./interfaces/ISafe.sol";
+import { ZkEmailRecovery } from "./ZkEmailRecovery.sol";
+import { ISafe } from "./interfaces/ISafe.sol";
 
 contract SafeZkEmailRecovery is ZkEmailRecovery {
     error InvalidOldOwner();
@@ -11,14 +11,11 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
         address _verifier,
         address _dkimRegistry,
         address _emailAuthImpl
-    ) ZkEmailRecovery(_verifier, _dkimRegistry, _emailAuthImpl) {}
+    )
+        ZkEmailRecovery(_verifier, _dkimRegistry, _emailAuthImpl)
+    { }
 
-    function recoverySubjectTemplates()
-        public
-        pure
-        override
-        returns (string[][] memory)
-    {
+    function recoverySubjectTemplates() public pure override returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](15);
         templates[0][0] = "Recover";
@@ -39,9 +36,11 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
         return templates;
     }
 
-    function validateRecoverySubjectTemplates(
-        bytes[] memory subjectParams
-    ) internal override returns (address, address) {
+    function validateRecoverySubjectTemplates(bytes[] memory subjectParams)
+        internal
+        override
+        returns (address, address)
+    {
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
         }

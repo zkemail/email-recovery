@@ -2,12 +2,12 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
-import {UnitBase} from "../UnitBase.t.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
-import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+import { UnitBase } from "../UnitBase.t.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
 contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
     OwnableValidatorRecoveryModule recoveryModule;
@@ -16,23 +16,18 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryModule = new OwnableValidatorRecoveryModule{salt: "test salt"}(
-            address(zkEmailRecovery)
-        );
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
     }
 
-    function test_UpdateGuardianVerifier_RevertWhen_UnauthorizedAccountForGuardian()
-        public
-    {
+    function test_UpdateGuardianVerifier_RevertWhen_UnauthorizedAccountForGuardian() public {
         address guardian = guardian1;
 
         MockGroth16Verifier newVerifier = new MockGroth16Verifier();
         address newVerifierAddr = address(verifier);
 
-        vm.expectRevert(
-            IZkEmailRecovery.UnauthorizedAccountForGuardian.selector
-        );
+        vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
         zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
     }
 
@@ -44,12 +39,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -62,9 +52,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
     }
 
-    function test_UpdateGuardianVerifier_UpdateGuardianVerifier_Succeeds()
-        public
-    {
+    function test_UpdateGuardianVerifier_UpdateGuardianVerifier_Succeeds() public {
         address guardian = guardian1;
         EmailAuth guardianEmailAuth = EmailAuth(guardian);
 
@@ -73,12 +61,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 

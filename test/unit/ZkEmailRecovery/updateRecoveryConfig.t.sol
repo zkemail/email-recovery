@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {UnitBase} from "../UnitBase.t.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { UnitBase } from "../UnitBase.t.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
 
 contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
     OwnableValidatorRecoveryModule recoveryModule;
@@ -13,24 +13,18 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryModule = new OwnableValidatorRecoveryModule{salt: "test salt"}(
-            address(zkEmailRecovery)
-        );
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_AlreadyRecovering() public {
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(recoveryModuleAddress, delay, expiry);
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, delay, expiry);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -43,33 +37,24 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
     }
 
-    function test_UpdateRecoveryConfig_RevertWhen_AccountNotConfigured()
-        public
-    {
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(recoveryModuleAddress, delay, expiry);
+    function test_UpdateRecoveryConfig_RevertWhen_AccountNotConfigured() public {
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, delay, expiry);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IZkEmailRecovery.AccountNotConfigured.selector);
         zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
     }
 
-    function test_UpdateRecoveryConfig_RevertWhen_InvalidRecoveryModule()
-        public
-    {
+    function test_UpdateRecoveryConfig_RevertWhen_InvalidRecoveryModule() public {
         address invalidRecoveryModule = address(0);
 
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(invalidRecoveryModule, delay, expiry);
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(invalidRecoveryModule, delay, expiry);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -81,17 +66,12 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
     function test_UpdateRecoveryConfig_RevertWhen_DelayMoreThanExpiry() public {
         uint256 invalidDelay = expiry + 1 seconds;
 
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(recoveryModuleAddress, invalidDelay, expiry);
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, invalidDelay, expiry);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -100,23 +80,16 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
     }
 
-    function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShort()
-        public
-    {
+    function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShort() public {
         uint256 newDelay = 1 hours;
         uint256 newExpiry = 24 hours;
 
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -130,17 +103,12 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 newDelay = 1 days;
         uint256 newExpiry = 4 weeks;
 
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig = IZkEmailRecovery
-            .RecoveryConfig(newRecoveryModule, newDelay, newExpiry);
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(newRecoveryModule, newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 

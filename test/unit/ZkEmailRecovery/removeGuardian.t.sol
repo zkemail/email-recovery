@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {UnitBase} from "../UnitBase.t.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
-import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
+import { UnitBase } from "../UnitBase.t.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
     OwnableValidatorRecoveryModule recoveryModule;
@@ -14,20 +14,15 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryModule = new OwnableValidatorRecoveryModule{salt: "test salt"}(
-            address(zkEmailRecovery)
-        );
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
     }
 
-    function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian()
-        public
-    {
+    function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian() public {
         address guardian = guardian1;
 
-        vm.expectRevert(
-            IZkEmailRecovery.UnauthorizedAccountForGuardian.selector
-        );
+        vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
         zkEmailRecovery.removeGuardian(guardian, threshold);
     }
 
@@ -36,12 +31,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -54,9 +44,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
         zkEmailRecovery.removeGuardian(guardian, threshold);
     }
 
-    function test_RemoveGuardian_RevertWhen_ThresholdExceedsTotalWeight()
-        public
-    {
+    function test_RemoveGuardian_RevertWhen_ThresholdExceedsTotalWeight() public {
         address guardian = guardian2; // guardian 2 weight is 2
         // threshold = 3
         // totalWeight = 4
@@ -68,21 +56,14 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(
-            IZkEmailRecovery.ThresholdCannotExceedTotalWeight.selector
-        );
+        vm.expectRevert(IZkEmailRecovery.ThresholdCannotExceedTotalWeight.selector);
         zkEmailRecovery.removeGuardian(guardian, threshold);
     }
 
@@ -98,12 +79,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -112,15 +88,13 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
         vm.startPrank(accountAddress);
         zkEmailRecovery.removeGuardian(guardian, threshold);
 
-        GuardianStorage memory guardianStorage = zkEmailRecovery.getGuardian(
-            accountAddress,
-            guardian
-        );
+        GuardianStorage memory guardianStorage =
+            zkEmailRecovery.getGuardian(accountAddress, guardian);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage.weight, 0);
 
-        IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
-            .getGuardianConfig(accountAddress);
+        IZkEmailRecovery.GuardianConfig memory guardianConfig =
+            zkEmailRecovery.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length - 1);
         assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
         assertEq(guardianConfig.threshold, threshold);
@@ -132,12 +106,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -146,8 +115,8 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
         vm.startPrank(accountAddress);
         zkEmailRecovery.removeGuardian(guardian, newThreshold);
 
-        IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
-            .getGuardianConfig(accountAddress);
+        IZkEmailRecovery.GuardianConfig memory guardianConfig =
+            zkEmailRecovery.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.threshold, newThreshold);
     }
 }

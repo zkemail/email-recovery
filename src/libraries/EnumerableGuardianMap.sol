@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
  * A struct representing the values required for a guardian
@@ -34,7 +34,9 @@ enum GuardianStatus {
 library EnumerableGuardianMap {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    /** Maximum number of guardians that can be added */
+    /**
+     * Maximum number of guardians that can be added
+     */
     uint256 constant MAX_NUMBER_OF_GUARDIANS = 32;
 
     error MaxNumberOfGuardiansReached();
@@ -53,14 +55,18 @@ library EnumerableGuardianMap {
      * Returns true if the key was added to the map, that is if it was not
      * already present.
      *
-     * @custom:modification Modifed from the OpenZeppelin implementation to support a max number of guardians.
+     * @custom:modification Modifed from the OpenZeppelin implementation to support a max number of
+     * guardians.
      * This prevents the library having unbounded costs when clearing up state
      */
     function set(
         AddressToGuardianMap storage map,
         address key,
         GuardianStorage memory value
-    ) internal returns (bool) {
+    )
+        internal
+        returns (bool)
+    {
         uint256 length = map._keys.length();
         if (length > MAX_NUMBER_OF_GUARDIANS) {
             revert MaxNumberOfGuardiansReached();
@@ -74,10 +80,7 @@ library EnumerableGuardianMap {
      *
      * Returns true if the key was removed from the map, that is if it was present.
      */
-    function remove(
-        AddressToGuardianMap storage map,
-        address key
-    ) internal returns (bool) {
+    function remove(AddressToGuardianMap storage map, address key) internal returns (bool) {
         delete map._values[key];
         return map._keys.remove(key);
     }
@@ -93,7 +96,10 @@ library EnumerableGuardianMap {
     function removeAll(
         AddressToGuardianMap storage map,
         address[] memory keys
-    ) internal returns (bool) {
+    )
+        internal
+        returns (bool)
+    {
         if (keys.length > MAX_NUMBER_OF_GUARDIANS) {
             revert TooManyValuesToRemove();
         }
@@ -116,7 +122,11 @@ library EnumerableGuardianMap {
     function get(
         AddressToGuardianMap storage map,
         address key
-    ) internal view returns (GuardianStorage memory) {
+    )
+        internal
+        view
+        returns (GuardianStorage memory)
+    {
         return map._values[key];
     }
 
@@ -126,9 +136,7 @@ library EnumerableGuardianMap {
      * WARNING: This operation will copy the entire storage to memory, which could
      * be quite expensive.
      */
-    function keys(
-        AddressToGuardianMap storage map
-    ) internal view returns (address[] memory) {
+    function keys(AddressToGuardianMap storage map) internal view returns (address[] memory) {
         return map._keys.values();
     }
 }

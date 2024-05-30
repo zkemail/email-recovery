@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
-import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
-import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";
-import {ModeLib} from "erc7579/lib/ModeLib.sol";
+import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
+import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
+import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
+import { ModeLib } from "erc7579/lib/ModeLib.sol";
 
-import {IRecoveryModule} from "../interfaces/IRecoveryModule.sol";
-import {IZkEmailRecovery} from "../interfaces/IZkEmailRecovery.sol";
-import {ISafe} from "../interfaces/ISafe.sol";
+import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
+import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
+import { ISafe } from "../interfaces/ISafe.sol";
 import "forge-std/console2.sol";
 
 contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
@@ -92,15 +92,9 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidNewOwner();
         }
 
-        address previousOwnerInLinkedList = getPreviousOwnerInLinkedList(
-            account,
-            oldOwner
-        );
+        address previousOwnerInLinkedList = getPreviousOwnerInLinkedList(account, oldOwner);
         bytes memory encodedSwapOwnerCall = abi.encodeWithSignature(
-            "swapOwner(address,address,address)",
-            previousOwnerInLinkedList,
-            oldOwner,
-            newOwner
+            "swapOwner(address,address,address)", previousOwnerInLinkedList, oldOwner, newOwner
         );
         IERC7579Account(account).executeFromExecutor(
             ModeLib.encodeSimpleSingle(),
@@ -118,7 +112,11 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     function getPreviousOwnerInLinkedList(
         address safe,
         address oldOwner
-    ) internal view returns (address) {
+    )
+        internal
+        view
+        returns (address)
+    {
         address[] memory owners = ISafe(safe).getOwners();
 
         uint256 oldOwnerIndex;

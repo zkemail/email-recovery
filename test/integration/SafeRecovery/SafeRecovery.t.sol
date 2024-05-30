@@ -3,15 +3,15 @@ pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
 
-import {MODULE_TYPE_EXECUTOR} from "erc7579/interfaces/IERC7579Module.sol";
-import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
-import {Safe} from "@safe-global/safe-contracts/contracts/Safe.sol";
+import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
+import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
+import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 
-import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
-import {SafeRecoveryModule} from "src/modules/SafeRecoveryModule.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
-import {SafeIntegrationBase} from "./SafeIntegrationBase.t.sol";
+import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
+import { SafeRecoveryModule } from "src/modules/SafeRecoveryModule.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     SafeRecoveryModule recoveryModule;
@@ -40,26 +40,16 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
         // Accept guardian
         acceptGuardian(accountSalt1);
-        GuardianStorage memory guardianStorage1 = zkEmailRecovery.getGuardian(
-            accountAddress,
-            guardian1
-        );
-        assertEq(
-            uint256(guardianStorage1.status),
-            uint256(GuardianStatus.ACCEPTED)
-        );
+        GuardianStorage memory guardianStorage1 =
+            zkEmailRecovery.getGuardian(accountAddress, guardian1);
+        assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
         acceptGuardian(accountSalt2);
-        GuardianStorage memory guardianStorage2 = zkEmailRecovery.getGuardian(
-            accountAddress,
-            guardian2
-        );
-        assertEq(
-            uint256(guardianStorage2.status),
-            uint256(GuardianStatus.ACCEPTED)
-        );
+        GuardianStorage memory guardianStorage2 =
+            zkEmailRecovery.getGuardian(accountAddress, guardian2);
+        assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage2.weight, uint256(2));
 
         // Time travel so that EmailAuth timestamp is valid
@@ -67,10 +57,8 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
         // handle recovery request for guardian 1
         handleRecovery(owner, newOwner, recoveryModuleAddress, accountSalt1);
-        IZkEmailRecovery.RecoveryRequest
-            memory recoveryRequest = zkEmailRecovery.getRecoveryRequest(
-                accountAddress
-            );
+        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
+            zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.currentWeight, 1);
 
         // handle recovery request for guardian 2
@@ -82,12 +70,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(
             recoveryRequest.subjectParams,
-            subjectParamsForRecovery(
-                accountAddress,
-                owner,
-                newOwner,
-                recoveryModuleAddress
-            )
+            subjectParamsForRecovery(accountAddress, owner, newOwner, recoveryModuleAddress)
         );
         assertEq(recoveryRequest.currentWeight, 3);
 

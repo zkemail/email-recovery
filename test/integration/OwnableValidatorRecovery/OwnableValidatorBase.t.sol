@@ -3,11 +3,11 @@ pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
 
-import {EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
-import {ZkEmailRecovery} from "src/ZkEmailRecovery.sol";
-import {IEmailAccountRecovery} from "src/interfaces/IEmailAccountRecovery.sol";
-import {IntegrationBase} from "../IntegrationBase.t.sol";
+import { ZkEmailRecovery } from "src/ZkEmailRecovery.sol";
+import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
+import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract OwnableValidatorBase is IntegrationBase {
     ZkEmailRecovery zkEmailRecovery;
@@ -17,9 +17,7 @@ abstract contract OwnableValidatorBase is IntegrationBase {
 
         // Deploy ZkEmailRecovery
         zkEmailRecovery = new ZkEmailRecovery(
-            address(verifier),
-            address(ecdsaOwnedDkimRegistry),
-            address(emailAuthImpl)
+            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
         );
 
         // Compute guardian addresses
@@ -39,7 +37,10 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         string memory subject,
         bytes32 nullifier,
         bytes32 accountSalt
-    ) public returns (EmailProof memory) {
+    )
+        public
+        returns (EmailProof memory)
+    {
         EmailProof memory emailProof;
         emailProof.domainName = "gmail.com";
         emailProof.publicKeyHash = bytes32(
@@ -59,50 +60,33 @@ abstract contract OwnableValidatorBase is IntegrationBase {
 
     function acceptGuardian(bytes32 accountSalt) public {
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-        string
-            memory subject = "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38";
+        string memory subject =
+            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38";
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
 
-        EmailProof memory emailProof = generateMockEmailProof(
-            subject,
-            nullifier,
-            accountSalt
-        );
+        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeAcceptanceTemplateId(
-                templateIdx
-            ),
+            templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        IEmailAccountRecovery(router).handleAcceptance(
-            emailAuthMsg,
-            templateIdx
-        );
+        IEmailAccountRecovery(router).handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address newOwner,
-        address recoveryModule,
-        bytes32 accountSalt
-    ) public {
+    function handleRecovery(address newOwner, address recoveryModule, bytes32 accountSalt) public {
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-        string
-            memory subject = "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5";
+        string memory subject =
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x08e2f9BefEb86008a498ba29C3a70d1CF15fCdA5";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 
-        EmailProof memory emailProof = generateMockEmailProof(
-            subject,
-            nullifier,
-            accountSalt
-        );
+        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);

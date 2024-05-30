@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import {UnitBase} from "../UnitBase.t.sol";
-import {IZkEmailRecovery} from "src/interfaces/IZkEmailRecovery.sol";
-import {OwnableValidatorRecoveryModule} from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { UnitBase } from "../UnitBase.t.sol";
+import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
 
 contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
     OwnableValidatorRecoveryModule recoveryModule;
@@ -13,21 +13,15 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryModule = new OwnableValidatorRecoveryModule{salt: "test salt"}(
-            address(zkEmailRecovery)
-        );
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
     }
 
     function test_RevertWhen_AlreadyRecovering() public {
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -50,32 +44,21 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(
-            IZkEmailRecovery.ThresholdCannotExceedTotalWeight.selector
-        );
+        vm.expectRevert(IZkEmailRecovery.ThresholdCannotExceedTotalWeight.selector);
         zkEmailRecovery.changeThreshold(highThreshold);
     }
+
     function test_RevertWhen_ThresholdIsZero() public {
         uint256 zeroThreshold = 0;
 
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -88,12 +71,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         uint256 newThreshold = threshold + 1;
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -102,8 +80,8 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         emit IZkEmailRecovery.ChangedThreshold(newThreshold);
         zkEmailRecovery.changeThreshold(newThreshold);
 
-        IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
-            .getGuardianConfig(accountAddress);
+        IZkEmailRecovery.GuardianConfig memory guardianConfig =
+            zkEmailRecovery.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }
@@ -112,12 +90,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         uint256 newThreshold = threshold - 1;
         vm.startPrank(accountAddress);
         zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress,
-            guardians,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
@@ -126,8 +99,8 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         emit IZkEmailRecovery.ChangedThreshold(newThreshold);
         zkEmailRecovery.changeThreshold(newThreshold);
 
-        IZkEmailRecovery.GuardianConfig memory guardianConfig = zkEmailRecovery
-            .getGuardianConfig(accountAddress);
+        IZkEmailRecovery.GuardianConfig memory guardianConfig =
+            zkEmailRecovery.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }

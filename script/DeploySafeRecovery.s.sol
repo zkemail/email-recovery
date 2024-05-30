@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {SafeZkEmailRecovery} from "src/SafeZkEmailRecovery.sol";
-import {SafeRecoveryModule} from "src/modules/SafeRecoveryModule.sol";
+import { Script } from "forge-std/Script.sol";
+import { SafeZkEmailRecovery } from "src/SafeZkEmailRecovery.sol";
+import { SafeRecoveryModule } from "src/modules/SafeRecoveryModule.sol";
 
 contract DeploySafeRecoveryScript is Script {
     function run() public {
@@ -15,12 +15,9 @@ contract DeploySafeRecoveryScript is Script {
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        SafeZkEmailRecovery safeZkEmailRecovery = new SafeZkEmailRecovery{
-            salt: salt
-        }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
-        SafeRecoveryModule safeRecoveryModule = new SafeRecoveryModule(
-            address(safeZkEmailRecovery)
-        );
+        SafeZkEmailRecovery safeZkEmailRecovery =
+            new SafeZkEmailRecovery{ salt: salt }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
+        SafeRecoveryModule safeRecoveryModule = new SafeRecoveryModule(address(safeZkEmailRecovery));
 
         vm.stopBroadcast();
     }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.25;
 
-import {ERC7579ValidatorBase} from "modulekit/Modules.sol";
-import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
+import { ERC7579ValidatorBase } from "modulekit/Modules.sol";
+import { PackedUserOperation } from "modulekit/external/ERC4337.sol";
 
-import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
+import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
 
 contract OwnableValidator is ERC7579ValidatorBase {
     using SignatureCheckerLib for address;
@@ -18,7 +18,9 @@ contract OwnableValidator is ERC7579ValidatorBase {
 
     mapping(address subAccout => address owner) public owners;
 
-    /** account to authorized account to authorization */
+    /**
+     * account to authorized account to authorization
+     */
     mapping(address => mapping(address => bool)) public authorized;
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -27,15 +29,15 @@ contract OwnableValidator is ERC7579ValidatorBase {
 
     function onInstall(bytes calldata data) external override {
         if (data.length == 0) return;
-        (address owner, address authorizedAccount) = abi.decode(
-            data,
-            (address, address)
-        );
+        (address owner, address authorizedAccount) = abi.decode(data, (address, address));
         owners[msg.sender] = owner;
         authorized[msg.sender][authorizedAccount] = true;
     }
 
-    /** An attacker could overcome authorized timelock by uninstalling and installing the module again */
+    /**
+     * An attacker could overcome authorized timelock by uninstalling and installing the module
+     * again
+     */
     function onUninstall(bytes calldata) external override {
         delete owners[msg.sender];
         // delete authorized[msg.sender][authorizedAccount];
@@ -52,10 +54,14 @@ contract OwnableValidator is ERC7579ValidatorBase {
     function validateUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash
-    ) external view override returns (ValidationData) {
+    )
+        external
+        view
+        override
+        returns (ValidationData)
+    {
         bool validSig = owners[userOp.sender].isValidSignatureNow(
-            ECDSA.toEthSignedMessageHash(userOpHash),
-            userOp.signature
+            ECDSA.toEthSignedMessageHash(userOpHash), userOp.signature
         );
         return _packValidationData(!validSig, type(uint48).max, 0);
     }
@@ -64,19 +70,26 @@ contract OwnableValidator is ERC7579ValidatorBase {
         address,
         bytes32 hash,
         bytes calldata data
-    ) external view override returns (bytes4) {
+    )
+        external
+        view
+        override
+        returns (bytes4)
+    {
         address owner = owners[msg.sender];
-        return
-            SignatureCheckerLib.isValidSignatureNowCalldata(owner, hash, data)
-                ? EIP1271_SUCCESS
-                : EIP1271_FAILED;
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner, hash, data)
+            ? EIP1271_SUCCESS
+            : EIP1271_FAILED;
     }
 
     function changeOwner(
         address account,
         address authorizedAccount,
         address newOwner
-    ) external onlyAuthorized(authorizedAccount) {
+    )
+        external
+        onlyAuthorized(authorizedAccount)
+    {
         owners[account] = newOwner;
     }
 
@@ -110,9 +123,7 @@ contract OwnableValidator is ERC7579ValidatorBase {
         return "0.0.1";
     }
 
-    function isModuleType(
-        uint256 typeID
-    ) external pure override returns (bool) {
+    function isModuleType(uint256 typeID) external pure override returns (bool) {
         return typeID == TYPE_VALIDATOR;
     }
 }
