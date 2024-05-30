@@ -19,6 +19,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     address public immutable zkEmailRecovery;
 
     error NotTrustedRecoveryContract();
+    error InvalidSubjectParams();
     error InvalidOldOwner();
     error InvalidNewOwner();
 
@@ -43,17 +44,14 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             uint256 expiry
         ) = abi.decode(data, (address[], uint256[], uint256, uint256, uint256));
 
-        bytes memory encodedCall = abi.encodeWithSignature(
-            "configureRecovery(address,address[],uint256[],uint256,uint256,uint256)",
-            address(this),
-            guardians,
-            weights,
-            threshold,
-            delay,
-            expiry
-        );
-
-        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
+        _execute({
+            to: zkEmailRecovery,
+            value: 0,
+            data: abi.encodeCall(
+                IZkEmailRecovery.configureRecovery,
+                (address(this), guardians, weights, threshold, delay, expiry)
+            )
+        });
     }
 
     /**
@@ -82,6 +80,11 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert NotTrustedRecoveryContract();
         }
 
+        // prevent out of bounds error message, in case subject params are invalid
+        if (subjectParams.length < 3) {
+            revert InvalidSubjectParams();
+        }
+
         address oldOwner = abi.decode(subjectParams[1], (address));
         address newOwner = abi.decode(subjectParams[2], (address));
         bool isOwner = ISafe(account).isOwner(oldOwner);
@@ -93,13 +96,12 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         }
 
         address previousOwnerInLinkedList = getPreviousOwnerInLinkedList(account, oldOwner);
-        bytes memory encodedSwapOwnerCall = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", previousOwnerInLinkedList, oldOwner, newOwner
-        );
-        IERC7579Account(account).executeFromExecutor(
-            ModeLib.encodeSimpleSingle(),
-            ExecutionLib.encodeSingle(account, 0, encodedSwapOwnerCall)
-        );
+        _execute({
+            account: account,
+            to: account,
+            value: 0,
+            data: abi.encodeCall(ISafe.swapOwner, (previousOwnerInLinkedList, oldOwner, newOwner))
+        });
     }
 
     /**
@@ -118,9 +120,10 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         returns (address)
     {
         address[] memory owners = ISafe(safe).getOwners();
+        uint256 length = owners.length;
 
         uint256 oldOwnerIndex;
-        for (uint256 i = 0; i < owners.length; i++) {
+        for (uint256 i; i < length; i++) {
             if (owners[i] == oldOwner) {
                 oldOwnerIndex = i;
                 break;
