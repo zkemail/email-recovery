@@ -194,22 +194,6 @@ interface IZkEmailRecovery {
         address verifierAddr
     ) external;
 
-    function updateGuardianSubjectTemplate(
-        address guardian,
-        uint templateId,
-        string[] memory subjectTemplate
-    ) external;
-
-    function deleteGuardianSubjectTemplate(
-        address guardian,
-        uint templateId
-    ) external;
-
-    function setGuardianTimestampCheckEnabled(
-        address guardian,
-        bool enabled
-    ) external;
-
     function upgradeEmailAuthGuardian(
         address guardian,
         address newImplementation,

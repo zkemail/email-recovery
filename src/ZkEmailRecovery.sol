@@ -889,47 +889,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     }
 
     /**
-     * @notice Updates the subject template for the specified guardian
-     * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
-     * @param guardian The address of the guardian
-     * @param templateId The ID of the template to be updated
-     * @param subjectTemplate The new subject template to be set for the guardian
-     */
-    function updateGuardianSubjectTemplate(
-        address guardian,
-        uint templateId,
-        string[] memory subjectTemplate
-    ) external onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
-        IEmailAuth(guardian).updateSubjectTemplate(templateId, subjectTemplate);
-    }
-
-    /**
-     * @notice Deletes the subject template for the specified guardian
-     * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
-     * @param guardian The address of the guardian
-     * @param templateId The ID of the template to be deleted
-     */
-    function deleteGuardianSubjectTemplate(
-        address guardian,
-        uint templateId
-    ) external onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
-        IEmailAuth(guardian).deleteSubjectTemplate(templateId);
-    }
-
-    /**
-     * @notice Enables or disables the timestamp check for the specified guardian
-     * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
-     * @param guardian The address of the guardian
-     * @param enabled Boolean value to enable or disable timestamp check for the guardian
-     */
-    function setGuardianTimestampCheckEnabled(
-        address guardian,
-        bool enabled
-    ) external onlyAccountForGuardian(guardian) onlyWhenNotRecovering {
-        IEmailAuth(guardian).setTimestampCheckEnabled(enabled);
-    }
-
-    /**
      * @notice Upgrades the implementation of the specified guardian and calls the provided data
      * @dev This function can only be called by the account associated with the guardian and only if no recovery is in process
      * @param guardian The address of the guardian
