@@ -221,9 +221,14 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // certain changes
+        // console2.log("accountAddress: ", accountAddress);
+
         string memory subject =
             "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
+
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
@@ -248,9 +253,16 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     )
         public
     {
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // certain changes
+        // console2.log("accountAddress: ", accountAddress);
+        // console2.log("oldOwner:       ", oldOwner);
+        // console2.log("newOwner:       ", newOwner);
+        // console2.log("recoveryModule: ", recoveryModule);
+
         string memory subject =
             "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 from old owner 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x6d2Fa6974Ef18eB6da842D3c7ab3150326feaEEC";
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 

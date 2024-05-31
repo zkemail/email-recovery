@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
+import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
 import { IZkEmailRecovery } from "./interfaces/IZkEmailRecovery.sol";
 import { IEmailAuth } from "./interfaces/IEmailAuth.sol";
@@ -288,6 +289,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
         if (recoveryConfig.recoveryModule == address(0)) {
             revert InvalidRecoveryModule();
+        }
+        bool isInitialized = IModule(recoveryConfig.recoveryModule).isInitialized(account);
+        if (!isInitialized) {
+            revert RecoveryModuleNotInstalled();
         }
         if (recoveryConfig.delay > recoveryConfig.expiry) {
             revert DelayMoreThanExpiry();

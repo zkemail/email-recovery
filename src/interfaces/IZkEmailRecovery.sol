@@ -84,6 +84,7 @@ interface IZkEmailRecovery {
     );
     error InvalidNewOwner();
     error InvalidRecoveryModule();
+    error RecoveryModuleNotInstalled();
     error NotEnoughApprovals();
     error DelayNotPassed();
     error RecoveryRequestExpired();

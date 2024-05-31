@@ -10,29 +10,38 @@ import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorReco
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
+import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
+    OwnableValidator validator;
     OwnableValidatorRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
+        validator = new OwnableValidator();
         recoveryModule =
             new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
+
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: address(validator),
+            data: abi.encode(owner, recoveryModuleAddress)
+        });
+        // Install recovery module - configureRecovery is called on `onInstall`
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
+        });
     }
 
     function test_ConfigureRecovery_RevertWhen_AlreadyRecovering() public {
-        vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
-        vm.stopPrank();
-
         acceptGuardian(accountSalt1);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, accountSalt1);
@@ -48,9 +57,6 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
     // Integration test?
     function test_ConfigureRecovery_RevertWhen_ConfigureRecoveryCalledTwice() public {
         vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
 
         vm.expectRevert(IZkEmailRecovery.SetupAlreadyCalled.selector);
         zkEmailRecovery.configureRecovery(
@@ -60,17 +66,24 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
     }
 
     function test_ConfigureRecovery_Succeeds() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
         address expectedRouterAddress =
             zkEmailRecovery.computeRouterAddress(keccak256(abi.encode(accountAddress)));
 
+        // Install recovery module - configureRecovery is called on `onInstall`
+        vm.prank(accountAddress);
         vm.expectEmit();
         emit IZkEmailRecovery.RecoveryConfigured(
             accountAddress, recoveryModuleAddress, guardians.length, expectedRouterAddress
         );
-        vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
+        });
         vm.stopPrank();
 
         IZkEmailRecovery.RecoveryConfig memory recoveryConfig =

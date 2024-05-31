@@ -25,7 +25,8 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule = new OwnableValidatorRecoveryModule(address(zkEmailRecovery));
+        recoveryModule =
+            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -65,14 +66,22 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
             zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
+        assertEq(recoveryRequest.subjectParams.length, 0);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
+        uint256 executeBefore = block.timestamp + expiry;
         handleRecovery(newOwner, recoveryModuleAddress, accountSalt2);
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
+        assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 3);
+        assertEq(recoveryRequest.subjectParams.length, 3);
+        assertEq(recoveryRequest.subjectParams[0], abi.encode(accountAddress));
+        assertEq(recoveryRequest.subjectParams[1], abi.encode(newOwner));
+        assertEq(recoveryRequest.subjectParams[2], abi.encode(recoveryModuleAddress));
 
         // Time travel so that the recovery delay has passed
         vm.warp(block.timestamp + delay);
@@ -84,7 +93,52 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorBase {
         address updatedOwner = validator.owners(accountAddress);
 
         assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.subjectParams.length, 0);
+        assertEq(updatedOwner, newOwner);
+    }
+
+    function test_Recover_TryInstallModuleAfterFailedConfigureRecovery() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
+        // This call fails because the account forgot to install the module before starting the
+        // recovery flow
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IZkEmailRecovery.RecoveryModuleNotInstalled.selector);
+        zkEmailRecovery.configureRecovery(
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
+        });
+
+        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+
+        acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
+        vm.warp(12 seconds);
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt1);
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt2);
+
+        vm.warp(block.timestamp + delay);
+
+        IEmailAccountRecovery(router).completeRecovery();
+
+        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
+            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        address updatedOwner = validator.owners(accountAddress);
+
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.subjectParams.length, 0);
         assertEq(updatedOwner, newOwner);
     }
 

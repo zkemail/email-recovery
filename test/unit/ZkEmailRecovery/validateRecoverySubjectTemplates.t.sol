@@ -15,15 +15,29 @@ contract ZkEmailRecovery_validateRecoverySubjectTemplates_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
+    OwnableValidator validator;
     OwnableValidatorRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
+        validator = new OwnableValidator();
         recoveryModule =
             new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
         recoveryModuleAddress = address(recoveryModule);
+
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: address(validator),
+            data: abi.encode(owner, recoveryModuleAddress)
+        });
+        // Install recovery module - configureRecovery is called on `onInstall`
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
+        });
     }
 
     function test_ValidateRecoverySubjectTemplates_RevertWhen_InvalidTemplateIndex() public {
@@ -83,12 +97,6 @@ contract ZkEmailRecovery_validateRecoverySubjectTemplates_Test is UnitBase {
         subjectParams[2] = abi.encode(recoveryModuleAddress); // recovery module is valid, but not
             // for the owner passed in
 
-        vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
-        vm.stopPrank();
-
         vm.expectRevert(IZkEmailRecovery.InvalidRecoveryModule.selector);
         zkEmailRecovery.exposed_validateRecoverySubjectTemplates(templateIdx, subjectParams);
     }
@@ -98,12 +106,6 @@ contract ZkEmailRecovery_validateRecoverySubjectTemplates_Test is UnitBase {
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(newOwner);
         subjectParams[2] = abi.encode(recoveryModuleAddress);
-
-        vm.startPrank(accountAddress);
-        zkEmailRecovery.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
-        vm.stopPrank();
 
         address account =
             zkEmailRecovery.exposed_validateRecoverySubjectTemplates(templateIdx, subjectParams);
