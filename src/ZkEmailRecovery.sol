@@ -66,7 +66,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
      */
-    uint256 public constant MINIMUM_RECOVERY_WINDOW = 1 days;
+    uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
 
     /**
      * Account address to recovery config

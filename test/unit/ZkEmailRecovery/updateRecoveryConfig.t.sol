@@ -81,8 +81,8 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShort() public {
-        uint256 newDelay = 1 hours;
-        uint256 newExpiry = 24 hours;
+        uint256 newDelay = 1 days;
+        uint256 newExpiry = 2 days;
 
         IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
             IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
@@ -98,7 +98,50 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
     }
 
-    function test_UpdateRecoveryConfig_UpdateRecoveryConfig_Succeeds() public {
+    function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShortByOneSecond() public {
+        uint256 newDelay = 1 seconds;
+        uint256 newExpiry = 2 days;
+
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
+
+        vm.startPrank(accountAddress);
+        zkEmailRecovery.configureRecovery(
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IZkEmailRecovery.RecoveryWindowTooShort.selector);
+        zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
+    }
+
+    function test_UpdateRecoveryConfig_SucceedsWhenRecoveryWindowEqualsMinimumRecoveryWindow()
+        public
+    {
+        address newRecoveryModule = address(1);
+        uint256 newDelay = 0 seconds;
+        uint256 newExpiry = 2 days;
+
+        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
+            IZkEmailRecovery.RecoveryConfig(newRecoveryModule, newDelay, newExpiry);
+
+        vm.startPrank(accountAddress);
+        zkEmailRecovery.configureRecovery(
+            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress);
+        zkEmailRecovery.updateRecoveryConfig(recoveryConfig);
+
+        recoveryConfig = zkEmailRecovery.getRecoveryConfig(accountAddress);
+        assertEq(recoveryConfig.recoveryModule, newRecoveryModule);
+        assertEq(recoveryConfig.delay, newDelay);
+        assertEq(recoveryConfig.expiry, newExpiry);
+    }
+
+    function test_UpdateRecoveryConfig_Succeeds() public {
         address newRecoveryModule = address(1);
         uint256 newDelay = 1 days;
         uint256 newExpiry = 4 weeks;
