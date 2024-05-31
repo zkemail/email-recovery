@@ -2,21 +2,18 @@
 pragma solidity ^0.8.25;
 
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
-import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
-import { ModeLib } from "erc7579/lib/ModeLib.sol";
 
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
-import "forge-std/console2.sol";
+// import "forge-std/console2.sol";
 
 contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    address public immutable zkEmailRecovery;
+    address public immutable ZK_EMAIL_RECOVERY;
 
     error NotTrustedRecoveryContract();
     error InvalidSubjectParams();
@@ -24,7 +21,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error InvalidNewOwner();
 
     constructor(address _zkEmailRecovery) {
-        zkEmailRecovery = _zkEmailRecovery;
+        ZK_EMAIL_RECOVERY = _zkEmailRecovery;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -45,7 +42,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         ) = abi.decode(data, (address[], uint256[], uint256, uint256, uint256));
 
         _execute({
-            to: zkEmailRecovery,
+            to: ZK_EMAIL_RECOVERY,
             value: 0,
             data: abi.encodeCall(
                 IZkEmailRecovery.configureRecovery,
@@ -59,7 +56,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @custom:unusedparam data - the data to de-initialize the module with
      */
     function onUninstall(bytes calldata /* data */ ) external {
-        IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
+        IZkEmailRecovery(ZK_EMAIL_RECOVERY).deInitRecoveryFromModule(msg.sender);
     }
 
     /**
@@ -68,7 +65,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address smartAccount) external view returns (bool) {
-        return IZkEmailRecovery(zkEmailRecovery).getGuardianConfig(smartAccount).threshold != 0;
+        return IZkEmailRecovery(ZK_EMAIL_RECOVERY).getGuardianConfig(smartAccount).threshold != 0;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -76,7 +73,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     //////////////////////////////////////////////////////////////////////////*/
 
     function recover(address account, bytes[] memory subjectParams) external {
-        if (msg.sender != zkEmailRecovery) {
+        if (msg.sender != ZK_EMAIL_RECOVERY) {
             revert NotTrustedRecoveryContract();
         }
 
@@ -134,7 +131,7 @@ contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     }
 
     function getTrustedContract() external view returns (address) {
-        return zkEmailRecovery;
+        return ZK_EMAIL_RECOVERY;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

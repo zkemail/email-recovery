@@ -5,22 +5,22 @@ import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
-import "forge-std/console2.sol";
+// import "forge-std/console2.sol";
 
 contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    address public immutable zkEmailRecovery;
+    address public immutable ZK_EMAIL_RECOVERY;
 
-    mapping(address => address) public validators;
+    mapping(address account => address validator) public validators;
 
     error InvalidNewOwner();
     error NotTrustedRecoveryContract();
 
     constructor(address _zkEmailRecovery) {
-        zkEmailRecovery = _zkEmailRecovery;
+        ZK_EMAIL_RECOVERY = _zkEmailRecovery;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
             expiry
         );
 
-        _execute(msg.sender, zkEmailRecovery, 0, encodedCall);
+        _execute(msg.sender, ZK_EMAIL_RECOVERY, 0, encodedCall);
     }
 
     /**
@@ -62,7 +62,7 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
      */
     function onUninstall(bytes calldata /* data */ ) external {
         delete validators[msg.sender];
-        IZkEmailRecovery(zkEmailRecovery).deInitRecoveryFromModule(msg.sender);
+        IZkEmailRecovery(ZK_EMAIL_RECOVERY).deInitRecoveryFromModule(msg.sender);
     }
 
     /**
@@ -79,7 +79,7 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
     //////////////////////////////////////////////////////////////////////////*/
 
     function recover(address account, bytes[] memory subjectParams) external {
-        if (msg.sender != zkEmailRecovery) {
+        if (msg.sender != ZK_EMAIL_RECOVERY) {
             revert NotTrustedRecoveryContract();
         }
 
@@ -95,7 +95,7 @@ contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule 
     }
 
     function getTrustedContract() external view returns (address) {
-        return zkEmailRecovery;
+        return ZK_EMAIL_RECOVERY;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

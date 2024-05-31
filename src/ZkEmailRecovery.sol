@@ -15,7 +15,7 @@ import {
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
-import "forge-std/console2.sol";
+// import "forge-std/console2.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -66,39 +66,40 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
      */
-    uint256 constant MINIMUM_RECOVERY_WINDOW = 1 days;
+    uint256 public constant MINIMUM_RECOVERY_WINDOW = 1 days;
 
     /**
      * Account address to recovery config
      */
-    mapping(address => RecoveryConfig) internal recoveryConfigs;
+    mapping(address account => RecoveryConfig recoveryConfig) internal recoveryConfigs;
 
     /**
      * Account address to recovery request
      */
-    mapping(address => RecoveryRequest) internal recoveryRequests;
+    mapping(address account => RecoveryRequest recoveryRequest) internal recoveryRequests;
 
     /**
      * Account address to guardian address to guardian storage
      */
-    mapping(address => EnumerableGuardianMap.AddressToGuardianMap) internal guardiansStorage;
+    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian) internal
+        guardiansStorage;
 
     /**
      * Account to guardian config
      */
-    mapping(address => GuardianConfig) internal guardianConfigs;
+    mapping(address account => GuardianConfig guardianConfig) internal guardianConfigs;
 
     /**
      * Email account recovery router address to account address
      */
-    mapping(address => address) internal routerToAccount;
+    mapping(address router => address account) internal routerToAccount;
 
     /**
      * Account address to email account recovery router address.
      * These are stored for frontends to easily find the router contract address from the given
      * account account address
      */
-    mapping(address => address) internal accountToRouter;
+    mapping(address account => address router) internal accountToRouter;
 
     /*//////////////////////////////////////////////////////////////////////////
                                 MODIFIERS

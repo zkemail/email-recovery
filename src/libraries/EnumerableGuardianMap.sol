@@ -37,7 +37,7 @@ library EnumerableGuardianMap {
     /**
      * Maximum number of guardians that can be added
      */
-    uint256 constant MAX_NUMBER_OF_GUARDIANS = 32;
+    uint256 public constant MAX_NUMBER_OF_GUARDIANS = 32;
 
     error MaxNumberOfGuardiansReached();
     error TooManyValuesToRemove();
