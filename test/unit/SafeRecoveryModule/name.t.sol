@@ -9,5 +9,5 @@ contract SafeRecoveryModule_name_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Name_ReturnsName() public view {}
+    function test_Name_ReturnsName() public view { }
 }

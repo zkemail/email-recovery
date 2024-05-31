@@ -9,6 +9,6 @@ contract EnumerableGuardianMap_get_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Get_GetsExistingValue() public view {}
-    function test_Get_GetsNonExistentValue() public view {}
+    function test_Get_GetsExistingValue() public view { }
+    function test_Get_GetsNonExistentValue() public view { }
 }

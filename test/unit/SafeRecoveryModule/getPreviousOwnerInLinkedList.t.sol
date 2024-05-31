@@ -9,8 +9,8 @@ contract SafeRecoveryModule_getPreviousOwnerInLinkedList_Test is UnitBase {
         super.setUp();
     }
 
-    function test_GetPreviousOwnerInLinkedList_RevertWhen_InvalidOldOwner() public view {}
-    function test_GetPreviousOwnerInLinkedList_RevertWhen_OldOwnerIsSentinel() public view {}
-    function test_GetPreviousOwnerInLinkedList_RevertWhen_OldOwnerIsZeroAddress() public view {}
-    function test_GetPreviousOwnerInLinkedList_Succeeds() public view {}
+    function test_GetPreviousOwnerInLinkedList_RevertWhen_InvalidOldOwner() public view { }
+    function test_GetPreviousOwnerInLinkedList_RevertWhen_OldOwnerIsSentinel() public view { }
+    function test_GetPreviousOwnerInLinkedList_RevertWhen_OldOwnerIsZeroAddress() public view { }
+    function test_GetPreviousOwnerInLinkedList_Succeeds() public view { }
 }

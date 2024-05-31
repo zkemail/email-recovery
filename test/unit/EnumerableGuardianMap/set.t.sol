@@ -9,9 +9,9 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Set_ReturnsFalseWhen_AddingKeysAlreadyInTheSet() public view {}
-    function test_Set_UpdatesValuesForKeysAlreadyInTheSet() public view {}
-    function test_Set_RevertWhen_MaxNumberOfGuardiansReached() public view {}
-    function test_Set_AddsAKey() public view {}
-    function test_Set_AddsSeveralKeys() public view {}
+    function test_Set_ReturnsFalseWhen_AddingKeysAlreadyInTheSet() public view { }
+    function test_Set_UpdatesValuesForKeysAlreadyInTheSet() public view { }
+    function test_Set_RevertWhen_MaxNumberOfGuardiansReached() public view { }
+    function test_Set_AddsAKey() public view { }
+    function test_Set_AddsSeveralKeys() public view { }
 }

@@ -9,5 +9,5 @@ contract SafeRecoveryModule_isModuleType_Test is UnitBase {
         super.setUp();
     }
 
-    function test_IsModuleType_ReturnsModuleType() public view {}
+    function test_IsModuleType_ReturnsModuleType() public view { }
 }

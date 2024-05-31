@@ -9,9 +9,9 @@ contract SafeRecoveryModule_recover_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Recover_RevertWhen_NotTrustedRecoveryContract() public view {}
-    function test_Recover_RevertWhen_InvalidSubjectParams() public view {}
-    function test_Recover_RevertWhen_InvalidOldOwner() public view {}
-    function test_Recover_RevertWhen_InvalidNewOwner() public view {}
-    function test_Recover_Succeeds() public view {}
+    function test_Recover_RevertWhen_NotTrustedRecoveryContract() public view { }
+    function test_Recover_RevertWhen_InvalidSubjectParams() public view { }
+    function test_Recover_RevertWhen_InvalidOldOwner() public view { }
+    function test_Recover_RevertWhen_InvalidNewOwner() public view { }
+    function test_Recover_Succeeds() public view { }
 }

@@ -9,6 +9,6 @@ contract SafeRecoveryModule_isInitialized_Test is UnitBase {
         super.setUp();
     }
 
-    function test_IsInitialized_ReturnsTrueWhenInitialized() public view {}
-    function test_IsInitialized_ReturnsFalseWhenUninitialized() public view {}
+    function test_IsInitialized_ReturnsTrueWhenInitialized() public view { }
+    function test_IsInitialized_ReturnsFalseWhenUninitialized() public view { }
 }

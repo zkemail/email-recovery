@@ -9,5 +9,5 @@ contract SafeRecoveryModule_onInstall_Test is UnitBase {
         super.setUp();
     }
 
-    function test_OnInstall_Succeeds() public view {}
+    function test_OnInstall_Succeeds() public view { }
 }

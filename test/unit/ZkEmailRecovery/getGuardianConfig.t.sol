@@ -8,7 +8,6 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract ZkEmailRecovery_getGuardianConfig_Test is UnitBase {
-
     OwnableValidatorRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
@@ -20,5 +19,5 @@ contract ZkEmailRecovery_getGuardianConfig_Test is UnitBase {
         recoveryModuleAddress = address(recoveryModule);
     }
 
-    function test_GetGuardianConfig_Succeeds() public {}
+    function test_GetGuardianConfig_Succeeds() public { }
 }

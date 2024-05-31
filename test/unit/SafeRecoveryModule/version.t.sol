@@ -9,5 +9,5 @@ contract SafeRecoveryModule_version_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Version_ReturnsVersion() public view {}
+    function test_Version_ReturnsVersion() public view { }
 }

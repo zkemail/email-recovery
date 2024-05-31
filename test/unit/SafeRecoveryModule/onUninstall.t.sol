@@ -9,5 +9,5 @@ contract SafeRecoveryModule_onUninstall_Test is UnitBase {
         super.setUp();
     }
 
-    function test_OnUninstall_Succeeds() public view {}
+    function test_OnUninstall_Succeeds() public view { }
 }

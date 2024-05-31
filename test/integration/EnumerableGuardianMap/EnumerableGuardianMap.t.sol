@@ -9,5 +9,5 @@ contract EnumerableGuardianMap_Integration_Test is IntegrationBase {
         super.setUp();
     }
 
-    function test_addsAndRemovesMultipleKeys() public view {}
+    function test_addsAndRemovesMultipleKeys() public view { }
 }

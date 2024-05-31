@@ -9,8 +9,8 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Keys_StartsEmpty() public view {}
-    function test_Keys_ReturnsEmptyArrayOfKeys() public view {}
-    function test_Keys_ReturnsArrayOfKeys() public view {}
-    function test_Keys_ReturnMaxArrayOfKeys() public view {}
+    function test_Keys_StartsEmpty() public view { }
+    function test_Keys_ReturnsEmptyArrayOfKeys() public view { }
+    function test_Keys_ReturnsArrayOfKeys() public view { }
+    function test_Keys_ReturnMaxArrayOfKeys() public view { }
 }
