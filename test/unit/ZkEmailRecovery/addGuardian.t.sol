@@ -105,7 +105,7 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
         vm.startPrank(accountAddress);
 
         vm.expectEmit();
-        emit IZkEmailRecovery.AddedGuardian(newGuardian);
+        emit IZkEmailRecovery.AddedGuardian(accountAddress, newGuardian);
         zkEmailRecovery.addGuardian(newGuardian, newGuardianWeight, threshold);
 
         GuardianStorage memory guardianStorage =

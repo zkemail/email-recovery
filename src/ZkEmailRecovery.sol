@@ -302,6 +302,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         recoveryConfigs[account] = recoveryConfig;
+
+        emit RecoveryConfigUpdated(
+            account, recoveryConfig.recoveryModule, recoveryConfig.delay, recoveryConfig.expiry
+        );
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -374,6 +378,8 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
             key: guardian,
             value: GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
         });
+
+        emit GuardianAccepted(accountInEmail, guardian);
     }
 
     /**
@@ -715,7 +721,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         guardianConfigs[account].guardianCount++;
         guardianConfigs[account].totalWeight += weight;
 
-        emit AddedGuardian(guardian);
+        emit AddedGuardian(account, guardian);
 
         // Change threshold if threshold was changed.
         if (guardianConfigs[account].threshold != threshold) {
@@ -751,7 +757,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         guardianConfigs[account].guardianCount--;
         guardianConfigs[account].totalWeight -= guardianStorage.weight;
 
-        emit RemovedGuardian(guardian);
+        emit RemovedGuardian(account, guardian);
 
         // Change threshold if threshold was changed.
         if (guardianConfig.threshold != threshold) {
@@ -784,7 +790,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         guardianConfigs[account].threshold = threshold;
-        emit ChangedThreshold(threshold);
+        emit ChangedThreshold(account, threshold);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

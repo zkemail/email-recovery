@@ -58,6 +58,10 @@ interface IZkEmailRecovery {
         uint256 guardianCount,
         address router
     );
+    event RecoveryConfigUpdated(
+        address indexed account, address indexed recoveryModule, uint256 delay, uint256 expiry
+    );
+    event GuardianAccepted(address indexed account, address indexed guardian);
     event RecoveryDeInitialized(address indexed account);
     event RecoveryProcessed(address indexed account, uint256 executeAfter, uint256 executeBefore);
     event RecoveryCompleted(address indexed account);
@@ -66,9 +70,9 @@ interface IZkEmailRecovery {
     /**
      * Guardian logic events
      */
-    event AddedGuardian(address indexed guardian);
-    event RemovedGuardian(address indexed guardian);
-    event ChangedThreshold(uint256 threshold);
+    event AddedGuardian(address indexed account, address indexed guardian);
+    event RemovedGuardian(address indexed account, address indexed guardian);
+    event ChangedThreshold(address indexed account, uint256 threshold);
 
     /*//////////////////////////////////////////////////////////////////////////
                                     ERRORS
