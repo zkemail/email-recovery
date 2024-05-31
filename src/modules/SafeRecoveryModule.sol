@@ -6,7 +6,6 @@ import { ERC7579ExecutorBase } from "modulekit/Modules.sol";
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
-// import "forge-std/console2.sol";
 
 contract SafeRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////

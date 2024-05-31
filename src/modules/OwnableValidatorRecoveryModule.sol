@@ -5,7 +5,6 @@ import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
-// import "forge-std/console2.sol";
 
 contract OwnableValidatorRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     /*//////////////////////////////////////////////////////////////////////////

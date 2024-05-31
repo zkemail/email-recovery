@@ -16,7 +16,6 @@ import {
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
-// import "forge-std/console2.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -25,14 +24,12 @@ import {
  * guardian contracts and handling email verification.
  *
  * This contract defines a default implementation for email-based recovery. It is designed to
- * provide the
- * core logic for email based account recovery that can be used across different account
+ * provide the core logic for email based account recovery that can be used across different account
  * implementations.
  *
  * ZkEmailRecovery relies on a dedicated recovery module to execute a recovery attempt. This
- * (ZkEmailRecovery)
- * contract defines "what a valid recovery attempt is for an account", and the recovery
- * module defines “how that recovery attempt is executed on the account”.
+ * (ZkEmailRecovery) contract defines "what a valid recovery attempt is for an account", and the
+ * recovery module defines “how that recovery attempt is executed on the account”.
  *
  * The core functions that must be called in the end-to-end flow for recovery are
  * 1. configureRecovery (does not need to be called again for subsequent recovery attempts)
@@ -41,20 +38,6 @@ import {
  * 3. handleRecovery - called for each guardian. Defined on EmailAccountRecovery.sol, calls
  * processRecovery in this contract
  * 4. completeRecovery
- *
- * For the end user, this recovery contract provides a robust and simple mechanism to recover an
- * account via email
- * in a scenario where a private key has been lost. This contract does NOT provide an adequate
- * mechanism to
- * protect an account from a stolen private key by a malicious actor. This attack vector requires a
- * holistic
- * approach to security that takes specific implementation details of an account into consideration.
- * For example,
- * adding additional access control when cancelling recovery to prevent a malicious actor stopping
- * recovery attempts,
- * and adding spending limits to prevent account draining. This contract is designed to be extended
- * to take these
- * additional considerations into account, but does not provide them by default.
  */
 contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
