@@ -58,9 +58,9 @@ import {
 contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                    CONSTANTS & STORAGE                     */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -101,42 +101,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      */
     mapping(address account => address router) internal accountToRouter;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                MODIFIERS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Modifier to check recovery status. Reverts if recovery is in process for the account
-     */
-    modifier onlyWhenNotRecovering() {
-        if (recoveryRequests[msg.sender].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
-        _;
-    }
-
-    /**
-     * @dev Modifier to check if the given address is a configured guardian
-     * for an account. Assumes msg.sender is the account
-     * @param guardian The address of the guardian to check
-     */
-    modifier onlyAccountForGuardian(address guardian) {
-        bool isGuardian = guardiansStorage[msg.sender].get(guardian).status != GuardianStatus.NONE;
-        if (!isGuardian) {
-            revert UnauthorizedAccountForGuardian();
-        }
-        _;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                    FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
     constructor(address _verifier, address _dkimRegistry, address _emailAuthImpl) {
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
     }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*            RECOVERY CONFIG AND REQUEST GETTERS             */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * @notice Retrieves the recovery configuration for a given account
@@ -158,141 +131,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         return recoveryRequests[account];
     }
 
-    /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for an
-     * acceptance by a new guardian.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different acceptance subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
-     * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
-     */
-    function acceptanceSubjectTemplates()
-        public
-        pure
-        virtual
-        override
-        returns (string[][] memory)
-    {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](5);
-        templates[0][0] = "Accept";
-        templates[0][1] = "guardian";
-        templates[0][2] = "request";
-        templates[0][3] = "for";
-        templates[0][4] = "{ethAddr}";
-        return templates;
-    }
-
-    /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for
-     * email recovery.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different recovery subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
-     * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
-     */
-    function recoverySubjectTemplates() public pure virtual override returns (string[][] memory) {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
-        templates[0][0] = "Recover";
-        templates[0][1] = "account";
-        templates[0][2] = "{ethAddr}";
-        templates[0][3] = "to";
-        templates[0][4] = "new";
-        templates[0][5] = "owner";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "module";
-        templates[0][10] = "{ethAddr}";
-        return templates;
-    }
-
-    /**
-     * @notice Validates the acceptance subject templates and extracts the account address
-     * @dev Can be overridden by an inheriting contract if using different acceptance subject
-     * templates. This function reverts if the subject parameters are invalid. The function
-     * should extract and return the account address as this is required by the core recovery logic.
-     * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams An array of bytes containing the subject parameters
-     * @return accountInEmail The extracted account address from the subject parameters
-     */
-    function validateAcceptanceSubjectTemplates(
-        uint256 templateIdx,
-        bytes[] memory subjectParams
-    )
-        internal
-        pure
-        virtual
-        returns (address)
-    {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        if (subjectParams.length != 1) revert InvalidSubjectParams();
-
-        // The GuardianStatus check in acceptGuardian implicitly
-        // validates the account, so no need to re-validate here
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-
-        return accountInEmail;
-    }
-
-    /**
-     * @notice Validates the recovery subject templates and extracts the account and recovery module
-     * addresses
-     * @dev Can be overridden by an inheriting contract if using different acceptance subject
-     * templates. This function reverts if the subject parameters are invalid. The function
-     * should extract and return the account address and the recovery module as they are required by
-     * the core recovery logic.
-     * @param templateIdx The index of the template used for the recovery request
-     * @param subjectParams An array of bytes containing the subject parameters
-     * @return accountInEmail The extracted account address from the subject parameters
-     */
-    function validateRecoverySubjectTemplates(
-        uint256 templateIdx,
-        bytes[] memory subjectParams
-    )
-        internal
-        view
-        virtual
-        returns (address)
-    {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        if (subjectParams.length != 3) revert InvalidSubjectParams();
-
-        // The GuardianStatus check in processRecovery implicitly
-        // validates the account, so no need to re-validate here
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
-
-        if (newOwnerInEmail == address(0)) {
-            revert InvalidNewOwner();
-        }
-
-        address expectedRecoveryModule = recoveryConfigs[accountInEmail].recoveryModule;
-        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
-        {
-            revert InvalidRecoveryModule();
-        }
-
-        return accountInEmail;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                CORE RECOVERY LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     CONFIGURE RECOVERY                     */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * @notice Configures recovery for the caller's account. This is the first core function
@@ -327,253 +168,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         updateRecoveryConfig(recoveryConfig);
 
         emit RecoveryConfigured(account, recoveryModule, guardians.length, router);
-    }
-
-    /**
-     * @notice Removes all state related to an account. Must be called from a configured recovery
-     * module
-     * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include remove state accociated with an account.
-     * @param account The account to delete state for
-     */
-    function deInitRecoveryFromModule(address account) external {
-        address recoveryModule = recoveryConfigs[account].recoveryModule;
-        if (recoveryModule != msg.sender) {
-            revert NotRecoveryModule();
-        }
-
-        if (recoveryRequests[account].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
-
-        delete recoveryConfigs[account];
-        delete recoveryRequests[account];
-
-        EnumerableGuardianMap.AddressToGuardianMap storage guardians = guardiansStorage[account];
-
-        guardians.removeAll(guardians.keys());
-        delete guardianConfigs[account];
-
-        address accountToRouterAddr = accountToRouter[account];
-        delete accountToRouter[account];
-        delete routerToAccount[accountToRouterAddr];
-
-        emit RecoveryDeInitialized(account);
-    }
-
-    /**
-     * @notice Accepts a guardian for the specified account. This is the second core function
-     * that must be called during the end-to-end recovery flow
-     * @dev Called once per guardian added. Although this adds an extra step to recovery, this
-     * acceptance
-     * flow is an important security feature to ensure that no typos are made when adding a guardian
-     * and that the guardian explicitly consents to the role. Called as part of handleAcceptance
-     * in EmailAccountRecovery
-     * @param guardian The address of the guardian to be accepted
-     * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams An array of bytes containing the subject parameters
-     */
-    function acceptGuardian(
-        address guardian,
-        uint256 templateIdx,
-        bytes[] memory subjectParams,
-        bytes32
-    )
-        internal
-        override
-    {
-        address accountInEmail = validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
-
-        if (recoveryRequests[accountInEmail].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
-
-        // This check ensures GuardianStatus is correct and also that the
-        // account in email is a valid account
-        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
-        if (guardianStorage.status != GuardianStatus.REQUESTED) {
-            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
-        }
-
-        guardiansStorage[accountInEmail].set({
-            key: guardian,
-            value: GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
-        });
-    }
-
-    /**
-     * @notice Processes a recovery request for a given account. This is the third core function
-     * that must be called during the end-to-end recovery flow
-     * @dev Reverts if the guardian address is invalid, if the template index is not zero, or if the
-     * guardian status is not accepted
-     * @param guardian The address of the guardian initiating the recovery
-     * @param templateIdx The index of the template used for the recovery request
-     * @param subjectParams An array of bytes containing the subject parameters
-     */
-    function processRecovery(
-        address guardian,
-        uint256 templateIdx,
-        bytes[] memory subjectParams,
-        bytes32
-    )
-        internal
-        override
-    {
-        address accountInEmail = validateRecoverySubjectTemplates(templateIdx, subjectParams);
-
-        // This check ensures GuardianStatus is correct and also that the
-        // account in email is a valid account
-        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
-        if (guardianStorage.status != GuardianStatus.ACCEPTED) {
-            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
-        }
-
-        RecoveryRequest storage recoveryRequest = recoveryRequests[accountInEmail];
-
-        recoveryRequest.currentWeight += guardianStorage.weight;
-
-        uint256 threshold = getGuardianConfig(accountInEmail).threshold;
-        if (recoveryRequest.currentWeight >= threshold) {
-            uint256 executeAfter = block.timestamp + recoveryConfigs[accountInEmail].delay;
-            uint256 executeBefore = block.timestamp + recoveryConfigs[accountInEmail].expiry;
-
-            recoveryRequest.executeAfter = executeAfter;
-            recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.subjectParams = subjectParams;
-
-            emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
-
-            // If delay is set to zero, an account can complete recovery straight away without
-            // needing an additional call to completeRecovery
-            if (executeAfter == block.timestamp) {
-                completeRecovery(accountInEmail);
-            }
-        }
-    }
-
-    /**
-     * @notice Completes the recovery process.
-     */
-    function completeRecovery() external override {
-        address account = getAccountForRouter(msg.sender);
-        completeRecovery(account);
-    }
-
-    /**
-     * @notice Completes the recovery process for a given account. This is the forth and final
-     * core function that must be called during the end-to-end recovery flow. Can be called by
-     * anyone.
-     * @dev Validates the recovery request by checking the total weight, that the delay has passed,
-     * and the request has not expired. Triggers the recovery module to perform the recovery. The
-     * recovery module trusts that this contract has validated the recovery attempt. Deletes the
-     * recovery
-     * request but recovery config state is maintained so future recovery requests can be made
-     * without having to reconfigure everything
-     * @param account The address of the account for which the recovery is being completed
-     */
-    function completeRecovery(address account) public {
-        if (account == address(0)) {
-            revert InvalidAccountAddress();
-        }
-        RecoveryRequest memory recoveryRequest = recoveryRequests[account];
-
-        uint256 threshold = getGuardianConfig(account).threshold;
-        if (recoveryRequest.currentWeight < threshold) {
-            revert NotEnoughApprovals();
-        }
-
-        if (block.timestamp < recoveryRequest.executeAfter) {
-            revert DelayNotPassed();
-        }
-
-        if (block.timestamp >= recoveryRequest.executeBefore) {
-            revert RecoveryRequestExpired();
-        }
-
-        delete recoveryRequests[account];
-
-        address recoveryModule = recoveryConfigs[account].recoveryModule;
-
-        IRecoveryModule(recoveryModule).recover(account, recoveryRequest.subjectParams);
-
-        emit RecoveryCompleted(account);
-    }
-
-    /**
-     * @notice Cancels the recovery request for the caller's account
-     * @dev Deletes the current recovery request associated with the caller's account
-     * Can be overridden by a child contract so custom access control can be added. Adding
-     * additional
-     * access control can be helpful to protect against malicious actors who have stolen a users
-     * private key. The default implementation of this account primarily protects against lost
-     * private keys
-     * @custom:unusedparam data - unused parameter, can be used when overridden
-     */
-    function cancelRecovery(bytes calldata /* data */ ) external virtual {
-        address account = msg.sender;
-        delete recoveryRequests[account];
-        emit RecoveryCancelled(account);
-    }
-
-    /**
-     * @notice Updates and validates the recovery configuration for the caller's account
-     * @dev Validates and sets the new recovery configuration for the caller's account, ensuring
-     * that no
-     * recovery is in process. Reverts if the recovery module address is invalid, if the
-     * delay is greater than the expiry, or if the recovery window is too short
-     * @param recoveryConfig The new recovery configuration to be set for the caller's account
-     */
-    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
-        public
-        onlyWhenNotRecovering
-    {
-        address account = msg.sender;
-
-        if (guardianConfigs[account].threshold == 0) {
-            revert AccountNotConfigured();
-        }
-        if (recoveryConfig.recoveryModule == address(0)) {
-            revert InvalidRecoveryModule();
-        }
-        if (recoveryConfig.delay > recoveryConfig.expiry) {
-            revert DelayMoreThanExpiry();
-        }
-        if (recoveryConfig.expiry - recoveryConfig.delay < MINIMUM_RECOVERY_WINDOW) {
-            revert RecoveryWindowTooShort();
-        }
-
-        recoveryConfigs[account] = recoveryConfig;
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                GUARDIAN LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Retrieves the guardian configuration for a given account
-     * @param account The address of the account for which the guardian configuration is being
-     * retrieved
-     * @return GuardianConfig The guardian configuration for the specified account
-     */
-    function getGuardianConfig(address account) public view returns (GuardianConfig memory) {
-        return guardianConfigs[account];
-    }
-
-    /**
-     * @notice Retrieves the guardian storage details for a given guardian and account
-     * @param account The address of the account associated with the guardian
-     * @param guardian The address of the guardian
-     * @return GuardianStorage The guardian storage details for the specified guardian and account
-     */
-    function getGuardian(
-        address account,
-        address guardian
-    )
-        public
-        view
-        returns (GuardianStorage memory)
-    {
-        return guardiansStorage[account].get(guardian);
     }
 
     /**
@@ -642,6 +236,432 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         }
 
         guardianConfigs[account] = GuardianConfig(guardianCount, totalWeight, threshold);
+    }
+
+    /**
+     * @notice Deploys a new router for the specified account
+     * @dev Deploys a new EmailAccountRecoveryRouter contract using Create2 and associates it with
+     * the account
+     * @param account The address of the account for which the router is being deployed
+     * @return address The address of the deployed router
+     */
+    function deployRouterForAccount(address account) internal returns (address) {
+        bytes32 salt = keccak256(abi.encode(account));
+        address routerAddress = computeRouterAddress(salt);
+
+        // It possible the router has already been deployed. For example, if the account
+        // configured recovery, and then cleared state using `deInitializeRecovery`. In
+        // this case, set the address in storage without deploying the contract
+        if (routerAddress.code.length > 0) {
+            routerToAccount[routerAddress] = account;
+            accountToRouter[account] = routerAddress;
+
+            return routerAddress;
+        } else {
+            EmailAccountRecoveryRouter emailAccountRecoveryRouter =
+                new EmailAccountRecoveryRouter{ salt: salt }(address(this));
+            routerAddress = address(emailAccountRecoveryRouter);
+
+            routerToAccount[routerAddress] = account;
+            accountToRouter[account] = routerAddress;
+
+            return routerAddress;
+        }
+    }
+
+    /**
+     * @notice Updates and validates the recovery configuration for the caller's account
+     * @dev Validates and sets the new recovery configuration for the caller's account, ensuring
+     * that no
+     * recovery is in process. Reverts if the recovery module address is invalid, if the
+     * delay is greater than the expiry, or if the recovery window is too short
+     * @param recoveryConfig The new recovery configuration to be set for the caller's account
+     */
+    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
+        public
+        onlyWhenNotRecovering
+    {
+        address account = msg.sender;
+
+        if (guardianConfigs[account].threshold == 0) {
+            revert AccountNotConfigured();
+        }
+        if (recoveryConfig.recoveryModule == address(0)) {
+            revert InvalidRecoveryModule();
+        }
+        if (recoveryConfig.delay > recoveryConfig.expiry) {
+            revert DelayMoreThanExpiry();
+        }
+        if (recoveryConfig.expiry - recoveryConfig.delay < MINIMUM_RECOVERY_WINDOW) {
+            revert RecoveryWindowTooShort();
+        }
+
+        recoveryConfigs[account] = recoveryConfig;
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     HANDLE ACCEPTANCE                      */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Returns a two-dimensional array of strings representing the subject templates for an
+     * acceptance by a new guardian.
+     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
+     * re-implemented by inheriting contracts
+     * to define different acceptance subject templates. This is useful for account implementations
+     * which require different data
+     * in the subject or if the email should be in a language that is not English.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
+    function acceptanceSubjectTemplates()
+        public
+        pure
+        virtual
+        override
+        returns (string[][] memory)
+    {
+        string[][] memory templates = new string[][](1);
+        templates[0] = new string[](5);
+        templates[0][0] = "Accept";
+        templates[0][1] = "guardian";
+        templates[0][2] = "request";
+        templates[0][3] = "for";
+        templates[0][4] = "{ethAddr}";
+        return templates;
+    }
+
+    /**
+     * @notice Accepts a guardian for the specified account. This is the second core function
+     * that must be called during the end-to-end recovery flow
+     * @dev Called once per guardian added. Although this adds an extra step to recovery, this
+     * acceptance
+     * flow is an important security feature to ensure that no typos are made when adding a guardian
+     * and that the guardian explicitly consents to the role. Called as part of handleAcceptance
+     * in EmailAccountRecovery
+     * @param guardian The address of the guardian to be accepted
+     * @param templateIdx The index of the template used for acceptance
+     * @param subjectParams An array of bytes containing the subject parameters
+     */
+    function acceptGuardian(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory subjectParams,
+        bytes32
+    )
+        internal
+        override
+    {
+        address accountInEmail = validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
+
+        if (recoveryRequests[accountInEmail].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
+
+        // This check ensures GuardianStatus is correct and also that the
+        // account in email is a valid account
+        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
+        if (guardianStorage.status != GuardianStatus.REQUESTED) {
+            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
+        }
+
+        guardiansStorage[accountInEmail].set({
+            key: guardian,
+            value: GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
+        });
+    }
+
+    /**
+     * @notice Validates the acceptance subject templates and extracts the account address
+     * @dev Can be overridden by an inheriting contract if using different acceptance subject
+     * templates. This function reverts if the subject parameters are invalid. The function
+     * should extract and return the account address as this is required by the core recovery logic.
+     * @param templateIdx The index of the template used for acceptance
+     * @param subjectParams An array of bytes containing the subject parameters
+     * @return accountInEmail The extracted account address from the subject parameters
+     */
+    function validateAcceptanceSubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
+        internal
+        pure
+        virtual
+        returns (address)
+    {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        if (subjectParams.length != 1) revert InvalidSubjectParams();
+
+        // The GuardianStatus check in acceptGuardian implicitly
+        // validates the account, so no need to re-validate here
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+
+        return accountInEmail;
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                      HANDLE RECOVERY                       */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Returns a two-dimensional array of strings representing the subject templates for
+     * email recovery.
+     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
+     * re-implemented by inheriting contracts
+     * to define different recovery subject templates. This is useful for account implementations
+     * which require different data
+     * in the subject or if the email should be in a language that is not English.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
+    function recoverySubjectTemplates() public pure virtual override returns (string[][] memory) {
+        string[][] memory templates = new string[][](1);
+        templates[0] = new string[](11);
+        templates[0][0] = "Recover";
+        templates[0][1] = "account";
+        templates[0][2] = "{ethAddr}";
+        templates[0][3] = "to";
+        templates[0][4] = "new";
+        templates[0][5] = "owner";
+        templates[0][6] = "{ethAddr}";
+        templates[0][7] = "using";
+        templates[0][8] = "recovery";
+        templates[0][9] = "module";
+        templates[0][10] = "{ethAddr}";
+        return templates;
+    }
+
+    /**
+     * @notice Processes a recovery request for a given account. This is the third core function
+     * that must be called during the end-to-end recovery flow
+     * @dev Reverts if the guardian address is invalid, if the template index is not zero, or if the
+     * guardian status is not accepted
+     * @param guardian The address of the guardian initiating the recovery
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams An array of bytes containing the subject parameters
+     */
+    function processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory subjectParams,
+        bytes32
+    )
+        internal
+        override
+    {
+        address accountInEmail = validateRecoverySubjectTemplates(templateIdx, subjectParams);
+
+        // This check ensures GuardianStatus is correct and also that the
+        // account in email is a valid account
+        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
+        if (guardianStorage.status != GuardianStatus.ACCEPTED) {
+            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
+        }
+
+        RecoveryRequest storage recoveryRequest = recoveryRequests[accountInEmail];
+
+        recoveryRequest.currentWeight += guardianStorage.weight;
+
+        uint256 threshold = getGuardianConfig(accountInEmail).threshold;
+        if (recoveryRequest.currentWeight >= threshold) {
+            uint256 executeAfter = block.timestamp + recoveryConfigs[accountInEmail].delay;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[accountInEmail].expiry;
+
+            recoveryRequest.executeAfter = executeAfter;
+            recoveryRequest.executeBefore = executeBefore;
+            recoveryRequest.subjectParams = subjectParams;
+
+            emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
+
+            // If delay is set to zero, an account can complete recovery straight away without
+            // needing an additional call to completeRecovery
+            if (executeAfter == block.timestamp) {
+                completeRecovery(accountInEmail);
+            }
+        }
+    }
+
+    /**
+     * @notice Validates the recovery subject templates and extracts the account and recovery module
+     * addresses
+     * @dev Can be overridden by an inheriting contract if using different acceptance subject
+     * templates. This function reverts if the subject parameters are invalid. The function
+     * should extract and return the account address and the recovery module as they are required by
+     * the core recovery logic.
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams An array of bytes containing the subject parameters
+     * @return accountInEmail The extracted account address from the subject parameters
+     */
+    function validateRecoverySubjectTemplates(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
+        internal
+        view
+        virtual
+        returns (address)
+    {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        if (subjectParams.length != 3) revert InvalidSubjectParams();
+
+        // The GuardianStatus check in processRecovery implicitly
+        // validates the account, so no need to re-validate here
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
+        address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
+
+        if (newOwnerInEmail == address(0)) {
+            revert InvalidNewOwner();
+        }
+
+        address expectedRecoveryModule = recoveryConfigs[accountInEmail].recoveryModule;
+        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
+        {
+            revert InvalidRecoveryModule();
+        }
+
+        return accountInEmail;
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     COMPLETE RECOVERY                      */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Completes the recovery process.
+     */
+    function completeRecovery() external override {
+        address account = getAccountForRouter(msg.sender);
+        completeRecovery(account);
+    }
+
+    /**
+     * @notice Completes the recovery process for a given account. This is the forth and final
+     * core function that must be called during the end-to-end recovery flow. Can be called by
+     * anyone.
+     * @dev Validates the recovery request by checking the total weight, that the delay has passed,
+     * and the request has not expired. Triggers the recovery module to perform the recovery. The
+     * recovery module trusts that this contract has validated the recovery attempt. Deletes the
+     * recovery
+     * request but recovery config state is maintained so future recovery requests can be made
+     * without having to reconfigure everything
+     * @param account The address of the account for which the recovery is being completed
+     */
+    function completeRecovery(address account) public {
+        if (account == address(0)) {
+            revert InvalidAccountAddress();
+        }
+        RecoveryRequest memory recoveryRequest = recoveryRequests[account];
+
+        uint256 threshold = getGuardianConfig(account).threshold;
+        if (recoveryRequest.currentWeight < threshold) {
+            revert NotEnoughApprovals();
+        }
+
+        if (block.timestamp < recoveryRequest.executeAfter) {
+            revert DelayNotPassed();
+        }
+
+        if (block.timestamp >= recoveryRequest.executeBefore) {
+            revert RecoveryRequestExpired();
+        }
+
+        delete recoveryRequests[account];
+
+        address recoveryModule = recoveryConfigs[account].recoveryModule;
+
+        IRecoveryModule(recoveryModule).recover(account, recoveryRequest.subjectParams);
+
+        emit RecoveryCompleted(account);
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                    CANCEL/DE-INIT LOGIC                    */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Cancels the recovery request for the caller's account
+     * @dev Deletes the current recovery request associated with the caller's account
+     * Can be overridden by a child contract so custom access control can be added. Adding
+     * additional
+     * access control can be helpful to protect against malicious actors who have stolen a users
+     * private key. The default implementation of this account primarily protects against lost
+     * private keys
+     * @custom:unusedparam data - unused parameter, can be used when overridden
+     */
+    function cancelRecovery(bytes calldata /* data */ ) external virtual {
+        address account = msg.sender;
+        delete recoveryRequests[account];
+        emit RecoveryCancelled(account);
+    }
+
+    /**
+     * @notice Removes all state related to an account. Must be called from a configured recovery
+     * module
+     * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
+     * should be deinitialized. This should include remove state accociated with an account.
+     * @param account The account to delete state for
+     */
+    function deInitRecoveryFromModule(address account) external {
+        address recoveryModule = recoveryConfigs[account].recoveryModule;
+        if (recoveryModule != msg.sender) {
+            revert NotRecoveryModule();
+        }
+
+        if (recoveryRequests[account].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
+
+        delete recoveryConfigs[account];
+        delete recoveryRequests[account];
+
+        EnumerableGuardianMap.AddressToGuardianMap storage guardians = guardiansStorage[account];
+
+        guardians.removeAll(guardians.keys());
+        delete guardianConfigs[account];
+
+        address accountToRouterAddr = accountToRouter[account];
+        delete accountToRouter[account];
+        delete routerToAccount[accountToRouterAddr];
+
+        emit RecoveryDeInitialized(account);
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                       GUARDIAN LOGIC                       */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Retrieves the guardian configuration for a given account
+     * @param account The address of the account for which the guardian configuration is being
+     * retrieved
+     * @return GuardianConfig The guardian configuration for the specified account
+     */
+    function getGuardianConfig(address account) public view returns (GuardianConfig memory) {
+        return guardianConfigs[account];
+    }
+
+    /**
+     * @notice Retrieves the guardian storage details for a given guardian and account
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian
+     * @return GuardianStorage The guardian storage details for the specified guardian and account
+     */
+    function getGuardian(
+        address account,
+        address guardian
+    )
+        public
+        view
+        returns (GuardianStorage memory)
+    {
+        return guardiansStorage[account].get(guardian);
     }
 
     /**
@@ -762,9 +782,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         emit ChangedThreshold(threshold);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                ROUTER LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                        ROUTER LOGIC                        */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * @notice Retrieves the account address associated with a given recovery router
@@ -802,40 +822,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         );
     }
 
-    /**
-     * @notice Deploys a new router for the specified account
-     * @dev Deploys a new EmailAccountRecoveryRouter contract using Create2 and associates it with
-     * the account
-     * @param account The address of the account for which the router is being deployed
-     * @return address The address of the deployed router
-     */
-    function deployRouterForAccount(address account) internal returns (address) {
-        bytes32 salt = keccak256(abi.encode(account));
-        address routerAddress = computeRouterAddress(salt);
-
-        // It possible the router has already been deployed. For example, if the account
-        // configured recovery, and then cleared state using `deInitializeRecovery`. In
-        // this case, set the address in storage without deploying the contract
-        if (routerAddress.code.length > 0) {
-            routerToAccount[routerAddress] = account;
-            accountToRouter[account] = routerAddress;
-
-            return routerAddress;
-        } else {
-            EmailAccountRecoveryRouter emailAccountRecoveryRouter =
-                new EmailAccountRecoveryRouter{ salt: salt }(address(this));
-            routerAddress = address(emailAccountRecoveryRouter);
-
-            routerToAccount[routerAddress] = account;
-            accountToRouter[account] = routerAddress;
-
-            return routerAddress;
-        }
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                EMAIL AUTH LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                      EMAIL AUTH LOGIC                      */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * @notice Updates the DKIM registry address for the specified guardian
@@ -891,5 +880,32 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         onlyWhenNotRecovering
     {
         IUUPSUpgradable(guardian).upgradeToAndCall(newImplementation, data);
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                         MODIFIERS                          */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @dev Modifier to check recovery status. Reverts if recovery is in process for the account
+     */
+    modifier onlyWhenNotRecovering() {
+        if (recoveryRequests[msg.sender].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
+        _;
+    }
+
+    /**
+     * @dev Modifier to check if the given address is a configured guardian
+     * for an account. Assumes msg.sender is the account
+     * @param guardian The address of the guardian to check
+     */
+    modifier onlyAccountForGuardian(address guardian) {
+        bool isGuardian = guardiansStorage[msg.sender].get(guardian).status != GuardianStatus.NONE;
+        if (!isGuardian) {
+            revert UnauthorizedAccountForGuardian();
+        }
+        _;
     }
 }

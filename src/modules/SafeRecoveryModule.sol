@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
+import { ERC7579ExecutorBase } from "modulekit/Modules.sol";
 
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IZkEmailRecovery } from "../interfaces/IZkEmailRecovery.sol";
