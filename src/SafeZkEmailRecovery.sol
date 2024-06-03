@@ -4,6 +4,11 @@ pragma solidity ^0.8.25;
 import { ZkEmailRecovery } from "./ZkEmailRecovery.sol";
 import { ISafe } from "./interfaces/ISafe.sol";
 
+/**
+ * @title SafeZkEmailRecovery
+ * @notice Implements email based recovery for Safe accounts inheriting core logic from ZkEmailRecovery
+ * @dev The underlying ZkEmailRecovery contract provides some the core logic for recovering an account
+ */
 contract SafeZkEmailRecovery is ZkEmailRecovery {
     error InvalidOldOwner();
 
@@ -18,9 +23,9 @@ contract SafeZkEmailRecovery is ZkEmailRecovery {
     /**
      * @notice Returns a two-dimensional array of strings representing the subject templates for
      * email recovery.
-     * @dev This function is overridden from ZkEmailRecovery. It is
-     * re-implemented by this contract to support a different subject template for recovering Safe
-     * accounts.
+     * @dev This function is overridden from ZkEmailRecovery. It overrides the base implementation
+     * to provide a template specific to Safe accounts. The template includes placeholders for
+     * the account address, old owner, new owner, and recovery module.
      * in the subject or if the email should be in a language that is not English.
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
