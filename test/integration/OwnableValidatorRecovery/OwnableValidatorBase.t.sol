@@ -92,7 +92,7 @@ abstract contract OwnableValidatorBase is IntegrationBase {
         // console2.log("recoveryModule: ", recoveryModule);
 
         string memory subject =
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xE98A1D4388fb2354016e56bFDb8dA7c55cDdae98";
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0xbF6064f750F31Dc9c9E7347E0C2236Be80B014B4";
         address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
