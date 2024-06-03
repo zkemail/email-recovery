@@ -20,6 +20,26 @@ forge build
 forge test
 ```
 
+### invalid subject error
+If you experience certain tests failing with the error `revert: invalid subject`. This means that there has been an update to one of the files that has resulted in the subject changing for the tests. The tests use hardcoded subjects, and when an address changes in the subject, these hardcoded values need to be updated. This is normally the recovery module address that needs updating when you change a core file like `ZkEmailRecovery.sol`. There is a known issue with CI being investiagted where a number of tests are failing because of this issue but local test runs pass successfully. If your local tests fail, you need to go to the base test files and uncomment the relevant console logs:
+- If the test failing is located in test/integration/OwnableValidatorRecovery, then go to test/integration/OwnableValidatorRecovery/OwnableValidatorBase.t.sol
+- If the test failing is located in test/integration/SafeRecoveryModule, then go to test/integration/SafeRecovery/SafeIntegrationBase.t.sol
+- If the test failing is located in test/unit/, then go to test/unit/UnitBase.t.sol
+
+Uncomment lines such as `console2.log("recoveryModule: ", recoveryModule);`, and then compare the hardcoded subjects to values printed in the console. If you uncomment the recovery module console log and see the following:
+```bash
+accountAddress:  0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52
+newOwner:  0x7240b687730BE024bcfD084621f794C2e4F8408f
+recoveryModule:  0xbF6064f750F31Dc9c9E7347E0C2236Be80B014B4
+```
+
+But the hardcoded subject is:
+```bash
+Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x0957519DC28b1d289F4721244416C3F00033747c
+```
+
+You can see that the account address and new owner address are the same in the console and the same in the hardcoded value. As it is the recovery module address that is different, you will need to update the final address in the subjecy to the new recovery module address printed in the console.
+
 # ZK Email Recovery
 
 ## High level contracts diagram.
@@ -34,7 +54,7 @@ The core contracts contain the bulk of the recovery logic.
 
 It inherits from a zk email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level zk email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level zk email contracts EmailAuth.sol, verifier, dkim registry etc. More info on the underlying EmailAccountRecovery.sol contract: https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract. 
 
-The guardians are represented onchain by EmailAuth.sol instances. EmailAuth.sol is a lower level zk email contract, it is designed to be generic, and allows dapps to authorize anything described in an email. The guardians privacy is protected onchain, for more info on zk email privacy and EmailAuth - see the zk email docs - TODO: add link here.
+The guardians are represented onchain by EmailAuth.sol instances. EmailAuth.sol is a lower level zk email contract, it is designed to be generic, and allows dapps to authorize anything described in an email. The guardians privacy is protected onchain, for more info on zk email privacy and EmailAuth - see the [zk email docs](https://zkemail.gitbook.io/zk-email).
 
 ZkEmailRecovery relies on a dedicated recovery module to execute a recovery attempt. This (ZkEmailRecovery) contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core ZkEMailRecovery contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `ZkEmailRecovery.sol` contract is designed to be account implementation agnostic and can be extended for a wide range of account implementations.
 
