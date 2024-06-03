@@ -32,7 +32,7 @@ jobs:
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
         with:
-          version: nightly-ea2eff95b5c17edd3ffbdfc6daab5ce5cc80afc0
+          version: nightly
 
       - name: "Install NodeJS"
         uses: actions/setup-node@v4
@@ -42,7 +42,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.1.2
+          version: 9.1.4
           run_install: false
 
       - name: "Install the Node.js dependencies"
