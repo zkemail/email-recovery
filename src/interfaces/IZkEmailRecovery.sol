@@ -33,9 +33,8 @@ interface IZkEmailRecovery {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
-        bytes[] subjectParams; // The bytes array of encoded subject params. The types of the
-            // subject params are unknown according to this struct so that the struct can be re-used
-            // for different recovery implementations with different email subjects
+        bytes32 calldataHash; // the keccak256 hash of the calldata used to execute the recovery
+            // attempt
     }
 
     /**
@@ -53,10 +52,7 @@ interface IZkEmailRecovery {
     //////////////////////////////////////////////////////////////////////////*/
 
     event RecoveryConfigured(
-        address indexed account,
-        address indexed recoveryModule,
-        uint256 guardianCount,
-        address router
+        address indexed account, address indexed recoveryModule, uint256 guardianCount
     );
     event RecoveryConfigUpdated(
         address indexed account, address indexed recoveryModule, uint256 delay, uint256 expiry
@@ -94,6 +90,7 @@ interface IZkEmailRecovery {
     error RecoveryRequestExpired();
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
+    error InvalidCalldataHash();
 
     /**
      * Guardian logic errors
@@ -108,11 +105,6 @@ interface IZkEmailRecovery {
     error AddressAlreadyRequested();
     error AddressAlreadyGuardian();
     error InvalidAccountAddress();
-
-    /**
-     * Router errors
-     */
-    error RouterAlreadyDeployed();
 
     /**
      * Email Auth access control errors
@@ -133,7 +125,9 @@ interface IZkEmailRecovery {
         uint256[] memory weights,
         uint256 threshold,
         uint256 delay,
-        uint256 expiry
+        uint256 expiry,
+        string[][] memory acceptanceSubjectTemplate,
+        string[][] memory recoverySubjectTemplate
     )
         external;
 
@@ -162,16 +156,6 @@ interface IZkEmailRecovery {
     function removeGuardian(address guardian, uint256 threshold) external;
 
     function changeThreshold(uint256 threshold) external;
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                ROUTER LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
-
-    function getAccountForRouter(address recoveryRouter) external view returns (address);
-
-    function getRouterForAccount(address account) external view returns (address);
-
-    function computeRouterAddress(bytes32 salt) external view returns (address);
 
     /*//////////////////////////////////////////////////////////////////////////
                                 EMAIL AUTH LOGIC

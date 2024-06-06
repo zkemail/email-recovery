@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailAccountRecovery } from
-    "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
+import { EmailAccountRecoveryNew } from "./EmailAccountRecoveryNew.sol";
 import { IZkEmailRecovery } from "./interfaces/IZkEmailRecovery.sol";
-import { IEmailAuth } from "./interfaces/IEmailAuth.sol";
-import { IUUPSUpgradable } from "./interfaces/IUUPSUpgradable.sol";
+import { IEmailAuth } from "../interfaces/IEmailAuth.sol";
+import { IUUPSUpgradable } from "../interfaces/IUUPSUpgradable.sol";
 import { IRecoveryModule } from "./interfaces/IRecoveryModule.sol";
-import { EmailAccountRecoveryRouter } from "./EmailAccountRecoveryRouter.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
+import {
+    HexStrings
+} from "./libraries/HexStrings.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -73,18 +74,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      */
     mapping(address account => GuardianConfig guardianConfig) internal guardianConfigs;
 
-    /**
-     * Email account recovery router address to account address
-     */
-    mapping(address router => address account) internal routerToAccount;
-
-    /**
-     * Account address to email account recovery router address.
-     * These are stored for frontends to easily find the router contract address from the given
-     * account account address
-     */
-    mapping(address account => address router) internal accountToRouter;
-
     constructor(address _verifier, address _dkimRegistry, address _emailAuthImpl) {
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
@@ -137,21 +126,23 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         uint256[] memory weights,
         uint256 threshold,
         uint256 delay,
-        uint256 expiry
+        uint256 expiry,
+        string[][] memory acceptanceSubjectTemplate,
+        string[][] memory recoverySubjectTemplate
     )
         external
     {
         address account = msg.sender;
+        acceptanceSubjectTemplates[account] = acceptanceSubjectTemplate;
+        recoverySubjectTemplates[account] = recoverySubjectTemplate;
 
         // setupGuardians contains a check that ensures this function can only be called once
         setupGuardians(account, guardians, weights, threshold);
 
-        address router = deployRouterForAccount(account);
-
         RecoveryConfig memory recoveryConfig = RecoveryConfig(recoveryModule, delay, expiry);
         updateRecoveryConfig(recoveryConfig);
 
-        emit RecoveryConfigured(account, recoveryModule, guardians.length, router);
+        emit RecoveryConfigured(account, recoveryModule, guardians.length);
     }
 
     /**
@@ -223,37 +214,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
     }
 
     /**
-     * @notice Deploys a new router for the specified account
-     * @dev Deploys a new EmailAccountRecoveryRouter contract using Create2 and associates it with
-     * the account
-     * @param account The address of the account for which the router is being deployed
-     * @return address The address of the deployed router
-     */
-    function deployRouterForAccount(address account) internal returns (address) {
-        bytes32 salt = keccak256(abi.encode(account));
-        address routerAddress = computeRouterAddress(salt);
-
-        // It possible the router has already been deployed. For example, if the account
-        // configured recovery, and then cleared state using `deInitializeRecovery`. In
-        // this case, set the address in storage without deploying the contract
-        if (routerAddress.code.length > 0) {
-            routerToAccount[routerAddress] = account;
-            accountToRouter[account] = routerAddress;
-
-            return routerAddress;
-        } else {
-            EmailAccountRecoveryRouter emailAccountRecoveryRouter =
-                new EmailAccountRecoveryRouter{ salt: salt }(address(this));
-            routerAddress = address(emailAccountRecoveryRouter);
-
-            routerToAccount[routerAddress] = account;
-            accountToRouter[account] = routerAddress;
-
-            return routerAddress;
-        }
-    }
-
-    /**
      * @notice Updates and validates the recovery configuration for the caller's account
      * @dev Validates and sets the new recovery configuration for the caller's account, ensuring
      * that no
@@ -306,21 +266,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
-    function acceptanceSubjectTemplates()
+    function getAcceptanceSubjectTemplates(address account)
         public
-        pure
-        virtual
+        view
         override
         returns (string[][] memory)
     {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](5);
-        templates[0][0] = "Accept";
-        templates[0][1] = "guardian";
-        templates[0][2] = "request";
-        templates[0][3] = "for";
-        templates[0][4] = "{ethAddr}";
-        return templates;
+        return acceptanceSubjectTemplates[account];
     }
 
     /**
@@ -336,6 +288,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param subjectParams An array of bytes containing the subject parameters
      */
     function acceptGuardian(
+        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -344,7 +297,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         internal
         override
     {
-        address accountInEmail = validateAcceptanceSubjectTemplates(templateIdx, subjectParams);
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        // TODO: store this somewhere so this can be done dynamically
+        uint256 accountIndex = 0;
+        address accountInEmail = abi.decode(subjectParams[accountIndex], (address));
 
         if (recoveryRequests[accountInEmail].currentWeight > 0) {
             revert RecoveryInProcess();
@@ -365,37 +324,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         emit GuardianAccepted(accountInEmail, guardian);
     }
 
-    /**
-     * @notice Validates the acceptance subject templates and extracts the account address
-     * @dev Can be overridden by an inheriting contract if using different acceptance subject
-     * templates. This function reverts if the subject parameters are invalid. The function
-     * should extract and return the account address as this is required by the core recovery logic.
-     * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams An array of bytes containing the subject parameters
-     * @return accountInEmail The extracted account address from the subject parameters
-     */
-    function validateAcceptanceSubjectTemplates(
-        uint256 templateIdx,
-        bytes[] memory subjectParams
-    )
-        internal
-        pure
-        virtual
-        returns (address)
-    {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        if (subjectParams.length != 1) revert InvalidSubjectParams();
-
-        // The GuardianStatus check in acceptGuardian implicitly
-        // validates the account, so no need to re-validate here
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-
-        return accountInEmail;
-    }
-
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                      HANDLE RECOVERY                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -411,21 +339,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
-    function recoverySubjectTemplates() public pure virtual override returns (string[][] memory) {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
-        templates[0][0] = "Recover";
-        templates[0][1] = "account";
-        templates[0][2] = "{ethAddr}";
-        templates[0][3] = "to";
-        templates[0][4] = "new";
-        templates[0][5] = "owner";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "module";
-        templates[0][10] = "{ethAddr}";
-        return templates;
+    function getRecoverySubjectTemplates(address account)
+        public
+        view
+        override
+        returns (string[][] memory)
+    {
+        return recoverySubjectTemplates[account];
     }
 
     /**
@@ -438,6 +358,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param subjectParams An array of bytes containing the subject parameters
      */
     function processRecovery(
+        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -446,7 +367,17 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
         internal
         override
     {
-        address accountInEmail = validateRecoverySubjectTemplates(templateIdx, subjectParams);
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        // TODO: store these somewhere so this can be done dynamically
+        uint256 accountIndex = 0;
+        uint256 calldataHashIndex = 3;
+
+        address accountInEmail = abi.decode(subjectParams[accountIndex], (address));
+        bytes32 calldataHashInEmail = abi.decode(subjectParams[calldataHashIndex], (bytes32));
+        bytes32 calldataHashBytes32 = HexStrings.fromHexString(calldataHashString);
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
@@ -466,74 +397,15 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.subjectParams = subjectParams;
+            recoveryRequest.calldataHash = calldataHashBytes32;
 
             emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
-
-            // If delay is set to zero, an account can complete recovery straight away without
-            // needing an additional call to completeRecovery
-            if (executeAfter == block.timestamp) {
-                completeRecovery(accountInEmail);
-            }
         }
-    }
-
-    /**
-     * @notice Validates the recovery subject templates and extracts the account and recovery module
-     * addresses
-     * @dev Can be overridden by an inheriting contract if using different acceptance subject
-     * templates. This function reverts if the subject parameters are invalid. The function
-     * should extract and return the account address and the recovery module as they are required by
-     * the core recovery logic.
-     * @param templateIdx The index of the template used for the recovery request
-     * @param subjectParams An array of bytes containing the subject parameters
-     * @return accountInEmail The extracted account address from the subject parameters
-     */
-    function validateRecoverySubjectTemplates(
-        uint256 templateIdx,
-        bytes[] memory subjectParams
-    )
-        internal
-        view
-        virtual
-        returns (address)
-    {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        if (subjectParams.length != 3) revert InvalidSubjectParams();
-
-        // The GuardianStatus check in processRecovery implicitly
-        // validates the account, so no need to re-validate here
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[1], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[2], (address));
-
-        if (newOwnerInEmail == address(0)) {
-            revert InvalidNewOwner();
-        }
-
-        address expectedRecoveryModule = recoveryConfigs[accountInEmail].recoveryModule;
-        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
-        {
-            revert InvalidRecoveryModule();
-        }
-
-        return accountInEmail;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                     COMPLETE RECOVERY                      */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    /**
-     * @notice Completes the recovery process.
-     */
-    function completeRecovery() external override {
-        address account = getAccountForRouter(msg.sender);
-        completeRecovery(account);
-    }
 
     /**
      * @notice Completes the recovery process for a given account. This is the forth and final
@@ -547,7 +419,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
      */
-    function completeRecovery(address account) public {
+    function completeRecovery(address account, bytes memory recoveryCalldata) public override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -568,9 +440,13 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         delete recoveryRequests[account];
 
+        if (keccak256(recoveryCalldata) != recoveryRequest.calldataHash) {
+            revert InvalidCalldataHash();
+        }
+
         address recoveryModule = recoveryConfigs[account].recoveryModule;
 
-        IRecoveryModule(recoveryModule).recover(account, recoveryRequest.subjectParams);
+        IRecoveryModule(recoveryModule).recover(account, recoveryCalldata);
 
         emit RecoveryCompleted(account);
     }
@@ -619,10 +495,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         guardians.removeAll(guardians.keys());
         delete guardianConfigs[account];
-
-        address accountToRouterAddr = accountToRouter[account];
-        delete accountToRouter[account];
-        delete routerToAccount[accountToRouterAddr];
 
         emit RecoveryDeInitialized(account);
     }
@@ -774,46 +646,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         guardianConfigs[account].threshold = threshold;
         emit ChangedThreshold(account, threshold);
-    }
-
-    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
-    /*                        ROUTER LOGIC                        */
-    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    /**
-     * @notice Retrieves the account address associated with a given recovery router
-     * @param recoveryRouter The address of the recovery router
-     * @return address The account address associated with the specified recovery router
-     */
-    function getAccountForRouter(address recoveryRouter) public view returns (address) {
-        return routerToAccount[recoveryRouter];
-    }
-
-    /**
-     * @notice Retrieves the recovery router address associated with a given account
-     * @param account The address of the account
-     * @return address The recovery router address associated with the specified account
-     */
-    function getRouterForAccount(address account) external view returns (address) {
-        return accountToRouter[account];
-    }
-
-    /**
-     * @notice Computes the address of the router using the provided salt
-     * @dev Uses Create2 to compute the address based on the salt and the creation code of the
-     * EmailAccountRecoveryRouter contract
-     * @param salt The salt used to compute the address
-     * @return address The computed address of the router
-     */
-    function computeRouterAddress(bytes32 salt) public view returns (address) {
-        return Create2.computeAddress(
-            salt,
-            keccak256(
-                abi.encodePacked(
-                    type(EmailAccountRecoveryRouter).creationCode, abi.encode(address(this))
-                )
-            )
-        );
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
