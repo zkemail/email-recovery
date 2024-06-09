@@ -65,7 +65,6 @@ abstract contract EmailAccountRecoveryNew {
         returns (string[][] memory);
 
     function acceptGuardian(
-        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -75,7 +74,6 @@ abstract contract EmailAccountRecoveryNew {
         virtual;
 
     function processRecovery(
-        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -87,7 +85,7 @@ abstract contract EmailAccountRecoveryNew {
     /// @notice Completes the recovery process.
     /// @dev This function must be implemented by inheriting contracts to finalize the recovery
     /// process.
-    function completeRecovery(address account, bytes memory recoveryCalldata) external virtual;
+    function completeRecovery(address account) external virtual;
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
     /// @dev This function utilizes the `Create2` library to compute the address. The computation
@@ -188,11 +186,7 @@ abstract contract EmailAccountRecoveryNew {
         guardianEmailAuth.authEmail(emailAuthMsg);
 
         acceptGuardian(
-            account,
-            guardian,
-            templateIdx,
-            emailAuthMsg.subjectParams,
-            emailAuthMsg.proof.emailNullifier
+            guardian, templateIdx, emailAuthMsg.subjectParams, emailAuthMsg.proof.emailNullifier
         );
     }
 
@@ -204,13 +198,7 @@ abstract contract EmailAccountRecoveryNew {
     /// @param emailAuthMsg The email auth message for recovery.
     /// @param templateIdx The index of the subject template for recovery, which should match with
     /// the subject in the given email auth message.
-    function handleRecovery(
-        address account,
-        EmailAuthMsg memory emailAuthMsg,
-        uint256 templateIdx
-    )
-        external
-    {
+    function handleRecovery(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
         address guardian = computeEmailAuthAddress(emailAuthMsg.proof.accountSalt);
         // Check if the guardian is deployed
         require(address(guardian).code.length > 0, "guardian is not deployed");
@@ -226,11 +214,7 @@ abstract contract EmailAccountRecoveryNew {
         guardianEmailAuth.authEmail(emailAuthMsg);
 
         processRecovery(
-            account,
-            guardian,
-            templateIdx,
-            emailAuthMsg.subjectParams,
-            emailAuthMsg.proof.emailNullifier
+            guardian, templateIdx, emailAuthMsg.subjectParams, emailAuthMsg.proof.emailNullifier
         );
     }
 }

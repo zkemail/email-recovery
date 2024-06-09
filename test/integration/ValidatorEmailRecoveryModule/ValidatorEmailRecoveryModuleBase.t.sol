@@ -4,9 +4,8 @@ pragma solidity ^0.8.25;
 import "forge-std/console2.sol";
 
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import {SubjectUtils} from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { ZkEmailRecovery } from "src/ZkEmailRecovery.sol";
-import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
+import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecoveryNew.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
@@ -59,11 +58,7 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         return emailProof;
     }
 
-    function acceptanceSubjectTemplates()
-        public
-        pure
-        returns (string[][] memory)
-    {
+    function acceptanceSubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](5);
         templates[0][0] = "Accept";
@@ -76,24 +71,21 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
 
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](15);
+        templates[0] = new string[](11);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
         templates[0][2] = "{ethAddr}";
-        templates[0][3] = "to";
-        templates[0][4] = "new";
-        templates[0][5] = "owner";
+        templates[0][3] = "via";
+        templates[0][4] = "recovery";
+        templates[0][5] = "module";
         templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "module";
+        templates[0][7] = "to";
+        templates[0][8] = "new";
+        templates[0][9] = "owner";
         templates[0][10] = "{ethAddr}";
-        templates[0][11] = "and";
-        templates[0][12] = "calldata";
-        templates[0][13] = "hash";
-        templates[0][14] = "{string}";
         return templates;
     }
+
     function acceptGuardian(bytes32 accountSalt) public {
         // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
         // certain changes
@@ -118,30 +110,30 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         zkEmailRecovery.handleAcceptance(accountAddress, emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(address newOwner, address recoveryModule, bytes32 calldataHash, bytes32 accountSalt) public {
+    function handleRecovery(
+        address newOwner,
+        address recoveryModule,
+        bytes32 accountSalt
+    )
+        public
+    {
         // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
         // certain changes
         // console2.log("accountAddress: ", accountAddress);
-        // console2.log("newOwner:       ", newOwner);
         // console2.log("recoveryModule: ", recoveryModule);
-        // console2.log("calldataHash:");
-        // console2.logBytes32(calldataHash);
-
-        // TODO: Ideally do this dynamically
-        string memory calldataHashString = "0x97b1d4ee156242fe89ddf0740066dbc1d684025f1d8b95e5fa67743608a243d0";
+        // console2.log("newOwner:       ", newOwner);
 
         string memory subject =
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x98055f91baf53ba7F88A6Db946391950f9B4DD80 and calldata hash 0x97b1d4ee156242fe89ddf0740066dbc1d684025f1d8b95e5fa67743608a243d0";
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 via recovery module 0xAB3594842B8651c8183D156e747C0BF89AFF8942 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(newOwner);
-        subjectParamsForRecovery[2] = abi.encode(recoveryModule);
-        subjectParamsForRecovery[3] = abi.encode(calldataHashString);
+        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[2] = abi.encode(newOwner);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
@@ -149,7 +141,6 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        console2.log("1");
-        zkEmailRecovery.handleRecovery(accountAddress, emailAuthMsg, templateIdx);
+        IEmailAccountRecovery(address(zkEmailRecovery)).handleRecovery(emailAuthMsg, templateIdx);
     }
 }

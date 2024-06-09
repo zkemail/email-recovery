@@ -6,17 +6,15 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
 import { EmailAccountRecoveryNew } from "./EmailAccountRecoveryNew.sol";
 import { IZkEmailRecovery } from "./interfaces/IZkEmailRecovery.sol";
-import { IEmailAuth } from "../interfaces/IEmailAuth.sol";
-import { IUUPSUpgradable } from "../interfaces/IUUPSUpgradable.sol";
+import { IEmailAuth } from "./interfaces/IEmailAuth.sol";
+import { IUUPSUpgradable } from "./interfaces/IUUPSUpgradable.sol";
 import { IRecoveryModule } from "./interfaces/IRecoveryModule.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
-import {
-    HexStrings
-} from "./libraries/HexStrings.sol";
+import { SubjectCalldataBuilder } from "./libraries/SubjectCalldataBuilder.sol";
 
 /**
  * @title ZkEmailRecovery
@@ -40,7 +38,7 @@ import {
  * processRecovery in this contract
  * 4. completeRecovery
  */
-contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
+contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -288,7 +286,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param subjectParams An array of bytes containing the subject parameters
      */
     function acceptGuardian(
-        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -358,7 +355,6 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * @param subjectParams An array of bytes containing the subject parameters
      */
     function processRecovery(
-        address account,
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
@@ -373,11 +369,9 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         // TODO: store these somewhere so this can be done dynamically
         uint256 accountIndex = 0;
-        uint256 calldataHashIndex = 3;
 
         address accountInEmail = abi.decode(subjectParams[accountIndex], (address));
-        bytes32 calldataHashInEmail = abi.decode(subjectParams[calldataHashIndex], (bytes32));
-        bytes32 calldataHashBytes32 = HexStrings.fromHexString(calldataHashString);
+        bytes memory recoveryCalldata = SubjectCalldataBuilder.buildSubjectCalldata(subjectParams);
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
@@ -397,7 +391,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.calldataHash = calldataHashBytes32;
+            recoveryRequest.recoveryCalldata = recoveryCalldata;
 
             emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
         }
@@ -419,7 +413,7 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
      * without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
      */
-    function completeRecovery(address account, bytes memory recoveryCalldata) public override {
+    function completeRecovery(address account) public override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -440,13 +434,10 @@ contract ZkEmailRecovery is EmailAccountRecovery, IZkEmailRecovery {
 
         delete recoveryRequests[account];
 
-        if (keccak256(recoveryCalldata) != recoveryRequest.calldataHash) {
-            revert InvalidCalldataHash();
-        }
 
         address recoveryModule = recoveryConfigs[account].recoveryModule;
 
-        IRecoveryModule(recoveryModule).recover(account, recoveryCalldata);
+        IRecoveryModule(recoveryModule).recover(account, recoveryRequest.recoveryCalldata);
 
         emit RecoveryCompleted(account);
     }

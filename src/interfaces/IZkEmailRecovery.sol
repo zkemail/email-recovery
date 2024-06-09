@@ -33,8 +33,7 @@ interface IZkEmailRecovery {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
-        bytes32 calldataHash; // the keccak256 hash of the calldata used to execute the recovery
-            // attempt
+        bytes recoveryCalldata; // the calldata used to execute the recovery attempt
     }
 
     /**

@@ -60,7 +60,6 @@ contract ValidatorEmailRecoveryModule_Integration_Test is ValidatorEmailRecovery
         bytes memory recoveryCalldata = abi.encodeWithSignature(
             "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
         );
-        bytes32 calldataHash = keccak256(recoveryCalldata);
 
         // Accept guardian 1
         acceptGuardian(accountSalt1);
@@ -79,7 +78,7 @@ contract ValidatorEmailRecoveryModule_Integration_Test is ValidatorEmailRecovery
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
         // handle recovery request for guardian 1
-        handleRecovery(newOwner, recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt1);
         IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
             zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
@@ -89,7 +88,7 @@ contract ValidatorEmailRecoveryModule_Integration_Test is ValidatorEmailRecovery
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
-        handleRecovery(newOwner, recoveryModuleAddress, calldataHash, accountSalt2);
+        handleRecovery(newOwner, recoveryModuleAddress, accountSalt2);
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
@@ -99,7 +98,7 @@ contract ValidatorEmailRecoveryModule_Integration_Test is ValidatorEmailRecovery
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        zkEmailRecovery.completeRecovery(accountAddress, recoveryCalldata);
+        zkEmailRecovery.completeRecovery(accountAddress);
 
         recoveryRequest = zkEmailRecovery.getRecoveryRequest(accountAddress);
         address updatedOwner = validator.owners(accountAddress);
