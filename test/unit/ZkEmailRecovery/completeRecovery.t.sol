@@ -6,25 +6,26 @@ import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-// completeRecovery()
+// completeRecovery(accountAddress, recoveryCalldata)
 contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
+
+    bytes recoveryCalldata;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -38,6 +39,10 @@ contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
             module: recoveryModuleAddress,
             data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
         });
+
+        recoveryCalldata = abi.encodeWithSignature(
+            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
+        );
     }
 
     function test_CompleteRecovery_RevertWhen_NotCalledFromCorrectRouter() public {
@@ -49,13 +54,11 @@ contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
 
         vm.warp(block.timestamp + delay);
 
-        vm.expectRevert(IZkEmailRecovery.InvalidAccountAddress.selector);
-        zkEmailRecovery.completeRecovery();
+        vm.expectRevert(IEmailRecoveryManager.InvalidAccountAddress.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_Succeeds() public {
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
@@ -64,15 +67,13 @@ contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
 
         vm.warp(block.timestamp + delay);
 
-        vm.prank(router);
-        zkEmailRecovery.completeRecovery();
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 }
 
@@ -82,15 +83,16 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
+
+    bytes recoveryCalldata;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -104,13 +106,17 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
             module: recoveryModuleAddress,
             data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay, expiry)
         });
+
+        recoveryCalldata = abi.encodeWithSignature(
+            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
+        );
     }
 
     function test_CompleteRecovery_RevertWhen_InvalidAccountAddress() public {
         address invalidAccount = address(0);
 
-        vm.expectRevert(IZkEmailRecovery.InvalidAccountAddress.selector);
-        zkEmailRecovery.completeRecovery(invalidAccount);
+        vm.expectRevert(IEmailRecoveryManager.InvalidAccountAddress.selector);
+        emailRecoveryManager.completeRecovery(invalidAccount, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_NotEnoughApprovals() public {
@@ -119,8 +125,8 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1); // only one guardian added and one
             // approval
 
-        vm.expectRevert(IZkEmailRecovery.NotEnoughApprovals.selector);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_DelayNotPassed() public {
@@ -132,8 +138,8 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
 
         vm.warp(block.timestamp + delay - 1 seconds); // one second before it should be valid
 
-        vm.expectRevert(IZkEmailRecovery.DelayNotPassed.selector);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.DelayNotPassed.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampEqualToExpiry()
@@ -147,8 +153,8 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
 
         vm.warp(block.timestamp + expiry); // block.timestamp == recoveryRequest.executeBefore
 
-        vm.expectRevert(IZkEmailRecovery.RecoveryRequestExpired.selector);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampMoreThanExpiry()
@@ -163,8 +169,8 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
         vm.warp(block.timestamp + expiry + 1 seconds); // block.timestamp >
             // recoveryRequest.executeBefore
 
-        vm.expectRevert(IZkEmailRecovery.RecoveryRequestExpired.selector);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_CompleteRecovery_Succeeds() public {
@@ -177,15 +183,14 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
         vm.warp(block.timestamp + delay);
 
         vm.expectEmit();
-        emit IZkEmailRecovery.RecoveryCompleted(accountAddress);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 
     function test_CompleteRecovery_SucceedsAlmostExpiry() public {
@@ -198,14 +203,13 @@ contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
         vm.warp(block.timestamp + expiry - 1 seconds);
 
         vm.expectEmit();
-        emit IZkEmailRecovery.RecoveryCompleted(accountAddress);
-        zkEmailRecovery.completeRecovery(accountAddress);
+        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 }

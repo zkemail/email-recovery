@@ -3,5 +3,5 @@ pragma solidity ^0.8.25;
 
 interface IRecoveryModule {
     function recover(address account, bytes memory recoveryCalldata) external;
-    function getTrustedContract() external returns (address);
+    function getTrustedRecoveryManager() external returns (address);
 }

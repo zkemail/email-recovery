@@ -6,8 +6,8 @@ import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
@@ -16,15 +16,14 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -52,12 +51,12 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         // invalidGuardian has not been configured nor accepted, so the guardian status is NONE
         vm.expectRevert(
             abi.encodeWithSelector(
-                IZkEmailRecovery.InvalidGuardianStatus.selector,
+                IEmailRecoveryManager.InvalidGuardianStatus.selector,
                 uint256(GuardianStatus.NONE),
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        zkEmailRecovery.exposed_processRecovery(
+        emailRecoveryManager.exposed_processRecovery(
             invalidGuardian, templateIdx, subjectParams, nullifier
         );
     }
@@ -73,12 +72,14 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         // REQUESTED
         vm.expectRevert(
             abi.encodeWithSelector(
-                IZkEmailRecovery.InvalidGuardianStatus.selector,
+                IEmailRecoveryManager.InvalidGuardianStatus.selector,
                 uint256(GuardianStatus.REQUESTED),
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        zkEmailRecovery.exposed_processRecovery(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryManager.exposed_processRecovery(
+            guardian1, templateIdx, subjectParams, nullifier
+        );
     }
 
     function test_ProcessRecovery_IncreasesTotalWeight() public {
@@ -92,14 +93,15 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
 
         acceptGuardian(accountSalt1);
 
-        zkEmailRecovery.exposed_processRecovery(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryManager.exposed_processRecovery(
+            guardian1, templateIdx, subjectParams, nullifier
+        );
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, guardian1Weight);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 
     function test_ProcessRecovery_InitiatesRecovery() public {
@@ -119,17 +121,15 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         // Call processRecovery with guardian2 which increases currentWeight to >= threshold
-        zkEmailRecovery.exposed_processRecovery(guardian2, templateIdx, subjectParams, nullifier);
+        emailRecoveryManager.exposed_processRecovery(
+            guardian2, templateIdx, subjectParams, nullifier
+        );
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
         assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, guardian1Weight + guardian2Weight);
-        assertEq(recoveryRequest.subjectParams.length, 3);
-        assertEq(recoveryRequest.subjectParams[0], subjectParams[0]);
-        assertEq(recoveryRequest.subjectParams[1], subjectParams[1]);
-        assertEq(recoveryRequest.subjectParams[2], subjectParams[2]);
     }
 
     function test_ProcessRecovery_CompletesRecoveryIfDelayIsZero() public {
@@ -144,8 +144,8 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         // Since configureRecovery is already called in `onInstall`, we update the delay to be 0
         // here
         vm.prank(accountAddress);
-        zkEmailRecovery.updateRecoveryConfig(
-            IZkEmailRecovery.RecoveryConfig(recoveryModuleAddress, zeroDelay, expiry)
+        emailRecoveryManager.updateRecoveryConfig(
+            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, zeroDelay, expiry)
         );
         vm.stopPrank();
 
@@ -156,13 +156,14 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         // Call processRecovery with guardian2 which increases currentWeight to >= threshold
-        zkEmailRecovery.exposed_processRecovery(guardian2, templateIdx, subjectParams, nullifier);
+        emailRecoveryManager.exposed_processRecovery(
+            guardian2, templateIdx, subjectParams, nullifier
+        );
 
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
     }
 }

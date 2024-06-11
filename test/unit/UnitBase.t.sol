@@ -14,8 +14,9 @@ import {
 } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { ZkEmailRecoveryHarness } from "./ZkEmailRecoveryHarness.sol";
+import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
+import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
 abstract contract UnitBase is RhinestoneModuleKit, Test {
@@ -25,7 +26,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     MockGroth16Verifier verifier;
     EmailAuth emailAuthImpl;
 
-    ZkEmailRecoveryHarness zkEmailRecovery;
+    EmailRecoverySubjectHandler emailRecoveryHandler;
+    EmailRecoveryManagerHarness emailRecoveryManager;
 
     // account and owners
     AccountInstance instance;
@@ -78,9 +80,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         address[] memory owners = new address[](1);
         owners[0] = owner;
 
-        // Deploy ZkEmailRecovery
-        zkEmailRecovery = new ZkEmailRecoveryHarness(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+
+        // Deploy EmailRecoveryManager
+        emailRecoveryManager = new EmailRecoveryManagerHarness(
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
         );
 
         // Deploy and fund the account
@@ -93,9 +100,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         accountSalt3 = keccak256(abi.encode("account salt 3"));
 
         // Compute guardian addresses
-        guardian1 = zkEmailRecovery.computeEmailAuthAddress(accountSalt1);
-        guardian2 = zkEmailRecovery.computeEmailAuthAddress(accountSalt2);
-        guardian3 = zkEmailRecovery.computeEmailAuthAddress(accountSalt3);
+        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
+        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
+        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;
@@ -115,6 +122,38 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     }
 
     // Helper functions
+
+    function acceptanceSubjectTemplates() public pure returns (string[][] memory) {
+        string[][] memory templates = new string[][](1);
+        templates[0] = new string[](5);
+        templates[0][0] = "Accept";
+        templates[0][1] = "guardian";
+        templates[0][2] = "request";
+        templates[0][3] = "for";
+        templates[0][4] = "{ethAddr}";
+        return templates;
+    }
+
+    function recoverySubjectTemplates() public pure returns (string[][] memory) {
+        string[][] memory templates = new string[][](1);
+        templates[0] = new string[](15);
+        templates[0][0] = "Recover";
+        templates[0][1] = "account";
+        templates[0][2] = "{ethAddr}";
+        templates[0][3] = "to";
+        templates[0][4] = "new";
+        templates[0][5] = "owner";
+        templates[0][6] = "{ethAddr}";
+        templates[0][7] = "using";
+        templates[0][8] = "recovery";
+        templates[0][9] = "module";
+        templates[0][10] = "{ethAddr}";
+        templates[0][11] = "and";
+        templates[0][12] = "calldata";
+        templates[0][13] = "hash";
+        templates[0][14] = "{string}";
+        return templates;
+    }
 
     function generateMockEmailProof(
         string memory subject,
@@ -147,7 +186,6 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // certain changes
         // console2.log("accountAddress: ", accountAddress);
 
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string memory subject =
             "Accept guardian request for 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52";
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
@@ -157,13 +195,13 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        IEmailAccountRecovery(router).handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(address recoveryModule, bytes32 accountSalt) public {
@@ -173,7 +211,6 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // console2.log("newOwner:       ", newOwner);
         // console2.log("recoveryModule: ", recoveryModule);
 
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         string memory subject =
             "Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x07859195125c40eE1f7dA0A9B88D2eF19b633947";
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
@@ -185,11 +222,11 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         subjectParamsForRecovery[2] = abi.encode(recoveryModule);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        IEmailAccountRecovery(router).handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

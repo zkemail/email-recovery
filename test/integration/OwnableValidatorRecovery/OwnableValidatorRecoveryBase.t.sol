@@ -4,25 +4,32 @@ pragma solidity ^0.8.25;
 import "forge-std/console2.sol";
 
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { ZkEmailRecovery } from "src/ZkEmailRecovery.sol";
-import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecoveryNew.sol";
+import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
-abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
-    ZkEmailRecovery zkEmailRecovery;
+abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
+    EmailRecoverySubjectHandler emailRecoveryHandler;
+    EmailRecoveryManager emailRecoveryManager;
 
     function setUp() public virtual override {
         super.setUp();
 
-        // Deploy ZkEmailRecovery
-        zkEmailRecovery = new ZkEmailRecovery(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+
+        // Deploy EmailRecoveryManager
+        emailRecoveryManager = new EmailRecoveryManager(
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
         );
 
         // Compute guardian addresses
-        guardian1 = zkEmailRecovery.computeEmailAuthAddress(accountSalt1);
-        guardian2 = zkEmailRecovery.computeEmailAuthAddress(accountSalt2);
-        guardian3 = zkEmailRecovery.computeEmailAuthAddress(accountSalt3);
+        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
+        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
+        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;
@@ -79,10 +86,10 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         templates[0][4] = "recovery";
         templates[0][5] = "module";
         templates[0][6] = "{ethAddr}";
-        templates[0][7] = "to";
-        templates[0][8] = "new";
-        templates[0][9] = "owner";
-        templates[0][10] = "{ethAddr}";
+        templates[0][7] = "using";
+        templates[0][8] = "recovery";
+        templates[0][9] = "hash";
+        templates[0][10] = "{string}";
         return templates;
     }
 
@@ -101,18 +108,18 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        zkEmailRecovery.handleAcceptance(accountAddress, emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(
-        address newOwner,
         address recoveryModule,
+        bytes32 calldataHash,
         bytes32 accountSalt
     )
         public
@@ -121,10 +128,17 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         // certain changes
         // console2.log("accountAddress: ", accountAddress);
         // console2.log("recoveryModule: ", recoveryModule);
-        // console2.log("newOwner:       ", newOwner);
+        // console2.log("calldataHash:");
+        // console2.logBytes32(calldataHash);
 
-        string memory subject =
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 via recovery module 0xAB3594842B8651c8183D156e747C0BF89AFF8942 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f";
+        // TODO: Ideally do this dynamically
+        string memory calldataHashString =
+            "0x774e575ec8d6368bbf9b564bd5827574b9f5f6c960e0f6ff9179eca3090df060";
+
+        string memory subject = string.concat(
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 via recovery module 0x2E15d2c3aBFfA78dA67Ebb55139902b85B746765 using recovery hash ",
+            calldataHashString
+        );
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 
@@ -133,14 +147,16 @@ abstract contract ValidatorEmailRecoveryModuleBase is IntegrationBase {
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
         subjectParamsForRecovery[1] = abi.encode(recoveryModule);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
+        subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        IEmailAccountRecovery(address(zkEmailRecovery)).handleRecovery(emailAuthMsg, templateIdx);
+        IEmailAccountRecovery(address(emailRecoveryManager)).handleRecovery(
+            emailAuthMsg, templateIdx
+        );
     }
 }

@@ -7,8 +7,8 @@ import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
@@ -17,15 +17,14 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -47,8 +46,8 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         MockGroth16Verifier newVerifier = new MockGroth16Verifier();
         address newVerifierAddr = address(newVerifier);
 
-        vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
-        zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
+        vm.expectRevert(IEmailRecoveryManager.UnauthorizedAccountForGuardian.selector);
+        emailRecoveryManager.updateGuardianVerifier(guardian, newVerifierAddr);
     }
 
     function test_UpdateGuardianVerifier_RevertWhen_RecoveryInProcess() public {
@@ -62,8 +61,8 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
-        zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.updateGuardianVerifier(guardian, newVerifierAddr);
     }
 
     function test_UpdateGuardianVerifier_Succeeds() public {
@@ -79,7 +78,7 @@ contract ZkEmailRecovery_updateGuardianVerifier_Test is UnitBase {
         assertEq(expectedVerifier, address(verifier));
 
         vm.startPrank(accountAddress);
-        zkEmailRecovery.updateGuardianVerifier(guardian, newVerifierAddr);
+        emailRecoveryManager.updateGuardianVerifier(guardian, newVerifierAddr);
 
         expectedVerifier = guardianEmailAuth.verifierAddr();
         assertEq(expectedVerifier, newVerifierAddr);

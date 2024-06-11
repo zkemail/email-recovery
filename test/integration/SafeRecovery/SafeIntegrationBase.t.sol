@@ -21,15 +21,17 @@ import { etchEntrypoint, IEntryPoint } from "modulekit/test/predeploy/EntryPoint
 import { MockExecutor, MockTarget } from "modulekit/Mocks.sol";
 import { MockValidator } from "module-bases/mocks/MockValidator.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-
 import { Solarray } from "solarray/Solarray.sol";
+
+import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { MockRegistry } from "../external/MockRegistry.sol";
-import { SafeZkEmailRecovery } from "src/SafeZkEmailRecovery.sol";
 import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeIntegrationBase is IntegrationBase {
-    SafeZkEmailRecovery zkEmailRecovery;
+    EmailRecoverySubjectHandler emailRecoveryHandler;
+    EmailRecoveryManager emailRecoveryManager;
 
     Safe7579 safe7579;
     Safe singleton;
@@ -47,17 +49,22 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     function setUp() public virtual override {
         super.setUp();
 
-        zkEmailRecovery = new SafeZkEmailRecovery(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+
+        emailRecoveryManager = new EmailRecoveryManager(
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
         );
 
         safe = deploySafe();
         accountAddress = address(safe);
 
         // Compute guardian addresses
-        guardian1 = zkEmailRecovery.computeEmailAuthAddress(accountSalt1);
-        guardian2 = zkEmailRecovery.computeEmailAuthAddress(accountSalt2);
-        guardian3 = zkEmailRecovery.computeEmailAuthAddress(accountSalt3);
+        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
+        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
+        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;
@@ -221,14 +228,14 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
+        // after
         // certain changes
         // console2.log("accountAddress: ", accountAddress);
 
         string memory subject =
             "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
 
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
@@ -237,49 +244,53 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        IEmailAccountRecovery(router).handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(
-        address oldOwner,
-        address newOwner,
         address recoveryModule,
+        bytes32 calldataHash,
         bytes32 accountSalt
     )
         public
     {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
+        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
+        // after
         // certain changes
         // console2.log("accountAddress: ", accountAddress);
-        // console2.log("oldOwner:       ", oldOwner);
-        // console2.log("newOwner:       ", newOwner);
-        // console2.log("recoveryModule: ", recoveryModule);
+        console2.log("recoveryModule: ", recoveryModule);
+        console2.log("calldataHash:");
+        console2.logBytes32(calldataHash);
 
-        string memory subject =
-            "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 from old owner 0x7c8999dC9a822c1f0Df42023113EDB4FDd543266 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x6d2Fa6974Ef18eB6da842D3c7ab3150326feaEEC";
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
+        // TODO: Ideally do this dynamically
+        string memory calldataHashString =
+            "0x4e66542ab78fcc7a2341586b67800e82b975078517d7d692e2aa98d2696c51d0";
+
+        string memory subject = string.concat(
+            "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 via recovery module 0xD7F74A3A1d35495c1537f5377590e44A2bf44122 using recovery hash ",
+            calldataHashString
+        );
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(oldOwner);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
-        subjectParamsForRecovery[3] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: zkEmailRecovery.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        IEmailAccountRecovery(router).handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

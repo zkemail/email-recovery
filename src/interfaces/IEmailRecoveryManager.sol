@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
-interface IZkEmailRecovery {
+interface IEmailRecoveryManager {
     /*//////////////////////////////////////////////////////////////////////////
                                 TYPE DELARATIONS
     //////////////////////////////////////////////////////////////////////////*/
@@ -33,7 +33,8 @@ interface IZkEmailRecovery {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
-        bytes recoveryCalldata; // the calldata used to execute the recovery attempt
+        bytes32 calldataHash; // the keccak256 hash of the calldata used to execute the recovery
+            // attempt
     }
 
     /**
@@ -124,9 +125,7 @@ interface IZkEmailRecovery {
         uint256[] memory weights,
         uint256 threshold,
         uint256 delay,
-        uint256 expiry,
-        string[][] memory acceptanceSubjectTemplate,
-        string[][] memory recoverySubjectTemplate
+        uint256 expiry
     )
         external;
 

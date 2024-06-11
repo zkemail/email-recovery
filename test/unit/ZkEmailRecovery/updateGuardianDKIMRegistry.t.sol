@@ -9,8 +9,8 @@ import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract ZkEmailRecovery_updateGuardianDKIMRegistry_Test is UnitBase {
@@ -18,15 +18,14 @@ contract ZkEmailRecovery_updateGuardianDKIMRegistry_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -48,8 +47,8 @@ contract ZkEmailRecovery_updateGuardianDKIMRegistry_Test is UnitBase {
         ECDSAOwnedDKIMRegistry newDkim = new ECDSAOwnedDKIMRegistry(accountAddress);
         address newDkimAddr = address(newDkim);
 
-        vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
-        zkEmailRecovery.updateGuardianDKIMRegistry(guardian, newDkimAddr);
+        vm.expectRevert(IEmailRecoveryManager.UnauthorizedAccountForGuardian.selector);
+        emailRecoveryManager.updateGuardianDKIMRegistry(guardian, newDkimAddr);
     }
 
     function test_UpdateGuardianDKIMRegistry_RevertWhen_RecoveryInProcess() public {
@@ -63,8 +62,8 @@ contract ZkEmailRecovery_updateGuardianDKIMRegistry_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
-        zkEmailRecovery.updateGuardianDKIMRegistry(guardian, newDkimAddr);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.updateGuardianDKIMRegistry(guardian, newDkimAddr);
     }
 
     function test_UpdateGuardianDKIMRegistry_Succeeds() public {
@@ -80,7 +79,7 @@ contract ZkEmailRecovery_updateGuardianDKIMRegistry_Test is UnitBase {
         assertEq(dkim, address(ecdsaOwnedDkimRegistry));
 
         vm.startPrank(accountAddress);
-        zkEmailRecovery.updateGuardianDKIMRegistry(guardian, newDkimAddr);
+        emailRecoveryManager.updateGuardianDKIMRegistry(guardian, newDkimAddr);
 
         dkim = guardianEmailAuth.dkimRegistryAddr();
         assertEq(dkim, newDkimAddr);

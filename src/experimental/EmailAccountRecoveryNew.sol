@@ -11,13 +11,10 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 /// @dev This contract is abstract and requires implementation of several methods for configuring a
 /// new guardian and recovering a wallet.
 abstract contract EmailAccountRecoveryNew {
-    uint8 constant EMAIL_ACCOUNT_RECOVERY_VERSION_ID = 2;
+    uint8 constant EMAIL_ACCOUNT_RECOVERY_VERSION_ID = 1;
     address public verifierAddr;
     address public dkimAddr;
     address public emailAuthImplementationAddr;
-
-    mapping(address account => string[][]) public acceptanceSubjectTemplates;
-    mapping(address account => string[][]) public recoverySubjectTemplates;
 
     /// @notice Returns the address of the verifier contract.
     /// @dev This function is virtual and can be overridden by inheriting contracts.
@@ -46,11 +43,7 @@ abstract contract EmailAccountRecoveryNew {
     /// specific acceptance subject templates.
     /// @return string[][] A two-dimensional array of strings, where each inner array represents a
     /// set of fixed strings and matchers for a subject template.
-    function getAcceptanceSubjectTemplates(address account)
-        public
-        view
-        virtual
-        returns (string[][] memory);
+    function acceptanceSubjectTemplates() public view virtual returns (string[][] memory);
 
     /// @notice Returns a two-dimensional array of strings representing the subject templates for
     /// email recovery.
@@ -58,11 +51,7 @@ abstract contract EmailAccountRecoveryNew {
     /// specific recovery subject templates.
     /// @return string[][] A two-dimensional array of strings, where each inner array represents a
     /// set of fixed strings and matchers for a subject template.
-    function getRecoverySubjectTemplates(address account)
-        public
-        view
-        virtual
-        returns (string[][] memory);
+    function recoverySubjectTemplates() public view virtual returns (string[][] memory);
 
     function acceptGuardian(
         address guardian,
@@ -85,7 +74,7 @@ abstract contract EmailAccountRecoveryNew {
     /// @notice Completes the recovery process.
     /// @dev This function must be implemented by inheriting contracts to finalize the recovery
     /// process.
-    function completeRecovery(address account) external virtual;
+    function completeRecovery(address account, bytes calldata recoveryCalldata) external virtual;
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
     /// @dev This function utilizes the `Create2` library to compute the address. The computation
@@ -141,13 +130,7 @@ abstract contract EmailAccountRecoveryNew {
     /// @param emailAuthMsg The email auth message for the email send from the guardian.
     /// @param templateIdx The index of the subject template for acceptance, which should match with
     /// the subject in the given email auth message.
-    function handleAcceptance(
-        address account,
-        EmailAuthMsg memory emailAuthMsg,
-        uint256 templateIdx
-    )
-        external
-    {
+    function handleAcceptance(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
         address guardian = computeEmailAuthAddress(emailAuthMsg.proof.accountSalt);
         uint256 templateId = computeAcceptanceTemplateId(templateIdx);
         require(templateId == emailAuthMsg.templateId, "invalid template id");
@@ -170,14 +153,14 @@ abstract contract EmailAccountRecoveryNew {
 
         guardianEmailAuth.updateDKIMRegistry(dkim());
         guardianEmailAuth.updateVerifier(verifier());
-        for (uint256 idx = 0; idx < acceptanceSubjectTemplates[account].length; idx++) {
+        for (uint256 idx = 0; idx < acceptanceSubjectTemplates().length; idx++) {
             guardianEmailAuth.insertSubjectTemplate(
-                computeAcceptanceTemplateId(idx), acceptanceSubjectTemplates[account][idx]
+                computeAcceptanceTemplateId(idx), acceptanceSubjectTemplates()[idx]
             );
         }
-        for (uint256 idx = 0; idx < recoverySubjectTemplates[account].length; idx++) {
+        for (uint256 idx = 0; idx < recoverySubjectTemplates().length; idx++) {
             guardianEmailAuth.insertSubjectTemplate(
-                computeRecoveryTemplateId(idx), recoverySubjectTemplates[account][idx]
+                computeRecoveryTemplateId(idx), recoverySubjectTemplates()[idx]
             );
         }
 

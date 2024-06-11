@@ -7,8 +7,8 @@ import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract ZkEmailRecovery_upgradeEmailAuthGuardian_Test is UnitBase {
@@ -16,15 +16,14 @@ contract ZkEmailRecovery_upgradeEmailAuthGuardian_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -44,8 +43,8 @@ contract ZkEmailRecovery_upgradeEmailAuthGuardian_Test is UnitBase {
         address newImplementation = address(1);
         bytes memory data = "";
 
-        vm.expectRevert(IZkEmailRecovery.UnauthorizedAccountForGuardian.selector);
-        zkEmailRecovery.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
+        vm.expectRevert(IEmailRecoveryManager.UnauthorizedAccountForGuardian.selector);
+        emailRecoveryManager.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
     }
 
     function test_UpgradeEmailAuthGuardian_RevertWhen_RecoveryInProcess() public {
@@ -58,8 +57,8 @@ contract ZkEmailRecovery_upgradeEmailAuthGuardian_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
-        zkEmailRecovery.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
     }
 
     function test_UpgradeEmailAuthGuardian_Succeeds() public {
@@ -70,6 +69,6 @@ contract ZkEmailRecovery_upgradeEmailAuthGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
-        zkEmailRecovery.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
+        emailRecoveryManager.upgradeEmailAuthGuardian(guardian1, newImplementation, data);
     }
 }

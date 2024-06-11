@@ -6,9 +6,9 @@ import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 
 import { UnitBase } from "../UnitBase.t.sol";
-import { IZkEmailRecovery } from "src/interfaces/IZkEmailRecovery.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { OwnableValidatorRecoveryModule } from "src/modules/OwnableValidatorRecoveryModule.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract ZkEmailRecovery_deInitRecoveryFromModule_Test is UnitBase {
@@ -16,15 +16,14 @@ contract ZkEmailRecovery_deInitRecoveryFromModule_Test is UnitBase {
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    OwnableValidatorRecoveryModule recoveryModule;
+    EmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule =
-            new OwnableValidatorRecoveryModule{ salt: "test salt" }(address(zkEmailRecovery));
+        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
         recoveryModuleAddress = address(recoveryModule);
 
         instance.installModule({
@@ -41,8 +40,8 @@ contract ZkEmailRecovery_deInitRecoveryFromModule_Test is UnitBase {
     }
 
     function test_DeInitRecoveryFromModule_RevertWhen_NotCalledFromRecoveryModule() public {
-        vm.expectRevert(IZkEmailRecovery.NotRecoveryModule.selector);
-        zkEmailRecovery.deInitRecoveryFromModule(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.NotRecoveryModule.selector);
+        emailRecoveryManager.deInitRecoveryFromModule(accountAddress);
     }
 
     function test_DeInitRecoveryFromModule_RevertWhen_RecoveryInProcess() public {
@@ -51,59 +50,50 @@ contract ZkEmailRecovery_deInitRecoveryFromModule_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
         vm.prank(recoveryModuleAddress);
-        vm.expectRevert(IZkEmailRecovery.RecoveryInProcess.selector);
-        zkEmailRecovery.deInitRecoveryFromModule(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.deInitRecoveryFromModule(accountAddress);
     }
 
     function test_DeInitRecoveryFromModule_Succeeds() public {
-        address router = zkEmailRecovery.getRouterForAccount(accountAddress);
-
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
 
         vm.prank(recoveryModuleAddress);
         vm.expectEmit();
-        emit IZkEmailRecovery.RecoveryDeInitialized(accountAddress);
-        zkEmailRecovery.deInitRecoveryFromModule(accountAddress);
+        emit IEmailRecoveryManager.RecoveryDeInitialized(accountAddress);
+        emailRecoveryManager.deInitRecoveryFromModule(accountAddress);
 
         // assert that recovery config has been cleared successfully
-        IZkEmailRecovery.RecoveryConfig memory recoveryConfig =
-            zkEmailRecovery.getRecoveryConfig(accountAddress);
+        IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
+            emailRecoveryManager.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.recoveryModule, address(0));
         assertEq(recoveryConfig.delay, 0);
         assertEq(recoveryConfig.expiry, 0);
 
         // assert that the recovery request has been cleared successfully
-        IZkEmailRecovery.RecoveryRequest memory recoveryRequest =
-            zkEmailRecovery.getRecoveryRequest(accountAddress);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.subjectParams.length, 0);
 
         // assert that guardian storage has been cleared successfully for guardian 1
         GuardianStorage memory guardianStorage1 =
-            zkEmailRecovery.getGuardian(accountAddress, guardian1);
+            emailRecoveryManager.getGuardian(accountAddress, guardian1);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage1.weight, uint256(0));
 
         // assert that guardian storage has been cleared successfully for guardian 2
         GuardianStorage memory guardianStorage2 =
-            zkEmailRecovery.getGuardian(accountAddress, guardian2);
+            emailRecoveryManager.getGuardian(accountAddress, guardian2);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage2.weight, uint256(0));
 
         // assert that guardian config has been cleared successfully
-        IZkEmailRecovery.GuardianConfig memory guardianConfig =
-            zkEmailRecovery.getGuardianConfig(accountAddress);
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, 0);
         assertEq(guardianConfig.totalWeight, 0);
         assertEq(guardianConfig.threshold, 0);
-
-        // assert that the recovery router mappings have been cleared successfully
-        address accountForRouter = zkEmailRecovery.getAccountForRouter(router);
-        address routerForAccount = zkEmailRecovery.getRouterForAccount(accountAddress);
-        assertEq(accountForRouter, address(0));
-        assertEq(routerForAccount, address(0));
     }
 }

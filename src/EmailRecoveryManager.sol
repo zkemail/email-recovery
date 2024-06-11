@@ -4,8 +4,9 @@ pragma solidity ^0.8.25;
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
-import { EmailAccountRecoveryNew } from "./EmailAccountRecoveryNew.sol";
-import { IZkEmailRecovery } from "./interfaces/IZkEmailRecovery.sol";
+import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
+import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
+import { IEmailRecoverySubjectHandler } from "./interfaces/IEmailRecoverySubjectHandler.sol";
 import { IEmailAuth } from "./interfaces/IEmailAuth.sol";
 import { IUUPSUpgradable } from "./interfaces/IUUPSUpgradable.sol";
 import { IRecoveryModule } from "./interfaces/IRecoveryModule.sol";
@@ -14,10 +15,9 @@ import {
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
-import { SubjectCalldataBuilder } from "./libraries/SubjectCalldataBuilder.sol";
 
 /**
- * @title ZkEmailRecovery
+ * @title EmailRecoveryManager
  * @notice Provides a mechanism for account recovery using email guardians
  * @dev The underlying EmailAccountRecovery contract provides some base logic for deploying
  * guardian contracts and handling email verification.
@@ -26,8 +26,9 @@ import { SubjectCalldataBuilder } from "./libraries/SubjectCalldataBuilder.sol";
  * provide the core logic for email based account recovery that can be used across different account
  * implementations.
  *
- * ZkEmailRecovery relies on a dedicated recovery module to execute a recovery attempt. This
- * (ZkEmailRecovery) contract defines "what a valid recovery attempt is for an account", and the
+ * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
+ * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
+ * the
  * recovery module defines “how that recovery attempt is executed on the account”.
  *
  * The core functions that must be called in the end-to-end flow for recovery are
@@ -38,12 +39,14 @@ import { SubjectCalldataBuilder } from "./libraries/SubjectCalldataBuilder.sol";
  * processRecovery in this contract
  * 4. completeRecovery
  */
-contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
+contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    address public immutable subjectHandler;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -72,10 +75,16 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
      */
     mapping(address account => GuardianConfig guardianConfig) internal guardianConfigs;
 
-    constructor(address _verifier, address _dkimRegistry, address _emailAuthImpl) {
+    constructor(
+        address _verifier,
+        address _dkimRegistry,
+        address _emailAuthImpl,
+        address _subjectHandler
+    ) {
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
+        subjectHandler = _subjectHandler;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -124,15 +133,11 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
         uint256[] memory weights,
         uint256 threshold,
         uint256 delay,
-        uint256 expiry,
-        string[][] memory acceptanceSubjectTemplate,
-        string[][] memory recoverySubjectTemplate
+        uint256 expiry
     )
         external
     {
         address account = msg.sender;
-        acceptanceSubjectTemplates[account] = acceptanceSubjectTemplate;
-        recoverySubjectTemplates[account] = recoverySubjectTemplate;
 
         // setupGuardians contains a check that ensures this function can only be called once
         setupGuardians(account, guardians, weights, threshold);
@@ -264,13 +269,8 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
-    function getAcceptanceSubjectTemplates(address account)
-        public
-        view
-        override
-        returns (string[][] memory)
-    {
-        return acceptanceSubjectTemplates[account];
+    function acceptanceSubjectTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoverySubjectHandler(subjectHandler).acceptanceSubjectTemplates();
     }
 
     /**
@@ -294,13 +294,8 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
         internal
         override
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        // TODO: store this somewhere so this can be done dynamically
-        uint256 accountIndex = 0;
-        address accountInEmail = abi.decode(subjectParams[accountIndex], (address));
+        address accountInEmail = IEmailRecoverySubjectHandler(subjectHandler)
+            .validateAcceptanceSubject(templateIdx, subjectParams);
 
         if (recoveryRequests[accountInEmail].currentWeight > 0) {
             revert RecoveryInProcess();
@@ -336,13 +331,8 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
-    function getRecoverySubjectTemplates(address account)
-        public
-        view
-        override
-        returns (string[][] memory)
-    {
-        return recoverySubjectTemplates[account];
+    function recoverySubjectTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoverySubjectHandler(subjectHandler).recoverySubjectTemplates();
     }
 
     /**
@@ -363,37 +353,31 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
         internal
         override
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
-        // TODO: store these somewhere so this can be done dynamically
-        uint256 accountIndex = 0;
-
-        address accountInEmail = abi.decode(subjectParams[accountIndex], (address));
-        bytes memory recoveryCalldata = SubjectCalldataBuilder.buildSubjectCalldata(subjectParams);
+        (address account, bytes32 recoveryCalldataHash) = IEmailRecoverySubjectHandler(
+            subjectHandler
+        ).validateRecoverySubject(templateIdx, subjectParams, address(this));
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
-        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
+        GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.ACCEPTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
         }
 
-        RecoveryRequest storage recoveryRequest = recoveryRequests[accountInEmail];
+        RecoveryRequest storage recoveryRequest = recoveryRequests[account];
 
         recoveryRequest.currentWeight += guardianStorage.weight;
 
-        uint256 threshold = getGuardianConfig(accountInEmail).threshold;
+        uint256 threshold = getGuardianConfig(account).threshold;
         if (recoveryRequest.currentWeight >= threshold) {
-            uint256 executeAfter = block.timestamp + recoveryConfigs[accountInEmail].delay;
-            uint256 executeBefore = block.timestamp + recoveryConfigs[accountInEmail].expiry;
+            uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.recoveryCalldata = recoveryCalldata;
+            recoveryRequest.calldataHash = recoveryCalldataHash;
 
-            emit RecoveryProcessed(accountInEmail, executeAfter, executeBefore);
+            emit RecoveryProcessed(account, executeAfter, executeBefore);
         }
     }
 
@@ -413,7 +397,7 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
      * without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
      */
-    function completeRecovery(address account) public override {
+    function completeRecovery(address account, bytes memory recoveryCalldata) public override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -434,10 +418,13 @@ contract ZkEmailRecovery is EmailAccountRecoveryNew, IZkEmailRecovery {
 
         delete recoveryRequests[account];
 
+        if (keccak256(recoveryCalldata) != recoveryRequest.calldataHash) {
+            revert InvalidCalldataHash();
+        }
 
         address recoveryModule = recoveryConfigs[account].recoveryModule;
 
-        IRecoveryModule(recoveryModule).recover(account, recoveryRequest.recoveryCalldata);
+        IRecoveryModule(recoveryModule).recover(account, recoveryCalldata);
 
         emit RecoveryCompleted(account);
     }
