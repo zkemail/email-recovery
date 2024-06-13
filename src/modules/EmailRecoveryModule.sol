@@ -4,10 +4,18 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 
+struct ValidatorList {
+    SentinelListLib.SentinelList validators;
+    uint256 count;
+}
+
 contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
+    using SentinelListLib for SentinelListLib.SentinelList;
+
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -15,16 +23,23 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     address public immutable EMAIL_RECOVERY_MANAGER;
 
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
+    event RemovedValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
 
     error NotTrustedRecoveryManager();
     error InvalidSubjectParams();
     error InvalidValidator(address validator);
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
+    error InvalidValidatorsLength();
+    error InvalidNextValidator();
 
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
-    mapping(address account => address validator) internal validators;
+
+    mapping(address account => mapping(bytes4 selector => address validator)) internal
+        selectorToValidator;
+
+    mapping(address account => ValidatorList validatorList) internal validators;
 
     constructor(address _zkEmailRecovery) {
         EMAIL_RECOVERY_MANAGER = _zkEmailRecovery;
@@ -61,8 +76,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             uint256 expiry
         ) = abi.decode(data, (address, bytes4, address[], uint256[], uint256, uint256, uint256));
 
-        _allowValidatorRecovery(validator, bytes("0"), selector);
-        validators[msg.sender] = validator;
+        allowValidatorRecovery(validator, bytes("0"), selector);
 
         _execute({
             to: EMAIL_RECOVERY_MANAGER,
@@ -74,12 +88,12 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         });
     }
 
-    function _allowValidatorRecovery(
+    function allowValidatorRecovery(
         address validator,
         bytes memory isInstalledContext,
         bytes4 recoverySelector
     )
-        internal
+        public
         withoutUnsafeSelector(recoverySelector)
     {
         if (
@@ -90,9 +104,47 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidValidator(validator);
         }
 
+        ValidatorList storage validatorList = validators[msg.sender];
+        bool alreadyInitialized = validatorList.validators.alreadyInitialized();
+        if (!alreadyInitialized) {
+            validatorList.validators.init();
+        }
+        validatorList.validators.push(validator);
+        validatorList.count++;
+
         allowedSelectors[validator][msg.sender] = recoverySelector;
+        selectorToValidator[msg.sender][recoverySelector] = validator;
 
         emit NewValidatorRecovery({ validatorModule: validator, recoverySelector: recoverySelector });
+    }
+
+    function disallowValidatorRecovery(
+        address validator,
+        address prevValidator,
+        bytes memory isInstalledContext,
+        bytes4 recoverySelector
+    )
+        public
+    {
+        if (
+            !IERC7579Account(msg.sender).isModuleInstalled(
+                TYPE_VALIDATOR, validator, isInstalledContext
+            )
+        ) {
+            revert InvalidValidator(validator);
+        }
+
+        ValidatorList storage validatorList = validators[msg.sender];
+        validatorList.validators.pop(prevValidator, validator);
+        validatorList.count--;
+
+        delete allowedSelectors[validator][msg.sender];
+        delete selectorToValidator[msg.sender][recoverySelector];
+
+        emit RemovedValidatorRecovery({
+            validatorModule: validator,
+            recoverySelector: recoverySelector
+        });
     }
 
     /**
@@ -100,9 +152,29 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @custom:unusedparam data - the data to de-initialize the module with
      */
     function onUninstall(bytes calldata /* data */ ) external {
-        address validator = validators[msg.sender];
-        delete allowedSelectors[validator][msg.sender];
-        delete validators[msg.sender];
+        ValidatorList storage validatorList = validators[msg.sender];
+
+        (address[] memory allowedValidators, address next) =
+            validatorList.validators.getEntriesPaginated(SENTINEL, validatorList.count);
+
+        uint256 allowedValidatorsLength = allowedValidators.length;
+        if (validatorList.count != allowedValidatorsLength) {
+            revert InvalidValidatorsLength();
+        }
+
+        if (next != ZERO_ADDRESS) {
+            revert InvalidNextValidator();
+        }
+
+        for (uint256 i; i < allowedValidatorsLength; i++) {
+            bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
+            delete selectorToValidator[msg.sender][allowedSelector];
+            delete allowedSelectors[allowedValidators[i]][msg.sender];
+        }
+
+        validatorList.validators.popAll();
+        validatorList.count = 0;
+
         IEmailRecoveryManager(EMAIL_RECOVERY_MANAGER).deInitRecoveryFromModule(msg.sender);
     }
 
@@ -127,7 +199,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
         bytes4 selector = bytes4(recoveryCalldata[:4]);
 
-        address validator = validators[account];
+        address validator = selectorToValidator[account][selector];
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {
             revert InvalidSelector(selector);
