@@ -11,6 +11,8 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
+error ThresholdCannotExceedTotalWeight();
+
 contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -71,7 +73,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(ThresholdCannotExceedTotalWeight.selector);
         emailRecoveryManager.removeGuardian(guardian, threshold);
     }
 

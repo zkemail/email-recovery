@@ -12,15 +12,9 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 /// new guardian and recovering a wallet.
 abstract contract EmailAccountRecoveryNew {
     uint8 constant EMAIL_ACCOUNT_RECOVERY_VERSION_ID = 1;
-    address internal immutable verifierAddr;
-    address internal immutable dkimAddr;
-    address internal immutable emailAuthImplementationAddr;
-
-    constructor(address _verifierAddr, address _dkimAddr, address _emailAuthImplementationAddr) {
-        verifierAddr = _verifierAddr;
-        dkimAddr = _dkimAddr;
-        emailAuthImplementationAddr = _emailAuthImplementationAddr;
-    }
+    address public verifierAddr;
+    address public dkimAddr;
+    address public emailAuthImplementationAddr;
 
     /// @notice Returns the address of the verifier contract.
     /// @dev This function is virtual and can be overridden by inheriting contracts.

@@ -9,6 +9,12 @@ import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol"
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
+error SetupNotCalled();
+error ThresholdCannotExceedTotalWeight();
+error ThresholdCannotBeZero();
+
+event ChangedThreshold(address indexed account, uint256 threshold);
+
 contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -48,7 +54,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
     }
 
     function test_RevertWhen_SetupNotCalled() public {
-        vm.expectRevert(IEmailRecoveryManager.SetupNotCalled.selector);
+        vm.expectRevert(SetupNotCalled.selector);
         emailRecoveryManager.changeThreshold(threshold);
     }
 
@@ -56,7 +62,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         uint256 highThreshold = totalWeight + 1;
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(ThresholdCannotExceedTotalWeight.selector);
         emailRecoveryManager.changeThreshold(highThreshold);
     }
 
@@ -64,7 +70,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
         uint256 zeroThreshold = 0;
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.ThresholdCannotBeZero.selector);
+        vm.expectRevert(ThresholdCannotBeZero.selector);
         emailRecoveryManager.changeThreshold(zeroThreshold);
     }
 
@@ -73,7 +79,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.ChangedThreshold(accountAddress, newThreshold);
+        emit ChangedThreshold(accountAddress, newThreshold);
         emailRecoveryManager.changeThreshold(newThreshold);
 
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =

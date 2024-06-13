@@ -44,6 +44,6 @@ contract EmailRecoveryManagerHarness is EmailRecoveryManager {
     )
         external
     {
-        setupGuardians(account, guardians, weights, threshold);
+        // setupGuardians(account, guardians, weights, threshold);
     }
 }

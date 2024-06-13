@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
 import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
@@ -15,6 +14,7 @@ import {
     GuardianStorage,
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
+import { GuardianUtils } from "./libraries/GuardianUtils.sol";
 
 /**
  * @title EmailRecoveryManager
@@ -28,31 +28,27 @@ import {
  *
  * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
  * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
- * the
- * recovery module defines “how that recovery attempt is executed on the account”.
- *
- * The core functions that must be called in the end-to-end flow for recovery are
- * 1. configureRecovery (does not need to be called again for subsequent recovery attempts)
- * 2. handleAcceptance - called for each guardian. Defined on EmailAccountRecovery.sol, calls
- * acceptGuardian in this contract
- * 3. handleRecovery - called for each guardian. Defined on EmailAccountRecovery.sol, calls
- * processRecovery in this contract
- * 4. completeRecovery
+ * the recovery module defines “how that recovery attempt is executed on the account”.
  */
 contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
+    using GuardianUtils for mapping(address => GuardianConfig);
+    using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    address public immutable subjectHandler;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
      */
     uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
+
+    /**
+     * The subject handler that returns and validates the subject templates
+     */
+    address public immutable subjectHandler;
 
     /**
      * Account address to recovery config
@@ -80,9 +76,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         address _dkimRegistry,
         address _emailAuthImpl,
         address _subjectHandler
-    )
-        EmailAccountRecoveryNew(_verifier, _dkimRegistry, _emailAuthImpl)
-    {
+    ) {
+        verifierAddr = _verifier;
+        dkimAddr = _dkimRegistry;
+        emailAuthImplementationAddr = _emailAuthImpl;
         subjectHandler = _subjectHandler;
     }
 
@@ -138,81 +135,18 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     {
         address account = msg.sender;
 
-        // setupGuardians contains a check that ensures this function can only be called once
-        setupGuardians(account, guardians, weights, threshold);
-
-        RecoveryConfig memory recoveryConfig = RecoveryConfig(recoveryModule, delay, expiry);
-        updateRecoveryConfig(recoveryConfig);
-
-        emit RecoveryConfigured(account, recoveryModule, guardians.length);
-    }
-
-    /**
-     * @notice Sets up guardians for a given account with specified weights and threshold
-     * @dev This function can only be called once and ensures the guardians, weights, and threshold
-     * are correctly configured
-     * @param account The address of the account for which guardians are being set up
-     * @param guardians An array of guardian addresses
-     * @param weights An array of weights corresponding to each guardian
-     * @param threshold The threshold weight required for guardians to approve recovery attempts
-     */
-    function setupGuardians(
-        address account,
-        address[] memory guardians,
-        uint256[] memory weights,
-        uint256 threshold
-    )
-        internal
-    {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function can only be called once.
         if (guardianConfigs[account].threshold > 0) {
             revert SetupAlreadyCalled();
         }
 
-        uint256 guardianCount = guardians.length;
+        setupGuardians(account, guardians, weights, threshold);
 
-        if (guardianCount != weights.length) {
-            revert IncorrectNumberOfWeights();
-        }
+        RecoveryConfig memory recoveryConfig = RecoveryConfig(recoveryModule, delay, expiry);
+        updateRecoveryConfig(recoveryConfig);
 
-        if (threshold == 0) {
-            revert ThresholdCannotBeZero();
-        }
-
-        uint256 totalWeight = 0;
-        for (uint256 i = 0; i < guardianCount; i++) {
-            address guardian = guardians[i];
-            uint256 weight = weights[i];
-
-            if (guardian == address(0) || guardian == account) {
-                revert InvalidGuardianAddress();
-            }
-
-            // As long as weights are 1 or above, there will be enough total weight to reach the
-            // required threshold. This is because we check the guardian count cannot be less
-            // than the threshold and there is an equal amount of guardians to weights.
-            if (weight == 0) {
-                revert InvalidGuardianWeight();
-            }
-
-            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-            if (guardianStorage.status != GuardianStatus.NONE) {
-                revert AddressAlreadyGuardian();
-            }
-
-            guardiansStorage[account].set({
-                key: guardian,
-                value: GuardianStorage(GuardianStatus.REQUESTED, weight)
-            });
-            totalWeight += weight;
-        }
-
-        if (threshold > totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
-        }
-
-        guardianConfigs[account] = GuardianConfig(guardianCount, totalWeight, threshold);
+        emit RecoveryConfigured(account, recoveryModule, guardians.length);
     }
 
     /**
@@ -480,22 +414,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     /*                       GUARDIAN LOGIC                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    /**
-     * @notice Retrieves the guardian configuration for a given account
-     * @param account The address of the account for which the guardian configuration is being
-     * retrieved
-     * @return GuardianConfig The guardian configuration for the specified account
-     */
     function getGuardianConfig(address account) public view returns (GuardianConfig memory) {
-        return guardianConfigs[account];
+        return guardianConfigs.getGuardianConfig(account);
     }
 
-    /**
-     * @notice Retrieves the guardian storage details for a given guardian and account
-     * @param account The address of the account associated with the guardian
-     * @param guardian The address of the guardian
-     * @return GuardianStorage The guardian storage details for the specified guardian and account
-     */
     function getGuardian(
         address account,
         address guardian
@@ -504,18 +426,20 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         view
         returns (GuardianStorage memory)
     {
-        return guardiansStorage[account].get(guardian);
+        return guardiansStorage.getGuardian(account, guardian);
     }
 
-    /**
-     * @notice Adds a guardian for the caller's account with a specified weight and updates the
-     * threshold if necessary
-     * @dev This function can only be called by the account associated with the guardian and only if
-     * no recovery is in process
-     * @param guardian The address of the guardian to be added
-     * @param weight The weight assigned to the guardian
-     * @param threshold The new threshold for guardian approvals
-     */
+    function setupGuardians(
+        address account,
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold
+    )
+        internal
+    {
+        guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
+    }
+
     function addGuardian(
         address guardian,
         uint256 weight,
@@ -525,49 +449,9 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         onlyWhenNotRecovering
     {
         address account = msg.sender;
-
-        // Threshold can only be 0 at initialization.
-        // Check ensures that setup function should be called first
-        if (guardianConfigs[account].threshold == 0) {
-            revert SetupNotCalled();
-        }
-
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-
-        if (guardian == address(0) || guardian == account) {
-            revert InvalidGuardianAddress();
-        }
-
-        if (guardianStorage.status != GuardianStatus.NONE) {
-            revert AddressAlreadyGuardian();
-        }
-
-        if (weight == 0) {
-            revert InvalidGuardianWeight();
-        }
-
-        guardiansStorage[account].set({
-            key: guardian,
-            value: GuardianStorage(GuardianStatus.REQUESTED, weight)
-        });
-        guardianConfigs[account].guardianCount++;
-        guardianConfigs[account].totalWeight += weight;
-
-        emit AddedGuardian(account, guardian);
-
-        // Change threshold if threshold was changed.
-        if (guardianConfigs[account].threshold != threshold) {
-            changeThreshold(threshold);
-        }
+        guardianConfigs.addGuardian(guardiansStorage, account, guardian, weight, threshold);
     }
 
-    /**
-     * @notice Removes a guardian for the caller's account and updates the threshold if necessary
-     * @dev This function can only be called by the account associated with the guardian and only if
-     * no recovery is in process
-     * @param guardian The address of the guardian to be removed
-     * @param threshold The new threshold for guardian approvals
-     */
     function removeGuardian(
         address guardian,
         uint256 threshold
@@ -577,52 +461,12 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         onlyWhenNotRecovering
     {
         address account = msg.sender;
-        GuardianConfig memory guardianConfig = guardianConfigs[account];
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-
-        // Only allow guardian removal if threshold can still be reached.
-        if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {
-            revert ThresholdCannotExceedTotalWeight();
-        }
-
-        guardiansStorage[account].remove(guardian);
-        guardianConfigs[account].guardianCount--;
-        guardianConfigs[account].totalWeight -= guardianStorage.weight;
-
-        emit RemovedGuardian(account, guardian);
-
-        // Change threshold if threshold was changed.
-        if (guardianConfig.threshold != threshold) {
-            changeThreshold(threshold);
-        }
+        guardianConfigs.removeGuardian(guardiansStorage, account, guardian, threshold);
     }
 
-    /**
-     * @notice Changes the threshold for guardian approvals for the caller's account
-     * @dev This function can only be called if no recovery is in process
-     * @param threshold The new threshold for guardian approvals
-     */
-    function changeThreshold(uint256 threshold) public onlyWhenNotRecovering {
+    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
         address account = msg.sender;
-
-        // Threshold can only be 0 at initialization.
-        // Check ensures that setup function should be called first
-        if (guardianConfigs[account].threshold == 0) {
-            revert SetupNotCalled();
-        }
-
-        // Validate that threshold is smaller than the total weight.
-        if (threshold > guardianConfigs[account].totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
-        }
-
-        // There has to be at least one Account guardian.
-        if (threshold == 0) {
-            revert ThresholdCannotBeZero();
-        }
-
-        guardianConfigs[account].threshold = threshold;
-        emit ChangedThreshold(account, threshold);
+        guardianConfigs.changeThreshold(account, threshold);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

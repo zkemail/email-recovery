@@ -12,6 +12,8 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 import { UnitBase } from "../UnitBase.t.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
+error SetupAlreadyCalled();
+
 contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -54,7 +56,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, accountSalt1);
 
-        vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
+        vm.expectRevert(SetupAlreadyCalled.selector);
         vm.startPrank(accountAddress);
         emailRecoveryManager.configureRecovery(
             recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
@@ -66,7 +68,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
     function test_ConfigureRecovery_RevertWhen_ConfigureRecoveryCalledTwice() public {
         vm.startPrank(accountAddress);
 
-        vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
+        vm.expectRevert(SetupAlreadyCalled.selector);
         emailRecoveryManager.configureRecovery(
             recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
         );

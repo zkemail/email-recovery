@@ -133,10 +133,10 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
         // TODO: Ideally do this dynamically
         string memory calldataHashString =
-            "0x774e575ec8d6368bbf9b564bd5827574b9f5f6c960e0f6ff9179eca3090df060";
+            "0x7d0a0821d7d9d44378fcfad477c8c880ced84785031154150b1e23e795ffa54c";
 
         string memory subject = string.concat(
-            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 via recovery module 0x2E15d2c3aBFfA78dA67Ebb55139902b85B746765 using recovery hash ",
+            "Recover account 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38 via recovery module 0x85B77dD4Af9375122103De9E4D78e80DB5744BA8 using recovery hash ",
             calldataHashString
         );
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));

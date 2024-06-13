@@ -94,8 +94,9 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         }
 
         // Even though someone could use a malicious contract as the recoveryManager argument, it
-        // does not matter in this case as this is only used as part of recovery in the recovery
-        // manager.
+        // does not matter in this case as this is only used as part of the recovery flow in the
+        // recovery manager. Passing the recovery manager in the constructor here would result
+        // in a circular dependency
         address expectedRecoveryModule =
             IEmailRecoveryManager(recoveryManager).getRecoveryConfig(accountInEmail).recoveryModule;
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)

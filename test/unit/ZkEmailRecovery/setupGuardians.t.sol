@@ -6,6 +6,14 @@ import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
+error SetupAlreadyCalled();
+error IncorrectNumberOfWeights();
+error ThresholdCannotBeZero();
+error InvalidGuardianAddress();
+error InvalidGuardianWeight();
+error AddressAlreadyGuardian();
+error ThresholdCannotExceedTotalWeight();
+
 contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function setUp() public override {
         super.setUp();
@@ -16,7 +24,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
             accountAddress, guardians, guardianWeights, threshold
         );
 
-        vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
+        vm.expectRevert(SetupAlreadyCalled.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -29,7 +37,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
         invalidGuardianWeights[2] = 1;
         invalidGuardianWeights[3] = 1;
 
-        vm.expectRevert(IEmailRecoveryManager.IncorrectNumberOfWeights.selector);
+        vm.expectRevert(IncorrectNumberOfWeights.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, invalidGuardianWeights, threshold
         );
@@ -38,7 +46,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_ThresholdIsZero() public {
         uint256 zeroThreshold = 0;
 
-        vm.expectRevert(IEmailRecoveryManager.ThresholdCannotBeZero.selector);
+        vm.expectRevert(ThresholdCannotBeZero.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, zeroThreshold
         );
@@ -47,7 +55,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_InvalidGuardianAddress() public {
         guardians[2] = address(0);
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianAddress.selector);
+        vm.expectRevert(InvalidGuardianAddress.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -56,7 +64,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_GuardianAddressIsAccountAddress() public {
         guardians[1] = accountAddress;
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianAddress.selector);
+        vm.expectRevert(InvalidGuardianAddress.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -65,7 +73,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
         guardianWeights[1] = 0;
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianWeight.selector);
+        vm.expectRevert(InvalidGuardianWeight.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -74,7 +82,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_AddressAlreadyGuardian() public {
         guardians[0] = guardians[1];
 
-        vm.expectRevert(IEmailRecoveryManager.AddressAlreadyGuardian.selector);
+        vm.expectRevert(AddressAlreadyGuardian.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -83,7 +91,7 @@ contract ZkEmailRecovery_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_ThresholdExceedsTotalWeight() public {
         uint256 invalidThreshold = totalWeight + 1;
 
-        vm.expectRevert(IEmailRecoveryManager.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(ThresholdCannotExceedTotalWeight.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, invalidThreshold
         );

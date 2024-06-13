@@ -76,6 +76,7 @@ interface IEmailRecoveryManager {
 
     error AccountNotConfigured();
     error NotRecoveryModule();
+    error SetupAlreadyCalled();
     error RecoveryInProcess();
     error InvalidTemplateIndex();
     error InvalidSubjectParams();
@@ -91,19 +92,6 @@ interface IEmailRecoveryManager {
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
     error InvalidCalldataHash();
-
-    /**
-     * Guardian logic errors
-     */
-    error SetupAlreadyCalled();
-    error SetupNotCalled();
-    error ThresholdCannotExceedTotalWeight();
-    error IncorrectNumberOfWeights();
-    error ThresholdCannotBeZero();
-    error InvalidGuardianAddress();
-    error InvalidGuardianWeight();
-    error AddressAlreadyRequested();
-    error AddressAlreadyGuardian();
     error InvalidAccountAddress();
 
     /**

@@ -10,6 +10,11 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
+error SetupNotCalled();
+error InvalidGuardianAddress();
+error AddressAlreadyGuardian();
+error InvalidGuardianWeight();
+
 contract ZkEmailRecovery_addGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -54,7 +59,7 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
         vm.stopPrank();
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.SetupNotCalled.selector);
+        vm.expectRevert(SetupNotCalled.selector);
         emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0], threshold);
     }
 
@@ -63,7 +68,7 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianAddress.selector);
+        vm.expectRevert(InvalidGuardianAddress.selector);
         emailRecoveryManager.addGuardian(invalidGuardianAddress, guardianWeights[0], threshold);
     }
 
@@ -72,14 +77,14 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianAddress.selector);
+        vm.expectRevert(InvalidGuardianAddress.selector);
         emailRecoveryManager.addGuardian(invalidGuardianAddress, guardianWeights[0], threshold);
     }
 
     function test_AddGuardian_RevertWhen_AddressAlreadyGuardian() public {
         vm.startPrank(accountAddress);
 
-        vm.expectRevert(IEmailRecoveryManager.AddressAlreadyGuardian.selector);
+        vm.expectRevert(AddressAlreadyGuardian.selector);
         emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0], threshold);
     }
 
@@ -89,7 +94,7 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidGuardianWeight.selector);
+        vm.expectRevert(InvalidGuardianWeight.selector);
         emailRecoveryManager.addGuardian(newGuardian, invalidGuardianWeight, threshold);
     }
 
