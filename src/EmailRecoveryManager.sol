@@ -80,10 +80,9 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         address _dkimRegistry,
         address _emailAuthImpl,
         address _subjectHandler
-    ) {
-        verifierAddr = _verifier;
-        dkimAddr = _dkimRegistry;
-        emailAuthImplementationAddr = _emailAuthImpl;
+    )
+        EmailAccountRecoveryNew(_verifier, _dkimRegistry, _emailAuthImpl)
+    {
         subjectHandler = _subjectHandler;
     }
 

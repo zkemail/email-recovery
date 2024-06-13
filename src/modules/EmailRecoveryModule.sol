@@ -4,21 +4,15 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
-import { ModeLib } from "erc7579/lib/ModeLib.sol";
-
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
-import { ISafe } from "../interfaces/ISafe.sol";
-import { BytesLib } from "../libraries/BytesLib.sol";
 
 contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
-    using BytesLib for bytes;
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    address public immutable emailRecoveryManager;
+    address public immutable EMAIL_RECOVERY_MANAGER;
 
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
 
@@ -26,13 +20,14 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error InvalidSubjectParams();
     error InvalidValidator(address validator);
     error InvalidSelector(bytes4 selector);
+    error InvalidOnInstallData();
 
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
     mapping(address account => address validator) internal validators;
 
     constructor(address _zkEmailRecovery) {
-        emailRecoveryManager = _zkEmailRecovery;
+        EMAIL_RECOVERY_MANAGER = _zkEmailRecovery;
     }
 
     modifier withoutUnsafeSelector(bytes4 recoverySelector) {
@@ -55,6 +50,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @param data The data to initialize the module with
      */
     function onInstall(bytes calldata data) external {
+        if (data.length == 0) revert InvalidOnInstallData();
         (
             address validator,
             bytes4 selector,
@@ -65,11 +61,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             uint256 expiry
         ) = abi.decode(data, (address, bytes4, address[], uint256[], uint256, uint256, uint256));
 
-        allowValidatorRecovery(validator, bytes("0"), selector);
+        _allowValidatorRecovery(validator, bytes("0"), selector);
         validators[msg.sender] = validator;
 
         _execute({
-            to: emailRecoveryManager,
+            to: EMAIL_RECOVERY_MANAGER,
             value: 0,
             data: abi.encodeCall(
                 IEmailRecoveryManager.configureRecovery,
@@ -78,7 +74,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         });
     }
 
-    function allowValidatorRecovery(
+    function _allowValidatorRecovery(
         address validator,
         bytes memory isInstalledContext,
         bytes4 recoverySelector
@@ -107,7 +103,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         address validator = validators[msg.sender];
         delete allowedSelectors[validator][msg.sender];
         delete validators[msg.sender];
-        IEmailRecoveryManager(emailRecoveryManager).deInitRecoveryFromModule(msg.sender);
+        IEmailRecoveryManager(EMAIL_RECOVERY_MANAGER).deInitRecoveryFromModule(msg.sender);
     }
 
     /**
@@ -116,20 +112,20 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address smartAccount) external view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
-            != 0;
+        return IEmailRecoveryManager(EMAIL_RECOVERY_MANAGER).getGuardianConfig(smartAccount)
+            .threshold != 0;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(address account, bytes memory recoveryCalldata) external {
-        if (msg.sender != emailRecoveryManager) {
+    function recover(address account, bytes calldata recoveryCalldata) external {
+        if (msg.sender != EMAIL_RECOVERY_MANAGER) {
             revert NotTrustedRecoveryManager();
         }
 
-        bytes4 selector = bytes4(recoveryCalldata.slice({ _start: 0, _length: 4 }));
+        bytes4 selector = bytes4(recoveryCalldata[:4]);
 
         address validator = validators[account];
         bytes4 allowedSelector = allowedSelectors[validator][account];
@@ -137,11 +133,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidSelector(selector);
         }
 
-        _execute({ account: account, to: validators[account], value: 0, data: recoveryCalldata });
+        _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
     }
 
     function getTrustedRecoveryManager() external view returns (address) {
-        return emailRecoveryManager;
+        return EMAIL_RECOVERY_MANAGER;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -153,7 +149,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @return name The name of the module
      */
     function name() external pure returns (string memory) {
-        return "EmailRecoveryModule";
+        return "ZKEmail.EmailRecoveryModule";
     }
 
     /**

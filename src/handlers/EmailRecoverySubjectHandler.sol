@@ -49,10 +49,10 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function validateAcceptanceSubject(
         uint256 templateIdx,
-        bytes[] memory subjectParams
+        bytes[] calldata subjectParams
     )
         external
-        view
+        pure
         returns (address)
     {
         if (templateIdx != 0) {
@@ -70,7 +70,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function validateRecoverySubject(
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] calldata subjectParams,
         address recoveryManager
     )
         public
