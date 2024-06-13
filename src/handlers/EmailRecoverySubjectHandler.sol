@@ -3,15 +3,12 @@ pragma solidity ^0.8.25;
 
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
-import { HexStrings } from "../libraries/HexStrings.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
  * This is the default subject handler that will work with any validator.
  */
 contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    using HexStrings for string;
-
     error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidAccount();
@@ -75,7 +72,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, bytes32)
+        returns (address, string memory)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
@@ -104,8 +101,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidRecoveryModule();
         }
 
-        bytes32 calldataHash = calldataHashInEmail.fromHexStringtoBytes32();
-
-        return (accountInEmail, calldataHash);
+        return (accountInEmail, calldataHashInEmail);
     }
 }

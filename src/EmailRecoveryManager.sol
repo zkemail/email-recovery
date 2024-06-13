@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
@@ -34,6 +35,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
     using GuardianUtils for mapping(address => GuardianConfig);
     using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
+    using Strings for uint256;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
@@ -286,7 +288,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         internal
         override
     {
-        (address account, bytes32 recoveryCalldataHash) = IEmailRecoverySubjectHandler(
+        (address account, string memory calldataHashString) = IEmailRecoverySubjectHandler(
             subjectHandler
         ).validateRecoverySubject(templateIdx, subjectParams, address(this));
 
@@ -308,7 +310,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.calldataHash = recoveryCalldataHash;
+            recoveryRequest.calldataHashString = calldataHashString;
 
             emit RecoveryProcessed(account, executeAfter, executeBefore);
         }
@@ -351,7 +353,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
 
         delete recoveryRequests[account];
 
-        if (keccak256(recoveryCalldata) != recoveryRequest.calldataHash) {
+        bytes32 calldataHash = keccak256(recoveryCalldata);
+        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+
+        if (!Strings.equal(calldataHashString, recoveryRequest.calldataHashString)) {
             revert InvalidCalldataHash();
         }
 

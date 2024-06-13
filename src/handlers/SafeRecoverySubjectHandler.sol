@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
@@ -10,6 +11,8 @@ import { ISafe } from "../interfaces/ISafe.sol";
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
+    using Strings for uint256;
+
     error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidOldOwner();
@@ -78,7 +81,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, bytes32)
+        returns (address, string memory)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
@@ -118,8 +121,9 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
         bytes32 calldataHash = keccak256(recoveryCallData);
+        string memory calldataHashString = uint256(calldataHash).toHexString(32);
 
-        return (accountInEmail, calldataHash);
+        return (accountInEmail, calldataHashString);
     }
 
     function getPreviousOwnerInLinkedList(
