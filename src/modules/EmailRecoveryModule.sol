@@ -4,16 +4,10 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
-import { ModeLib } from "erc7579/lib/ModeLib.sol";
-
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
-import { ISafe } from "../interfaces/ISafe.sol";
-import { BytesLib } from "../libraries/BytesLib.sol";
 
 contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
-    using BytesLib for bytes;
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -124,12 +118,12 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function recover(address account, bytes memory recoveryCalldata) external {
+    function recover(address account, bytes calldata recoveryCalldata) external {
         if (msg.sender != emailRecoveryManager) {
             revert NotTrustedRecoveryManager();
         }
 
-        bytes4 selector = bytes4(recoveryCalldata.slice({ _start: 0, _length: 4 }));
+        bytes4 selector = bytes4(recoveryCalldata[:4]);
 
         address validator = validators[account];
         bytes4 allowedSelector = allowedSelectors[validator][account];
@@ -137,7 +131,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidSelector(selector);
         }
 
-        _execute({ account: account, to: validators[account], value: 0, data: recoveryCalldata });
+        _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
     }
 
     function getTrustedRecoveryManager() external view returns (address) {
