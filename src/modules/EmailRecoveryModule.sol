@@ -12,7 +12,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    address public immutable EMAIL_RECOVERY_MANAGER;
+    address private immutable EMAIL_RECOVERY_MANAGER;
 
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
 
