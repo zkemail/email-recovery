@@ -51,7 +51,7 @@ contract ZkEmailRecovery_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.currentWeight, 1);
 
         vm.startPrank(otherAddress);
-        emailRecoveryManager.cancelRecovery("");
+        emailRecoveryManager.cancelRecovery();
 
         recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
@@ -71,7 +71,7 @@ contract ZkEmailRecovery_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.currentWeight, 1);
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.cancelRecovery("");
+        emailRecoveryManager.cancelRecovery();
 
         recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
@@ -93,7 +93,7 @@ contract ZkEmailRecovery_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.currentWeight, 3);
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.cancelRecovery("");
+        emailRecoveryManager.cancelRecovery();
 
         recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);

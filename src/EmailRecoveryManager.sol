@@ -84,7 +84,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
-    /*            RECOVERY CONFIG AND REQUEST GETTERS             */
+    /*       RECOVERY CONFIG, REQUEST AND TEMPLATE GETTERS        */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
@@ -105,6 +105,36 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
      */
     function getRecoveryRequest(address account) external view returns (RecoveryRequest memory) {
         return recoveryRequests[account];
+    }
+
+    /**
+     * @notice Returns a two-dimensional array of strings representing the subject templates for an
+     * acceptance by a new guardian.
+     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
+     * re-implemented by inheriting contracts
+     * to define different acceptance subject templates. This is useful for account implementations
+     * which require different data
+     * in the subject or if the email should be in a language that is not English.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
+    function acceptanceSubjectTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoverySubjectHandler(subjectHandler).acceptanceSubjectTemplates();
+    }
+
+    /**
+     * @notice Returns a two-dimensional array of strings representing the subject templates for
+     * email recovery.
+     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
+     * re-implemented by inheriting contracts
+     * to define different recovery subject templates. This is useful for account implementations
+     * which require different data
+     * in the subject or if the email should be in a language that is not English.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
+    function recoverySubjectTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoverySubjectHandler(subjectHandler).recoverySubjectTemplates();
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -192,21 +222,6 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for an
-     * acceptance by a new guardian.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different acceptance subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
-     * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
-     */
-    function acceptanceSubjectTemplates() public view override returns (string[][] memory) {
-        return IEmailRecoverySubjectHandler(subjectHandler).acceptanceSubjectTemplates();
-    }
-
-    /**
      * @notice Accepts a guardian for the specified account. This is the second core function
      * that must be called during the end-to-end recovery flow
      * @dev Called once per guardian added. Although this adds an extra step to recovery, this
@@ -252,21 +267,6 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                      HANDLE RECOVERY                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for
-     * email recovery.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different recovery subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
-     * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
-     */
-    function recoverySubjectTemplates() public view override returns (string[][] memory) {
-        return IEmailRecoverySubjectHandler(subjectHandler).recoverySubjectTemplates();
-    }
 
     /**
      * @notice Processes a recovery request for a given account. This is the third core function
@@ -369,14 +369,8 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     /**
      * @notice Cancels the recovery request for the caller's account
      * @dev Deletes the current recovery request associated with the caller's account
-     * Can be overridden by a child contract so custom access control can be added. Adding
-     * additional
-     * access control can be helpful to protect against malicious actors who have stolen a users
-     * private key. The default implementation of this account primarily protects against lost
-     * private keys
-     * @custom:unusedparam data - unused parameter, can be used when overridden
      */
-    function cancelRecovery(bytes calldata /* data */ ) external virtual {
+    function cancelRecovery() external virtual {
         address account = msg.sender;
         delete recoveryRequests[account];
         emit RecoveryCancelled(account);

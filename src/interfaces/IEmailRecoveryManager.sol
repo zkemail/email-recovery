@@ -119,7 +119,7 @@ interface IEmailRecoveryManager {
 
     function deInitRecoveryFromModule(address account) external;
 
-    function cancelRecovery(bytes calldata data) external;
+    function cancelRecovery() external;
 
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 
