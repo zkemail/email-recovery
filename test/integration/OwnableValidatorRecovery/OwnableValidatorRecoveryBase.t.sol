@@ -105,12 +105,8 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating after
-        // certain changes
-        // console2.log("accountAddress: ", accountAddress);
-
-        string memory subject =
-            "Accept guardian request for 0x19F55F3fE4c8915F21cc92852CD8E924998fDa38";
+        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
+        string memory subject = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
 
