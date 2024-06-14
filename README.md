@@ -85,7 +85,6 @@ It is strongly recommended that configureRecovery is called during the installat
 
 ```ts
 function configureRecovery(
-    address recoveryModule,
     address[] memory guardians,
     uint256[] memory weights,
     uint256 threshold,

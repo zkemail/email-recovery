@@ -145,7 +145,7 @@ contract ZkEmailRecovery_processRecovery_Test is UnitBase {
         // here
         vm.prank(accountAddress);
         emailRecoveryManager.updateRecoveryConfig(
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, zeroDelay, expiry)
+            IEmailRecoveryManager.RecoveryConfig(zeroDelay, expiry)
         );
         vm.stopPrank();
 

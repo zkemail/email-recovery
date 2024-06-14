@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
-import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
@@ -41,6 +41,28 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         templates[0][9] = "hash";
         templates[0][10] = "{string}";
         return templates;
+    }
+
+    function extractRecoveredAccountFromAcceptanceSubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        pure
+        returns (address)
+    {
+        return abi.decode(subjectParams[0], (address));
+    }
+
+    function extractRecoveredAccountFromRecoverySubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        pure
+        returns (address)
+    {
+        return abi.decode(subjectParams[0], (address));
     }
 
     function validateAcceptanceSubject(
@@ -85,8 +107,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         // does not matter in this case as this is only used as part of the recovery flow in the
         // recovery manager. Passing the recovery manager in the constructor here would result
         // in a circular dependency
-        address expectedRecoveryModule =
-            IEmailRecoveryManager(recoveryManager).getRecoveryConfig(accountInEmail).recoveryModule;
+        address expectedRecoveryModule = EmailRecoveryManager(recoveryManager).emailRecoveryModule();
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
         {
             revert InvalidRecoveryModule();

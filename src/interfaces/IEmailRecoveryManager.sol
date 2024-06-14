@@ -13,8 +13,6 @@ interface IEmailRecoveryManager {
      * Config should be maintained over subsequent recovery attempts unless explicitly modified
      */
     struct RecoveryConfig {
-        address recoveryModule; // the trusted recovery module that has permission to recover an
-            // account
         uint256 delay; // the time from when recovery is started until the recovery request can be
             // executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes
@@ -51,64 +49,47 @@ interface IEmailRecoveryManager {
                                     EVENTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    event RecoveryConfigured(
-        address indexed account, address indexed recoveryModule, uint256 guardianCount
-    );
-    event RecoveryConfigUpdated(
-        address indexed account, address indexed recoveryModule, uint256 delay, uint256 expiry
-    );
+    event RecoveryConfigured(address indexed account, uint256 guardianCount);
+    event RecoveryConfigUpdated(address indexed account, uint256 delay, uint256 expiry);
     event GuardianAccepted(address indexed account, address indexed guardian);
-    event RecoveryDeInitialized(address indexed account);
     event RecoveryProcessed(address indexed account, uint256 executeAfter, uint256 executeBefore);
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
-
-    /**
-     * Guardian logic events
-     */
-    event AddedGuardian(address indexed account, address indexed guardian);
-    event RemovedGuardian(address indexed account, address indexed guardian);
-    event ChangedThreshold(address indexed account, uint256 threshold);
+    event RecoveryDeInitialized(address indexed account);
 
     /*//////////////////////////////////////////////////////////////////////////
                                     ERRORS
     //////////////////////////////////////////////////////////////////////////*/
 
-    error AccountNotConfigured();
-    error NotRecoveryModule();
-    error SetupAlreadyCalled();
+    error InvalidSubjectHandler();
+    error InitializerNotDeployer();
+    error InvalidRecoveryModule();
     error RecoveryInProcess();
+    error SetupAlreadyCalled();
+    error AccountNotConfigured();
+    error RecoveryModuleNotInstalled();
+    error DelayMoreThanExpiry();
+    error RecoveryWindowTooShort();
     error InvalidTemplateIndex();
-    error InvalidSubjectParams();
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
-    error InvalidNewOwner();
-    error InvalidRecoveryModule();
-    error RecoveryModuleNotInstalled();
+    error InvalidAccountAddress();
     error NotEnoughApprovals();
     error DelayNotPassed();
     error RecoveryRequestExpired();
-    error DelayMoreThanExpiry();
-    error RecoveryWindowTooShort();
     error InvalidCalldataHash();
-    error InvalidAccountAddress();
-
-    /**
-     * Email Auth access control errors
-     */
-    error UnauthorizedAccountForGuardian();
+    error NotRecoveryModule();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
-
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 
+    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
+
     function configureRecovery(
-        address recoveryModule,
         address[] memory guardians,
         uint256[] memory weights,
         uint256 threshold,
@@ -117,11 +98,11 @@ interface IEmailRecoveryManager {
     )
         external;
 
+    function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
+
     function deInitRecoveryFromModule(address account) external;
 
     function cancelRecovery() external;
-
-    function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 
     /*//////////////////////////////////////////////////////////////////////////
                                 GUARDIAN LOGIC
@@ -142,19 +123,4 @@ interface IEmailRecoveryManager {
     function removeGuardian(address guardian, uint256 threshold) external;
 
     function changeThreshold(uint256 threshold) external;
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                EMAIL AUTH LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
-
-    function updateGuardianDKIMRegistry(address guardian, address dkimRegistryAddr) external;
-
-    function updateGuardianVerifier(address guardian, address verifierAddr) external;
-
-    function upgradeEmailAuthGuardian(
-        address guardian,
-        address newImplementation,
-        bytes memory data
-    )
-        external;
 }

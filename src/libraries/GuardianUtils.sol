@@ -11,14 +11,15 @@ library GuardianUtils {
     event RemovedGuardian(address indexed account, address indexed guardian);
     event ChangedThreshold(address indexed account, uint256 threshold);
 
-    error SetupNotCalled();
-    error ThresholdCannotExceedTotalWeight();
     error IncorrectNumberOfWeights();
     error ThresholdCannotBeZero();
     error InvalidGuardianAddress();
     error InvalidGuardianWeight();
     error AddressAlreadyGuardian();
+    error ThresholdCannotExceedTotalWeight();
     error StatusCannotBeTheSame();
+    error SetupNotCalled();
+    error UnauthorizedAccountForGuardian();
 
     function getGuardianStorage(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
@@ -158,6 +159,11 @@ library GuardianUtils {
     {
         IEmailRecoveryManager.GuardianConfig memory guardianConfig = guardianConfigs[account];
         GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+
+        bool isGuardian = guardianStorage.status != GuardianStatus.NONE;
+        if (!isGuardian) {
+            revert UnauthorizedAccountForGuardian();
+        }
 
         // Only allow guardian removal if threshold can still be reached.
         if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {

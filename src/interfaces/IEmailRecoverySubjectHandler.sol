@@ -5,6 +5,22 @@ interface IEmailRecoverySubjectHandler {
     function acceptanceSubjectTemplates() external pure returns (string[][] memory);
     function recoverySubjectTemplates() external pure returns (string[][] memory);
 
+    function extractRecoveredAccountFromAcceptanceSubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        external
+        view
+        returns (address);
+
+    function extractRecoveredAccountFromRecoverySubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        external
+        view
+        returns (address);
+
     function validateAcceptanceSubject(
         uint256 templateIdx,
         bytes[] memory subjectParams

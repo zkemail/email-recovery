@@ -3,8 +3,8 @@ pragma solidity ^0.8.25;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
-import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
+import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
@@ -52,6 +52,28 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return templates;
     }
 
+    function extractRecoveredAccountFromAcceptanceSubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        view
+        returns (address)
+    {
+        return abi.decode(subjectParams[0], (address));
+    }
+
+    function extractRecoveredAccountFromRecoverySubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        view
+        returns (address)
+    {
+        return abi.decode(subjectParams[0], (address));
+    }
+
     function validateAcceptanceSubject(
         uint256 templateIdx,
         bytes[] calldata subjectParams
@@ -97,9 +119,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         }
 
         // Even though someone could use a malicious contract as the recoveryManager argument, it
-        // does not matter in this case as this
-        address expectedRecoveryModule =
-            IEmailRecoveryManager(recoveryManager).getRecoveryConfig(accountInEmail).recoveryModule;
+        // does not matter in this case as this is only used as part of the recovery flow in the
+        // recovery manager. Passing the recovery manager in the constructor here would result
+        // in a circular dependency
+        address expectedRecoveryModule = EmailRecoveryManager(recoveryManager).emailRecoveryModule();
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
         {
             revert InvalidRecoveryModule();

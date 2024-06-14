@@ -17,9 +17,13 @@ contract EmailRecoveryFactory {
     {
         EmailRecoveryManager emailRecoveryManager =
             new EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, emailRecoveryHandler);
-        EmailRecoveryModule emailRecoveryModule =
-            new EmailRecoveryModule(address(emailRecoveryManager));
+        address manager = address(emailRecoveryManager);
 
-        return (address(emailRecoveryManager), address(emailRecoveryModule));
+        EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule(manager);
+        address module = address(emailRecoveryModule);
+
+        emailRecoveryManager.initialize(module);
+
+        return (manager, module);
     }
 }

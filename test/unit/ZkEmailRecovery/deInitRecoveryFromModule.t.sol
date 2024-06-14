@@ -66,7 +66,6 @@ contract ZkEmailRecovery_deInitRecoveryFromModule_Test is UnitBase {
         // assert that recovery config has been cleared successfully
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryManager.getRecoveryConfig(accountAddress);
-        assertEq(recoveryConfig.recoveryModule, address(0));
         assertEq(recoveryConfig.delay, 0);
         assertEq(recoveryConfig.expiry, 0);
 

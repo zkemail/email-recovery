@@ -17,8 +17,6 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-    EmailRecoveryModule recoveryModule;
-    address recoveryModuleAddress;
 
     bytes4 functionSelector;
 
@@ -26,8 +24,6 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
         super.setUp();
 
         validator = new OwnableValidator();
-        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
-        recoveryModuleAddress = address(recoveryModule);
 
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 

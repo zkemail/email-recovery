@@ -20,18 +20,18 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    address public immutable EMAIL_RECOVERY_MANAGER;
+    address public immutable emailRecoveryManager;
 
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
     event RemovedValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
 
-    error NotTrustedRecoveryManager();
-    error InvalidSubjectParams();
-    error InvalidValidator(address validator);
+    error CanOnlySetManagerOnce();
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
-    error InvalidValidatorsLength();
+    error InvalidValidator(address validator);
     error InvalidNextValidator();
+    error InvalidValidatorsLength();
+    error NotTrustedRecoveryManager();
 
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
@@ -41,8 +41,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
     mapping(address account => ValidatorList validatorList) internal validators;
 
-    constructor(address _zkEmailRecovery) {
-        EMAIL_RECOVERY_MANAGER = _zkEmailRecovery;
+    constructor(address _emailRecoveryManager) {
+        emailRecoveryManager = _emailRecoveryManager;
     }
 
     modifier withoutUnsafeSelector(bytes4 recoverySelector) {
@@ -68,7 +68,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         if (data.length == 0) revert InvalidOnInstallData();
         (
             address validator,
-            bytes4 selector,
+            bytes4 initialSelector,
             address[] memory guardians,
             uint256[] memory weights,
             uint256 threshold,
@@ -76,14 +76,13 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             uint256 expiry
         ) = abi.decode(data, (address, bytes4, address[], uint256[], uint256, uint256, uint256));
 
-        allowValidatorRecovery(validator, bytes("0"), selector);
+        allowValidatorRecovery(validator, bytes("0"), initialSelector);
 
         _execute({
-            to: EMAIL_RECOVERY_MANAGER,
+            to: emailRecoveryManager,
             value: 0,
             data: abi.encodeCall(
-                IEmailRecoveryManager.configureRecovery,
-                (address(this), guardians, weights, threshold, delay, expiry)
+                IEmailRecoveryManager.configureRecovery, (guardians, weights, threshold, delay, expiry)
             )
         });
     }
@@ -175,7 +174,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         validatorList.validators.popAll();
         validatorList.count = 0;
 
-        IEmailRecoveryManager(EMAIL_RECOVERY_MANAGER).deInitRecoveryFromModule(msg.sender);
+        IEmailRecoveryManager(emailRecoveryManager).deInitRecoveryFromModule(msg.sender);
     }
 
     /**
@@ -184,8 +183,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address smartAccount) external view returns (bool) {
-        return IEmailRecoveryManager(EMAIL_RECOVERY_MANAGER).getGuardianConfig(smartAccount)
-            .threshold != 0;
+        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
+            != 0;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -193,7 +192,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     //////////////////////////////////////////////////////////////////////////*/
 
     function recover(address account, bytes calldata recoveryCalldata) external {
-        if (msg.sender != EMAIL_RECOVERY_MANAGER) {
+        if (msg.sender != emailRecoveryManager) {
             revert NotTrustedRecoveryManager();
         }
 
@@ -209,7 +208,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     }
 
     function getTrustedRecoveryManager() external view returns (address) {
-        return EMAIL_RECOVERY_MANAGER;
+        return emailRecoveryManager;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

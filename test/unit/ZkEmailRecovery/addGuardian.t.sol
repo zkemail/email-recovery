@@ -15,6 +15,8 @@ error InvalidGuardianAddress();
 error AddressAlreadyGuardian();
 error InvalidGuardianWeight();
 
+event AddedGuardian(address indexed account, address indexed guardian);
+
 contract ZkEmailRecovery_addGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -109,7 +111,7 @@ contract ZkEmailRecovery_addGuardian_Test is UnitBase {
         vm.startPrank(accountAddress);
 
         vm.expectEmit();
-        emit IEmailRecoveryManager.AddedGuardian(accountAddress, newGuardian);
+        emit AddedGuardian(accountAddress, newGuardian);
         emailRecoveryManager.addGuardian(newGuardian, newGuardianWeight, threshold);
 
         GuardianStorage memory guardianStorage =

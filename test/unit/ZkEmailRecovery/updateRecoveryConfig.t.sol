@@ -40,7 +40,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
 
     function test_UpdateRecoveryConfig_RevertWhen_AlreadyRecovering() public {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, delay, expiry);
+            IEmailRecoveryManager.RecoveryConfig(delay, expiry);
 
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
@@ -56,7 +56,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
     function test_UpdateRecoveryConfig_RevertWhen_AccountNotConfigured() public {
         address nonConfiguredAccount = address(0);
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, delay, expiry);
+            IEmailRecoveryManager.RecoveryConfig(delay, expiry);
 
         vm.startPrank(nonConfiguredAccount);
         vm.expectRevert(IEmailRecoveryManager.AccountNotConfigured.selector);
@@ -67,7 +67,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         address invalidRecoveryModule = address(0);
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(invalidRecoveryModule, delay, expiry);
+            IEmailRecoveryManager.RecoveryConfig(delay, expiry);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.InvalidRecoveryModule.selector);
@@ -78,7 +78,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 invalidDelay = expiry + 1 seconds;
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, invalidDelay, expiry);
+            IEmailRecoveryManager.RecoveryConfig(invalidDelay, expiry);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.DelayMoreThanExpiry.selector);
@@ -90,7 +90,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 newExpiry = 2 days;
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
+            IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.RecoveryWindowTooShort.selector);
@@ -102,7 +102,7 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 newExpiry = 2 days;
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
+            IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.RecoveryWindowTooShort.selector);
@@ -116,13 +116,12 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 newExpiry = 2 days;
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(recoveryModuleAddress, newDelay, newExpiry);
+            IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
 
         recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);
-        assertEq(recoveryConfig.recoveryModule, recoveryModuleAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
@@ -133,13 +132,12 @@ contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
         uint256 newExpiry = 4 weeks;
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            IEmailRecoveryManager.RecoveryConfig(newRecoveryModule, newDelay, newExpiry);
+            IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
 
         recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);
-        assertEq(recoveryConfig.recoveryModule, newRecoveryModule);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }

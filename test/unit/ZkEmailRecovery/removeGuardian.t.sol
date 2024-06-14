@@ -12,6 +12,7 @@ import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 error ThresholdCannotExceedTotalWeight();
+error UnauthorizedAccountForGuardian();
 
 contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
@@ -44,7 +45,7 @@ contract ZkEmailRecovery_removeGuardian_Test is UnitBase {
     function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian() public {
         address guardian = guardian1;
 
-        vm.expectRevert(IEmailRecoveryManager.UnauthorizedAccountForGuardian.selector);
+        vm.expectRevert(UnauthorizedAccountForGuardian.selector);
         emailRecoveryManager.removeGuardian(guardian, threshold);
     }
 

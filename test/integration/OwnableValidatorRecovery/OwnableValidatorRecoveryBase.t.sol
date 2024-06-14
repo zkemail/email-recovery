@@ -6,6 +6,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
@@ -13,21 +14,28 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     using Strings for uint256;
     using Strings for address;
 
+    EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManager emailRecoveryManager;
+
+    address emailRecoveryManagerAddress;
+    address recoveryModuleAddress;
 
     function setUp() public virtual override {
         super.setUp();
 
+        emailRecoveryFactory = new EmailRecoveryFactory();
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
-        // Deploy EmailRecoveryManager
-        emailRecoveryManager = new EmailRecoveryManager(
+        // Deploy EmailRecoveryManager & EmailRecoveryModule
+        (emailRecoveryManagerAddress, recoveryModuleAddress) = emailRecoveryFactory
+            .deployModuleAndManager(
             address(verifier),
             address(ecdsaOwnedDkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
+        emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
         // Compute guardian addresses
         guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);

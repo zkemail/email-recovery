@@ -58,9 +58,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
 
         vm.expectRevert(SetupAlreadyCalled.selector);
         vm.startPrank(accountAddress);
-        emailRecoveryManager.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
+        emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
         vm.stopPrank();
     }
 
@@ -69,9 +67,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
         vm.startPrank(accountAddress);
 
         vm.expectRevert(SetupAlreadyCalled.selector);
-        emailRecoveryManager.configureRecovery(
-            recoveryModuleAddress, guardians, guardianWeights, threshold, delay, expiry
-        );
+        emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
         vm.stopPrank();
     }
 
@@ -83,9 +79,7 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
         // Install recovery module - configureRecovery is called on `onInstall`
         vm.prank(accountAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryConfigured(
-            accountAddress, recoveryModuleAddress, guardians.length
-        );
+        emit IEmailRecoveryManager.RecoveryConfigured(accountAddress, guardians.length);
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
@@ -104,7 +98,6 @@ contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryManager.getRecoveryConfig(accountAddress);
-        assertEq(recoveryConfig.recoveryModule, recoveryModuleAddress);
         assertEq(recoveryConfig.delay, delay);
         assertEq(recoveryConfig.expiry, expiry);
 

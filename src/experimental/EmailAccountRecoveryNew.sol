@@ -53,6 +53,36 @@ abstract contract EmailAccountRecoveryNew {
     /// set of fixed strings and matchers for a subject template.
     function recoverySubjectTemplates() public view virtual returns (string[][] memory);
 
+    /// @notice Extracts the account address to be recovered from the subject parameters of an
+    /// acceptance email.
+    /// @dev This function is virtual and should be implemented by inheriting contracts to extract
+    /// the account address from the subject parameters.
+    /// @param subjectParams The subject parameters of the acceptance email.
+    /// @param templateIdx The index of the acceptance subject template.
+    function extractRecoveredAccountFromAcceptanceSubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        view
+        virtual
+        returns (address);
+
+    /// @notice Extracts the account address to be recovered from the subject parameters of a
+    /// recovery email.
+    /// @dev This function is virtual and should be implemented by inheriting contracts to extract
+    /// the account address from the subject parameters.
+    /// @param subjectParams The subject parameters of the recovery email.
+    /// @param templateIdx The index of the recovery subject template.
+    function extractRecoveredAccountFromRecoverySubject(
+        bytes[] memory subjectParams,
+        uint256 templateIdx
+    )
+        public
+        view
+        virtual
+        returns (address);
+
     function acceptGuardian(
         address guardian,
         uint256 templateIdx,

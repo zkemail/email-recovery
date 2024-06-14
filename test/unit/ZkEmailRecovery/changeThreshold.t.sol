@@ -93,7 +93,7 @@ contract ZkEmailRecovery_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.ChangedThreshold(accountAddress, newThreshold);
+        emit ChangedThreshold(accountAddress, newThreshold);
         emailRecoveryManager.changeThreshold(newThreshold);
 
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =
