@@ -33,13 +33,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error InvalidValidatorsLength();
     error NotTrustedRecoveryManager();
 
+    mapping(address account => ValidatorList validatorList) internal validators;
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
-
-    mapping(address account => mapping(bytes4 selector => address validator)) internal
+    mapping(bytes4 selector => mapping(address account => address validator)) internal
         selectorToValidator;
-
-    mapping(address account => ValidatorList validatorList) internal validators;
 
     constructor(address _emailRecoveryManager) {
         emailRecoveryManager = _emailRecoveryManager;
@@ -112,7 +110,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         validatorList.count++;
 
         allowedSelectors[validator][msg.sender] = recoverySelector;
-        selectorToValidator[msg.sender][recoverySelector] = validator;
+        selectorToValidator[recoverySelector][msg.sender] = validator;
 
         emit NewValidatorRecovery({ validatorModule: validator, recoverySelector: recoverySelector });
     }
@@ -138,7 +136,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         validatorList.count--;
 
         delete allowedSelectors[validator][msg.sender];
-        delete selectorToValidator[msg.sender][recoverySelector];
+        delete selectorToValidator[recoverySelector][msg.sender];
 
         emit RemovedValidatorRecovery({
             validatorModule: validator,
@@ -167,7 +165,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
         for (uint256 i; i < allowedValidatorsLength; i++) {
             bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
-            delete selectorToValidator[msg.sender][allowedSelector];
+            delete selectorToValidator[allowedSelector][msg.sender];
             delete allowedSelectors[allowedValidators[i]][msg.sender];
         }
 
@@ -198,7 +196,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
         bytes4 selector = bytes4(recoveryCalldata[:4]);
 
-        address validator = selectorToValidator[account][selector];
+        address validator = selectorToValidator[selector][account];
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {
             revert InvalidSelector(selector);
