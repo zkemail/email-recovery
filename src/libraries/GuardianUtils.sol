@@ -18,19 +18,9 @@ library GuardianUtils {
     error InvalidGuardianAddress();
     error InvalidGuardianWeight();
     error AddressAlreadyGuardian();
+    error StatusCannotBeTheSame();
 
-    function getGuardianConfig(
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
-        address account
-    )
-        internal
-        view
-        returns (IEmailRecoveryManager.GuardianConfig memory)
-    {
-        return guardianConfigs[account];
-    }
-
-    function getGuardian(
+    function getGuardianStorage(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account,
         address guardian
@@ -98,9 +88,28 @@ library GuardianUtils {
             IEmailRecoveryManager.GuardianConfig(guardianCount, totalWeight, threshold);
     }
 
-    function addGuardian(
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
+    function updateGuardianStatus(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        address account,
+        address guardian,
+        GuardianStatus newStatus
+    )
+        internal
+    {
+        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+        if (newStatus == guardianStorage.status) {
+            revert StatusCannotBeTheSame();
+        }
+
+        guardiansStorage[account].set({
+            key: guardian,
+            value: GuardianStorage(newStatus, guardianStorage.weight)
+        });
+    }
+
+    function addGuardian(
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         address account,
         address guardian,
         uint256 weight,
@@ -139,8 +148,8 @@ library GuardianUtils {
     }
 
     function removeGuardian(
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         address account,
         address guardian,
         uint256 threshold
@@ -160,6 +169,15 @@ library GuardianUtils {
         guardianConfigs[account].totalWeight -= guardianStorage.weight;
 
         emit RemovedGuardian(account, guardian);
+    }
+
+    function removeAllGuardians(
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        address account
+    )
+        internal
+    {
+        guardiansStorage[account].removeAll(guardiansStorage[account].keys());
     }
 
     function changeThreshold(

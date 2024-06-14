@@ -32,7 +32,6 @@ import { GuardianUtils } from "./libraries/GuardianUtils.sol";
  * the recovery module defines “how that recovery attempt is executed on the account”.
  */
 contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager {
-    using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
     using GuardianUtils for mapping(address => GuardianConfig);
     using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
     using Strings for uint256;
@@ -261,17 +260,14 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
             revert RecoveryModuleNotInstalled();
         }
 
-        // This check ensures GuardianStatus is correct and also that the
+        // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.REQUESTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
         }
 
-        guardiansStorage[account].set({
-            key: guardian,
-            value: GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
-        });
+        guardiansStorage.updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED);
 
         emit GuardianAccepted(account, guardian);
     }
@@ -306,7 +302,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
             subjectHandler
         ).validateRecoverySubject(templateIdx, subjectParams, address(this));
 
-        // This check ensures GuardianStatus is correct and also that the
+        // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.ACCEPTED) {
@@ -322,7 +318,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
 
         recoveryRequest.currentWeight += guardianStorage.weight;
 
-        uint256 threshold = getGuardianConfig(account).threshold;
+        uint256 threshold = guardianConfigs[account].threshold;
         if (recoveryRequest.currentWeight >= threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
@@ -357,7 +353,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         }
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
-        uint256 threshold = getGuardianConfig(account).threshold;
+        uint256 threshold = guardianConfigs[account].threshold;
         if (recoveryRequest.currentWeight < threshold) {
             revert NotEnoughApprovals();
         }
@@ -420,9 +416,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         delete recoveryConfigs[account];
         delete recoveryRequests[account];
 
-        EnumerableGuardianMap.AddressToGuardianMap storage guardians = guardiansStorage[account];
-
-        guardians.removeAll(guardians.keys());
+        guardiansStorage.removeAllGuardians(account);
         delete guardianConfigs[account];
 
         emit RecoveryDeInitialized(account);
@@ -432,8 +426,8 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
     /*                       GUARDIAN LOGIC                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    function getGuardianConfig(address account) public view returns (GuardianConfig memory) {
-        return guardianConfigs.getGuardianConfig(account);
+    function getGuardianConfig(address account) external view returns (GuardianConfig memory) {
+        return guardianConfigs[account];
     }
 
     function getGuardian(
@@ -444,7 +438,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         view
         returns (GuardianStorage memory)
     {
-        return guardiansStorage.getGuardian(account, guardian);
+        return guardiansStorage.getGuardianStorage(account, guardian);
     }
 
     function setupGuardians(
@@ -467,7 +461,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         onlyWhenNotRecovering
     {
         address account = msg.sender;
-        guardianConfigs.addGuardian(guardiansStorage, account, guardian, weight, threshold);
+        guardiansStorage.addGuardian(guardianConfigs, account, guardian, weight, threshold);
     }
 
     function removeGuardian(
@@ -479,7 +473,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         onlyWhenNotRecovering
     {
         address account = msg.sender;
-        guardianConfigs.removeGuardian(guardiansStorage, account, guardian, threshold);
+        guardiansStorage.removeGuardian(guardianConfigs, account, guardian, threshold);
     }
 
     function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
@@ -567,7 +561,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
      * @param guardian The address of the guardian to check
      */
     modifier onlyAccountForGuardian(address guardian) {
-        bool isGuardian = guardiansStorage[msg.sender].get(guardian).status != GuardianStatus.NONE;
+        bool isGuardian = getGuardian(msg.sender, guardian).status != GuardianStatus.NONE;
         if (!isGuardian) {
             revert UnauthorizedAccountForGuardian();
         }
