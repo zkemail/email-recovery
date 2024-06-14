@@ -248,26 +248,32 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
             revert InvalidTemplateIndex();
         }
 
-        address accountInEmail = IEmailRecoverySubjectHandler(subjectHandler)
-            .validateAcceptanceSubject(templateIdx, subjectParams);
+        address account = IEmailRecoverySubjectHandler(subjectHandler).validateAcceptanceSubject(
+            templateIdx, subjectParams
+        );
 
-        if (recoveryRequests[accountInEmail].currentWeight > 0) {
+        if (recoveryRequests[account].currentWeight > 0) {
             revert RecoveryInProcess();
+        }
+
+        bool isInitialized = IModule(recoveryConfigs[account].recoveryModule).isInitialized(account);
+        if (!isInitialized) {
+            revert RecoveryModuleNotInstalled();
         }
 
         // This check ensures GuardianStatus is correct and also that the
         // account in email is a valid account
-        GuardianStorage memory guardianStorage = getGuardian(accountInEmail, guardian);
+        GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.REQUESTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
         }
 
-        guardiansStorage[accountInEmail].set({
+        guardiansStorage[account].set({
             key: guardian,
             value: GuardianStorage(GuardianStatus.ACCEPTED, guardianStorage.weight)
         });
 
-        emit GuardianAccepted(accountInEmail, guardian);
+        emit GuardianAccepted(account, guardian);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -305,6 +311,11 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.ACCEPTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
+        }
+
+        bool isInitialized = IModule(recoveryConfigs[account].recoveryModule).isInitialized(account);
+        if (!isInitialized) {
+            revert RecoveryModuleNotInstalled();
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
