@@ -22,32 +22,4 @@ contract EmailRecoveryFactory {
 
         return (address(emailRecoveryManager), address(emailRecoveryModule));
     }
-
-    function deployHandler(address emailRecoveryManager) external returns (address) {
-        EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
-
-        return (address(emailRecoveryHandler));
-    }
-
-    function deployAll(
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl
-    )
-        external
-        returns (address, address, address)
-    {
-        EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
-        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager(
-            verifier, dkimRegistry, emailAuthImpl, address(emailRecoveryHandler)
-        );
-        EmailRecoveryModule emailRecoveryModule =
-            new EmailRecoveryModule(address(emailRecoveryManager));
-
-        return (
-            address(emailRecoveryManager),
-            address(emailRecoveryModule),
-            address(emailRecoveryHandler)
-        );
-    }
 }
