@@ -22,10 +22,10 @@ ignored_warnings_from = [
 ]
 
 [rpc_endpoints]
-baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
+sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [etherscan]
-baseSepolia = { key = "${BASE_SCAN_API_KEY}" }
+sepolia = { key = "${BASE_SCAN_API_KEY}" }
 
 [fmt]
 bracket_spacing = true

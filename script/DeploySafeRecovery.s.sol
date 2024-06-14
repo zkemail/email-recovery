@@ -2,22 +2,27 @@
 pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
-import { SafeZkEmailRecovery } from "src/SafeZkEmailRecovery.sol";
-import { SafeRecoveryModule } from "src/modules/SafeRecoveryModule.sol";
+import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract DeploySafeRecoveryScript is Script {
     function run() public {
         bytes32 salt = bytes32(uint256(0));
 
         address verifier = 0xEdC642bbaD91E21cCE6cd436Fdc6F040FD0fF998;
-        address ecdsaOwnedDkimRegistry = 0xC83256CCf7B94d310e49edA05077899ca036eb78;
+        address dkimRegistry = 0xC83256CCf7B94d310e49edA05077899ca036eb78;
         address emailAuthImpl = 0x1C76Aa365c17B40c7E944DcCdE4dC6e6D2A7b748;
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        SafeZkEmailRecovery safeZkEmailRecovery =
-            new SafeZkEmailRecovery{ salt: salt }(verifier, ecdsaOwnedDkimRegistry, emailAuthImpl);
-        new SafeRecoveryModule(address(safeZkEmailRecovery));
+        SafeRecoverySubjectHandler emailRecoveryHandler = new SafeRecoverySubjectHandler();
+
+        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager(
+            verifier, dkimRegistry, emailAuthImpl, address(emailRecoveryHandler)
+        );
+
+        new EmailRecoveryModule(address(emailRecoveryManager));
 
         vm.stopBroadcast();
     }
