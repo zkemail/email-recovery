@@ -15,7 +15,6 @@ import {
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
-import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 

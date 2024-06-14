@@ -13,7 +13,6 @@ import { ISafe } from "../interfaces/ISafe.sol";
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     using Strings for uint256;
 
-    error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidOldOwner();
     error InvalidNewOwner();
@@ -61,10 +60,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         pure
         returns (address)
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         if (subjectParams.length != 1) revert InvalidSubjectParams();
 
         // The GuardianStatus check in acceptGuardian implicitly
@@ -83,10 +78,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         view
         returns (address, string memory)
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
         }

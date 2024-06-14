@@ -9,7 +9,6 @@ import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
  * This is the default subject handler that will work with any validator.
  */
 contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidAccount();
     error InvalidRecoveryModule();
@@ -52,10 +51,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         pure
         returns (address)
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         if (subjectParams.length != 1) revert InvalidSubjectParams();
 
         // The GuardianStatus check in acceptGuardian implicitly
@@ -74,10 +69,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         view
         returns (address, string memory)
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         if (subjectParams.length != 3) {
             revert InvalidSubjectParams();
         }

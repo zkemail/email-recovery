@@ -7,7 +7,6 @@ import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/sr
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
@@ -153,8 +152,6 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        IEmailAccountRecovery(address(emailRecoveryManager)).handleRecovery(
-            emailAuthMsg, templateIdx
-        );
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

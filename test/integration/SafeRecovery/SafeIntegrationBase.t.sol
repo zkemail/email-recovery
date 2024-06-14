@@ -26,7 +26,6 @@ import { Solarray } from "solarray/Solarray.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { MockRegistry } from "../external/MockRegistry.sol";
-import { IEmailAccountRecovery } from "src/interfaces/IEmailAccountRecovery.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeIntegrationBase is IntegrationBase {

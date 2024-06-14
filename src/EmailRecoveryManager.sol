@@ -244,6 +244,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         internal
         override
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
         address accountInEmail = IEmailRecoverySubjectHandler(subjectHandler)
             .validateAcceptanceSubject(templateIdx, subjectParams);
 
@@ -288,6 +292,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, IEmailRecoveryManager 
         internal
         override
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
         (address account, string memory calldataHashString) = IEmailRecoverySubjectHandler(
             subjectHandler
         ).validateRecoverySubject(templateIdx, subjectParams, address(this));
