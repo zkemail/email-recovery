@@ -16,6 +16,7 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
 abstract contract UnitBase is RhinestoneModuleKit, Test {
@@ -27,6 +28,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
+
+    address emailRecoveryManagerAddress;
+    address recoveryModuleAddress;
 
     // account and owners
     AccountInstance instance;
@@ -81,13 +85,28 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
-        // Deploy EmailRecoveryManager
-        emailRecoveryManager = new EmailRecoveryManagerHarness(
+        EmailRecoveryManagerHarness emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),
             address(ecdsaOwnedDkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
+        address manager = address(emailRecoveryManager);
+
+        EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule(manager);
+        recoveryModuleAddress = address(emailRecoveryModule);
+
+        emailRecoveryManager.initialize(recoveryModuleAddress);
+
+        // Deploy EmailRecoveryManager & EmailRecoveryModule
+        // (emailRecoveryManagerAddress, recoveryModuleAddress) = emailRecoveryFactory
+        //     .deployModuleAndManager(
+        // address(verifier),
+        // address(ecdsaOwnedDkimRegistry),
+        // address(emailAuthImpl),
+        // address(emailRecoveryHandler)
+        // );
+        // emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
         // Deploy and fund the account
         instance = makeAccountInstance("account");

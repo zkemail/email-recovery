@@ -17,14 +17,12 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
     using ModuleKitUserOp for *;
 
     OwnableValidator validator;
-
     bytes4 functionSelector;
 
     function setUp() public override {
         super.setUp();
 
         validator = new OwnableValidator();
-
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 
         instance.installModule({

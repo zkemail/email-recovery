@@ -8,14 +8,8 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract ZkEmailRecovery_getRecoveryConfig_Test is UnitBase {
-    EmailRecoveryModule recoveryModule;
-    address recoveryModuleAddress;
-
     function setUp() public override {
         super.setUp();
-
-        recoveryModule = new EmailRecoveryModule{ salt: "test salt" }(address(emailRecoveryManager));
-        recoveryModuleAddress = address(recoveryModule);
     }
 
     function test_GetRecoveryConfig_Succeeds() public { }
