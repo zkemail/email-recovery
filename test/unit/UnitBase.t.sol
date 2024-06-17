@@ -3,8 +3,13 @@ pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
-
-import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
+import {
+    RhinestoneModuleKit,
+    AccountInstance,
+    ModuleKitHelpers,
+    ModuleKitUserOp
+} from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import {
@@ -17,9 +22,13 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
 abstract contract UnitBase is RhinestoneModuleKit, Test {
+    using ModuleKitHelpers for *;
+    using ModuleKitUserOp for *;
+
     // ZK Email contracts and variables
     address zkEmailDeployer = vm.addr(1);
     ECDSAOwnedDKIMRegistry dkimRegistry;

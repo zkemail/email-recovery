@@ -14,13 +14,13 @@ contract ZkEmailRecovery_constructor_Test is UnitBase {
     function test_Constructor() public {
         EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager(
             address(verifier),
-            address(ecdsaOwnedDkimRegistry),
+            address(dkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
 
         assertEq(address(verifier), emailRecoveryManager.verifier());
-        assertEq(address(ecdsaOwnedDkimRegistry), emailRecoveryManager.dkim());
+        assertEq(address(dkimRegistry), emailRecoveryManager.dkim());
         assertEq(address(emailAuthImpl), emailRecoveryManager.emailAuthImplementation());
     }
 }

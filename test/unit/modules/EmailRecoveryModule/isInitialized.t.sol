@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import { UnitBase } from "../UnitBase.t.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
 
 contract EmailRecoveryModule_isInitialized_Test is UnitBase {
     function setUp() public override {
