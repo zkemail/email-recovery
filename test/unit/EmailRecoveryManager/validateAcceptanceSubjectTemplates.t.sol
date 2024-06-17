@@ -12,20 +12,9 @@ pragma solidity ^0.8.25;
 // import { UnitBase } from "../UnitBase.t.sol";
 
 // contract ZkEmailRecovery_validateAcceptanceSubjectTemplates_Test is UnitBase {
-//     using ModuleKitHelpers for *;
-//     using ModuleKitUserOp for *;
-
-//     EmailRecoveryModule recoveryModule;
-//     address recoveryModuleAddress;
-
-//     function setUp() public override {
-//         super.setUp();
-
-//         recoveryModule =
-//             new EmailRecoveryModule{ salt: "test salt"
-// }(address(emailRecoveryManager));
-//         recoveryModuleAddress = address(recoveryModule);
-//     }
+// function setUp() public override {
+//     super.setUp();
+// }
 
 //     function test_ValidateAcceptanceSubjectTemplates_RevertWhen_InvalidTemplateIndex() public {
 //         uint256 invalidTemplateIdx = 1;

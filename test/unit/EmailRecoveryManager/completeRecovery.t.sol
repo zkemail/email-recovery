@@ -12,46 +12,15 @@ import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 // completeRecovery(accountAddress, recoveryCalldata)
 contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
-    using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
-
-    OwnableValidator validator;
-
-    bytes recoveryCalldata;
-    bytes4 functionSelector;
-
     function setUp() public override {
         super.setUp();
-
-        validator = new OwnableValidator();
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
-            data: abi.encode(owner, recoveryModuleAddress)
-        });
-        // Install recovery module - configureRecovery is called on `onInstall`
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(
-                address(validator),
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
-        });
-
-        recoveryCalldata = abi.encodeWithSignature(
-            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
-        );
     }
 
     // function test_CompleteRecovery_RevertWhen_NotCalledFromCorrectRouter() public {
+    //     bytes memory recoveryCalldata = abi.encodeWithSignature(
+    //         "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress,
+    // newOwner
+    //     );
     //     acceptGuardian(accountSalt1);
     //     acceptGuardian(accountSalt2);
     //     vm.warp(12 seconds);
@@ -85,46 +54,14 @@ contract ZkEmailRecovery_completeRecovery_Test is UnitBase {
 
 // completeRecovery(address account)
 contract ZkEmailRecovery_completeRecoveryWithAddress_Test is UnitBase {
-    using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
-
-    OwnableValidator validator;
-
-    bytes recoveryCalldata;
-    bytes4 functionSelector;
-
     function setUp() public override {
         super.setUp();
-
-        validator = new OwnableValidator();
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
-            data: abi.encode(owner, recoveryModuleAddress)
-        });
-        // Install recovery module - configureRecovery is called on `onInstall`
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(
-                address(validator),
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
-        });
-
-        recoveryCalldata = abi.encodeWithSignature(
-            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
-        );
     }
 
     // function test_CompleteRecovery_RevertWhen_InvalidAccountAddress() public {
+    //     bytes memory recoveryCalldata = abi.encodeWithSignature(
+    //         "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress,
+    // newOwner
     //     address invalidAccount = address(0);
 
     //     vm.expectRevert(IEmailRecoveryManager.InvalidAccountAddress.selector);

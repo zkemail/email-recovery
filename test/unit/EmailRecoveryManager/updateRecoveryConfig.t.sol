@@ -11,37 +11,8 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract ZkEmailRecovery_updateRecoveryConfig_Test is UnitBase {
-    using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
-
-    OwnableValidator validator;
-    bytes4 functionSelector;
-
     function setUp() public override {
         super.setUp();
-
-        validator = new OwnableValidator();
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
-            data: abi.encode(owner, recoveryModuleAddress)
-        });
-        // Install recovery module - configureRecovery is called on `onInstall`
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(
-                address(validator),
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
-        });
     }
 
     // function test_UpdateRecoveryConfig_RevertWhen_AlreadyRecovering() public {

@@ -12,35 +12,9 @@ pragma solidity ^0.8.25;
 // import { UnitBase } from "../UnitBase.t.sol";
 
 // contract ZkEmailRecovery_validateRecoverySubjectTemplates_Test is UnitBase {
-//     using ModuleKitHelpers for *;
-//     using ModuleKitUserOp for *;
-
-//     OwnableValidator validator;
-//     EmailRecoveryModule recoveryModule;
-//     address recoveryModuleAddress;
-
-//     function setUp() public override {
-//         super.setUp();
-
-//         validator = new OwnableValidator();
-//         recoveryModule =
-//             new EmailRecoveryModule{ salt: "test salt"
-// }(address(emailRecoveryManager));
-//         recoveryModuleAddress = address(recoveryModule);
-
-//         instance.installModule({
-//             moduleTypeId: MODULE_TYPE_VALIDATOR,
-//             module: address(validator),
-//             data: abi.encode(owner, recoveryModuleAddress)
-//         });
-//         // Install recovery module - configureRecovery is called on `onInstall`
-//         instance.installModule({
-//             moduleTypeId: MODULE_TYPE_EXECUTOR,
-//             module: recoveryModuleAddress,
-//             data: abi.encode(address(validator), guardians, guardianWeights, threshold, delay,
-// expiry)
-//         });
-//     }
+// function setUp() public override {
+//     super.setUp();
+// }
 
 //     function test_ValidateRecoverySubjectTemplates_RevertWhen_InvalidTemplateIndex() public {
 //         uint256 invalidTemplateIdx = 1;

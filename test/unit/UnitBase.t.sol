@@ -22,15 +22,17 @@ import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 abstract contract UnitBase is RhinestoneModuleKit, Test {
     // ZK Email contracts and variables
     address zkEmailDeployer = vm.addr(1);
-    ECDSAOwnedDKIMRegistry ecdsaOwnedDkimRegistry;
+    ECDSAOwnedDKIMRegistry dkimRegistry;
     MockGroth16Verifier verifier;
     EmailAuth emailAuthImpl;
 
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
-
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
+
+    OwnableValidator validator;
+    bytes4 functionSelector;
 
     // account and owners
     AccountInstance instance;
@@ -64,14 +66,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         // Create ZK Email contracts
         vm.startPrank(zkEmailDeployer);
-        ecdsaOwnedDkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
-        string memory signedMsg = ecdsaOwnedDkimRegistry.computeSignedMsg(
-            ecdsaOwnedDkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
+        dkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
+        string memory signedMsg = dkimRegistry.computeSignedMsg(
+            dkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
         );
         bytes32 digest = ECDSA.toEthSignedMessageHash(bytes(signedMsg));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
-        ecdsaOwnedDkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
+        dkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
 
         verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();
@@ -83,30 +85,24 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         address[] memory owners = new address[](1);
         owners[0] = owner;
 
+        // Deploy handler, manager and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
-
         EmailRecoveryManagerHarness emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),
-            address(ecdsaOwnedDkimRegistry),
+            address(dkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
-        address manager = address(emailRecoveryManager);
+        emailRecoveryManagerAddress = address(emailRecoveryManager);
 
-        EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule(manager);
+        EmailRecoveryModule emailRecoveryModule =
+            new EmailRecoveryModule(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
-
         emailRecoveryManager.initialize(recoveryModuleAddress);
 
-        // Deploy EmailRecoveryManager & EmailRecoveryModule
-        // (emailRecoveryManagerAddress, recoveryModuleAddress) = emailRecoveryFactory
-        //     .deployModuleAndManager(
-        // address(verifier),
-        // address(ecdsaOwnedDkimRegistry),
-        // address(emailAuthImpl),
-        // address(emailRecoveryHandler)
-        // );
-        // emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
+        // Deploy validator to be recovered
+        validator = new OwnableValidator();
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 
         // Deploy and fund the account
         instance = makeAccountInstance("account");
@@ -137,6 +133,26 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         expiry = 2 weeks;
         threshold = 3;
         templateIdx = 0;
+
+        // Install modules
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: address(validator),
+            data: abi.encode(owner, recoveryModuleAddress)
+        });
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(
+                address(validator),
+                functionSelector,
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
+        });
     }
 
     // Helper functions
