@@ -353,15 +353,15 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             subjectHandler
         ).validateRecoverySubject(templateIdx, subjectParams, address(this));
 
+        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
+            revert RecoveryModuleNotInstalled();
+        }
+
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.ACCEPTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
-        }
-
-        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
-            revert RecoveryModuleNotInstalled();
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
