@@ -13,7 +13,7 @@ pragma solidity ^0.8.25;
 
 // import { OwnableValidatorBase } from "../OwnableValidatorRecovery/OwnableValidatorBase.t.sol";
 
-// contract ZkEmailRecovery_Integration_Test is OwnableValidatorBase {
+// contract EmailRecoveryManager_Integration_Test is OwnableValidatorBase {
 //     using ModuleKitHelpers for *;
 //     using ModuleKitUserOp for *;
 
