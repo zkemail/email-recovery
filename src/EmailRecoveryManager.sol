@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -15,6 +14,7 @@ import {
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "./libraries/GuardianUtils.sol";
+import "forge-std/console2.sol";
 
 /**
  * @title EmailRecoveryManager
@@ -231,8 +231,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
 
         setupGuardians(account, guardians, weights, threshold);
 
-        bool isInitialized = IModule(emailRecoveryModule).isInitialized(account);
-        if (!isInitialized) {
+        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
             revert RecoveryModuleNotInstalled();
         }
 
@@ -308,8 +307,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert RecoveryInProcess();
         }
 
-        bool isInitialized = IModule(emailRecoveryModule).isInitialized(account);
-        if (!isInitialized) {
+        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
             revert RecoveryModuleNotInstalled();
         }
 
@@ -362,8 +360,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
         }
 
-        bool isInitialized = IModule(emailRecoveryModule).isInitialized(account);
-        if (!isInitialized) {
+        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
             revert RecoveryModuleNotInstalled();
         }
 

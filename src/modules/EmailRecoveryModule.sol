@@ -7,6 +7,7 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
+import "forge-std/console2.sol";
 
 struct ValidatorList {
     SentinelListLib.SentinelList validators;
@@ -159,7 +160,9 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidValidatorsLength();
         }
 
-        if (next != ZERO_ADDRESS) {
+        // TODO: unit test
+        // if (next != ZERO_ADDRESS) {
+        if (next != SENTINEL) {
             revert InvalidNextValidator();
         }
 
@@ -207,6 +210,16 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
     function getTrustedRecoveryManager() external view returns (address) {
         return emailRecoveryManager;
+    }
+
+    function getAllowedValidators(address account) external view returns (address[] memory) {
+        ValidatorList storage validatorList = validators[account];
+
+        // getEntriesPaginated pageCount cannot be zero
+        uint256 pageCount = validatorList.count == 0 ? 1 : validatorList.count;
+        (address[] memory array,) =
+            validatorList.validators.getEntriesPaginated(SENTINEL, pageCount);
+        return array;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

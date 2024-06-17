@@ -2,15 +2,20 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
+import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
+    using ModuleKitHelpers for *;
+    using ModuleKitUserOp for *;
     using Strings for uint256;
     using Strings for address;
 
@@ -20,6 +25,9 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
+
+    OwnableValidator validator;
+    bytes4 functionSelector;
 
     function setUp() public virtual override {
         super.setUp();
@@ -37,6 +45,10 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         );
         emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
+        // Deploy validator to be recovered
+        validator = new OwnableValidator();
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+
         // Compute guardian addresses
         guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
         guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
@@ -46,6 +58,26 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         guardians[0] = guardian1;
         guardians[1] = guardian2;
         guardians[2] = guardian3;
+
+        // Install modules
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: address(validator),
+            data: abi.encode(owner, recoveryModuleAddress)
+        });
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(
+                address(validator),
+                functionSelector,
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
+        });
     }
 
     // Helper functions

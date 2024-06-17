@@ -16,10 +16,9 @@ interface IEmailRecoveryManager {
         uint256 delay; // the time from when recovery is started until the recovery request can be
             // executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes
-            // invalid.
-            // The recovery expiry encourages the timely execution of successful recovery attempts,
-            // and reduces
-            // the risk of unauthorized access through stale or outdated requests.
+            // invalid. The recovery expiry encourages the timely execution of successful recovery
+            // attempts, and reduces the risk of unauthorized access through stale or outdated
+            // requests.
     }
 
     /**
