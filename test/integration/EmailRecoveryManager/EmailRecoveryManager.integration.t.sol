@@ -159,7 +159,7 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        // vm.expectRevert(IEmailRecoveryManager.InvalidAccountAddress.selector);
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 

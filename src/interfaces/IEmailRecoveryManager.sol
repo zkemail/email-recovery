@@ -74,6 +74,7 @@ interface IEmailRecoveryManager {
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
     error InvalidAccountAddress();
+    error NoRecoveryConfigured();
     error NotEnoughApprovals();
     error DelayNotPassed();
     error RecoveryRequestExpired();

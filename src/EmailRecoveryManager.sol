@@ -404,6 +404,10 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = guardianConfigs[account].threshold;
+        if (threshold == 0) {
+            revert NoRecoveryConfigured();
+        }
+
         if (recoveryRequest.currentWeight < threshold) {
             revert NotEnoughApprovals();
         }
