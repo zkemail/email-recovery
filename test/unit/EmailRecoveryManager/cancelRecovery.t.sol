@@ -2,76 +2,88 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
-contract ZkEmailRecovery_cancelRecovery_Test is UnitBase {
+contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
+    using Strings for uint256;
+
+    string calldataHashString;
+
     function setUp() public override {
         super.setUp();
+        calldataHashString = uint256(calldataHash).toHexString(32);
     }
 
-    // function test_CancelRecovery_CannotCancelWrongRecoveryRequest() public {
-    //     address otherAddress = address(99);
+    function test_CancelRecovery_CannotCancelWrongRecoveryRequest() public {
+        address otherAddress = address(99);
 
-    //     acceptGuardian(accountSalt1);
-    //     vm.warp(12 seconds);
-    //     handleRecovery(recoveryModuleAddress, accountSalt1);
+        acceptGuardian(accountSalt1);
+        vm.warp(12 seconds);
+        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
-    //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-    //         emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 1);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 1);
+        assertEq(recoveryRequest.calldataHashString, "");
 
-    //     vm.startPrank(otherAddress);
-    //     emailRecoveryManager.cancelRecovery();
+        vm.startPrank(otherAddress);
+        emailRecoveryManager.cancelRecovery();
 
-    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 1);
-    // }
+        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 1);
+        assertEq(recoveryRequest.calldataHashString, "");
+    }
 
-    // function test_CancelRecovery_PartialRequest_Succeeds() public {
-    //     acceptGuardian(accountSalt1);
-    //     vm.warp(12 seconds);
-    //     handleRecovery(recoveryModuleAddress, accountSalt1);
+    function test_CancelRecovery_PartialRequest_Succeeds() public {
+        acceptGuardian(accountSalt1);
+        vm.warp(12 seconds);
+        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
-    //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-    //         emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 1);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 1);
+        assertEq(recoveryRequest.calldataHashString, "");
 
-    //     vm.startPrank(accountAddress);
-    //     emailRecoveryManager.cancelRecovery();
+        vm.startPrank(accountAddress);
+        emailRecoveryManager.cancelRecovery();
 
-    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 0);
-    // }
+        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.calldataHashString, "");
+    }
 
-    // function test_CancelRecovery_FullRequest_Succeeds() public {
-    //     acceptGuardian(accountSalt1);
-    //     acceptGuardian(accountSalt2);
-    //     vm.warp(12 seconds);
-    //     handleRecovery(recoveryModuleAddress, accountSalt1);
-    //     handleRecovery(recoveryModuleAddress, accountSalt2);
+    function test_CancelRecovery_FullRequest_Succeeds() public {
+        acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
+        vm.warp(12 seconds);
+        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
 
-    //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-    //         emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
-    //     assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-    //     assertEq(recoveryRequest.currentWeight, 3);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
+        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        assertEq(recoveryRequest.currentWeight, 3);
+        assertEq(recoveryRequest.calldataHashString, calldataHashString);
 
-    //     vm.startPrank(accountAddress);
-    //     emailRecoveryManager.cancelRecovery();
+        vm.startPrank(accountAddress);
+        emailRecoveryManager.cancelRecovery();
 
-    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 0);
-    // }
+        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.calldataHashString, "");
+    }
 }
