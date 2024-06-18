@@ -33,7 +33,6 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
-    // using Strings for address;
 
     // ZK Email contracts and variables
     address zkEmailDeployer = vm.addr(1);

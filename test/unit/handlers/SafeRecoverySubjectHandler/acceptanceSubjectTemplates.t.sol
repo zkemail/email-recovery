@@ -2,15 +2,19 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import { UnitBase } from "../UnitBase.t.sol";
+import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
-contract EmailRecoveryManager_acceptanceSubjectTemplates_Test is UnitBase {
+contract SafeRecoverySubjectHandler_acceptanceSubjectTemplates_Test is SafeUnitBase {
+    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
+
     function setUp() public override {
         super.setUp();
+        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
     }
 
     function test_AcceptanceSubjectTemplates_Succeeds() public view {
-        string[][] memory templates = emailRecoveryManager.acceptanceSubjectTemplates();
+        string[][] memory templates = safeRecoverySubjectHandler.acceptanceSubjectTemplates();
 
         assertEq(templates.length, 1);
         assertEq(templates[0].length, 5);
