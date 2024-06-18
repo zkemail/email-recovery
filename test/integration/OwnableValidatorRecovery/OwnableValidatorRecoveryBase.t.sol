@@ -28,6 +28,8 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
     OwnableValidator validator;
     bytes4 functionSelector;
+    bytes recoveryCalldata;
+    bytes32 calldataHash;
 
     function setUp() public virtual override {
         super.setUp();
@@ -48,6 +50,10 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         // Deploy validator to be recovered
         validator = new OwnableValidator();
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+        recoveryCalldata = abi.encodeWithSignature(
+            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
+        );
+        calldataHash = keccak256(recoveryCalldata);
 
         // Compute guardian addresses
         guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);

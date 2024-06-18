@@ -18,11 +18,6 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
     }
 
     function test_Recover_RotatesOwnerSuccessfully() public {
-        bytes memory recoveryCalldata = abi.encodeWithSignature(
-            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
-        );
-        bytes32 calldataHash = keccak256(recoveryCalldata);
-
         // Accept guardian 1
         acceptGuardian(accountSalt1);
         GuardianStorage memory guardianStorage1 =
