@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
@@ -10,9 +10,8 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 import { UnitBase } from "../UnitBase.t.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
-contract ZkEmailRecovery_configureRecovery_Test is UnitBase {
+contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
 
     function setUp() public override {
         super.setUp();

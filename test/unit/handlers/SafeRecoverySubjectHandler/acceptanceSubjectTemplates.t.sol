@@ -6,11 +6,8 @@ import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHand
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
 contract SafeRecoverySubjectHandler_acceptanceSubjectTemplates_Test is SafeUnitBase {
-    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
-
     function setUp() public override {
         super.setUp();
-        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
     }
 
     function test_AcceptanceSubjectTemplates_Succeeds() public view {

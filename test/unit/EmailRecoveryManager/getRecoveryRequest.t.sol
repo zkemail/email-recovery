@@ -7,7 +7,7 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
-contract ZkEmailRecovery_getRecoveryRequest_Test is UnitBase {
+contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }

@@ -9,5 +9,7 @@ contract EmailRecoveryModule_onUninstall_Test is UnitBase {
         super.setUp();
     }
 
+    function test_OnUninstall_RevertWhen_InvalidValidatorsLength() public view { }
+    function test_OnUninstall_RevertWhen_InvalidNextValidator() public view { }
     function test_OnUninstall_Succeeds() public view { }
 }

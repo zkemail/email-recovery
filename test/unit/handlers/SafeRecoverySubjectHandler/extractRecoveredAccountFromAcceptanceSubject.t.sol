@@ -8,20 +8,16 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 contract SafeRecoverySubjectHandler_extractRecoveredAccountFromAcceptanceSubject_Test is
     SafeUnitBase
 {
-    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
-
     function setUp() public override {
         super.setUp();
-        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
     }
 
     function test_ExtractRecoveredAccountFromAcceptanceSubject_Succeeds() public view {
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress);
 
-        address extractedAccount = emailRecoveryHandler.extractRecoveredAccountFromAcceptanceSubject(
-            subjectParams, templateIdx
-        );
+        address extractedAccount = safeRecoverySubjectHandler
+            .extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
         assertEq(extractedAccount, accountAddress);
     }
 }

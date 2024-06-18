@@ -2,15 +2,11 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
 contract SafeRecoverySubjectHandler_recoverySubjectTemplates_Test is SafeUnitBase {
-    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
-
     function setUp() public override {
         super.setUp();
-        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
     }
 
     function test_RecoverySubjectTemplates_Succeeds() public view {

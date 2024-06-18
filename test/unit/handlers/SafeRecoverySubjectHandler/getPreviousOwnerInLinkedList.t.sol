@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
+import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
-contract EmailRecoveryModule_getPreviousOwnerInLinkedList_Test is UnitBase {
+contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUnitBase {
     function setUp() public override {
         super.setUp();
     }
