@@ -212,14 +212,27 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         return emailRecoveryManager;
     }
 
-    function getAllowedValidators(address account) external view returns (address[] memory) {
+    function getAllowedValidators(address account) public view returns (address[] memory) {
         ValidatorList storage validatorList = validators[account];
 
         // getEntriesPaginated pageCount cannot be zero
         uint256 pageCount = validatorList.count == 0 ? 1 : validatorList.count;
-        (address[] memory array,) =
+        (address[] memory allowedValidators,) =
             validatorList.validators.getEntriesPaginated(SENTINEL, pageCount);
-        return array;
+
+        return allowedValidators;
+    }
+
+    function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
+        address[] memory allowedValidators = getAllowedValidators(account);
+        uint256 allowedValidatorsLength = allowedValidators.length;
+
+        bytes4[] memory selectors = new bytes4[](allowedValidatorsLength);
+        for (uint256 i; i < allowedValidatorsLength; i++) {
+            selectors[i] = allowedSelectors[allowedValidators[i]][account];
+        }
+
+        return selectors;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
