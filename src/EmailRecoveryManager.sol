@@ -498,19 +498,12 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
         guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
     }
 
-    function addGuardian(
-        address guardian,
-        uint256 weight,
-        uint256 threshold
-    )
-        external
-        onlyWhenNotRecovering
-    {
-        guardiansStorage.addGuardian(guardianConfigs, msg.sender, guardian, weight, threshold);
+    function addGuardian(address guardian, uint256 weight) external onlyWhenNotRecovering {
+        guardiansStorage.addGuardian(guardianConfigs, msg.sender, guardian, weight);
     }
 
-    function removeGuardian(address guardian, uint256 threshold) external onlyWhenNotRecovering {
-        guardiansStorage.removeGuardian(guardianConfigs, msg.sender, guardian, threshold);
+    function removeGuardian(address guardian) external onlyWhenNotRecovering {
+        guardiansStorage.removeGuardian(guardianConfigs, msg.sender, guardian);
     }
 
     function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {

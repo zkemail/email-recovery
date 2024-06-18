@@ -117,9 +117,9 @@ interface IEmailRecoveryManager {
         view
         returns (GuardianStorage memory);
 
-    function addGuardian(address guardian, uint256 weight, uint256 threshold) external;
+    function addGuardian(address guardian, uint256 weight) external;
 
-    function removeGuardian(address guardian, uint256 threshold) external;
+    function removeGuardian(address guardian) external;
 
     function changeThreshold(uint256 threshold) external;
 }

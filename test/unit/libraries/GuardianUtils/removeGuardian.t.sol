@@ -3,26 +3,39 @@ pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
 
-import { UnitBase } from "../UnitBase.t.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 
-contract EmailRecoveryManager_removeGuardian_Test is UnitBase {
+contract GuardianUtils_removeGuardian_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_RemoveGuardian_RevertWhen_AlreadyRecovering() public {
-        address guardian = guardian1;
+    function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian() public {
+        address unauthorizedAccount = guardian1;
+
+        vm.startPrank(unauthorizedAccount);
+        vm.expectRevert(GuardianUtils.UnauthorizedAccountForGuardian.selector);
+        emailRecoveryManager.removeGuardian(guardian1);
+    }
+
+    function test_RemoveGuardian_RevertWhen_ThresholdExceedsTotalWeight() public {
+        address guardian = guardian2; // guardian 2 weight is 2
+        // threshold = 3
+        // totalWeight = 4
+        // weight = 2
+
+        // Fails if totalWeight - weight < threshold
+        // (totalWeight - weight == 4 - 2) = 2
+        // (weight < threshold == 2 < 3) = fails
 
         acceptGuardian(accountSalt1);
-        vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
         emailRecoveryManager.removeGuardian(guardian);
     }
 

@@ -3,8 +3,12 @@ pragma solidity ^0.8.25;
 
 import "forge-std/console2.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 
 contract EmailRecoveryManagerHarness is EmailRecoveryManager {
+    using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
+
     constructor(
         address verifier,
         address dkimRegistry,
@@ -44,6 +48,20 @@ contract EmailRecoveryManagerHarness is EmailRecoveryManager {
     )
         external
     {
-        // setupGuardians(account, guardians, weights, threshold);
+        setupGuardians(account, guardians, weights, threshold);
+    }
+
+    function exposed_updateGuardianStatus(
+        address account,
+        address guardian,
+        GuardianStatus newStatus
+    )
+        external
+    {
+        guardiansStorage.updateGuardianStatus(account, guardian, newStatus);
+    }
+
+    function exposed_removeAllGuardians(address account) external {
+        guardiansStorage.removeAllGuardians(account);
     }
 }
