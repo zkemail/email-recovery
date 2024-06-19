@@ -26,7 +26,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
     event RemovedValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
 
-    error CanOnlySetManagerOnce();
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
@@ -75,6 +74,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             uint256 expiry
         ) = abi.decode(data, (address, bytes4, address[], uint256[], uint256, uint256, uint256));
 
+        // TODO: Should isInstalledContext be passed in?
         allowValidatorRecovery(validator, bytes("0"), initialSelector);
 
         _execute({
@@ -160,7 +160,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidValidatorsLength();
         }
 
-        // TODO: unit test
+        // TODO: test
         // if (next != ZERO_ADDRESS) {
         if (next != SENTINEL) {
             revert InvalidNextValidator();
