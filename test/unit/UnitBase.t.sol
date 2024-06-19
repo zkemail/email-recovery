@@ -43,6 +43,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
+    EmailRecoveryModule emailRecoveryModule;
+
     // EmailRecoveryManager emailRecoveryManager;
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
@@ -115,8 +117,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         );
         emailRecoveryManagerAddress = address(emailRecoveryManager);
 
-        EmailRecoveryModule emailRecoveryModule =
-            new EmailRecoveryModule(emailRecoveryManagerAddress);
+        emailRecoveryModule = new EmailRecoveryModule(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
         emailRecoveryManager.initialize(recoveryModuleAddress);
 
