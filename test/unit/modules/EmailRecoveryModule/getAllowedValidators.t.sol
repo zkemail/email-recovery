@@ -4,17 +4,35 @@ pragma solidity ^0.8.25;
 import "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
 contract EmailRecoveryModule_getAllowedValidators_Test is UnitBase {
     using ModuleKitHelpers for *;
+    using SentinelListHelper for address[];
 
     function setUp() public override {
         super.setUp();
     }
 
-    function test_GetAllowedValidators_Succeeds() public {
+    function test_GetAllowedValidators_SucceedsWhenNoValidators() public {
+        address[] memory allowedValidators =
+            emailRecoveryModule.getAllowedValidators(accountAddress);
+        address prevValidator = allowedValidators.findPrevious(validatorAddress);
+
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.disallowValidatorRecovery(
+            validatorAddress, prevValidator, "", functionSelector
+        );
+        vm.stopPrank();
+
+        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
+
+        assertEq(allowedValidators.length, 0);
+    }
+
+    function test_GetAllowedValidators_SucceedsWithOneValidator() public {
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);
 

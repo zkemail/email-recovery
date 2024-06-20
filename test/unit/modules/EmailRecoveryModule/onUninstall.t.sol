@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 

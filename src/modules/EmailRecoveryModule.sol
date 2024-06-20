@@ -160,13 +160,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
 
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
 
-        uint256 allowedValidatorsLength = allowedValidators.length;
-        if (validatorList.count != allowedValidatorsLength) {
-            // TODO: assess if this check is needed
-            revert InvalidValidatorsLength();
-        }
-
-        for (uint256 i; i < allowedValidatorsLength; i++) {
+        for (uint256 i; i < allowedValidators.length; i++) {
             bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
             delete selectorToValidator[allowedSelector][msg.sender];
             delete allowedSelectors[allowedValidators[i]][msg.sender];
