@@ -15,4 +15,7 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
     function test_Remove_RemovesAddedKeys() public view {
         // TODO: test
     }
+    function test_Remove_AddsAndRemovesMultipleKeys() public view {
+        // TODO: test
+    }
 }

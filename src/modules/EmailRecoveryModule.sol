@@ -9,7 +9,8 @@ import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import "forge-std/console2.sol";
 
-// TODO: Open Zeppelin 5.1.0 has an AddressToAddressMap that could be used instead
+// TODO: Open Zeppelin 5.1.0 has an AddressToAddressMap that could be used instead - not released
+// yet so might not be audited
 struct ValidatorList {
     SentinelListLib.SentinelList validators;
     uint256 count;
