@@ -12,5 +12,7 @@ contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
         super.setUp();
     }
 
-    function test_GetRecoveryConfig_Succeeds() public { }
+    function test_GetRecoveryConfig_Succeeds() public {
+        // TODO: test
+    }
 }

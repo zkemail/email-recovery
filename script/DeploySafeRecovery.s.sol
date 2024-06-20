@@ -8,8 +8,6 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract DeploySafeRecoveryScript is Script {
     function run() public {
-        bytes32 salt = bytes32(uint256(0));
-
         address verifier = 0xEdC642bbaD91E21cCE6cd436Fdc6F040FD0fF998;
         address dkimRegistry = 0xC83256CCf7B94d310e49edA05077899ca036eb78;
         address emailAuthImpl = 0x1C76Aa365c17B40c7E944DcCdE4dC6e6D2A7b748;

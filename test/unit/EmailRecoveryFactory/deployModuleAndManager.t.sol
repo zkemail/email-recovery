@@ -9,5 +9,7 @@ contract EmailRecoveryManager_deployModuleAndManager_Test is UnitBase {
         super.setUp();
     }
 
-    function test_DeployModuleAndManager_Succeeds() public { }
+    function test_DeployModuleAndManager_Succeeds() public {
+        // TODO: test
+    }
 }

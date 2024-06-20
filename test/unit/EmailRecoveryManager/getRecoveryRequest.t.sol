@@ -12,5 +12,7 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
         super.setUp();
     }
 
-    function test_GetRecoveryRequest_Succeeds() public { }
+    function test_GetRecoveryRequest_Succeeds() public {
+        // TODO: test
+    }
 }

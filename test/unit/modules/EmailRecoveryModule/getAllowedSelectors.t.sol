@@ -14,7 +14,7 @@ contract EmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
         super.setUp();
     }
 
-    function test_GetAllowedSelectors_Succeeds() public {
+    function test_GetAllowedSelectors_Succeeds() public view {
         bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
 
         assertEq(allowedSelectors.length, 1);

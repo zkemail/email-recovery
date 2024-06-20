@@ -14,7 +14,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
         address invalidHandler = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidSubjectHandler.selector);
-        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager(
+        new EmailRecoveryManager(
             address(verifier), address(dkimRegistry), address(emailAuthImpl), invalidHandler
         );
     }

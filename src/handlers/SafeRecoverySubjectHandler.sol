@@ -55,10 +55,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] memory subjectParams,
-        uint256 templateIdx
+        uint256 /* templateIdx */
     )
         public
-        view
+        pure
         returns (address)
     {
         return abi.decode(subjectParams[0], (address));
@@ -66,17 +66,17 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] memory subjectParams,
-        uint256 templateIdx
+        uint256 /* templateIdx */
     )
         public
-        view
+        pure
         returns (address)
     {
         return abi.decode(subjectParams[0], (address));
     }
 
     function validateAcceptanceSubject(
-        uint256 templateIdx,
+        uint256, /* templateIdx */
         bytes[] calldata subjectParams
     )
         external
@@ -93,7 +93,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     function validateRecoverySubject(
-        uint256 templateIdx,
+        uint256, /* templateIdx */
         bytes[] calldata subjectParams,
         address recoveryManager
     )

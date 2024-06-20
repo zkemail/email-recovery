@@ -46,7 +46,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] memory subjectParams,
-        uint256 templateIdx
+        uint256 /* templateIdx */
     )
         public
         pure
@@ -57,7 +57,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] memory subjectParams,
-        uint256 templateIdx
+        uint256 /* templateIdx */
     )
         public
         pure
@@ -67,7 +67,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     function validateAcceptanceSubject(
-        uint256 templateIdx,
+        uint256, /* templateIdx */
         bytes[] calldata subjectParams
     )
         external
@@ -84,7 +84,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     function validateRecoverySubject(
-        uint256 templateIdx,
+        uint256, /* templateIdx */
         bytes[] calldata subjectParams,
         address recoveryManager
     )

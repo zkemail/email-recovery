@@ -88,7 +88,6 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
     }
 
     function test_UpdateRecoveryConfig_Succeeds() public {
-        address newRecoveryModule = recoveryModuleAddress;
         uint256 newDelay = 1 days;
         uint256 newExpiry = 4 weeks;
 

@@ -12,5 +12,7 @@ contract EmailRecoveryManager_getGuardian_Test is UnitBase {
         super.setUp();
     }
 
-    function test_GetGuardian_Succeeds() public { }
+    function test_GetGuardian_Succeeds() public {
+        // TODO: test
+    }
 }

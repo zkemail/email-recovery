@@ -263,13 +263,13 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     function handleRecovery(
         address recoveryModule,
-        bytes32 calldataHash,
+        bytes32 recoveryCalldataHash,
         bytes32 accountSalt
     )
         public
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory calldataHashString = uint256(recoveryCalldataHash).toHexString(32);
         string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);

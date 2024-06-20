@@ -15,6 +15,7 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
         address account
     )
         external
+        view
         returns (bytes4)
     {
         return allowedSelectors[validator][account];
@@ -25,6 +26,7 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
         address account
     )
         external
+        view
         returns (address)
     {
         return selectorToValidator[selector][account];

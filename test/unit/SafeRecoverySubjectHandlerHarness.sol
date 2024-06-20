@@ -12,6 +12,7 @@ contract SafeRecoverySubjectHandlerHarness is SafeRecoverySubjectHandler {
         address oldOwner
     )
         external
+        view
         returns (address)
     {
         return getPreviousOwnerInLinkedList(safe, oldOwner);

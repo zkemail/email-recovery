@@ -32,7 +32,7 @@ contract EmailRecoveryModule_getAllowedValidators_Test is UnitBase {
         assertEq(allowedValidators.length, 0);
     }
 
-    function test_GetAllowedValidators_SucceedsWithOneValidator() public {
+    function test_GetAllowedValidators_SucceedsWithOneValidator() public view {
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);
 

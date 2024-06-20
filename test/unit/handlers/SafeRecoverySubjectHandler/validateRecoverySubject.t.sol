@@ -84,7 +84,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         );
     }
 
-    function test_ValidateRecoverySubject_Succeeds() public {
+    function test_ValidateRecoverySubject_Succeeds() public view {
         (address account, string memory calldataHash) = safeRecoverySubjectHandler
             .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
         assertEq(account, accountAddress);

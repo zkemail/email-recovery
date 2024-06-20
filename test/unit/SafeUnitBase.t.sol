@@ -23,6 +23,7 @@ import { MockValidator } from "module-bases/mocks/MockValidator.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { Solarray } from "solarray/Solarray.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
@@ -33,6 +34,8 @@ import { MockRegistry } from "../integration/external/MockRegistry.sol";
 import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
 
 abstract contract SafeUnitBase is IntegrationBase {
+    using Strings for uint256;
+
     EmailRecoveryFactory emailRecoveryFactory;
     SafeRecoverySubjectHandlerHarness safeRecoverySubjectHandler;
     EmailRecoveryManager emailRecoveryManager;
@@ -276,27 +279,19 @@ abstract contract SafeUnitBase is IntegrationBase {
 
     function handleRecovery(
         address recoveryModule,
-        bytes32 calldataHash,
+        bytes32 recoveryCalldataHash,
         bytes32 accountSalt
     )
         public
     {
-        // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
-        // after
-        // certain changes
-        // console2.log("accountAddress: ", accountAddress);
-        console2.log("recoveryModule: ", recoveryModule);
-        console2.log("calldataHash:");
-        console2.logBytes32(calldataHash);
+        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
+        string memory calldataHashString = uint256(recoveryCalldataHash).toHexString(32);
+        string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
 
-        // TODO: Ideally do this dynamically
-        string memory calldataHashString =
-            "0x4e66542ab78fcc7a2341586b67800e82b975078517d7d692e2aa98d2696c51d0";
-
-        string memory subject = string.concat(
-            "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 via recovery module 0xD7F74A3A1d35495c1537f5377590e44A2bf44122 using recovery hash ",
-            calldataHashString
-        );
+        string memory subjectPart1 = string.concat("Recover account ", accountString);
+        string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
+        string memory subjectPart3 = string.concat(" using recovery hash ", calldataHashString);
+        string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 

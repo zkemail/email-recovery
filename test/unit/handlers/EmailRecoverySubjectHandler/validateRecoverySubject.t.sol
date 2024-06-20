@@ -74,10 +74,11 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         );
     }
 
-    function test_ValidateRecoverySubject_Succeeds() public {
+    function test_ValidateRecoverySubject_Succeeds() public view {
         (address account, string memory calldataHash) = emailRecoveryHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
         assertEq(account, accountAddress);
+        assertEq(calldataHashString, calldataHash);
     }
 }
