@@ -136,6 +136,10 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         validatorList.validators.pop(prevValidator, validator);
         validatorList.count--;
 
+        if (allowedSelectors[validator][msg.sender] != recoverySelector) {
+            revert InvalidSelector(recoverySelector);
+        }
+
         delete allowedSelectors[validator][msg.sender];
         delete selectorToValidator[recoverySelector][msg.sender];
 
