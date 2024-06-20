@@ -9,6 +9,7 @@ import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import "forge-std/console2.sol";
 
+// TODO: Open Zeppelin 5.1.0 has an AddressToAddressMap that could be used instead
 struct ValidatorList {
     SentinelListLib.SentinelList validators;
     uint256 count;
@@ -29,8 +30,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
-    error InvalidNextValidator();
-    error InvalidValidatorsLength();
     error NotTrustedRecoveryManager();
 
     mapping(address account => ValidatorList validatorList) internal validators;

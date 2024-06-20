@@ -422,6 +422,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
 
         delete recoveryRequests[account];
 
+        // TODO: ZkEmail contracts have a library for converting a string to bytes32
         bytes32 calldataHash = keccak256(recoveryCalldata);
         string memory calldataHashString = uint256(calldataHash).toHexString(32);
 
