@@ -66,16 +66,18 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         if (data.length == 0) revert InvalidOnInstallData();
         (
             address validator,
+            bytes memory isInstalledContext,
             bytes4 initialSelector,
             address[] memory guardians,
             uint256[] memory weights,
             uint256 threshold,
             uint256 delay,
             uint256 expiry
-        ) = abi.decode(data, (address, bytes4, address[], uint256[], uint256, uint256, uint256));
+        ) = abi.decode(
+            data, (address, bytes, bytes4, address[], uint256[], uint256, uint256, uint256)
+        );
 
-        // TODO: Should isInstalledContext be passed in?
-        allowValidatorRecovery(validator, bytes("0"), initialSelector);
+        allowValidatorRecovery(validator, isInstalledContext, initialSelector);
 
         _execute({
             to: emailRecoveryManager,

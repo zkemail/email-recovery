@@ -51,6 +51,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     address validatorAddress;
 
     OwnableValidator validator;
+    bytes isInstalledContext;
     bytes4 functionSelector;
     bytes recoveryCalldata;
     bytes32 calldataHash;
@@ -155,6 +156,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // Deploy validator to be recovered
         validator = new OwnableValidator();
         validatorAddress = address(validator);
+        isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
         recoveryCalldata = abi.encodeWithSignature(
             "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
@@ -171,7 +173,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
             data: abi.encode(
-                validatorAddress, functionSelector, guardians, guardianWeights, threshold, delay, expiry
+                validatorAddress,
+                isInstalledContext,
+                functionSelector,
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
             )
         });
     }

@@ -33,6 +33,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //         module: recoveryModuleAddress,
     //         data: abi.encode(
     //             address(safe), // FIXME: requires rhinestone change
+    //             isInstalledContext,
     //             functionSelector,
     //             guardians,
     //             guardianWeights,

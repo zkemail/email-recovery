@@ -39,7 +39,14 @@ contract EmailRecoveryModule_onInstall_Test is UnitBase {
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
             data: abi.encode(
-                validatorAddress, functionSelector, guardians, guardianWeights, threshold, delay, expiry
+                validatorAddress,
+                isInstalledContext,
+                functionSelector,
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
             )
         });
 
