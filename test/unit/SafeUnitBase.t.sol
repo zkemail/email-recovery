@@ -27,14 +27,14 @@ import { Solarray } from "solarray/Solarray.sol";
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoverySubjectHandlerHarness } from "./SafeRecoverySubjectHandlerHarness.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { MockRegistry } from "../integration/external/MockRegistry.sol";
 import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
 
 abstract contract SafeUnitBase is IntegrationBase {
     EmailRecoveryFactory emailRecoveryFactory;
-    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
+    SafeRecoverySubjectHandlerHarness safeRecoverySubjectHandler;
     EmailRecoveryManager emailRecoveryManager;
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
@@ -60,7 +60,7 @@ abstract contract SafeUnitBase is IntegrationBase {
         super.setUp();
 
         // Deploy handler, manager and module
-        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
+        safeRecoverySubjectHandler = new SafeRecoverySubjectHandlerHarness();
         emailRecoveryFactory = new EmailRecoveryFactory();
 
         emailRecoveryManager = new EmailRecoveryManagerHarness(
