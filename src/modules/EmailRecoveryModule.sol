@@ -156,18 +156,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     function onUninstall(bytes calldata /* data */ ) external {
         ValidatorList storage validatorList = validators[msg.sender];
 
-        (address[] memory allowedValidators, address next) =
-            validatorList.validators.getEntriesPaginated(SENTINEL, validatorList.count);
+        address[] memory allowedValidators = getAllowedValidators(account);
 
         uint256 allowedValidatorsLength = allowedValidators.length;
         if (validatorList.count != allowedValidatorsLength) {
             revert InvalidValidatorsLength();
-        }
-
-        // TODO: test
-        // if (next != ZERO_ADDRESS) {
-        if (next != SENTINEL) {
-            revert InvalidNextValidator();
         }
 
         for (uint256 i; i < allowedValidatorsLength; i++) {
