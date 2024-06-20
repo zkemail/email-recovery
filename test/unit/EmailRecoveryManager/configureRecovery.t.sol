@@ -54,7 +54,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
             data: abi.encode(
-                address(validator),
+                validatorAddress,
                 functionSelector,
                 guardians,
                 guardianWeights,

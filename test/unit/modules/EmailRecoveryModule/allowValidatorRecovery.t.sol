@@ -25,7 +25,7 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         );
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            address(validator), bytes("0"), IModule.onInstall.selector
+            validatorAddress, bytes("0"), IModule.onInstall.selector
         );
     }
 
@@ -37,7 +37,7 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         );
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            address(validator), bytes("0"), IModule.onUninstall.selector
+            validatorAddress, bytes("0"), IModule.onUninstall.selector
         );
     }
 
@@ -60,10 +60,10 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         vm.startPrank(accountAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
-                SentinelListLib.LinkedList_EntryAlreadyInList.selector, address(validator)
+                SentinelListLib.LinkedList_EntryAlreadyInList.selector, validatorAddress
             )
         );
-        emailRecoveryModule.allowValidatorRecovery(address(validator), "", functionSelector);
+        emailRecoveryModule.allowValidatorRecovery(validatorAddress, "", functionSelector);
     }
 
     function test_AllowValidatorRecovery_SucceedsWhenAlreadyInitialized() public {
@@ -84,9 +84,8 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
 
         assertEq(allowedValidators.length, 2);
-        // TODO: think about if this ordering should be expected behaviour
         assertEq(allowedValidators[0], newValidatorAddress);
-        assertEq(allowedValidators[1], address(validator));
+        assertEq(allowedValidators[1], validatorAddress);
         assertEq(allowedSelectors.length, 2);
         assertEq(allowedSelectors[0], functionSelector);
         assertEq(allowedSelectors[1], functionSelector);
@@ -97,14 +96,14 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
         vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(address(validator), "", functionSelector);
+        emailRecoveryModule.allowValidatorRecovery(validatorAddress, "", functionSelector);
 
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);
         bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
 
         assertEq(allowedValidators.length, 1);
-        assertEq(allowedValidators[0], address(validator));
+        assertEq(allowedValidators[0], validatorAddress);
         assertEq(allowedSelectors.length, 1);
         assertEq(allowedSelectors[0], functionSelector);
     }

@@ -25,6 +25,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
+    address validatorAddress;
 
     OwnableValidator validator;
     bytes4 functionSelector;
@@ -49,6 +50,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
         // Deploy validator to be recovered
         validator = new OwnableValidator();
+        validatorAddress = address(validator);
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
         recoveryCalldata = abi.encodeWithSignature(
             "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
@@ -68,20 +70,14 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         // Install modules
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
+            module: validatorAddress,
             data: abi.encode(owner, recoveryModuleAddress)
         });
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
             data: abi.encode(
-                address(validator),
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
+                validatorAddress, functionSelector, guardians, guardianWeights, threshold, delay, expiry
             )
         });
     }

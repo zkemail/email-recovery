@@ -23,7 +23,7 @@ import { ECDSA } from "solady/utils/ECDSA.sol";
 
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { EmailRecoveryModuleHarness } from "./EmailRecoveryModuleHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -43,11 +43,12 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
-    EmailRecoveryModule emailRecoveryModule;
+    EmailRecoveryModuleHarness emailRecoveryModule;
 
     // EmailRecoveryManager emailRecoveryManager;
     address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
+    address validatorAddress;
 
     OwnableValidator validator;
     bytes4 functionSelector;
@@ -117,7 +118,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         );
         emailRecoveryManagerAddress = address(emailRecoveryManager);
 
-        emailRecoveryModule = new EmailRecoveryModule(emailRecoveryManagerAddress);
+        emailRecoveryModule = new EmailRecoveryModuleHarness(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
         emailRecoveryManager.initialize(recoveryModuleAddress);
 
@@ -153,6 +154,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         // Deploy validator to be recovered
         validator = new OwnableValidator();
+        validatorAddress = address(validator);
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
         recoveryCalldata = abi.encodeWithSignature(
             "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
@@ -162,20 +164,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // Install modules
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: address(validator),
+            module: validatorAddress,
             data: abi.encode(owner, recoveryModuleAddress)
         });
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
             data: abi.encode(
-                address(validator),
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
+                validatorAddress, functionSelector, guardians, guardianWeights, threshold, delay, expiry
             )
         });
     }
