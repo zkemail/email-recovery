@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
@@ -33,7 +32,6 @@ import "forge-std/console2.sol";
 contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailRecoveryManager {
     using GuardianUtils for mapping(address => GuardianConfig);
     using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
-    using Strings for uint256;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
