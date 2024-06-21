@@ -7,7 +7,7 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * @title EmailRecoveryModule

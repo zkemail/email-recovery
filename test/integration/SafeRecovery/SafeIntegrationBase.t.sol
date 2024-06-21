@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import {
@@ -25,7 +25,7 @@ import { Solarray } from "solarray/Solarray.sol";
 
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { MockRegistry } from "../external/MockRegistry.sol";
+import { MockRegistry } from "src/test/MockRegistry.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeIntegrationBase is IntegrationBase {

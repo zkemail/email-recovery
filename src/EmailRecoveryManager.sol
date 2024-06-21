@@ -13,7 +13,7 @@ import {
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "./libraries/GuardianUtils.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * @title EmailRecoveryManager

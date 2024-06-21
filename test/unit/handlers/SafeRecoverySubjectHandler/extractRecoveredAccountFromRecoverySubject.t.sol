@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
 contract SafeRecoverySubjectHandler_extractRecoveredAccountFromRecoverySubject_Test is

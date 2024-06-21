@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "solidity-stringutils/src/strings.sol";
+import { strings } from "solidity-stringutils/src/strings.sol";
 
 // Extracted from https://github.com/zkemail/email-wallet-sdk/blob/main/src/helpers/StringUtils.sol
 library StringUtils {

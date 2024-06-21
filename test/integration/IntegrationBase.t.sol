@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
 import { ECDSAOwnedDKIMRegistry } from

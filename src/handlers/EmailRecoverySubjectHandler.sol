@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 import { StringUtils } from "../libraries/StringUtils.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
