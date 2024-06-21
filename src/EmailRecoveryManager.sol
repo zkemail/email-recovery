@@ -349,9 +349,8 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert InvalidTemplateIndex();
         }
 
-        (address account, string memory calldataHashString) = IEmailRecoverySubjectHandler(
-            subjectHandler
-        ).validateRecoverySubject(templateIdx, subjectParams, address(this));
+        (address account, bytes32 calldataHash) = IEmailRecoverySubjectHandler(subjectHandler)
+            .validateRecoverySubject(templateIdx, subjectParams, address(this));
 
         if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
             revert RecoveryModuleNotInstalled();
@@ -375,7 +374,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.calldataHashString = calldataHashString;
+            recoveryRequest.calldataHash = calldataHash;
 
             emit RecoveryProcessed(account, executeAfter, executeBefore);
         }
@@ -422,11 +421,8 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
 
         delete recoveryRequests[account];
 
-        // TODO: Do ZkEmail contracts have a library for converting a string to bytes32?
         bytes32 calldataHash = keccak256(recoveryCalldata);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
-
-        if (!Strings.equal(calldataHashString, recoveryRequest.calldataHashString)) {
+        if (calldataHash != recoveryRequest.calldataHash) {
             revert InvalidCalldataHash();
         }
 

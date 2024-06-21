@@ -25,9 +25,10 @@
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
   "dependencies": {
-    "@rhinestone/modulekit": "v0.4.2",
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
-    "@zk-email/contracts": "v6.0.3"
+    "@rhinestone/modulekit": "v0.4.2",
+    "@zk-email/contracts": "v6.0.3",
+    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
   },
   "files": [
     "src",

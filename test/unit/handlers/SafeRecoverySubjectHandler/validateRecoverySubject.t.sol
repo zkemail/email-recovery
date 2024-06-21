@@ -9,13 +9,11 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase {
     using Strings for uint256;
 
-    string calldataHashString;
     bytes[] subjectParams;
 
     function setUp() public override {
         super.setUp();
 
-        calldataHashString = uint256(calldataHash).toHexString(32);
         subjectParams = new bytes[](4);
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(owner);
@@ -85,9 +83,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateRecoverySubject_Succeeds() public view {
-        (address account, string memory calldataHash) = safeRecoverySubjectHandler
+        (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
             .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
-        assertEq(account, accountAddress);
-        assertEq(calldataHash, calldataHashString);
+        assertEq(accountFromEmail, accountAddress);
+        assertEq(calldataHashFromEmail, calldataHash);
     }
 }

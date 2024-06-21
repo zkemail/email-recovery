@@ -95,7 +95,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, guardian1Weight);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 
     function test_ProcessRecovery_InitiatesRecovery() public {
@@ -118,6 +118,6 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
         assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, guardian1Weight + guardian2Weight);
-        assertEq(recoveryRequest.calldataHashString, calldataHashString);
+        assertEq(recoveryRequest.calldataHash, calldataHash);
     }
 }

@@ -47,7 +47,7 @@ contract EmailRecoveryManager_deInitRecoveryFromModule_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
 
         // assert that guardian storage has been cleared successfully for guardian 1
         GuardianStorage memory guardianStorage1 =

@@ -36,5 +36,5 @@ interface IEmailRecoverySubjectHandler {
     )
         external
         view
-        returns (address, string memory);
+        returns (address, bytes32);
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import { StringUtils } from "../libraries/StringUtils.sol";
 import "forge-std/console2.sol";
 
 /**
@@ -90,7 +91,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, string memory)
+        returns (address, bytes32)
     {
         if (subjectParams.length != 3) {
             revert InvalidSubjectParams();
@@ -99,6 +100,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address accountInEmail = abi.decode(subjectParams[0], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
         string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
+        bytes32 calldataHash = StringUtils.hexToBytes32(calldataHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
@@ -114,6 +116,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidRecoveryModule();
         }
 
-        return (accountInEmail, calldataHashInEmail);
+        return (accountInEmail, calldataHash);
     }
 }
