@@ -108,28 +108,40 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
     // Helper function
     function executeRecoveryFlowForAccount(
         address account,
+        bytes32 calldataHash,
         bytes memory recoveryCalldata
     )
         internal
     {
         acceptGuardian(account, guardian1);
         acceptGuardian(account, guardian2);
-        vm.warp(12 seconds);
-        handleRecovery(account, guardian1, calldataHash1);
-        handleRecovery(account, guardian2, calldataHash1);
+        vm.warp(block.timestamp + 12 seconds);
+        handleRecovery(account, guardian1, calldataHash);
+        handleRecovery(account, guardian2, calldataHash);
         vm.warp(block.timestamp + delay);
         emailRecoveryManager.completeRecovery(account, recoveryCalldata);
     }
 
     function test_Recover_RotatesMultipleOwnersSuccessfully() public {
-        // Accept guardian 1 for account 1
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        executeRecoveryFlowForAccount(accountAddress1, calldataHash1, recoveryCalldata1);
+        vm.warp(block.timestamp + 12 seconds);
+        executeRecoveryFlowForAccount(accountAddress2, calldataHash2, recoveryCalldata2);
+        vm.warp(block.timestamp + 12 seconds);
+        executeRecoveryFlowForAccount(accountAddress3, calldataHash3, recoveryCalldata3);
 
-        // Accept guardian 1 for account 2
-        emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress2, guardian1);
-        // FIXME: Should not fail here
-        vm.expectRevert("template id already exists");
+        address updatedOwner1 = validator.owners(accountAddress1);
+        address updatedOwner2 = validator.owners(accountAddress2);
+        address updatedOwner3 = validator.owners(accountAddress3);
+        assertEq(updatedOwner1, newOwner1);
+        assertEq(updatedOwner2, newOwner2);
+        assertEq(updatedOwner3, newOwner3);
+    }
+
+    function test_Recover_RevertWhen_InvalidTimestamp() public {
+        acceptGuardian(accountAddress1, guardian1);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress2, guardian1);
+
+        vm.expectRevert("invalid timestamp");
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 }

@@ -41,6 +41,8 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     bytes32 calldataHash2;
     bytes32 calldataHash3;
 
+    uint256 nullifierCount;
+
     function setUp() public virtual override {
         super.setUp();
 
@@ -68,7 +70,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         recoveryCalldata2 = abi.encodeWithSelector(
             functionSelector, accountAddress2, recoveryModuleAddress, newOwner2
         );
-        recoveryCalldata2 = abi.encodeWithSelector(
+        recoveryCalldata3 = abi.encodeWithSelector(
             functionSelector, accountAddress3, recoveryModuleAddress, newOwner3
         );
         calldataHash1 = keccak256(recoveryCalldata1);
@@ -175,6 +177,10 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         revert("Invalid guardian address");
     }
 
+    function generateNewNullifier() public returns (bytes32) {
+        return keccak256(abi.encode(nullifierCount++));
+    }
+
     function acceptGuardian(address account, address guardian) public {
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
@@ -189,7 +195,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory subject = string.concat("Accept guardian request for ", accountString);
-        bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
+        bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
@@ -227,7 +233,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         string memory subjectPart3 = string.concat(" using recovery hash ", calldataHashString);
 
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
-        bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
+        bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);

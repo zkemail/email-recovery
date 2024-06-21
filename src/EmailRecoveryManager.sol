@@ -417,12 +417,12 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert RecoveryRequestExpired();
         }
 
-        delete recoveryRequests[account];
-
         bytes32 calldataHash = keccak256(recoveryCalldata);
         if (calldataHash != recoveryRequest.calldataHash) {
             revert InvalidCalldataHash();
         }
+
+        delete recoveryRequests[account];
 
         IRecoveryModule(emailRecoveryModule).recover(account, recoveryCalldata);
 

@@ -104,7 +104,9 @@ abstract contract EmailAccountRecoveryNew {
     /// @notice Completes the recovery process.
     /// @dev This function must be implemented by inheriting contracts to finalize the recovery
     /// process.
-    function completeRecovery(address account, bytes calldata recoveryCalldata) external virtual;
+    /// @param account The address of the account to be recovered.
+    /// @param completeCalldata The calldata for the recovery process.
+    function completeRecovery(address account, bytes memory completeCalldata) external virtual;
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
     /// @dev This function utilizes the `Create2` library to compute the address. The computation
@@ -153,15 +155,19 @@ abstract contract EmailAccountRecoveryNew {
             keccak256(abi.encode(EMAIL_ACCOUNT_RECOVERY_VERSION_ID, "RECOVERY", templateIdx))
         );
     }
-
     /// @notice Handles an acceptance by a new guardian.
     /// @dev This function validates the email auth message, deploys a new EmailAuth contract as a
     /// proxy if validations pass and initializes the contract.
     /// @param emailAuthMsg The email auth message for the email send from the guardian.
     /// @param templateIdx The index of the subject template for acceptance, which should match with
     /// the subject in the given email auth message.
+
     function handleAcceptance(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
+        address recoveredAccount =
+            extractRecoveredAccountFromAcceptanceSubject(emailAuthMsg.subjectParams, templateIdx);
+        require(recoveredAccount != address(0), "invalid account in email");
         address guardian = computeEmailAuthAddress(emailAuthMsg.proof.accountSalt);
+        // require(address(guardian).code.length == 0, "guardian is already deployed");
         uint256 templateId = computeAcceptanceTemplateId(templateIdx);
         require(templateId == emailAuthMsg.templateId, "invalid template id");
         require(emailAuthMsg.proof.isCodeExist == true, "isCodeExist is false");
@@ -175,29 +181,29 @@ abstract contract EmailAccountRecoveryNew {
                     EmailAuth.initialize, (address(this), emailAuthMsg.proof.accountSalt)
                 )
             );
-
             guardianEmailAuth = EmailAuth(address(proxy));
+            // guardianEmailAuth.initDKIMRegistry(dkim());
+            // guardianEmailAuth.initVerifier(verifier());
+            guardianEmailAuth.updateDKIMRegistry(dkim());
+            guardianEmailAuth.updateVerifier(verifier());
+            for (uint256 idx = 0; idx < acceptanceSubjectTemplates().length; idx++) {
+                guardianEmailAuth.insertSubjectTemplate(
+                    computeAcceptanceTemplateId(idx), acceptanceSubjectTemplates()[idx]
+                );
+            }
+            for (uint256 idx = 0; idx < recoverySubjectTemplates().length; idx++) {
+                guardianEmailAuth.insertSubjectTemplate(
+                    computeRecoveryTemplateId(idx), recoverySubjectTemplates()[idx]
+                );
+            }
         } else {
-            guardianEmailAuth = EmailAuth(guardian);
-        }
-
-        guardianEmailAuth.updateDKIMRegistry(dkim());
-        guardianEmailAuth.updateVerifier(verifier());
-        for (uint256 idx = 0; idx < acceptanceSubjectTemplates().length; idx++) {
-            guardianEmailAuth.insertSubjectTemplate(
-                computeAcceptanceTemplateId(idx), acceptanceSubjectTemplates()[idx]
-            );
-        }
-        for (uint256 idx = 0; idx < recoverySubjectTemplates().length; idx++) {
-            guardianEmailAuth.insertSubjectTemplate(
-                computeRecoveryTemplateId(idx), recoverySubjectTemplates()[idx]
-            );
+            guardianEmailAuth = EmailAuth(payable(address(guardian)));
+            // require(guardianEmailAuth.controller() == address(this), "invalid controller");
         }
 
         // An assertion to confirm that the authEmail function is executed successfully
         // and does not return an error.
         guardianEmailAuth.authEmail(emailAuthMsg);
-
         acceptGuardian(
             guardian, templateIdx, emailAuthMsg.subjectParams, emailAuthMsg.proof.emailNullifier
         );
@@ -212,6 +218,9 @@ abstract contract EmailAccountRecoveryNew {
     /// @param templateIdx The index of the subject template for recovery, which should match with
     /// the subject in the given email auth message.
     function handleRecovery(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external {
+        address recoveredAccount =
+            extractRecoveredAccountFromRecoverySubject(emailAuthMsg.subjectParams, templateIdx);
+        require(recoveredAccount != address(0), "invalid account in email");
         address guardian = computeEmailAuthAddress(emailAuthMsg.proof.accountSalt);
         // Check if the guardian is deployed
         require(address(guardian).code.length > 0, "guardian is not deployed");
