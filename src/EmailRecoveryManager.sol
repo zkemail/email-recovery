@@ -106,7 +106,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
     }
 
     /**
-     * @dev Modifier to check recovery status. Reverts if recovery is in process for the account
+     * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
      */
     modifier onlyWhenNotRecovering() {
         if (recoveryRequests[msg.sender].currentWeight > 0) {

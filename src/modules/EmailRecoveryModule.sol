@@ -9,15 +9,29 @@ import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import "forge-std/console2.sol";
 
+/**
+ * @title EmailRecoveryModule
+ * @notice This contract provides a simple mechanism for recovering account validators by
+ * permissioning certain functions to be called on validators. It facilitates recovery by
+ * integration with a trusted email recovery manager. The module defines how a recovery request is
+ * executed on a validator, while the trusted recovery manager defines what a valid
+ * recovery request is
+ */
 contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                    CONSTANTS
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                    CONSTANTS & STORAGE                     */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    /**
+     * Maximum number of validators that can be configured for recovery
+     */
     uint256 public constant MAX_VALIDATORS = 32;
 
+    /**
+     * Trusted email recovery manager contract that handles recovery requests
+     */
     address public immutable emailRecoveryManager;
 
     event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
@@ -29,11 +43,23 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error MaxValidatorsReached();
     error NotTrustedRecoveryManager();
 
+    /**
+     * Account address to validator list
+     */
     mapping(address account => SentinelListLib.SentinelList validatorList) internal validators;
+    /**
+     * Account address to validator count
+     */
     mapping(address account => uint256 count) public validatorCount;
 
+    /**
+     * validator address to account address to function selector
+     */
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
+    /**
+     * function selector to account address to validator address
+     */
     mapping(bytes4 selector => mapping(address account => address validator)) internal
         selectorToValidator;
 
@@ -41,6 +67,10 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         emailRecoveryManager = _emailRecoveryManager;
     }
 
+    /**
+     * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
+     * "onInstall" or "onUninstall"
+     */
     modifier withoutUnsafeSelector(bytes4 recoverySelector) {
         if (
             recoverySelector == IModule.onUninstall.selector
@@ -52,13 +82,16 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         _;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                     CONFIG
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                          CONFIG                            */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * Initialize the module with the given data
-     * @param data The data to initialize the module with
+     * Initializes the module with the threshold and guardians
+     * @dev data is encoded as follows: abi.encode(validator, isInstalledContext, initialSelector,
+     * guardians, weights, threshold, delay, expiry)
+     *
+     * @param data encoded data for recovery configuration
      */
     function onInstall(bytes calldata data) external {
         if (data.length == 0) revert InvalidOnInstallData();
@@ -87,6 +120,15 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         });
     }
 
+    /**
+     * @notice Allows a validator and function selector to be used for recovery
+     * @dev Ensure that the function selector does indeed correspond to the validator as
+     * this cannot be checked in this function, as modules may not support ERC165
+     * @param validator The validator to allow recovery for
+     * @param isInstalledContext additional context data that the smart account may
+     * interpret to identifiy conditions under which the module is installed.
+     * @param recoverySelector The function selector to allow when executing recovery
+     */
     function allowValidatorRecovery(
         address validator,
         bytes memory isInstalledContext,
@@ -115,6 +157,14 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         emit NewValidatorRecovery({ validatorModule: validator, recoverySelector: recoverySelector });
     }
 
+    /**
+     * @notice Disallows a validator and function selector that has been configured for recovery
+     * @param validator The validator to disallow
+     * @param prevValidator The previous validator in the validators linked list
+     * @param isInstalledContext additional context data that the smart account may
+     * interpret to identifiy conditions under which the module is installed.
+     * @param recoverySelector The function selector to disallow
+     */
     function disallowValidatorRecovery(
         address validator,
         address prevValidator,
@@ -148,8 +198,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     }
 
     /**
-     * De-initialize the module with the given data
-     * @custom:unusedparam data - the data to de-initialize the module with
+     * Handles the uninstallation of the module and clears the recovery configuration
+     * @dev the data parameter is not used
      */
     function onUninstall(bytes calldata /* data */ ) external {
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
@@ -175,10 +225,17 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
             != 0;
     }
-    /*//////////////////////////////////////////////////////////////////////////
-                                     MODULE LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
 
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                        MODULE LOGIC                        */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @notice Executes recovery on a validator. Must be called by the trusted recovery manager
+     * @param account The account to execute recovery for
+     * @param recoveryCalldata The recovery calldata that should be executed on the validator
+     * being recovered
+     */
     function recover(address account, bytes calldata recoveryCalldata) external {
         if (msg.sender != emailRecoveryManager) {
             revert NotTrustedRecoveryManager();
@@ -195,10 +252,19 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
     }
 
+    /**
+     * @notice Returns the address of the trusted recovery manager.
+     * @return address The address of the email recovery manager.
+     */
     function getTrustedRecoveryManager() external view returns (address) {
         return emailRecoveryManager;
     }
 
+    /**
+     * @notice Retrieves the list of allowed validators for a given account.
+     * @param account The address of the account.
+     * @return address[] An array of the allowed validator addresses.
+     */
     function getAllowedValidators(address account) public view returns (address[] memory) {
         (address[] memory allowedValidators,) =
             validators[account].getEntriesPaginated(SENTINEL, MAX_VALIDATORS);
@@ -206,6 +272,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         return allowedValidators;
     }
 
+    /**
+     * @notice Retrieves the list of allowed selectors for a given account.
+     * @param account The address of the account.
+     * @return address[] An array of allowed function selectors.
+     */
     function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
         address[] memory allowedValidators = getAllowedValidators(account);
         uint256 allowedValidatorsLength = allowedValidators.length;
@@ -218,30 +289,30 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         return selectors;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                     METADATA
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                         METADATA                           */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * The name of the module
-     * @return name The name of the module
+     * Returns the name of the module
+     * @return name of the module
      */
     function name() external pure returns (string memory) {
         return "ZKEmail.EmailRecoveryModule";
     }
 
     /**
-     * The version of the module
-     * @return version The version of the module
+     * Returns the version of the module
+     * @return version of the module
      */
     function version() external pure returns (string memory) {
         return "0.0.1";
     }
 
     /**
-     * Check if the module is of a certain type
-     * @param typeID The type ID to check
-     * @return true if the module is of the given type, false otherwise
+     * Returns the type of the module
+     * @param typeID type of the module
+     * @return true if the type is a module type, false otherwise
      */
     function isModuleType(uint256 typeID) external pure returns (bool) {
         return typeID == TYPE_EXECUTOR;
