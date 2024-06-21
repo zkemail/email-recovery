@@ -148,6 +148,14 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+    }
+
+    function getAcceptanceEmailAuthMessage(bytes32 accountSalt)
+        public
+        returns (EmailAuthMsg memory)
+    {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
         string memory subject = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
@@ -157,26 +165,27 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
-        EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
+        return EmailAuthMsg({
             templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address recoveryModule,
-        bytes32 recoveryCalldataHash,
-        bytes32 accountSalt
-    )
+    function handleRecovery(bytes32 accountSalt) public {
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    }
+
+    function getRecoveryEmailAuthMessage(bytes32 accountSalt)
         public
+        returns (EmailAuthMsg memory)
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
-        string memory calldataHashString = uint256(recoveryCalldataHash).toHexString(32);
-        string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
+        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory recoveryModuleString =
+            SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
         string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
@@ -190,15 +199,14 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[1] = abi.encode(recoveryModuleAddress);
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
-        EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
+        return EmailAuthMsg({
             templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

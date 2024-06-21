@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
@@ -27,31 +28,30 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        // Issue where forge cannot detect revert even though the call does indeed revert when
-        // is
-        // "expectRevert" commented out
-        // vm.expectRevert();
-        // acceptGuardian(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeTimeStampChanged() public {
         acceptGuardian(accountSalt1);
 
-        // Issue where forge cannot detect revert even though this is the revert message when
-        // the call is made with "expectRevert"
-        // vm.expectRevert("invalid timestamp");
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+
+        vm.expectRevert("invalid timestamp");
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_DuringRecovery() public {
         acceptGuardian(accountSalt1);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(accountSalt1);
 
-        // Issue where forge cannot detect revert even though this is the revert error when
-        // the call is made with "expectRevert"
-        // vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        // acceptGuardian(accountSalt2);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_AfterRecoveryProcessedButBeforeCompleteRecovery(
@@ -61,25 +61,22 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        handleRecovery(accountSalt1);
+        handleRecovery(accountSalt2);
 
-        // Issue where forge cannot detect revert even though this is the revert error when
-        // the call is made with "expectRevert"
-        // vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        // acceptGuardian(accountSalt3);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt3);
+
+        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_HandleNewAcceptanceSucceeds_AfterCompleteRecovery() public {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
-
+        handleRecovery(accountSalt1);
+        handleRecovery(accountSalt2);
         vm.warp(block.timestamp + delay);
-
-        // Complete recovery
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
 
         acceptGuardian(accountSalt3);
@@ -95,17 +92,17 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        // Issue where forge cannot detect revert even though the call does indeed revert when
-        // is
-        // vm.expectRevert();
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+
+        vm.expectRevert();
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeHandleAcceptance() public {
-        // Issue where forge cannot detect revert even though this is the revert message when
-        // the call is made with "expectRevert"
-        // vm.expectRevert("guardian is not deployed");
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+
+        vm.expectRevert("guardian is not deployed");
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_DuringRecoveryWithoutGuardianBeingDeployed()
@@ -113,12 +110,12 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
     {
         acceptGuardian(accountSalt1);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(accountSalt1);
 
-        // Issue where forge cannot detect revert even though this is the revert message when
-        // the call is made with "expectRevert"
-        // vm.expectRevert("guardian is not deployed");
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt2);
+
+        vm.expectRevert("guardian is not deployed");
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_AfterRecoveryProcessedButBeforeCompleteRecovery()
@@ -127,31 +124,28 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        handleRecovery(accountSalt1);
+        handleRecovery(accountSalt2);
 
-        // Issue where forge cannot detect revert even though this is the revert message when
-        // the call is made with "expectRevert"
-        // vm.expectRevert("guardian is not deployed");
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt3);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt3);
+
+        vm.expectRevert("guardian is not deployed");
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_AfterCompleteRecovery() public {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
-
+        handleRecovery(accountSalt1);
+        handleRecovery(accountSalt2);
         vm.warp(block.timestamp + delay);
-
-        // Complete recovery
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
 
-        // Issue where forge cannot detect revert even though this is the revert message when
-        // the call is made with "expectRevert"
-        // vm.expectRevert("email nullifier already used");
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+
+        vm.expectRevert("email nullifier already used");
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
@@ -175,7 +169,7 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
-    function test_TryRecoverWhenModuleNotInstalled() public {
+    function test_TryConfigureAndAcceptanceFunctionsWhenModuleNotInstalled() public {
         vm.prank(accountAddress);
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
@@ -183,34 +177,54 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
-        // vm.stopPrank();
+        vm.stopPrank();
 
-        //
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        // acceptGuardian(accountSalt1);
-        // acceptGuardian(accountSalt2);
-        // vm.warp(12 seconds);
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        // handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+    }
 
-        // vm.warp(block.timestamp + delay);
+    function test_TryRecoverFunctionsWhenModuleNotInstalled() public {
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        // // vm.expectRevert(
-        // //     abi.encodeWithSelector(
-        // //         InvalidModule.selector,
-        // //         recoveryModuleAddress
-        // //     )
-        // // );
-        // vm.expectRevert();
-        // emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
+        vm.warp(12 seconds);
+
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt2);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    }
+
+    function test_TryCompleteRecoveryWhenModuleNotInstalled() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
+        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_StaleRecoveryRequest() public {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        handleRecovery(accountSalt1);
+        handleRecovery(accountSalt2);
 
         vm.warp(10 weeks);
 
