@@ -122,10 +122,12 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
     }
 
     function test_Recover_RotatesMultipleOwnersSuccessfully() public {
-        executeRecoveryFlowForAccount(accountAddress1, recoveryCalldata1);
+        // Accept guardian 1 for account 1
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress2, guardian1);
-
+        // Accept guardian 1 for account 2
+        emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress2, guardian1);
         // FIXME: Should not fail here
         vm.expectRevert("template id already exists");
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
