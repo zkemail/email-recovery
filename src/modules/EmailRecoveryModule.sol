@@ -9,19 +9,14 @@ import { IRecoveryModule } from "../interfaces/IRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 import "forge-std/console2.sol";
 
-// TODO: Open Zeppelin 5.1.0 has an AddressToAddressMap that could be used instead - not released
-// yet so might not be audited
-struct ValidatorList {
-    SentinelListLib.SentinelList validators;
-    uint256 count;
-}
-
 contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
 
     /*//////////////////////////////////////////////////////////////////////////
                                     CONSTANTS
     //////////////////////////////////////////////////////////////////////////*/
+
+    uint256 public constant MAX_VALIDATORS = 32;
 
     address public immutable emailRecoveryManager;
 
@@ -31,9 +26,12 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
+    error MaxValidatorsReached();
     error NotTrustedRecoveryManager();
 
-    mapping(address account => ValidatorList validatorList) internal validators;
+    mapping(address account => SentinelListLib.SentinelList validatorList) internal validators;
+    mapping(address account => uint256 count) public validatorCount;
+
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
     mapping(bytes4 selector => mapping(address account => address validator)) internal
@@ -77,6 +75,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             data, (address, bytes, bytes4, address[], uint256[], uint256, uint256, uint256)
         );
 
+        validators[msg.sender].init();
         allowValidatorRecovery(validator, isInstalledContext, initialSelector);
 
         _execute({
@@ -104,13 +103,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidValidator(validator);
         }
 
-        ValidatorList storage validatorList = validators[msg.sender];
-        bool alreadyInitialized = validatorList.validators.alreadyInitialized();
-        if (!alreadyInitialized) {
-            validatorList.validators.init();
+        if (validatorCount[msg.sender] > MAX_VALIDATORS) {
+            revert MaxValidatorsReached();
         }
-        validatorList.validators.push(validator);
-        validatorList.count++;
+        validators[msg.sender].push(validator);
+        validatorCount[msg.sender]++;
 
         allowedSelectors[validator][msg.sender] = recoverySelector;
         selectorToValidator[recoverySelector][msg.sender] = validator;
@@ -134,9 +131,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             revert InvalidValidator(validator);
         }
 
-        ValidatorList storage validatorList = validators[msg.sender];
-        validatorList.validators.pop(prevValidator, validator);
-        validatorList.count--;
+        validators[msg.sender].pop(prevValidator, validator);
+        validatorCount[msg.sender]--;
 
         if (allowedSelectors[validator][msg.sender] != recoverySelector) {
             revert InvalidSelector(recoverySelector);
@@ -156,8 +152,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
      * @custom:unusedparam data - the data to de-initialize the module with
      */
     function onUninstall(bytes calldata /* data */ ) external {
-        ValidatorList storage validatorList = validators[msg.sender];
-
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
 
         for (uint256 i; i < allowedValidators.length; i++) {
@@ -166,8 +160,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             delete allowedSelectors[allowedValidators[i]][msg.sender];
         }
 
-        validatorList.validators.popAll();
-        validatorList.count = 0;
+        validators[msg.sender].popAll();
+        validatorCount[msg.sender] = 0;
 
         IEmailRecoveryManager(emailRecoveryManager).deInitRecoveryFromModule(msg.sender);
     }
@@ -181,7 +175,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
         return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
             != 0;
     }
-
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
@@ -207,12 +200,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
     }
 
     function getAllowedValidators(address account) public view returns (address[] memory) {
-        ValidatorList storage validatorList = validators[account];
-
-        // getEntriesPaginated pageCount cannot be zero
-        uint256 pageCount = validatorList.count == 0 ? 1 : validatorList.count;
         (address[] memory allowedValidators,) =
-            validatorList.validators.getEntriesPaginated(SENTINEL, pageCount);
+            validators[account].getEntriesPaginated(SENTINEL, MAX_VALIDATORS);
 
         return allowedValidators;
     }
