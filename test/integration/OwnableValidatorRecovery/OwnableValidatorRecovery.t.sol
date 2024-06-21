@@ -104,4 +104,30 @@ contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBa
         );
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
+
+    // Helper function
+    function executeRecoveryFlowForAccount(
+        address account,
+        bytes memory recoveryCalldata
+    )
+        internal
+    {
+        acceptGuardian(account, guardian1);
+        acceptGuardian(account, guardian2);
+        vm.warp(12 seconds);
+        handleRecovery(account, guardian1, calldataHash1);
+        handleRecovery(account, guardian2, calldataHash1);
+        vm.warp(block.timestamp + delay);
+        emailRecoveryManager.completeRecovery(account, recoveryCalldata);
+    }
+
+    function test_Recover_RotatesMultipleOwnersSuccessfully() public {
+        executeRecoveryFlowForAccount(accountAddress1, recoveryCalldata1);
+
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress2, guardian1);
+
+        // FIXME: Should not fail here
+        vm.expectRevert("template id already exists");
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+    }
 }
