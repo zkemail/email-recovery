@@ -20,10 +20,18 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     EmailAuth emailAuthImpl;
 
     // account and owners
-    AccountInstance instance;
-    address accountAddress;
-    address owner;
-    address newOwner;
+    AccountInstance instance1;
+    AccountInstance instance2;
+    AccountInstance instance3;
+    address accountAddress1;
+    address accountAddress2;
+    address accountAddress3;
+    address owner1;
+    address owner2;
+    address owner3;
+    address newOwner1;
+    address newOwner2;
+    address newOwner3;
 
     // recovery config
     address[] guardians;
@@ -65,15 +73,23 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
         vm.stopPrank();
 
         // create owners
-        owner = vm.createWallet("owner").addr;
-        newOwner = vm.createWallet("newOwner").addr;
-        address[] memory owners = new address[](1);
-        owners[0] = owner;
+        owner1 = vm.createWallet("owner1").addr;
+        owner2 = vm.createWallet("owner2").addr;
+        owner3 = vm.createWallet("owner3").addr;
+        newOwner1 = vm.createWallet("newOwner1").addr;
+        newOwner2 = vm.createWallet("newOwner2").addr;
+        newOwner3 = vm.createWallet("newOwner3").addr;
 
-        // Deploy and fund the account
-        instance = makeAccountInstance("account");
-        accountAddress = instance.account;
-        vm.deal(address(instance.account), 10 ether);
+        // Deploy and fund the accounts
+        instance1 = makeAccountInstance("account1");
+        instance2 = makeAccountInstance("account2");
+        instance3 = makeAccountInstance("account3");
+        accountAddress1 = instance1.account;
+        accountAddress2 = instance2.account;
+        accountAddress3 = instance3.account;
+        vm.deal(address(instance1.account), 10 ether);
+        vm.deal(address(instance2.account), 10 ether);
+        vm.deal(address(instance3.account), 10 ether);
 
         accountSalt1 = keccak256(abi.encode("account salt 1"));
         accountSalt2 = keccak256(abi.encode("account salt 2"));

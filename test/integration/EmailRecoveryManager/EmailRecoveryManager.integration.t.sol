@@ -24,31 +24,32 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeTimeStampChanged() public {
-        acceptGuardian(accountSalt1);
+        acceptGuardian(accountAddress1, guardian1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
 
         vm.expectRevert("invalid timestamp");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_DuringRecovery() public {
-        acceptGuardian(accountSalt1);
+        acceptGuardian(accountAddress1, guardian1);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian2);
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
@@ -58,48 +59,50 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
     )
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardian1);
+        acceptGuardian(accountAddress1, guardian2);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
-        handleRecovery(accountSalt2);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
+        handleRecovery(accountAddress1, guardian2, calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt3);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian3);
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_HandleNewAcceptanceSucceeds_AfterCompleteRecovery() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardian1);
+        acceptGuardian(accountAddress1, guardian2);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
-        handleRecovery(accountSalt2);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
+        handleRecovery(accountAddress1, guardian2, calldataHash1);
         vm.warp(block.timestamp + delay);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
 
-        acceptGuardian(accountSalt3);
+        acceptGuardian(accountAddress1, guardian3);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryManager.getGuardian(accountAddress, guardian3);
+            emailRecoveryManager.getGuardian(accountAddress1, guardian3);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage.weight, uint256(1));
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
 
         vm.expectRevert();
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeHandleAcceptance() public {
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
@@ -108,11 +111,12 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
     function test_RevertWhen_HandleRecoveryCalled_DuringRecoveryWithoutGuardianBeingDeployed()
         public
     {
-        acceptGuardian(accountSalt1);
+        acceptGuardian(accountAddress1, guardian1);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt2);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian2, calldataHash1);
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
@@ -121,123 +125,125 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
     function test_RevertWhen_HandleRecoveryCalled_AfterRecoveryProcessedButBeforeCompleteRecovery()
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardian1);
+        acceptGuardian(accountAddress1, guardian2);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
-        handleRecovery(accountSalt2);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
+        handleRecovery(accountAddress1, guardian2, calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt3);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian3, calldataHash1);
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_AfterCompleteRecovery() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardian1);
+        acceptGuardian(accountAddress1, guardian2);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
-        handleRecovery(accountSalt2);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
+        handleRecovery(accountAddress1, guardian2, calldataHash1);
         vm.warp(block.timestamp + delay);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
 
         vm.expectRevert("email nullifier already used");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeHandleAcceptance() public {
         vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeProcessRecovery() public {
-        acceptGuardian(accountSalt1);
+        acceptGuardian(accountAddress1, guardian1);
 
         vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
     function test_TryConfigureAndAcceptanceFunctionsWhenModuleNotInstalled() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
         vm.stopPrank();
 
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+        emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function test_TryRecoverFunctionsWhenModuleNotInstalled() public {
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt1);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian1);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        emailAuthMsg = getAcceptanceEmailAuthMessage(accountSalt2);
+        emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardian2);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
         vm.warp(12 seconds);
 
-        emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt1);
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
 
-        emailAuthMsg = getRecoveryEmailAuthMessage(accountSalt2);
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardian2, calldataHash1);
         vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_TryCompleteRecoveryWhenModuleNotInstalled() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
     function test_StaleRecoveryRequest() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardian1);
+        acceptGuardian(accountAddress1, guardian2);
         vm.warp(12 seconds);
-        handleRecovery(accountSalt1);
-        handleRecovery(accountSalt2);
+        handleRecovery(accountAddress1, guardian1, calldataHash1);
+        handleRecovery(accountAddress1, guardian2, calldataHash1);
 
         vm.warp(10 weeks);
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
 
         // Can cancel recovery even when stale
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryManager.cancelRecovery();
         vm.stopPrank();
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryManager.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);

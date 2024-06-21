@@ -15,7 +15,7 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         address invalidOwner = address(0);
 
         address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
-            accountAddress, invalidOwner
+            accountAddress1, invalidOwner
         );
 
         assertEq(previousOwner, SENTINEL_OWNERS);
@@ -25,7 +25,7 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         address invalidOwner = SENTINEL_OWNERS;
 
         address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
-            accountAddress, invalidOwner
+            accountAddress1, invalidOwner
         );
 
         assertEq(previousOwner, SENTINEL_OWNERS);
@@ -35,13 +35,13 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         address invalidAccount = address(0);
 
         vm.expectRevert();
-        safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(invalidAccount, owner);
+        safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(invalidAccount, owner1);
     }
 
     function test_GetPreviousOwnerInLinkedList_Succeeds() public view {
         address expectedPreviousOwner = address(1);
         address previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress, owner);
+            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
 
         assertEq(expectedPreviousOwner, previousOwner);
     }

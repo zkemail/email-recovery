@@ -15,9 +15,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         super.setUp();
 
         subjectParams = new bytes[](4);
-        subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(owner);
-        subjectParams[2] = abi.encode(newOwner);
+        subjectParams[0] = abi.encode(accountAddress1);
+        subjectParams[1] = abi.encode(owner1);
+        subjectParams[2] = abi.encode(newOwner1);
         subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
@@ -85,7 +85,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     function test_ValidateRecoverySubject_Succeeds() public view {
         (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
             .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
-        assertEq(accountFromEmail, accountAddress);
+        assertEq(accountFromEmail, accountAddress1);
         assertEq(calldataHashFromEmail, calldataHash);
     }
 }

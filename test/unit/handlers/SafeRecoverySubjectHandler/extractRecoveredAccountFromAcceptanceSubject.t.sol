@@ -14,10 +14,10 @@ contract SafeRecoverySubjectHandler_extractRecoveredAccountFromAcceptanceSubject
 
     function test_ExtractRecoveredAccountFromAcceptanceSubject_Succeeds() public view {
         bytes[] memory subjectParams = new bytes[](1);
-        subjectParams[0] = abi.encode(accountAddress);
+        subjectParams[0] = abi.encode(accountAddress1);
 
         address extractedAccount = safeRecoverySubjectHandler
             .extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
-        assertEq(extractedAccount, accountAddress);
+        assertEq(extractedAccount, accountAddress1);
     }
 }

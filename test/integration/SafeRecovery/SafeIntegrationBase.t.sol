@@ -58,7 +58,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         );
 
         safe = deploySafe();
-        accountAddress = address(safe);
+        accountAddress1 = address(safe);
 
         // Compute guardian addresses
         guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
@@ -98,7 +98,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
 
         Safe7579Launchpad.InitData memory initData = Safe7579Launchpad.InitData({
             singleton: address(singleton),
-            owners: Solarray.addresses(owner),
+            owners: Solarray.addresses(owner1),
             threshold: 1,
             setupTo: address(launchpad),
             setupData: abi.encodeCall(
@@ -230,7 +230,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
         // after
         // certain changes
-        // console2.log("accountAddress: ", accountAddress);
+        // console2.log("accountAddress1: ", accountAddress1);
 
         string memory subject =
             "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
@@ -240,7 +240,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
+        subjectParamsForAcceptance[0] = abi.encode(accountAddress1);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
@@ -261,7 +261,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
         // after
         // certain changes
-        // console2.log("accountAddress: ", accountAddress);
+        // console2.log("accountAddress1: ", accountAddress1);
         console2.log("recoveryModule: ", recoveryModule);
         console2.log("calldataHash:");
         console2.logBytes32(calldataHash);
@@ -280,7 +280,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(accountAddress);
+        subjectParamsForRecovery[0] = abi.encode(accountAddress1);
         subjectParamsForRecovery[1] = abi.encode(recoveryModule);
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
