@@ -49,11 +49,11 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
     function test_GetPreviousOwnerInLinkedList_SucceedsWithMultipleAccounts() public {
         address expectedPreviousOwner = address(1);
         address previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress, owner);
+            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
 
         assertEq(expectedPreviousOwner, previousOwner);
         previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress, anotherOwner);
+            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner2);
         assertEq(expectedPreviousOwner, previousOwner);
     }
 }
