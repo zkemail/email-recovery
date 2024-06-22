@@ -32,6 +32,13 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         addresses[1] = vm.addr(2);
         addresses[2] = vm.addr(3);
         guardiansStorage[accountAddress].removeAll(addresses);
+        for (uint256 i = 1; i <= 3; i++) {
+            require(
+                guardiansStorage[accountAddress]._values[vm.addr(i)].status ==
+                    GuardianStatus.NONE,
+                "Expected status to be NONE"
+            );
+        }
     }
 
     function test_RemoveAll_RemovesMaxNumberOfValues() public {
@@ -63,6 +70,13 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
             addresses[i] = vm.addr(i + 1);
         }
         guardiansStorage[accountAddress].removeAll(addresses);
+        for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
+            require(
+                guardiansStorage[accountAddress]._values[vm.addr(i)].status ==
+                    GuardianStatus.NONE,
+                "Expected status to be NONE"
+            );
+        }
     }
 
     function test_RemoveAll_RevertWhen_TooManyValuesToRemove() public {
