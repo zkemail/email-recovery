@@ -19,10 +19,6 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
         assertEq(keys.length, 0);
     }
 
-    function test_Keys_ReturnsEmptyArrayOfKeys() public view {
-        // It's same as test_Keys_StartsEmpty()
-    }
-
     function test_Keys_ReturnsArrayOfKeys() public {
         bool result;
 
