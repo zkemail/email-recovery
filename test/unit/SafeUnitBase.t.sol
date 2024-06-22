@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import {
@@ -30,7 +30,7 @@ import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { SafeRecoverySubjectHandlerHarness } from "./SafeRecoverySubjectHandlerHarness.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
-import { MockRegistry } from "../integration/external/MockRegistry.sol";
+import { MockRegistry } from "src/test/MockRegistry.sol";
 import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
 
 abstract contract SafeUnitBase is IntegrationBase {
@@ -80,14 +80,14 @@ abstract contract SafeUnitBase is IntegrationBase {
         emailRecoveryManager.initialize(recoveryModuleAddress);
 
         safe = deploySafe();
-        accountAddress = address(safe);
+        accountAddress1 = address(safe);
 
         functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
         address previousOwnerInLinkedList = address(1);
         // address previousOwnerInLinkedList =
         //     safeRecoverySubjectHandler.previousOwnerInLinkedList(accountAddress, owner);
         recoveryCalldata = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", previousOwnerInLinkedList, owner, newOwner
+            "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
         );
         calldataHash = keccak256(recoveryCalldata);
 
@@ -129,7 +129,7 @@ abstract contract SafeUnitBase is IntegrationBase {
 
         Safe7579Launchpad.InitData memory initData = Safe7579Launchpad.InitData({
             singleton: address(singleton),
-            owners: Solarray.addresses(owner),
+            owners: Solarray.addresses(owner1),
             threshold: 1,
             setupTo: address(launchpad),
             setupData: abi.encodeCall(
@@ -257,8 +257,8 @@ abstract contract SafeUnitBase is IntegrationBase {
         return emailProof;
     }
 
-    function acceptGuardian(bytes32 accountSalt) public {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
+    function acceptGuardian(address account, bytes32 accountSalt) public {
+        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory subject = string.concat("Accept guardian request for ", accountString);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
@@ -266,7 +266,7 @@ abstract contract SafeUnitBase is IntegrationBase {
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
+        subjectParamsForAcceptance[0] = abi.encode(account);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
@@ -277,16 +277,11 @@ abstract contract SafeUnitBase is IntegrationBase {
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address recoveryModule,
-        bytes32 recoveryCalldataHash,
-        bytes32 accountSalt
-    )
-        public
-    {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
-        string memory calldataHashString = uint256(recoveryCalldataHash).toHexString(32);
-        string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
+    function handleRecovery(address account, bytes32 accountSalt) public {
+        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
+        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory recoveryModuleString =
+            SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
         string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
@@ -298,8 +293,8 @@ abstract contract SafeUnitBase is IntegrationBase {
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
+        subjectParamsForRecovery[0] = abi.encode(account);
+        subjectParamsForRecovery[1] = abi.encode(recoveryModuleAddress);
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({

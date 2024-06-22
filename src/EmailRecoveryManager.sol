@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
@@ -14,7 +13,7 @@ import {
     GuardianStatus
 } from "./libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "./libraries/GuardianUtils.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * @title EmailRecoveryManager
@@ -33,7 +32,6 @@ import "forge-std/console2.sol";
 contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailRecoveryManager {
     using GuardianUtils for mapping(address => GuardianConfig);
     using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
-    using Strings for uint256;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
@@ -108,7 +106,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
     }
 
     /**
-     * @dev Modifier to check recovery status. Reverts if recovery is in process for the account
+     * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
      */
     modifier onlyWhenNotRecovering() {
         if (recoveryRequests[msg.sender].currentWeight > 0) {
@@ -349,9 +347,8 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert InvalidTemplateIndex();
         }
 
-        (address account, string memory calldataHashString) = IEmailRecoverySubjectHandler(
-            subjectHandler
-        ).validateRecoverySubject(templateIdx, subjectParams, address(this));
+        (address account, bytes32 calldataHash) = IEmailRecoverySubjectHandler(subjectHandler)
+            .validateRecoverySubject(templateIdx, subjectParams, address(this));
 
         if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
             revert RecoveryModuleNotInstalled();
@@ -375,7 +372,7 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.calldataHashString = calldataHashString;
+            recoveryRequest.calldataHash = calldataHash;
 
             emit RecoveryProcessed(account, executeAfter, executeBefore);
         }
@@ -420,15 +417,12 @@ contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailR
             revert RecoveryRequestExpired();
         }
 
-        delete recoveryRequests[account];
-
-        // TODO: Do ZkEmail contracts have a library for converting a string to bytes32?
         bytes32 calldataHash = keccak256(recoveryCalldata);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
-
-        if (!Strings.equal(calldataHashString, recoveryRequest.calldataHashString)) {
+        if (calldataHash != recoveryRequest.calldataHash) {
             revert InvalidCalldataHash();
         }
+
+        delete recoveryRequests[account];
 
         IRecoveryModule(emailRecoveryModule).recover(account, recoveryCalldata);
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -10,11 +10,8 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
     using Strings for uint256;
 
-    string calldataHashString;
-
     function setUp() public override {
         super.setUp();
-        calldataHashString = uint256(calldataHash).toHexString(32);
     }
 
     function test_CancelRecovery_CannotCancelWrongRecoveryRequest() public {
@@ -29,7 +26,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
 
         vm.startPrank(otherAddress);
         emailRecoveryManager.cancelRecovery();
@@ -38,7 +35,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 
     function test_CancelRecovery_PartialRequest_Succeeds() public {
@@ -51,7 +48,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
 
         vm.startPrank(accountAddress);
         emailRecoveryManager.cancelRecovery();
@@ -60,7 +57,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 
     function test_CancelRecovery_FullRequest_Succeeds() public {
@@ -75,7 +72,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
         assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, 3);
-        assertEq(recoveryRequest.calldataHashString, calldataHashString);
+        assertEq(recoveryRequest.calldataHash, calldataHash);
 
         vm.startPrank(accountAddress);
         emailRecoveryManager.cancelRecovery();
@@ -84,6 +81,6 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 }

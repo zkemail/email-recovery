@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 
@@ -106,7 +106,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 
     function test_CompleteRecovery_SucceedsAlmostExpiry() public {
@@ -127,6 +127,6 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
     }
 }

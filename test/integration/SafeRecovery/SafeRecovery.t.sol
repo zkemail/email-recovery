@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
@@ -28,7 +28,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 
-    //     instance.installModule({
+    //     instance1.installModule({
     //         moduleTypeId: MODULE_TYPE_EXECUTOR,
     //         module: recoveryModuleAddress,
     //         data: abi.encode(
@@ -45,21 +45,21 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     // }
 
     // function test_Recover_RotatesOwnerSuccessfully() public {
-    //     IERC7579Account account = IERC7579Account(accountAddress);
+    //     IERC7579Account account = IERC7579Account(accountAddress1);
     //     bytes memory recoveryCalldata = abi.encodeWithSignature(
-    //         "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress,
-    // newOwner
+    //         "changeOwner(address,address,address)", accountAddress1, recoveryModuleAddress,
+    // newOwner1
     //     );
     //     bytes32 calldataHash = keccak256(recoveryCalldata);
 
     //     bytes[] memory subjectParamsForRecovery = new bytes[](4);
-    //     subjectParamsForRecovery[0] = abi.encode(accountAddress);
-    //     subjectParamsForRecovery[1] = abi.encode(owner);
-    //     subjectParamsForRecovery[2] = abi.encode(newOwner);
+    //     subjectParamsForRecovery[0] = abi.encode(accountAddress1);
+    //     subjectParamsForRecovery[1] = abi.encode(owner1);
+    //     subjectParamsForRecovery[2] = abi.encode(newOwner1);
     //     subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
     //     // // Install recovery module - configureRecovery is called on `onInstall`
-    //     // vm.prank(accountAddress);
+    //     // vm.prank(accountAddress1);
     //     // account.installModule(
     //     //     MODULE_TYPE_EXECUTOR,
     //     //     recoveryModuleAddress,
@@ -68,16 +68,16 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // vm.stopPrank();
 
     //     // Accept guardian
-    //     acceptGuardian(accountSalt1);
+    //     acceptGuardian(accountAddress1, accountSalt1);
     //     GuardianStorage memory guardianStorage1 =
-    //         emailRecoveryManager.getGuardian(accountAddress, guardian1);
+    //         emailRecoveryManager.getGuardian(accountAddress1, guardian1);
     //     assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
     //     assertEq(guardianStorage1.weight, uint256(1));
 
     //     // Accept guardian
-    //     acceptGuardian(accountSalt2);
+    //     acceptGuardian(accountAddress1, accountSalt2);
     //     GuardianStorage memory guardianStorage2 =
-    //         emailRecoveryManager.getGuardian(accountAddress, guardian2);
+    //         emailRecoveryManager.getGuardian(accountAddress1, guardian2);
     //     assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
     //     assertEq(guardianStorage2.weight, uint256(2));
 
@@ -87,14 +87,14 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // handle recovery request for guardian 1
     //     handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
     //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-    //         emailRecoveryManager.getRecoveryRequest(accountAddress);
+    //         emailRecoveryManager.getRecoveryRequest(accountAddress1);
     //     assertEq(recoveryRequest.currentWeight, 1);
 
     //     // handle recovery request for guardian 2
     //     uint256 executeAfter = block.timestamp + delay;
     //     uint256 executeBefore = block.timestamp + expiry;
     //     handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
-    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
     //     assertEq(recoveryRequest.executeAfter, executeAfter);
     //     assertEq(recoveryRequest.executeBefore, executeBefore);
     //     assertEq(recoveryRequest.currentWeight, 3);
@@ -102,18 +102,18 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     vm.warp(block.timestamp + delay);
 
     //     // Complete recovery
-    //     emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+    //     emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata);
 
-    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+    //     recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
     //     assertEq(recoveryRequest.executeAfter, 0);
     //     assertEq(recoveryRequest.executeBefore, 0);
     //     assertEq(recoveryRequest.currentWeight, 0);
 
-    //     vm.prank(accountAddress);
-    //     bool isOwner = Safe(payable(accountAddress)).isOwner(newOwner);
+    //     vm.prank(accountAddress1);
+    //     bool isOwner = Safe(payable(accountAddress1)).isOwner(newOwner1);
     //     assertTrue(isOwner);
 
-    //     bool oldOwnerIsOwner = Safe(payable(accountAddress)).isOwner(owner);
+    //     bool oldOwnerIsOwner = Safe(payable(accountAddress1)).isOwner(owner1);
     //     assertFalse(oldOwnerIsOwner);
     // }
 
@@ -122,12 +122,12 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // configure and complete an entire recovery request
     //     test_Recover_RotatesOwnerSuccessfully();
     //     address router = emailRecoveryManager.computeRouterAddress(
-    //         keccak256(abi.encode(accountAddress))
+    //         keccak256(abi.encode(accountAddress1))
     //     );
-    //     IERC7579Account account = IERC7579Account(accountAddress);
+    //     IERC7579Account account = IERC7579Account(accountAddress1);
 
     //     // Uninstall module
-    //     vm.prank(accountAddress);
+    //     vm.prank(accountAddress1);
     //     account.uninstallModule(
     //         MODULE_TYPE_EXECUTOR,
     //         recoveryModuleAddress,
@@ -144,7 +144,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that recovery config has been cleared successfully
     //     IEmailRecoveryManager.RecoveryConfig memory recoveryConfig = emailRecoveryManager
-    //         .getRecoveryConfig(accountAddress);
+    //         .getRecoveryConfig(accountAddress1);
     //     assertEq(recoveryConfig.recoveryModule, address(0));
     //     assertEq(recoveryConfig.delay, 0);
     //     assertEq(recoveryConfig.expiry, 0);
@@ -152,7 +152,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // assert that the recovery request has been cleared successfully
     //     IEmailRecoveryManager.RecoveryRequest
     //         memory recoveryRequest = emailRecoveryManager.getRecoveryRequest(
-    //             accountAddress
+    //             accountAddress1
     //         );
     //     assertEq(recoveryRequest.executeAfter, 0);
     //     assertEq(recoveryRequest.executeBefore, 0);
@@ -161,7 +161,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that guardian storage has been cleared successfully for guardian 1
     //     GuardianStorage memory guardianStorage1 = emailRecoveryManager.getGuardian(
-    //         accountAddress,
+    //         accountAddress1,
     //         guardian1
     //     );
     //     assertEq(
@@ -172,7 +172,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that guardian storage has been cleared successfully for guardian 2
     //     GuardianStorage memory guardianStorage2 = emailRecoveryManager.getGuardian(
-    //         accountAddress,
+    //         accountAddress1,
     //         guardian2
     //     );
     //     assertEq(
@@ -183,7 +183,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that guardian config has been cleared successfully
     //     IEmailRecoveryManager.GuardianConfig memory guardianConfig = emailRecoveryManager
-    //         .getGuardianConfig(accountAddress);
+    //         .getGuardianConfig(accountAddress1);
     //     assertEq(guardianConfig.guardianCount, 0);
     //     assertEq(guardianConfig.totalWeight, 0);
     //     assertEq(guardianConfig.threshold, 0);
@@ -191,7 +191,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // assert that the recovery router mappings have been cleared successfully
     //     address accountForRouter = emailRecoveryManager.getAccountForRouter(router);
     //     address routerForAccount = emailRecoveryManager.getRouterForAccount(
-    //         accountAddress
+    //         accountAddress1
     //     );
     //     assertEq(accountForRouter, address(0));
     //     assertEq(routerForAccount, address(0));

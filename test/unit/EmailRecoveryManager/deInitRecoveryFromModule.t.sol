@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
@@ -47,7 +47,7 @@ contract EmailRecoveryManager_deInitRecoveryFromModule_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.calldataHashString, "");
+        assertEq(recoveryRequest.calldataHash, "");
 
         // assert that guardian storage has been cleared successfully for guardian 1
         GuardianStorage memory guardianStorage1 =

@@ -20,3 +20,4 @@ solarray/=node_modules/solarray/src/
 
 ether-email-auth/=lib/ether-email-auth/
 @zk-email/contracts/=node_modules/@zk-email/contracts/
+solidity-stringutils/=node_modules/solidity-stringutils/

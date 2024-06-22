@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EmailRecoveryModule, ValidatorList } from "src/modules/EmailRecoveryModule.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryModuleHarness is EmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;

@@ -5,7 +5,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
@@ -99,7 +99,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, string memory)
+        returns (address, bytes32)
     {
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
@@ -136,9 +136,8 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
         bytes32 calldataHash = keccak256(recoveryCallData);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
 
-        return (accountInEmail, calldataHashString);
+        return (accountInEmail, calldataHash);
     }
 
     function getPreviousOwnerInLinkedList(

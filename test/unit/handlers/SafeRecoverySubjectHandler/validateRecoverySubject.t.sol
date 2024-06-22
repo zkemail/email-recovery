@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "forge-std/console2.sol";
+import { console2 } from "forge-std/console2.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
@@ -9,17 +9,15 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase {
     using Strings for uint256;
 
-    string calldataHashString;
     bytes[] subjectParams;
 
     function setUp() public override {
         super.setUp();
 
-        calldataHashString = uint256(calldataHash).toHexString(32);
         subjectParams = new bytes[](4);
-        subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(owner);
-        subjectParams[2] = abi.encode(newOwner);
+        subjectParams[0] = abi.encode(accountAddress1);
+        subjectParams[1] = abi.encode(owner1);
+        subjectParams[2] = abi.encode(newOwner1);
         subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
@@ -85,9 +83,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateRecoverySubject_Succeeds() public view {
-        (address account, string memory calldataHash) = safeRecoverySubjectHandler
+        (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
             .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
-        assertEq(account, accountAddress);
-        assertEq(calldataHash, calldataHashString);
+        assertEq(accountFromEmail, accountAddress1);
+        assertEq(calldataHashFromEmail, calldataHash);
     }
 }
