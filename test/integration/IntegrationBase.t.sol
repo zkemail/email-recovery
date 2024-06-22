@@ -23,6 +23,7 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     AccountInstance instance;
     address accountAddress;
     address owner;
+    address anotherOwner;
     address newOwner;
 
     // recovery config
@@ -66,9 +67,11 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
 
         // create owners
         owner = vm.createWallet("owner").addr;
+        anotherOwner = vm.createWallet("anotherOwner").addr;
         newOwner = vm.createWallet("newOwner").addr;
-        address[] memory owners = new address[](1);
+        address[] memory owners = new address[](2);
         owners[0] = owner;
+        owners[1] = anotherOwner;
 
         // Deploy and fund the account
         instance = makeAccountInstance("account");

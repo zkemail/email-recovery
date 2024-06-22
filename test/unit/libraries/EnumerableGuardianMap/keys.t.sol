@@ -20,7 +20,7 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
     }
 
     function test_Keys_ReturnsEmptyArrayOfKeys() public view {
-        // TODO: It's same as test_Keys_StartsEmpty()
+        // It's same as test_Keys_StartsEmpty()
     }
 
     function test_Keys_ReturnsArrayOfKeys() public {
