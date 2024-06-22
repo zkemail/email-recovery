@@ -51,15 +51,18 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         bytes4 functionSelector = bytes4(
             keccak256(bytes("changeOwner(address,address,address)"))
         );
-        address[] memory guardians = new address[](0);
-        uint256[] memory guardianWeights = new uint256[](0);
+        address[] memory guardians = new address[](1);
+        guardians[0] = vm.envAddress("GUARDIAN0");
+        uint256[] memory guardianWeights = new uint256[](1);
+        guardianWeights[0] = 1;
+        uint threshold = 1;
         bytes memory recoveryModuleInstallData = abi.encode(
             validatorAddress,
             bytes("0"),
             functionSelector,
-            new address[](0),
-            new uint256[](0),
-            0,
+            guardians,
+            guardianWeights,
+            threshold,
             1 seconds,
             2 weeks
         );
