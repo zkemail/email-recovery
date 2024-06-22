@@ -68,7 +68,7 @@ library EnumerableGuardianMap {
         returns (bool)
     {
         uint256 length = map._keys.length();
-        if (length > MAX_NUMBER_OF_GUARDIANS) {
+        if (length >= MAX_NUMBER_OF_GUARDIANS) {
             revert MaxNumberOfGuardiansReached();
         }
         map._values[key] = value;

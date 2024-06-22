@@ -88,8 +88,7 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
 
     function test_Set_RevertWhen_MaxNumberOfGuardiansReached() public {
         bool result;
-        // TODO: Can it be acceptable to number 33?
-        for (uint256 i = 1; i <= 33; i++) {
+        for (uint256 i = 1; i <= 32; i++) {
             result = guardiansStorage[accountAddress].set({
                 key: vm.addr(i),
                 value: GuardianStorage(
