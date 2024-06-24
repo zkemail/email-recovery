@@ -9,6 +9,7 @@ import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
 import {Verifier} from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import {EmailAccountRecovery} from "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import {EmailRecoveryFactory} from "src/EmailRecoveryFactory.sol";
 import {RhinestoneModuleKit, AccountInstance} from "modulekit/ModuleKit.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
@@ -51,8 +52,15 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         bytes4 functionSelector = bytes4(
             keccak256(bytes("changeOwner(address,address,address)"))
         );
+        address managerAddr = vm.envAddress("RECOVERY_MANAGER");
+        require(managerAddr != address(0), "RECOVERY_MANAGER is required");
+        bytes32 accountSalt = vm.envBytes32("ACCOUNT_SALT");
+        require(accountSalt != bytes32(0), "ACCOUNT_SALT is required");
+        address guardianAddr = EmailAccountRecovery(managerAddr)
+            .computeEmailAuthAddress(instance.account, accountSalt);
+        console.log("Guardian's EmailAuth address", guardianAddr);
         address[] memory guardians = new address[](1);
-        guardians[0] = vm.envAddress("GUARDIAN0");
+        guardians[0] = guardianAddr;
         uint256[] memory guardianWeights = new uint256[](1);
         guardianWeights[0] = 1;
         uint threshold = 1;
