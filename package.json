@@ -25,11 +25,12 @@
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
   "dependencies": {
+    "@matterlabs/zksync-contracts": "^0.6.1",
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@rhinestone/modulekit": "v0.4.2",
     "@zk-email/contracts": "v6.0.3",
-    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git",
-    "@matterlabs/zksync-contracts": "^0.6.1"
+    "erc7579-implementation": "https://github.com/erc7579/erc7579-implementation.git",
+    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
   },
   "files": [
     "src",

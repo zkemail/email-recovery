@@ -1360,6 +1360,16 @@ enquirer@^2.3.6:
     ansi-colors "^4.1.1"
     strip-ansi "^6.0.1"
 
+"erc7579-implementation@https://github.com/erc7579/erc7579-implementation.git":
+  version "0.3.1"
+  resolved "https://github.com/erc7579/erc7579-implementation.git#4f27201bfd949348ae3a390ae5aa8e85ea19cc11"
+  dependencies:
+    "@rhinestone/sentinellist" "github:rhinestonewtf/sentinellist"
+    account-abstraction "github:eth-infinitism/account-abstraction#develop"
+    ds-test "github:dapphub/ds-test"
+    forge-std "github:foundry-rs/forge-std"
+    solady "github:vectorized/solady"
+
 "erc7579@github:erc7579/erc7579-implementation":
   version "0.3.1"
   resolved "https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/338bf8af011aa1588b5e1b2a19d1d7ead33bf779"
