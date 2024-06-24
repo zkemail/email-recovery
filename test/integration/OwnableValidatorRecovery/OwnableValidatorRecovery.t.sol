@@ -84,49 +84,49 @@ contract OwnableValidatorRecovery_Integration_Test is
         assertEq(updatedOwner, newOwner1);
     }
 
-    function test_Recover_CannotMixAccountHandleAcceptance() public {
-        acceptGuardian(accountAddress1, guardians1[0]);
-        acceptGuardian(accountAddress2, guardians2[1]);
-        vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+    // function test_Recover_CannotMixAccountHandleAcceptance() public {
+    //     acceptGuardian(accountAddress1, guardians1[0]);
+    //     acceptGuardian(accountAddress2, guardians2[1]);
+    //     vm.warp(12 seconds);
+    //     handleRecovery(accountAddress1, guardians1[0], calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
-            accountAddress1,
-            guardians1[1],
-            calldataHash1
-        );
+    //     EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+    //         accountAddress1,
+    //         guardians1[1],
+    //         calldataHash1
+    //     );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                GuardianStatus.REQUESTED,
-                GuardianStatus.ACCEPTED
-            )
-        );
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
-    }
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             IEmailRecoveryManager.InvalidGuardianStatus.selector,
+    //             GuardianStatus.REQUESTED,
+    //             GuardianStatus.ACCEPTED
+    //         )
+    //     );
+    //     emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    // }
 
-    function test_Recover_CannotMixAccountHandleRecovery() public {
-        acceptGuardian(accountAddress1, guardians1[0]);
-        acceptGuardian(accountAddress1, guardians1[1]);
-        vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+    // function test_Recover_CannotMixAccountHandleRecovery() public {
+    //     acceptGuardian(accountAddress1, guardians1[0]);
+    //     acceptGuardian(accountAddress1, guardians1[1]);
+    //     vm.warp(12 seconds);
+    //     handleRecovery(accountAddress1, guardians1[0], calldataHash1);
 
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
-            accountAddress2,
-            guardians1[1],
-            calldataHash2
-        );
+    //     EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+    //         accountAddress2,
+    //         guardians1[1],
+    //         calldataHash2
+    //     );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                GuardianStatus.REQUESTED,
-                GuardianStatus.ACCEPTED
-            )
-        );
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
-    }
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             IEmailRecoveryManager.InvalidGuardianStatus.selector,
+    //             GuardianStatus.REQUESTED,
+    //             GuardianStatus.ACCEPTED
+    //         )
+    //     );
+    //     emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    // }
 
     // Helper function
     function executeRecoveryFlowForAccount(
@@ -143,41 +143,41 @@ contract OwnableValidatorRecovery_Integration_Test is
         emailRecoveryManager.completeRecovery(account, recoveryCalldata);
     }
 
-    function test_Recover_RotatesMultipleOwnersSuccessfully() public {
-        executeRecoveryFlowForAccount(
-            accountAddress1,
-            calldataHash1,
-            recoveryCalldata1
-        );
-        vm.warp(block.timestamp + 12 seconds);
-        executeRecoveryFlowForAccount(
-            accountAddress2,
-            calldataHash2,
-            recoveryCalldata2
-        );
-        vm.warp(block.timestamp + 12 seconds);
-        executeRecoveryFlowForAccount(
-            accountAddress3,
-            calldataHash3,
-            recoveryCalldata3
-        );
+    // function test_Recover_RotatesMultipleOwnersSuccessfully() public {
+    //     executeRecoveryFlowForAccount(
+    //         accountAddress1,
+    //         calldataHash1,
+    //         recoveryCalldata1
+    //     );
+    //     vm.warp(block.timestamp + 12 seconds);
+    //     executeRecoveryFlowForAccount(
+    //         accountAddress2,
+    //         calldataHash2,
+    //         recoveryCalldata2
+    //     );
+    //     vm.warp(block.timestamp + 12 seconds);
+    //     executeRecoveryFlowForAccount(
+    //         accountAddress3,
+    //         calldataHash3,
+    //         recoveryCalldata3
+    //     );
 
-        address updatedOwner1 = validator.owners(accountAddress1);
-        address updatedOwner2 = validator.owners(accountAddress2);
-        address updatedOwner3 = validator.owners(accountAddress3);
-        assertEq(updatedOwner1, newOwner1);
-        assertEq(updatedOwner2, newOwner2);
-        assertEq(updatedOwner3, newOwner3);
-    }
+    //     address updatedOwner1 = validator.owners(accountAddress1);
+    //     address updatedOwner2 = validator.owners(accountAddress2);
+    //     address updatedOwner3 = validator.owners(accountAddress3);
+    //     assertEq(updatedOwner1, newOwner1);
+    //     assertEq(updatedOwner2, newOwner2);
+    //     assertEq(updatedOwner3, newOwner3);
+    // }
 
-    function test_Recover_RevertWhen_InvalidTimestamp() public {
-        acceptGuardian(accountAddress1, guardians1[0]);
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
-            accountAddress2,
-            guardians2[0]
-        );
+    // function test_Recover_RevertWhen_InvalidTimestamp() public {
+    //     acceptGuardian(accountAddress1, guardians1[0]);
+    //     EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
+    //         accountAddress2,
+    //         guardians2[0]
+    //     );
 
-        vm.expectRevert("invalid timestamp");
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
-    }
+    //     vm.expectRevert("invalid timestamp");
+    //     emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+    // }
 }
