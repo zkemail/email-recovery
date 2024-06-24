@@ -11,11 +11,11 @@ env:
 
 jobs:
   build:
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@e78620dc"
 
   test:
     needs: ["build"]
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test.yaml@main"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test.yaml@e78620dc"
     with:
       foundry-fuzz-runs: 5000
       foundry-profile: "test"
