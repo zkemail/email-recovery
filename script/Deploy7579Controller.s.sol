@@ -21,7 +21,7 @@ contract Deploy7579ControllerScript is Script {
 
         if (verifier == address(0)) {
             verifier = address(new Verifier());
-            vm.setEnv("VERIFIER", vm.toString(verifier));
+            // vm.setEnv("VERIFIER", vm.toString(verifier));
             console.log("Deployed Verifier at", verifier);
         }
 
@@ -33,25 +33,25 @@ contract Deploy7579ControllerScript is Script {
             dkimRegistry = address(
                 new ECDSAOwnedDKIMRegistry(dkimRegistrySigner)
             );
-            vm.setEnv("DKIM_REGISTRY", vm.toString(dkimRegistry));
+            // vm.setEnv("DKIM_REGISTRY", vm.toString(dkimRegistry));
             console.log("Deployed DKIM Registry at", dkimRegistry);
         }
 
         if (emailAuthImpl == address(0)) {
             emailAuthImpl = address(new EmailAuth());
-            vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(emailAuthImpl));
+            // vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(emailAuthImpl));
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
-        vm.setEnv(
-            "RECOVERY_HANDLER",
-            vm.toString(address(emailRecoveryHandler))
-        );
-        address _factory = vm.envOr("FACTORY", address(0));
+        // vm.setEnv(
+        //     "RECOVERY_HANDLER",
+        //     vm.toString(address(emailRecoveryHandler))
+        // );
+        address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryFactory());
-            vm.setEnv("FACTORY", vm.toString(_factory));
+            // vm.setEnv("RECOVERY_FACTORY", vm.toString(_factory));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
         EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
@@ -61,8 +61,8 @@ contract Deploy7579ControllerScript is Script {
             emailAuthImpl,
             address(emailRecoveryHandler)
         );
-        vm.setEnv("RECOVERY_MANAGER", vm.toString(manager));
-        vm.setEnv("RECOVERY_MODULE", vm.toString(module));
+        // vm.setEnv("RECOVERY_MANAGER", vm.toString(manager));
+        // vm.setEnv("RECOVERY_MODULE", vm.toString(module));
 
         console.log(
             "Deployed Email Recovery Handler at",

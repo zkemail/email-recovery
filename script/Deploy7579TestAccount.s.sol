@@ -29,14 +29,14 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         vm.startBroadcast(privKey);
         address deployer = vm.addr(privKey);
 
-        AccountInstance memory instance = makeAccountInstance(
-            vm.envBytes32("ACCOUNT_SALT")
-        );
+        bytes32 accountSalt = vm.envBytes32("ACCOUNT_SALT");
+        require(accountSalt != bytes32(0), "ACCOUNT_SALT is required");
+        AccountInstance memory instance = makeAccountInstance(accountSalt);
 
         address validatorAddress = vm.envOr("VALIDATOR", address(0));
         if (validatorAddress == address(0)) {
             validatorAddress = address(new OwnableValidator());
-            vm.setEnv("VALIDATOR", vm.toString(validatorAddress));
+            // vm.setEnv("VALIDATOR", vm.toString(validatorAddress));
             console.log("Deployed Ownable Validator at", validatorAddress);
         }
         OwnableValidator validator = OwnableValidator(validatorAddress);
@@ -54,8 +54,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         );
         address managerAddr = vm.envAddress("RECOVERY_MANAGER");
         require(managerAddr != address(0), "RECOVERY_MANAGER is required");
-        bytes32 accountSalt = vm.envBytes32("ACCOUNT_SALT");
-        require(accountSalt != bytes32(0), "ACCOUNT_SALT is required");
+
         address guardianAddr = EmailAccountRecovery(managerAddr)
             .computeEmailAuthAddress(instance.account, accountSalt);
         console.log("Guardian's EmailAuth address", guardianAddr);
