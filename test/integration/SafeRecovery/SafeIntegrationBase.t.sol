@@ -1,32 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
+import {console2} from "forge-std/console2.sol";
 
-import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
-import {
-    SafeProxy,
-    SafeProxyFactory
-} from "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
-import { Safe7579Launchpad } from "safe7579/Safe7579Launchpad.sol";
-import { IERC7484 } from "safe7579/interfaces/IERC7484.sol";
-import { Safe7579 } from "safe7579/Safe7579.sol";
-import { ModuleInit } from "safe7579/DataTypes.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
-import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
-import { ModeLib } from "erc7579/lib/ModeLib.sol";
-import { ISafe7579 } from "safe7579/ISafe7579.sol";
-import { PackedUserOperation } from "modulekit/external/ERC4337.sol";
-import { etchEntrypoint, IEntryPoint } from "modulekit/test/predeploy/EntryPoint.sol";
-import { MockExecutor, MockTarget } from "modulekit/Mocks.sol";
-import { MockValidator } from "module-bases/mocks/MockValidator.sol";
-import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { Solarray } from "solarray/Solarray.sol";
+import {Safe} from "@safe-global/safe-contracts/contracts/Safe.sol";
+import {SafeProxy, SafeProxyFactory} from "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
+import {Safe7579Launchpad} from "safe7579/Safe7579Launchpad.sol";
+import {IERC7484} from "safe7579/interfaces/IERC7484.sol";
+import {Safe7579} from "safe7579/Safe7579.sol";
+import {ModuleInit} from "safe7579/DataTypes.sol";
+import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
+import {ExecutionLib} from "erc7579/lib/ExecutionLib.sol";
+import {ModeLib} from "erc7579/lib/ModeLib.sol";
+import {ISafe7579} from "safe7579/ISafe7579.sol";
+import {PackedUserOperation} from "modulekit/external/ERC4337.sol";
+import {etchEntrypoint, IEntryPoint} from "modulekit/test/predeploy/EntryPoint.sol";
+import {MockExecutor, MockTarget} from "modulekit/Mocks.sol";
+import {MockValidator} from "module-bases/mocks/MockValidator.sol";
+import {EmailAuthMsg, EmailProof} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import {Solarray} from "solarray/Solarray.sol";
 
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { MockRegistry } from "src/test/MockRegistry.sol";
-import { IntegrationBase } from "../IntegrationBase.t.sol";
+import {EmailRecoveryManager} from "src/EmailRecoveryManager.sol";
+import {EmailRecoverySubjectHandler} from "src/handlers/EmailRecoverySubjectHandler.sol";
+import {MockRegistry} from "src/test/MockRegistry.sol";
+import {IntegrationBase} from "../IntegrationBase.t.sol";
 
 abstract contract SafeIntegrationBase is IntegrationBase {
     EmailRecoverySubjectHandler emailRecoveryHandler;
@@ -61,14 +58,45 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         accountAddress1 = address(safe);
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
-
-        guardians = new address[](3);
-        guardians[0] = guardian1;
-        guardians[1] = guardian2;
-        guardians[2] = guardian3;
+        guardians1 = new address[](3);
+        guardians1[0] = emailRecoveryManager.computeEmailAuthAddress(
+            instance1.account,
+            accountSalt1
+        );
+        guardians1[1] = emailRecoveryManager.computeEmailAuthAddress(
+            instance1.account,
+            accountSalt2
+        );
+        guardians1[2] = emailRecoveryManager.computeEmailAuthAddress(
+            instance1.account,
+            accountSalt3
+        );
+        guardians2 = new address[](3);
+        guardians2[0] = emailRecoveryManager.computeEmailAuthAddress(
+            instance2.account,
+            accountSalt1
+        );
+        guardians2[1] = emailRecoveryManager.computeEmailAuthAddress(
+            instance2.account,
+            accountSalt2
+        );
+        guardians2[2] = emailRecoveryManager.computeEmailAuthAddress(
+            instance2.account,
+            accountSalt3
+        );
+        guardians3 = new address[](3);
+        guardians3[0] = emailRecoveryManager.computeEmailAuthAddress(
+            instance3.account,
+            accountSalt1
+        );
+        guardians3[1] = emailRecoveryManager.computeEmailAuthAddress(
+            instance3.account,
+            accountSalt2
+        );
+        guardians3[2] = emailRecoveryManager.computeEmailAuthAddress(
+            instance3.account,
+            accountSalt3
+        );
     }
 
     /**
@@ -90,52 +118,69 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         bytes32 salt;
 
         ModuleInit[] memory validators = new ModuleInit[](1);
-        validators[0] = ModuleInit({ module: address(defaultValidator), initData: bytes("") });
+        validators[0] = ModuleInit({
+            module: address(defaultValidator),
+            initData: bytes("")
+        });
         ModuleInit[] memory executors = new ModuleInit[](1);
-        executors[0] = ModuleInit({ module: address(defaultExecutor), initData: bytes("") });
+        executors[0] = ModuleInit({
+            module: address(defaultExecutor),
+            initData: bytes("")
+        });
         ModuleInit[] memory fallbacks = new ModuleInit[](0);
         ModuleInit[] memory hooks = new ModuleInit[](0);
 
-        Safe7579Launchpad.InitData memory initData = Safe7579Launchpad.InitData({
-            singleton: address(singleton),
-            owners: Solarray.addresses(owner1),
-            threshold: 1,
-            setupTo: address(launchpad),
-            setupData: abi.encodeCall(
-                Safe7579Launchpad.initSafe7579,
-                (
-                    address(safe7579),
-                    executors,
-                    fallbacks,
-                    hooks,
-                    Solarray.addresses(makeAddr("attester1"), makeAddr("attester2")),
-                    2
+        Safe7579Launchpad.InitData memory initData = Safe7579Launchpad
+            .InitData({
+                singleton: address(singleton),
+                owners: Solarray.addresses(owner1),
+                threshold: 1,
+                setupTo: address(launchpad),
+                setupData: abi.encodeCall(
+                    Safe7579Launchpad.initSafe7579,
+                    (
+                        address(safe7579),
+                        executors,
+                        fallbacks,
+                        hooks,
+                        Solarray.addresses(
+                            makeAddr("attester1"),
+                            makeAddr("attester2")
+                        ),
+                        2
+                    )
+                ),
+                safe7579: ISafe7579(safe7579),
+                validators: validators,
+                callData: abi.encodeCall(
+                    IERC7579Account.execute,
+                    (
+                        ModeLib.encodeSimpleSingle(),
+                        ExecutionLib.encodeSingle({
+                            target: address(target),
+                            value: 0,
+                            callData: abi.encodeCall(MockTarget.set, (1337))
+                        })
+                    )
                 )
-            ),
-            safe7579: ISafe7579(safe7579),
-            validators: validators,
-            callData: abi.encodeCall(
-                IERC7579Account.execute,
-                (
-                    ModeLib.encodeSimpleSingle(),
-                    ExecutionLib.encodeSingle({
-                        target: address(target),
-                        value: 0,
-                        callData: abi.encodeCall(MockTarget.set, (1337))
-                    })
-                )
-            )
-        });
+            });
         bytes32 initHash = launchpad.hash(initData);
 
-        bytes memory factoryInitializer =
-            abi.encodeCall(Safe7579Launchpad.preValidationSetup, (initHash, address(0), ""));
+        bytes memory factoryInitializer = abi.encodeCall(
+            Safe7579Launchpad.preValidationSetup,
+            (initHash, address(0), "")
+        );
 
-        PackedUserOperation memory userOp =
-            getDefaultUserOp(address(safe), address(defaultValidator));
+        PackedUserOperation memory userOp = getDefaultUserOp(
+            address(safe),
+            address(defaultValidator)
+        );
 
         {
-            userOp.callData = abi.encodeCall(Safe7579Launchpad.setupSafe, (initData));
+            userOp.callData = abi.encodeCall(
+                Safe7579Launchpad.setupSafe,
+                (initData)
+            );
             userOp.initCode = _initCode(factoryInitializer, salt);
         }
 
@@ -149,7 +194,9 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         userOp.sender = predict;
         assertEq(userOp.sender, predict);
         userOp.signature = abi.encodePacked(
-            uint48(0), uint48(type(uint48).max), hex"4141414141414141414141414141414141"
+            uint48(0),
+            uint48(type(uint48).max),
+            hex"4141414141414141414141414141414141"
         );
 
         entrypoint.getUserOpHash(userOp);
@@ -165,11 +212,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     function _initCode(
         bytes memory initializer,
         bytes32 salt
-    )
-        internal
-        view
-        returns (bytes memory initCode)
-    {
+    ) internal view returns (bytes memory initCode) {
         initCode = abi.encodePacked(
             address(safeProxyFactory),
             abi.encodeCall(
@@ -182,17 +225,15 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     function getDefaultUserOp(
         address account,
         address validator
-    )
-        internal
-        view
-        returns (PackedUserOperation memory userOp)
-    {
+    ) internal view returns (PackedUserOperation memory userOp) {
         userOp = PackedUserOperation({
             sender: account,
             nonce: safe7579.getNonce(account, validator),
             initCode: "",
             callData: "",
-            accountGasLimits: bytes32(abi.encodePacked(uint128(2e6), uint128(2e6))),
+            accountGasLimits: bytes32(
+                abi.encodePacked(uint128(2e6), uint128(2e6))
+            ),
             preVerificationGas: 2e6,
             gasFees: bytes32(abi.encodePacked(uint128(2e6), uint128(2e6))),
             paymasterAndData: bytes(""),
@@ -204,11 +245,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         string memory subject,
         bytes32 nullifier,
         bytes32 accountSalt
-    )
-        public
-        view
-        returns (EmailProof memory)
-    {
+    ) public view returns (EmailProof memory) {
         EmailProof memory emailProof;
         emailProof.domainName = "gmail.com";
         emailProof.publicKeyHash = bytes32(
@@ -232,18 +269,24 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         // certain changes
         // console2.log("accountAddress1: ", accountAddress1);
 
-        string memory subject =
-            "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
+        string
+            memory subject = "Accept guardian request for 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095";
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
         uint256 templateIdx = 0;
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(
+            subject,
+            nullifier,
+            accountSalt
+        );
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress1);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeAcceptanceTemplateId(
+                templateIdx
+            ),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
@@ -255,9 +298,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         address recoveryModule,
         bytes32 calldataHash,
         bytes32 accountSalt
-    )
-        public
-    {
+    ) public {
         // Uncomment if getting "invalid subject" errors. Sometimes the subject needs updating
         // after
         // certain changes
@@ -267,8 +308,8 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         console2.logBytes32(calldataHash);
 
         // TODO: Ideally do this dynamically
-        string memory calldataHashString =
-            "0x4e66542ab78fcc7a2341586b67800e82b975078517d7d692e2aa98d2696c51d0";
+        string
+            memory calldataHashString = "0x4e66542ab78fcc7a2341586b67800e82b975078517d7d692e2aa98d2696c51d0";
 
         string memory subject = string.concat(
             "Recover account 0xE760ccaE42b4EA7a93A4CfA75BC649aaE1033095 via recovery module 0xD7F74A3A1d35495c1537f5377590e44A2bf44122 using recovery hash ",
@@ -277,7 +318,11 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(
+            subject,
+            nullifier,
+            accountSalt
+        );
 
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress1);
@@ -285,7 +330,9 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeRecoveryTemplateId(
+                templateIdx
+            ),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof

@@ -28,7 +28,8 @@
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@rhinestone/modulekit": "v0.4.2",
     "@zk-email/contracts": "v6.0.3",
-    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
+    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git",
+    "@matterlabs/zksync-contracts": "^0.6.1"
   },
   "files": [
     "src",
