@@ -2,13 +2,18 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import {UnitBase} from "../../UnitBase.t.sol";
-import {EnumerableGuardianMap, GuardianStorage, GuardianStatus} from "../../../../src/libraries/EnumerableGuardianMap.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
+import {
+    EnumerableGuardianMap,
+    GuardianStorage,
+    GuardianStatus
+} from "../../../../src/libraries/EnumerableGuardianMap.sol";
 
 contract EnumerableGuardianMap_remove_Test is UnitBase {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
-    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian)
-        internal guardiansStorage;
+
+    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian) internal
+        guardiansStorage;
 
     function setUp() public override {
         super.setUp();
@@ -24,8 +29,7 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
         result = guardiansStorage[accountAddress].remove(guardian1);
         assertEq(result, true);
         require(
-            guardiansStorage[accountAddress]._values[guardian1].status ==
-                GuardianStatus.NONE,
+            guardiansStorage[accountAddress]._values[guardian1].status == GuardianStatus.NONE,
             "Expected status to be NONE"
         );
     }
@@ -113,18 +117,15 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
 
         // [1,3]
         require(
-            guardiansStorage[accountAddress]._values[guardian1].status ==
-                GuardianStatus.REQUESTED,
+            guardiansStorage[accountAddress]._values[guardian1].status == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
         require(
-            guardiansStorage[accountAddress]._values[guardian2].status ==
-                GuardianStatus.NONE,
+            guardiansStorage[accountAddress]._values[guardian2].status == GuardianStatus.NONE,
             "Expected status to be NONE"
         );
         require(
-            guardiansStorage[accountAddress]._values[guardian3].status ==
-                GuardianStatus.REQUESTED,
+            guardiansStorage[accountAddress]._values[guardian3].status == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
     }

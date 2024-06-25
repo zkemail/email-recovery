@@ -44,12 +44,11 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     }
 
     function test_ConfigureRecovery_Succeeds() public {
-        vm.prank(accountAddress);
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
         // Install recovery module - configureRecovery is called on `onInstall`
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryConfigured(accountAddress, guardians.length);
+        emit IEmailRecoveryManager.RecoveryConfigured(instance.account, guardians.length);
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
@@ -64,6 +63,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
                 expiry
             )
         });
+        console2.log("foooo", guardians.length);
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryManager.getRecoveryConfig(accountAddress);

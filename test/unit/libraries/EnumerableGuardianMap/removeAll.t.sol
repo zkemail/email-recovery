@@ -2,13 +2,18 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import {UnitBase} from "../../UnitBase.t.sol";
-import {EnumerableGuardianMap, GuardianStorage, GuardianStatus} from "../../../../src/libraries/EnumerableGuardianMap.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
+import {
+    EnumerableGuardianMap,
+    GuardianStorage,
+    GuardianStatus
+} from "../../../../src/libraries/EnumerableGuardianMap.sol";
 
 contract EnumerableGuardianMap_removeAll_Test is UnitBase {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
-    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian)
-        internal guardiansStorage;
+
+    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian) internal
+        guardiansStorage;
 
     function setUp() public override {
         super.setUp();
@@ -20,10 +25,7 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         for (uint256 i = 1; i <= 3; i++) {
             result = guardiansStorage[accountAddress].set({
                 key: vm.addr(i),
-                value: GuardianStorage(
-                    GuardianStatus.REQUESTED,
-                    guardianWeights[1]
-                )
+                value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
@@ -34,8 +36,7 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         guardiansStorage[accountAddress].removeAll(addresses);
         for (uint256 i = 1; i <= 3; i++) {
             require(
-                guardiansStorage[accountAddress]._values[vm.addr(i)].status ==
-                    GuardianStatus.NONE,
+                guardiansStorage[accountAddress]._values[vm.addr(i)].status == GuardianStatus.NONE,
                 "Expected status to be NONE"
             );
         }
@@ -44,51 +45,32 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
     function test_RemoveAll_RemovesMaxNumberOfValues() public {
         bool result;
 
-        for (
-            uint256 i = 1;
-            i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS;
-            i++
-        ) {
+        for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             result = guardiansStorage[accountAddress].set({
                 key: vm.addr(i),
-                value: GuardianStorage(
-                    GuardianStatus.REQUESTED,
-                    guardianWeights[1]
-                )
+                value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
 
-        address[] memory addresses = new address[](
-            EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS
-        );
-        for (
-            uint256 i = 0;
-            i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS;
-            i++
-        ) {
+        address[] memory addresses = new address[](EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS);
+        for (uint256 i = 0; i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             addresses[i] = vm.addr(i + 1);
         }
         guardiansStorage[accountAddress].removeAll(addresses);
         for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             require(
-                guardiansStorage[accountAddress]._values[vm.addr(i)].status ==
-                    GuardianStatus.NONE,
+                guardiansStorage[accountAddress]._values[vm.addr(i)].status == GuardianStatus.NONE,
                 "Expected status to be NONE"
             );
         }
     }
 
     function test_RemoveAll_RevertWhen_TooManyValuesToRemove() public {
-        address[] memory addresses = new address[](
-            EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS + 1
-        );
+        address[] memory addresses =
+            new address[](EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS + 1);
 
-        for (
-            uint256 i = 0;
-            i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS + 1;
-            i++
-        ) {
+        for (uint256 i = 0; i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS + 1; i++) {
             addresses[i] = vm.addr(i + 1);
         }
         vm.expectRevert(EnumerableGuardianMap.TooManyValuesToRemove.selector);
