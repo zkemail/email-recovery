@@ -186,9 +186,9 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             initCode: initCode,
             callData: userOpCalldata,
             accountGasLimits: bytes32(
-                abi.encodePacked(uint128(1e7), uint128(1e8))
+                abi.encodePacked(uint128(1e6), uint128(3e5))
             ),
-            preVerificationGas: 1e7,
+            preVerificationGas: 1e5,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
             signature: bytes("")
@@ -205,7 +205,10 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         console.log("init userOps are ready");
-        IEntryPoint(ENTRYPOINT_ADDR).handleOps(userOps, payable(deployer));
+        IEntryPoint(ENTRYPOINT_ADDR).handleOps{gas: 1e6}(
+            userOps,
+            payable(deployer)
+        );
         console.log("init UserOps are executed");
 
         // set threshold to 1.
@@ -232,9 +235,9 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             initCode: bytes(""),
             callData: userOpCalldata,
             accountGasLimits: bytes32(
-                abi.encodePacked(uint128(1e7), uint128(1e8))
+                abi.encodePacked(uint128(1e5), uint128(1e6))
             ),
-            preVerificationGas: 1e7,
+            preVerificationGas: 1e5,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
             signature: bytes("")
@@ -250,7 +253,10 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         console.log("changeThreshold userOps are ready");
-        IEntryPoint(ENTRYPOINT_ADDR).handleOps(userOps, payable(deployer));
+        IEntryPoint(ENTRYPOINT_ADDR).handleOps{gas: 3e6}(
+            userOps,
+            payable(deployer)
+        );
         console.log("changeThreshold UserOps are executed");
 
         // AccountInstance memory instance = makeAccountInstance(accountSalt);
