@@ -187,7 +187,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             initCode: initCode,
             callData: userOpCalldata,
             accountGasLimits: bytes32(
-                abi.encodePacked(uint128(1e7), uint128(1e7))
+                abi.encodePacked(uint128(1e7), uint128(1e5))
             ),
             preVerificationGas: 1e7,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
