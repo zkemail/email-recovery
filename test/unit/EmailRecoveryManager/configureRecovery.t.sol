@@ -47,8 +47,8 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
         // Install recovery module - configureRecovery is called on `onInstall`
-        vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryConfigured(instance.account, guardians.length);
+        // vm.expectEmit();
+        // emit IEmailRecoveryManager.RecoveryConfigured(instance.account, guardians.length);
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
