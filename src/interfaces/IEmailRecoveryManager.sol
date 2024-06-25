@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
+import {GuardianStorage, GuardianStatus} from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
     /*//////////////////////////////////////////////////////////////////////////
@@ -14,11 +14,11 @@ interface IEmailRecoveryManager {
      */
     struct RecoveryConfig {
         uint256 delay; // the time from when recovery is started until the recovery request can be
-            // executed
+        // executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes
-            // invalid. The recovery expiry encourages the timely execution of successful recovery
-            // attempts, and reduces the risk of unauthorized access through stale or outdated
-            // requests.
+        // invalid. The recovery expiry encourages the timely execution of successful recovery
+        // attempts, and reduces the risk of unauthorized access through stale or outdated
+        // requests.
     }
 
     /**
@@ -31,7 +31,7 @@ interface IEmailRecoveryManager {
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
         bytes32 calldataHash; // the keccak256 hash of the calldata used to execute the
-            // recovery attempt
+        // recovery attempt
     }
 
     /**
@@ -42,6 +42,7 @@ interface IEmailRecoveryManager {
         uint256 guardianCount;
         uint256 totalWeight;
         uint256 threshold;
+        bool initialized;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -49,9 +50,17 @@ interface IEmailRecoveryManager {
     //////////////////////////////////////////////////////////////////////////*/
 
     event RecoveryConfigured(address indexed account, uint256 guardianCount);
-    event RecoveryConfigUpdated(address indexed account, uint256 delay, uint256 expiry);
+    event RecoveryConfigUpdated(
+        address indexed account,
+        uint256 delay,
+        uint256 expiry
+    );
     event GuardianAccepted(address indexed account, address indexed guardian);
-    event RecoveryProcessed(address indexed account, uint256 executeAfter, uint256 executeBefore);
+    event RecoveryProcessed(
+        address indexed account,
+        uint256 executeAfter,
+        uint256 executeBefore
+    );
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
     event RecoveryDeInitialized(address indexed account);
@@ -71,7 +80,8 @@ interface IEmailRecoveryManager {
     error RecoveryWindowTooShort();
     error InvalidTemplateIndex();
     error InvalidGuardianStatus(
-        GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
+        GuardianStatus guardianStatus,
+        GuardianStatus expectedGuardianStatus
     );
     error InvalidAccountAddress();
     error NoRecoveryConfigured();
@@ -85,9 +95,13 @@ interface IEmailRecoveryManager {
                                     FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*/
 
-    function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
+    function getRecoveryConfig(
+        address account
+    ) external view returns (RecoveryConfig memory);
 
-    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
+    function getRecoveryRequest(
+        address account
+    ) external view returns (RecoveryRequest memory);
 
     function configureRecovery(
         address[] memory guardians,
@@ -95,10 +109,11 @@ interface IEmailRecoveryManager {
         uint256 threshold,
         uint256 delay,
         uint256 expiry
-    )
-        external;
+    ) external;
 
-    function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
+    function updateRecoveryConfig(
+        RecoveryConfig calldata recoveryConfig
+    ) external;
 
     function deInitRecoveryFromModule(address account) external;
 
@@ -108,15 +123,14 @@ interface IEmailRecoveryManager {
                                 GUARDIAN LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
-    function getGuardianConfig(address account) external view returns (GuardianConfig memory);
+    function getGuardianConfig(
+        address account
+    ) external view returns (GuardianConfig memory);
 
     function getGuardian(
         address account,
         address guardian
-    )
-        external
-        view
-        returns (GuardianStorage memory);
+    ) external view returns (GuardianStorage memory);
 
     function addGuardian(address guardian, uint256 weight) external;
 

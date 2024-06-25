@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EnumerableGuardianMap, GuardianStorage, GuardianStatus } from "./EnumerableGuardianMap.sol";
-import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
+import {EnumerableGuardianMap, GuardianStorage, GuardianStatus} from "./EnumerableGuardianMap.sol";
+import {IEmailRecoveryManager} from "../interfaces/IEmailRecoveryManager.sol";
 
 library GuardianUtils {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
@@ -22,34 +22,31 @@ library GuardianUtils {
     error UnauthorizedAccountForGuardian();
 
     function getGuardianStorage(
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
         address account,
         address guardian
-    )
-        internal
-        view
-        returns (GuardianStorage memory)
-    {
+    ) internal view returns (GuardianStorage memory) {
         return guardiansStorage[account].get(guardian);
     }
 
     function setupGuardians(
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => IEmailRecoveryManager.GuardianConfig)
+            storage guardianConfigs,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
         address account,
         address[] memory guardians,
         uint256[] memory weights,
         uint256 threshold
-    )
-        internal
-    {
+    ) internal {
         uint256 guardianCount = guardians.length;
 
         if (guardianCount != weights.length) {
             revert IncorrectNumberOfWeights();
         }
 
-        if (threshold == 0) {
+        if (threshold == 0 && guardianCount > 0) {
             revert ThresholdCannotBeZero();
         }
 
@@ -69,7 +66,8 @@ library GuardianUtils {
                 revert InvalidGuardianWeight();
             }
 
-            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+            GuardianStorage memory guardianStorage = guardiansStorage[account]
+                .get(guardian);
             if (guardianStorage.status != GuardianStatus.NONE) {
                 revert AddressAlreadyGuardian();
             }
@@ -85,19 +83,24 @@ library GuardianUtils {
             revert ThresholdCannotExceedTotalWeight();
         }
 
-        guardianConfigs[account] =
-            IEmailRecoveryManager.GuardianConfig(guardianCount, totalWeight, threshold);
+        guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig(
+            guardianCount,
+            totalWeight,
+            threshold,
+            true
+        );
     }
 
     function updateGuardianStatus(
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
         address account,
         address guardian,
         GuardianStatus newStatus
-    )
-        internal
-    {
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+    ) internal {
+        GuardianStorage memory guardianStorage = guardiansStorage[account].get(
+            guardian
+        );
         if (newStatus == guardianStorage.status) {
             revert StatusCannotBeTheSame();
         }
@@ -109,17 +112,17 @@ library GuardianUtils {
     }
 
     function addGuardian(
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
+        mapping(address => IEmailRecoveryManager.GuardianConfig)
+            storage guardianConfigs,
         address account,
         address guardian,
         uint256 weight
-    )
-        internal
-    {
-        // Threshold can only be 0 at initialization.
+    ) internal {
+        // Initialized can only be false at initialization.
         // Check ensures that setup function should be called first
-        if (guardianConfigs[account].threshold == 0) {
+        if (!guardianConfigs[account].initialized) {
             revert SetupNotCalled();
         }
 
@@ -127,7 +130,9 @@ library GuardianUtils {
             revert InvalidGuardianAddress();
         }
 
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+        GuardianStorage memory guardianStorage = guardiansStorage[account].get(
+            guardian
+        );
 
         if (guardianStorage.status != GuardianStatus.NONE) {
             revert AddressAlreadyGuardian();
@@ -148,15 +153,18 @@ library GuardianUtils {
     }
 
     function removeGuardian(
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
+        mapping(address => IEmailRecoveryManager.GuardianConfig)
+            storage guardianConfigs,
         address account,
         address guardian
-    )
-        internal
-    {
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig = guardianConfigs[account];
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+    ) internal {
+        IEmailRecoveryManager.GuardianConfig
+            memory guardianConfig = guardianConfigs[account];
+        GuardianStorage memory guardianStorage = guardiansStorage[account].get(
+            guardian
+        );
 
         bool isGuardian = guardianStorage.status != GuardianStatus.NONE;
         if (!isGuardian) {
@@ -164,7 +172,10 @@ library GuardianUtils {
         }
 
         // Only allow guardian removal if threshold can still be reached.
-        if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {
+        if (
+            guardianConfig.totalWeight - guardianStorage.weight <
+            guardianConfig.threshold
+        ) {
             revert ThresholdCannotExceedTotalWeight();
         }
 
@@ -176,24 +187,22 @@ library GuardianUtils {
     }
 
     function removeAllGuardians(
-        mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
+        mapping(address => EnumerableGuardianMap.AddressToGuardianMap)
+            storage guardiansStorage,
         address account
-    )
-        internal
-    {
+    ) internal {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
     }
 
     function changeThreshold(
-        mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
+        mapping(address => IEmailRecoveryManager.GuardianConfig)
+            storage guardianConfigs,
         address account,
         uint256 threshold
-    )
-        internal
-    {
-        // Threshold can only be 0 at initialization.
+    ) internal {
+        // Initialized can only be false at initialization.
         // Check ensures that setup function should be called first
-        if (guardianConfigs[account].threshold == 0) {
+        if (!guardianConfigs[account].initialized) {
             revert SetupNotCalled();
         }
 
