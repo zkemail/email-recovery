@@ -19,7 +19,8 @@ import {ModuleKitHelpers, ModuleKitUserOp} from "modulekit/ModuleKit.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERC7579Account} from "erc7579-implementation/src/interfaces/IERC7579Account.sol";
 import {IEntryPoint, ENTRYPOINT_ADDR} from "erc7579-implementation/test/dependencies/EntryPoint.sol";
-// import {EntryPoint} from "account-abstraction/core/EntryPoint.sol";
+import {NonceManager} from "account-abstraction/core/NonceManager.sol";
+import {StakeManager} from "account-abstraction/core/StakeManager.sol";
 import {PackedUserOperation} from "erc7579-implementation/src/interfaces/IERC4337Account.sol";
 import {MSABasic} from "erc7579-implementation/src/MSABasic.sol";
 import {MSAFactory} from "erc7579-implementation/src/MSAFactory.sol";
@@ -159,6 +160,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         );
         account = msaFactory.getAddress(accountSalt, _initCode);
         console.log("Account address", account);
+        console.log("Account code size", account.code.length);
         initCode = abi.encodePacked(
             address(msaFactory),
             abi.encodeWithSelector(
@@ -178,15 +180,16 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
                 )
             )
         );
+        console.log("nonce", getNonce(account, validatorAddr));
         userOp = PackedUserOperation({
             sender: account,
             nonce: getNonce(account, validatorAddr),
             initCode: initCode,
             callData: userOpCalldata,
             accountGasLimits: bytes32(
-                abi.encodePacked(uint128(1e6), uint128(1e6))
+                abi.encodePacked(uint128(1e7), uint128(1e7))
             ),
-            preVerificationGas: 1e6,
+            preVerificationGas: 1e7,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
             signature: bytes("")
@@ -203,6 +206,9 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         console.log("userOps are ready");
+        // StakeManager(payable(ENTRYPOINT_ADDR)).depositTo{value: 0.01 ether}(
+        //     account
+        // );
         IEntryPoint(ENTRYPOINT_ADDR).handleOps(userOps, payable(deployer));
         console.log("UserOps are executed");
 
@@ -254,6 +260,14 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         address validator
     ) internal returns (uint256 nonce) {
         uint192 key = uint192(bytes24(bytes20(address(validator))));
+        // console.log("shifted key", uint256(key) << 64);
+        // console.log(
+        //     "raw nonce",
+        //     NonceManager(ENTRYPOINT_ADDR).nonceSequenceNumber(
+        //         address(account),
+        //         key
+        //     )
+        // );
         nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(account), key);
     }
 }
