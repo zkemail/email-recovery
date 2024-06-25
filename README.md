@@ -9,6 +9,7 @@ Account recovery has traditionally been one of the most complex UX hurdles that 
 
 ```shell
 pnpm install
+forge install
 ```
 
 ### Build

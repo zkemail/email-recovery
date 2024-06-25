@@ -92,14 +92,13 @@ abstract contract SafeUnitBase is IntegrationBase {
         calldataHash = keccak256(recoveryCalldata);
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
-
-        guardians = new address[](3);
-        guardians[0] = guardian1;
-        guardians[1] = guardian2;
-        guardians[2] = guardian3;
+        guardians1 = new address[](3);
+        guardians1[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt1);
+        guardians1[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
+        guardians1[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
     }
 
     /**

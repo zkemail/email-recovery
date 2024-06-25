@@ -3,7 +3,8 @@ pragma solidity ^0.8.25;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import { EmailAccountRecoveryNew } from "./experimental/EmailAccountRecoveryNew.sol";
+import { EmailAccountRecovery } from
+    "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoverySubjectHandler } from "./interfaces/IEmailRecoverySubjectHandler.sol";
 import { IRecoveryModule } from "./interfaces/IRecoveryModule.sol";
@@ -29,7 +30,7 @@ import { console2 } from "forge-std/console2.sol";
  * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
  * the recovery module defines “how that recovery attempt is executed on the account”.
  */
-contract EmailRecoveryManager is EmailAccountRecoveryNew, Initializable, IEmailRecoveryManager {
+contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailRecoveryManager {
     using GuardianUtils for mapping(address => GuardianConfig);
     using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
 

@@ -21,3 +21,5 @@ solarray/=node_modules/solarray/src/
 ether-email-auth/=lib/ether-email-auth/
 @zk-email/contracts/=node_modules/@zk-email/contracts/
 solidity-stringutils/=node_modules/solidity-stringutils/
+@matterlabs/=node_modules/@matterlabs
+erc7579-implementation/=node_modules/erc7579-implementation/

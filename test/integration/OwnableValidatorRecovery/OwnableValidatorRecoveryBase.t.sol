@@ -78,20 +78,53 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         calldataHash3 = keccak256(recoveryCalldata3);
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
+        guardians1 = new address[](3);
+        guardians1[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt1);
+        guardians1[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
+        guardians1[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
+        guardians2 = new address[](3);
+        guardians2[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt1);
+        guardians2[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt2);
+        guardians2[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt3);
+        guardians3 = new address[](3);
+        guardians3[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt1);
+        guardians3[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt2);
+        guardians3[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt3);
 
-        guardians = new address[](3);
-        guardians[0] = guardian1;
-        guardians[1] = guardian2;
-        guardians[2] = guardian3;
-
-        bytes memory recoveryModuleInstallData = abi.encode(
+        bytes memory recoveryModuleInstallData1 = abi.encode(
             validatorAddress,
             isInstalledContext,
             functionSelector,
-            guardians,
+            guardians1,
+            guardianWeights,
+            threshold,
+            delay,
+            expiry
+        );
+        bytes memory recoveryModuleInstallData2 = abi.encode(
+            validatorAddress,
+            isInstalledContext,
+            functionSelector,
+            guardians2,
+            guardianWeights,
+            threshold,
+            delay,
+            expiry
+        );
+        bytes memory recoveryModuleInstallData3 = abi.encode(
+            validatorAddress,
+            isInstalledContext,
+            functionSelector,
+            guardians3,
             guardianWeights,
             threshold,
             delay,
@@ -107,7 +140,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
-            data: recoveryModuleInstallData
+            data: recoveryModuleInstallData1
         });
 
         // Install modules for account 2
@@ -119,7 +152,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         instance2.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
-            data: recoveryModuleInstallData
+            data: recoveryModuleInstallData2
         });
 
         // Install modules for account 3
@@ -131,7 +164,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         instance3.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
-            data: recoveryModuleInstallData
+            data: recoveryModuleInstallData3
         });
     }
 
@@ -163,14 +196,30 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         return emailProof;
     }
 
-    function getAccountSaltForGuardian(address guardian) public returns (bytes32) {
-        if (guardian == guardian1) {
+    function getAccountSaltForGuardian(
+        address account,
+        address guardian
+    )
+        public
+        returns (bytes32)
+    {
+        address[] memory guardians;
+        if (account == instance1.account) {
+            guardians = guardians1;
+        } else if (account == instance2.account) {
+            guardians = guardians2;
+        } else if (account == instance3.account) {
+            guardians = guardians3;
+        } else {
+            revert("Invalid account address");
+        }
+        if (guardian == guardians[0]) {
             return accountSalt1;
         }
-        if (guardian == guardian2) {
+        if (guardian == guardians[1]) {
             return accountSalt2;
         }
-        if (guardian == guardian3) {
+        if (guardian == guardians[2]) {
             return accountSalt3;
         }
 
@@ -196,7 +245,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory subject = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(guardian);
+        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
@@ -234,7 +283,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
 
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(guardian);
+        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 

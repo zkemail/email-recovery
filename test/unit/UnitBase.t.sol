@@ -133,9 +133,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         accountSalt3 = keccak256(abi.encode("account salt 3"));
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
+        guardian1 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt1);
+        guardian2 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt2);
+        guardian3 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;

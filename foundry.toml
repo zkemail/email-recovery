@@ -3,18 +3,12 @@ emv_version = "paris"
 src = "src"
 out = "out"
 script = "script"
-libs = [
-    "node_modules",
-    "lib",
-]
+libs = ["node_modules", "lib"]
 fs_permissions = [
     { access = "read", path = "out-optimized" },
     { access = "read-write", path = "gas_calculations" },
 ]
-allow_paths = [
-    "*",
-    "/",
-]
+allow_paths = ["*", "/"]
 ignored_warnings_from = [
     "node_modules",
     "node_modules/@rhinestone/modulekit/src/**/*.sol",
@@ -24,8 +18,8 @@ ignored_warnings_from = [
 [rpc_endpoints]
 sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
-[etherscan]
-sepolia = { key = "${BASE_SCAN_API_KEY}" }
+# [etherscan]
+# sepolia = { key = "${BASE_SCAN_API_KEY}" }
 
 [fmt]
 bracket_spacing = true

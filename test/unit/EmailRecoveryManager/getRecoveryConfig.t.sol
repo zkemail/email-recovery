@@ -14,11 +14,8 @@ contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        IEmailRecoveryManager.RecoveryConfig
-            memory recoveryConfig = IEmailRecoveryManager.RecoveryConfig(
-                newDelay,
-                newExpiry
-            );
+        IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
+            IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
@@ -29,10 +26,8 @@ contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
     }
 
     function test_GetRecoveryConfig_Succeeds() public {
-        IEmailRecoveryManager.RecoveryConfig
-            memory result = emailRecoveryManager.getRecoveryConfig(
-                accountAddress
-            );
+        IEmailRecoveryManager.RecoveryConfig memory result =
+            emailRecoveryManager.getRecoveryConfig(accountAddress);
         assertEq(result.delay, newDelay);
         assertEq(result.expiry, newExpiry);
     }

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import {IEmailRecoveryManager} from "src/interfaces/IEmailRecoveryManager.sol";
-import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
-import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
-import {UnitBase} from "../UnitBase.t.sol";
+import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_getGuardian_Test is UnitBase {
     address newGuardian = address(1);
@@ -20,12 +20,9 @@ contract EmailRecoveryManager_getGuardian_Test is UnitBase {
     }
 
     function test_GetGuardian_Succeeds() public {
-        GuardianStorage memory guardianStorage = emailRecoveryManager
-            .getGuardian(accountAddress, newGuardian);
-        assertEq(
-            uint256(guardianStorage.status),
-            uint256(GuardianStatus.REQUESTED)
-        );
+        GuardianStorage memory guardianStorage =
+            emailRecoveryManager.getGuardian(accountAddress, newGuardian);
+        assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage.weight, newGuardianWeight);
     }
 }

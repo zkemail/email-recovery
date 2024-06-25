@@ -34,10 +34,9 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     address newOwner3;
 
     // recovery config
-    address[] guardians;
-    address guardian1;
-    address guardian2;
-    address guardian3;
+    address[] guardians1;
+    address[] guardians2;
+    address[] guardians3;
     uint256[] guardianWeights;
     uint256 totalWeight;
     uint256 delay;

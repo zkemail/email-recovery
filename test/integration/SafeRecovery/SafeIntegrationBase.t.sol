@@ -61,14 +61,27 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         accountAddress1 = address(safe);
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(accountSalt3);
-
-        guardians = new address[](3);
-        guardians[0] = guardian1;
-        guardians[1] = guardian2;
-        guardians[2] = guardian3;
+        guardians1 = new address[](3);
+        guardians1[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt1);
+        guardians1[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
+        guardians1[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
+        guardians2 = new address[](3);
+        guardians2[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt1);
+        guardians2[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt2);
+        guardians2[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt3);
+        guardians3 = new address[](3);
+        guardians3[0] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt1);
+        guardians3[1] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt2);
+        guardians3[2] =
+            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt3);
     }
 
     /**
