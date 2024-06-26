@@ -1,30 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script} from "forge-std/Script.sol";
-import {console} from "forge-std/console.sol";
-import {EmailRecoverySubjectHandler} from "src/handlers/EmailRecoverySubjectHandler.sol";
-import {EmailRecoveryManager} from "src/EmailRecoveryManager.sol";
-import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
-import {Verifier} from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
-import {ECDSAOwnedDKIMRegistry} from "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import {EmailAuth} from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import {EmailRecoveryFactory} from "src/EmailRecoveryFactory.sol";
+import { Script } from "forge-std/Script.sol";
+import { console } from "forge-std/console.sol";
+import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
+import { ECDSAOwnedDKIMRegistry } from
+    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 
 contract Compute7579CalldataHash is Script {
-    bytes4 functionSelector =
-        bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 
     function run() public {
         address accountAddr = vm.envAddress("ACCOUNT");
         address recoveryModuleAddr = vm.envAddress("RECOVERY_MODULE");
         address newOwner = vm.envAddress("NEW_OWNER");
-        bytes memory recoveryCalldata = abi.encodeWithSelector(
-            functionSelector,
-            accountAddr,
-            newOwner,
-            recoveryModuleAddr
-        );
+        bytes memory recoveryCalldata =
+            abi.encodeWithSelector(functionSelector, accountAddr, newOwner, recoveryModuleAddr);
         console.log("recoveryCalldata", vm.toString(recoveryCalldata));
         bytes32 calldataHash = keccak256(recoveryCalldata);
         console.log("calldataHash", vm.toString(calldataHash));
