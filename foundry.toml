@@ -3,12 +3,18 @@ emv_version = "paris"
 src = "src"
 out = "out"
 script = "script"
-libs = ["node_modules", "lib"]
+libs = [
+    "node_modules",
+    "lib",
+]
 fs_permissions = [
     { access = "read", path = "out-optimized" },
     { access = "read-write", path = "gas_calculations" },
 ]
-allow_paths = ["*", "/"]
+allow_paths = [
+    "*",
+    "/",
+]
 ignored_warnings_from = [
     "node_modules",
     "node_modules/@rhinestone/modulekit/src/**/*.sol",
@@ -30,3 +36,6 @@ number_underscore = "thousands"
 quote_style = "double"
 tab_width = 4
 wrap_comments = true
+ignore = [
+    "./src/zksyncDeps/contracts/L2ContractHelper.sol",
+]
