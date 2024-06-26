@@ -5,7 +5,6 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
-import { console2 } from "forge-std/console2.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
