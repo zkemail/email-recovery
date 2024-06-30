@@ -2,24 +2,28 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
+contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }
 
     function test_Recover_RevertWhen_NotTrustedRecoveryContract() public {
-        vm.expectRevert(EmailRecoveryModule.NotTrustedRecoveryManager.selector);
+        vm.expectRevert(UniversalEmailRecoveryModule.NotTrustedRecoveryManager.selector);
         emailRecoveryModule.recover(accountAddress, recoveryCalldata);
     }
 
-    function test_Recover_RevertWhen_RecoveryNotAuthorizedForAccount() public {
+    function test_Recover_RevertWhen_InvalidAccount() public {
         address invalidAccount = address(1);
 
         vm.startPrank(emailRecoveryManagerAddress);
-        vm.expectRevert(EmailRecoveryModule.RecoveryNotAuthorizedForAccount.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, functionSelector
+            )
+        );
         emailRecoveryModule.recover(invalidAccount, recoveryCalldata);
     }
 
@@ -30,7 +34,9 @@ contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
 
         vm.startPrank(emailRecoveryManagerAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, invalidSelector)
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, invalidSelector
+            )
         );
         emailRecoveryModule.recover(accountAddress, invalidCalldata);
     }

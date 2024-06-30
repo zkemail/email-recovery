@@ -15,9 +15,9 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
-import { IntegrationBase } from "../IntegrationBase.t.sol";
+import { IntegrationBase } from "../../IntegrationBase.t.sol";
 
-abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
+abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is IntegrationBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
@@ -46,24 +46,33 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
     function setUp() public virtual override {
         super.setUp();
 
-        emailRecoveryFactory = new EmailRecoveryFactory();
-        emailRecoveryHandler = new EmailRecoverySubjectHandler();
-
-        // Deploy EmailRecoveryManager & EmailRecoveryModule
-        (emailRecoveryManagerAddress, recoveryModuleAddress) = emailRecoveryFactory
-            .deployModuleAndManager(
-            address(verifier),
-            address(ecdsaOwnedDkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler)
-        );
-        emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
-
         // Deploy validator to be recovered
         validator = new OwnableValidator();
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+
+        emailRecoveryFactory = new EmailRecoveryFactory();
+        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+
+        // Deploy EmailRecoveryManager & EmailRecoveryModule
+        bytes32 subjectHandlerSalt = bytes32(uint256(0));
+        bytes32 recoveryManagerSalt = bytes32(uint256(0));
+        bytes32 recoveryModuleSalt = bytes32(uint256(0));
+        bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
+        (emailRecoveryManagerAddress, recoveryModuleAddress,) = emailRecoveryFactory.deployAll(
+            subjectHandlerSalt,
+            recoveryManagerSalt,
+            recoveryModuleSalt,
+            subjectHandlerBytecode,
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl),
+            validatorAddress,
+            functionSelector
+        );
+        emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
+
         recoveryCalldata1 = abi.encodeWithSelector(
             functionSelector, accountAddress1, recoveryModuleAddress, newOwner1
         );
@@ -100,42 +109,18 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         guardians3[2] =
             emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt3);
 
-        bytes memory recoveryModuleInstallData1 = abi.encode(
-            validatorAddress,
-            isInstalledContext,
-            functionSelector,
-            guardians1,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
-        );
-        bytes memory recoveryModuleInstallData2 = abi.encode(
-            validatorAddress,
-            isInstalledContext,
-            functionSelector,
-            guardians2,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
-        );
-        bytes memory recoveryModuleInstallData3 = abi.encode(
-            validatorAddress,
-            isInstalledContext,
-            functionSelector,
-            guardians3,
-            guardianWeights,
-            threshold,
-            delay,
-            expiry
-        );
+        bytes memory recoveryModuleInstallData1 =
+            abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry);
+        bytes memory recoveryModuleInstallData2 =
+            abi.encode(isInstalledContext, guardians2, guardianWeights, threshold, delay, expiry);
+        bytes memory recoveryModuleInstallData3 =
+            abi.encode(isInstalledContext, guardians3, guardianWeights, threshold, delay, expiry);
 
         // Install modules for account 1
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: validatorAddress,
-            data: abi.encode(owner1, recoveryModuleAddress)
+            data: abi.encode(owner1)
         });
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
@@ -147,7 +132,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         instance2.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: validatorAddress,
-            data: abi.encode(owner2, recoveryModuleAddress)
+            data: abi.encode(owner2)
         });
         instance2.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
@@ -159,7 +144,7 @@ abstract contract OwnableValidatorRecoveryBase is IntegrationBase {
         instance3.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: validatorAddress,
-            data: abi.encode(owner3, recoveryModuleAddress)
+            data: abi.encode(owner3)
         });
         instance3.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,

@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
@@ -49,7 +48,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.exposed_acceptGuardian(
             guardian1, templateIdx, subjectParams, nullifier
         );

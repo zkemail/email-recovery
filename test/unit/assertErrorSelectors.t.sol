@@ -6,7 +6,7 @@ import { console2 } from "forge-std/console2.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -35,7 +35,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryInProcess.selector, bytes4(0xf90ea6fc));
         assertEq(IEmailRecoveryManager.SetupAlreadyCalled.selector, bytes4(0xb3af5593));
         assertEq(IEmailRecoveryManager.AccountNotConfigured.selector, bytes4(0x66ecbd6d));
-        assertEq(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector, bytes4(0xd5e44d3f));
+        assertEq(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector, bytes4(0xbfa7d2a9));
         assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0x655a4874));
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x12fa0714));
         assertEq(IEmailRecoveryManager.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
@@ -50,11 +50,13 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_EmailRecoveryModule_AssertSelectors() public {
-        assertEq(EmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
-        assertEq(EmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
-        assertEq(EmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
-        assertEq(EmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
-        assertEq(EmailRecoveryModule.NotTrustedRecoveryManager.selector, bytes4(0x38f1b648));
+        assertEq(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(UniversalEmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
+        assertEq(UniversalEmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
+        assertEq(UniversalEmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
+        assertEq(
+            UniversalEmailRecoveryModule.NotTrustedRecoveryManager.selector, bytes4(0x38f1b648)
+        );
     }
 
     function test_EnumerableGuardianMap_AssertSelectors() public {
@@ -72,9 +74,5 @@ contract LogErrorSelectors_Test is Test {
         assertEq(GuardianUtils.StatusCannotBeTheSame.selector, bytes4(0x115e823f));
         assertEq(GuardianUtils.SetupNotCalled.selector, bytes4(0xae69115b));
         assertEq(GuardianUtils.UnauthorizedAccountForGuardian.selector, bytes4(0xe4c3248f));
-    }
-
-    function test_OwnableValidator_AssertSelectors() public {
-        assertEq(OwnableValidator.NotAuthorized.selector, bytes4(0xea8e4eb5));
     }
 }

@@ -27,7 +27,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeRecoverySubjectHandlerHarness } from "./SafeRecoverySubjectHandlerHarness.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { MockRegistry } from "src/test/MockRegistry.sol";
@@ -74,8 +74,8 @@ abstract contract SafeUnitBase is IntegrationBase {
         );
         emailRecoveryManagerAddress = address(emailRecoveryManager);
 
-        EmailRecoveryModule emailRecoveryModule =
-            new EmailRecoveryModule(emailRecoveryManagerAddress);
+        UniversalEmailRecoveryModule emailRecoveryModule =
+            new UniversalEmailRecoveryModule(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
         emailRecoveryManager.initialize(recoveryModuleAddress);
 

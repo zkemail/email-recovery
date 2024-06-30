@@ -5,7 +5,6 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -50,16 +49,25 @@ contract Deploy7579ControllerScript is Script {
             // vm.setEnv("RECOVERY_FACTORY", vm.toString(_factory));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
-        EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-        (address manager, address module) = factory.deployModuleAndManager(
-            verifier, dkimRegistry, emailAuthImpl, address(emailRecoveryHandler)
-        );
-        // vm.setEnv("RECOVERY_MANAGER", vm.toString(manager));
-        // vm.setEnv("RECOVERY_MODULE", vm.toString(module));
+        {
+            EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
+            (address manager, address module, address subjectHandler) = factory
+                .deployAllWithUniversalModule(
+                bytes32(uint256(0)),
+                bytes32(uint256(0)),
+                bytes32(uint256(0)),
+                type(EmailRecoverySubjectHandler).creationCode,
+                verifier,
+                dkimRegistry,
+                emailAuthImpl
+            );
+            // vm.setEnv("RECOVERY_MANAGER", vm.toString(manager));
+            // vm.setEnv("RECOVERY_MODULE", vm.toString(module));
 
-        console.log("Deployed Email Recovery Handler at", address(emailRecoveryHandler));
-        console.log("Deployed Email Recovery Manager at", vm.toString(manager));
-        console.log("Deployed Email Recovery Module at", vm.toString(module));
-        vm.stopBroadcast();
+            console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
+            console.log("Deployed Email Recovery Manager at", vm.toString(manager));
+            console.log("Deployed Email Recovery Module at", vm.toString(module));
+            vm.stopBroadcast();
+        }
     }
 }

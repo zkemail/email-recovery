@@ -14,8 +14,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     error InvalidAccount();
     error InvalidRecoveryModule();
 
-    constructor() { }
-
     function acceptanceSubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](5);

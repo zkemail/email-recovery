@@ -7,7 +7,7 @@ import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoverySubjectHandler } from "./interfaces/IEmailRecoverySubjectHandler.sol";
-import { IRecoveryModule } from "./interfaces/IRecoveryModule.sol";
+import { IEmailRecoveryModule } from "./interfaces/IEmailRecoveryModule.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
@@ -229,8 +229,8 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
 
         setupGuardians(account, guardians, weights, threshold);
 
-        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
-            revert RecoveryModuleNotInstalled();
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+            revert RecoveryModuleNotAuthorized();
         }
 
         RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
@@ -305,8 +305,8 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryInProcess();
         }
 
-        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
-            revert RecoveryModuleNotInstalled();
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+            revert RecoveryModuleNotAuthorized();
         }
 
         // This check ensures GuardianStatus is correct and also implicitly that the
@@ -350,8 +350,8 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         (address account, bytes32 calldataHash) = IEmailRecoverySubjectHandler(subjectHandler)
             .validateRecoverySubject(templateIdx, subjectParams, address(this));
 
-        if (IRecoveryModule(emailRecoveryModule).getAllowedValidators(account).length == 0) {
-            revert RecoveryModuleNotInstalled();
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+            revert RecoveryModuleNotAuthorized();
         }
 
         // This check ensures GuardianStatus is correct and also implicitly that the
@@ -424,7 +424,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
 
         delete recoveryRequests[account];
 
-        IRecoveryModule(emailRecoveryModule).recover(account, recoveryCalldata);
+        IEmailRecoveryModule(emailRecoveryModule).recover(account, recoveryCalldata);
 
         emit RecoveryCompleted(account);
     }

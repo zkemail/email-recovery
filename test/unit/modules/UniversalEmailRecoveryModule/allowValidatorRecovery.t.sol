@@ -7,10 +7,10 @@ import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
+contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {
@@ -20,7 +20,7 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
+                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
             )
         );
         vm.startPrank(accountAddress);
@@ -32,7 +32,7 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnUninstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, IModule.onUninstall.selector
+                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onUninstall.selector
             )
         );
         vm.startPrank(accountAddress);
@@ -47,7 +47,7 @@ contract EmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
+                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
             )
         );
         vm.startPrank(accountAddress);

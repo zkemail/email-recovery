@@ -7,7 +7,7 @@ import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
+contract UniversalEmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {

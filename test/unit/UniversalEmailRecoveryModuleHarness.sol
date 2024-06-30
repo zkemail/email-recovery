@@ -3,12 +3,12 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
-contract EmailRecoveryModuleHarness is EmailRecoveryModule {
+contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
 
-    constructor(address emailRecoveryManager) EmailRecoveryModule(emailRecoveryManager) { }
+    constructor(address emailRecoveryManager) UniversalEmailRecoveryModule(emailRecoveryManager) { }
 
     function exposed_allowedSelectors(
         address validator,

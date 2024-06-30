@@ -8,12 +8,13 @@ import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-import { OwnableValidatorRecoveryBase } from "./OwnableValidatorRecoveryBase.t.sol";
+import { OwnableValidatorRecovery_EmailRecoveryModule_Base } from "./EmailRecoveryModuleBase.t.sol";
 
-contract OwnableValidatorRecovery_Integration_Test is OwnableValidatorRecoveryBase {
+contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
+    OwnableValidatorRecovery_EmailRecoveryModule_Base
+{
     function setUp() public override {
         super.setUp();
     }
