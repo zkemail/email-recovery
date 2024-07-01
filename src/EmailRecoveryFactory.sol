@@ -7,14 +7,25 @@ import { UniversalEmailRecoveryModule } from "./modules/UniversalEmailRecoveryMo
 import { EmailRecoveryModule } from "./modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryFactory {
-    function deployAll(
+    address public immutable verifier;
+    address public immutable dkimRegistry;
+    address public immutable emailAuthImpl;
+
+    event EmailRecoveryModuleDeployed(
+        address emailRecoveryModule, address emailRecoveryManager, address subjectHandler
+    );
+
+    constructor(address _verifier, address _dkimRegistry, address _emailAuthImpl) {
+        verifier = _verifier;
+        dkimRegistry = _dkimRegistry;
+        emailAuthImpl = _emailAuthImpl;
+    }
+
+    function deployEmailRecoveryModule(
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
         bytes memory subjectHandlerBytecode,
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl,
         address validator,
         bytes4 functionSelector
     )
@@ -25,31 +36,31 @@ contract EmailRecoveryFactory {
         address subjectHandler = Create2.deploy(0, subjectHandlerSalt, subjectHandlerBytecode);
 
         // Deploy recovery manager
-        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager{
-            salt: recoveryManagerSalt
-        }(verifier, dkimRegistry, emailAuthImpl, subjectHandler);
-        address emailRecoveryManagerAddress = address(emailRecoveryManager);
+        address emailRecoveryManager = address(
+            new EmailRecoveryManager{ salt: recoveryManagerSalt }(
+                verifier, dkimRegistry, emailAuthImpl, subjectHandler
+            )
+        );
 
         // Deploy recovery module
-        EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule{ salt: recoveryModuleSalt }(
-            emailRecoveryManagerAddress, validator, functionSelector
+        address emailRecoveryModule = address(
+            new EmailRecoveryModule{ salt: recoveryModuleSalt }(
+                emailRecoveryManager, validator, functionSelector
+            )
         );
-        address emailRecoveryModuleAddress = address(emailRecoveryModule);
 
         // Initialize recovery manager with module address
-        emailRecoveryManager.initialize(emailRecoveryModuleAddress);
+        EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
+        emit EmailRecoveryModuleDeployed(emailRecoveryModule, emailRecoveryManager, subjectHandler);
 
-        return (emailRecoveryManagerAddress, emailRecoveryModuleAddress, subjectHandler);
+        return (emailRecoveryModule, emailRecoveryManager, subjectHandler);
     }
 
-    function deployAllWithUniversalModule(
+    function deployUniversalEmailRecoveryModule(
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
-        bytes memory subjectHandlerBytecode,
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl
+        bytes memory subjectHandlerBytecode
     )
         external
         returns (address, address, address)
@@ -58,20 +69,21 @@ contract EmailRecoveryFactory {
         address subjectHandler = Create2.deploy(0, subjectHandlerSalt, subjectHandlerBytecode);
 
         // Deploy recovery manager
-        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager{
-            salt: recoveryManagerSalt
-        }(verifier, dkimRegistry, emailAuthImpl, subjectHandler);
-        address emailRecoveryManagerAddress = address(emailRecoveryManager);
+        address emailRecoveryManager = address(
+            new EmailRecoveryManager{ salt: recoveryManagerSalt }(
+                verifier, dkimRegistry, emailAuthImpl, subjectHandler
+            )
+        );
 
         // Deploy recovery module
-        UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule{
-            salt: recoveryModuleSalt
-        }(emailRecoveryManagerAddress);
-        address emailRecoveryModuleAddress = address(emailRecoveryModule);
+        address emailRecoveryModule = address(
+            new UniversalEmailRecoveryModule{ salt: recoveryModuleSalt }(emailRecoveryManager)
+        );
 
         // Initialize recovery manager with module address
-        emailRecoveryManager.initialize(emailRecoveryModuleAddress);
+        EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
+        emit EmailRecoveryModuleDeployed(emailRecoveryModule, emailRecoveryManager, subjectHandler);
 
-        return (emailRecoveryManagerAddress, emailRecoveryModuleAddress, subjectHandler);
+        return (emailRecoveryModule, emailRecoveryManager, subjectHandler);
     }
 }
