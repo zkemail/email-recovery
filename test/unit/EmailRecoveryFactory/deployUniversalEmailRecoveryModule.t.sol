@@ -7,15 +7,17 @@ import { UnitBase } from "../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
-contract EmailRecoveryFactory_deployAll_Test is UnitBase {
+contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryFactory = new EmailRecoveryFactory();
+        emailRecoveryFactory = new EmailRecoveryFactory(
+            address(verifier), address(dkimRegistry), address(emailAuthImpl)
+        );
     }
 
-    function test_DeployAll_Succeeds() public {
+    function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
         bytes32 recoveryManagerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
         bytes32 subjectHandlerSalt = bytes32(uint256(0));
@@ -39,24 +41,15 @@ contract EmailRecoveryFactory_deployAll_Test is UnitBase {
         );
 
         bytes memory recoveryModuleBytecode = abi.encodePacked(
-            type(EmailRecoveryModule).creationCode,
-            abi.encode(expectedManager, validatorAddress, functionSelector)
+            type(UniversalEmailRecoveryModule).creationCode, abi.encode(expectedManager)
         );
         address expectedModule = Create2.computeAddress(
             recoveryModuleSalt, keccak256(recoveryModuleBytecode), address(emailRecoveryFactory)
         );
 
-        (address emailRecoveryManager, address emailRecoveryModule, address subjectHandler) =
-        emailRecoveryFactory.deployAll(
-            subjectHandlerSalt,
-            recoveryManagerSalt,
-            recoveryModuleSalt,
-            subjectHandlerBytecode,
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            validatorAddress,
-            functionSelector
+        (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
+        emailRecoveryFactory.deployUniversalEmailRecoveryModule(
+            subjectHandlerSalt, recoveryManagerSalt, recoveryModuleSalt, subjectHandlerBytecode
         );
 
         assertEq(emailRecoveryManager, expectedManager);

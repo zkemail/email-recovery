@@ -65,7 +65,7 @@ contract Compute7579CalldataHash is Script {
         //     console.log("Deployed Email Recovery Factory at", _factory);
         // }
         // EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-        // (address manager, address module) = factory.deployAllWithUniversalModule(
+        // (address manager, address module) = factory.deployUniversalEmailRecoveryModule(
         //     verifier,
         //     dkimRegistry,
         //     emailAuthImpl,

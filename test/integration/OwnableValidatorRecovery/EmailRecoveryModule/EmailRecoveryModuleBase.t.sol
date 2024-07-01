@@ -52,7 +52,9 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
 
-        emailRecoveryFactory = new EmailRecoveryFactory();
+        emailRecoveryFactory = new EmailRecoveryFactory(
+            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        );
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         // Deploy EmailRecoveryManager & EmailRecoveryModule
@@ -60,14 +62,12 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         bytes32 recoveryManagerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
         bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
-        (emailRecoveryManagerAddress, recoveryModuleAddress,) = emailRecoveryFactory.deployAll(
+        (recoveryModuleAddress, emailRecoveryManagerAddress,) = emailRecoveryFactory
+            .deployEmailRecoveryModule(
             subjectHandlerSalt,
             recoveryManagerSalt,
             recoveryModuleSalt,
             subjectHandlerBytecode,
-            address(verifier),
-            address(ecdsaOwnedDkimRegistry),
-            address(emailAuthImpl),
             validatorAddress,
             functionSelector
         );

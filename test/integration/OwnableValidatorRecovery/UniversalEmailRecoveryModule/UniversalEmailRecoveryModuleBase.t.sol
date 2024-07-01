@@ -46,7 +46,9 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     function setUp() public virtual override {
         super.setUp();
 
-        emailRecoveryFactory = new EmailRecoveryFactory();
+        emailRecoveryFactory = new EmailRecoveryFactory(
+            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        );
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
@@ -54,15 +56,9 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         bytes32 recoveryManagerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
         bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
-        (emailRecoveryManagerAddress, recoveryModuleAddress,) = emailRecoveryFactory
-            .deployAllWithUniversalModule(
-            subjectHandlerSalt,
-            recoveryManagerSalt,
-            recoveryModuleSalt,
-            subjectHandlerBytecode,
-            address(verifier),
-            address(ecdsaOwnedDkimRegistry),
-            address(emailAuthImpl)
+        (recoveryModuleAddress, emailRecoveryManagerAddress,) = emailRecoveryFactory
+            .deployUniversalEmailRecoveryModule(
+            subjectHandlerSalt, recoveryManagerSalt, recoveryModuleSalt, subjectHandlerBytecode
         );
         emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
