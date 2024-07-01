@@ -8,6 +8,7 @@ import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { RecoveryModuleBase } from "src/modules/RecoveryModuleBase.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
 contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
@@ -29,7 +30,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
+                RecoveryModuleBase.InvalidValidator.selector, newValidatorAddress
             )
         );
         vm.startPrank(accountAddress);
@@ -87,9 +88,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
         vm.startPrank(accountAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, invalidSelector
-            )
+            abi.encodeWithSelector(RecoveryModuleBase.InvalidSelector.selector, invalidSelector)
         );
         emailRecoveryModule.disallowValidatorRecovery(
             validatorAddress, prevValidator, "", invalidSelector

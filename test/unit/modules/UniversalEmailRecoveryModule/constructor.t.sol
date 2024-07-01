@@ -14,6 +14,6 @@ contract UniversalEmailRecoveryManager_constructor_Test is UnitBase {
         UniversalEmailRecoveryModule emailRecoveryModule =
             new UniversalEmailRecoveryModule(emailRecoveryManagerAddress);
 
-        assertEq(emailRecoveryManagerAddress, emailRecoveryModule.emailRecoveryManager());
+        assertEq(emailRecoveryManagerAddress, emailRecoveryModule.getTrustedRecoveryManager());
     }
 }

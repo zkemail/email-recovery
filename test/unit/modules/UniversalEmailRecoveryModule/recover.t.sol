@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { RecoveryModuleBase } from "src/modules/RecoveryModuleBase.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
 contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
@@ -20,9 +21,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
 
         vm.startPrank(emailRecoveryManagerAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, functionSelector
-            )
+            abi.encodeWithSelector(RecoveryModuleBase.InvalidSelector.selector, functionSelector)
         );
         emailRecoveryModule.recover(invalidAccount, recoveryCalldata);
     }
@@ -34,9 +33,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
 
         vm.startPrank(emailRecoveryManagerAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, invalidSelector
-            )
+            abi.encodeWithSelector(RecoveryModuleBase.InvalidSelector.selector, invalidSelector)
         );
         emailRecoveryModule.recover(accountAddress, invalidCalldata);
     }
