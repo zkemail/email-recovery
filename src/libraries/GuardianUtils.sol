@@ -49,7 +49,7 @@ library GuardianUtils {
             revert IncorrectNumberOfWeights();
         }
 
-        if (threshold == 0 && guardianCount > 0) {
+        if (threshold == 0) {
             revert ThresholdCannotBeZero();
         }
 
@@ -85,8 +85,12 @@ library GuardianUtils {
             revert ThresholdCannotExceedTotalWeight();
         }
 
-        guardianConfigs[account] =
-            IEmailRecoveryManager.GuardianConfig(guardianCount, totalWeight, threshold, true);
+        guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig({
+            guardianCount: guardianCount,
+            totalWeight: totalWeight,
+            threshold: threshold,
+            initialized: true
+        });
     }
 
     function updateGuardianStatus(
@@ -202,7 +206,7 @@ library GuardianUtils {
             revert ThresholdCannotExceedTotalWeight();
         }
 
-        // There has to be at least one Account guardian.
+        // Guardian weight should be at least 1
         if (threshold == 0) {
             revert ThresholdCannotBeZero();
         }

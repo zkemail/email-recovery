@@ -45,5 +45,6 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
+        assertEq(guardianConfig.initialized, true);
     }
 }

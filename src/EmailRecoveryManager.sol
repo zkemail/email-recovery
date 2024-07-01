@@ -227,10 +227,15 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert SetupAlreadyCalled();
         }
 
-        setupGuardians(account, guardians, weights, threshold);
-
         if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
             revert RecoveryModuleNotAuthorized();
+        }
+
+        // Allow recovery configuration without configuring guardians
+        if (guardians.length == 0 && weights.length == 0 && threshold == 0) {
+            guardianConfigs[account].initialized = true;
+        } else {
+            setupGuardians(account, guardians, weights, threshold);
         }
 
         RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
