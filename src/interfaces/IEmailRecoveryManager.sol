@@ -67,7 +67,7 @@ interface IEmailRecoveryManager {
     error RecoveryInProcess();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
-    error RecoveryModuleNotInstalled();
+    error RecoveryModuleNotAuthorized();
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
     error InvalidTemplateIndex();

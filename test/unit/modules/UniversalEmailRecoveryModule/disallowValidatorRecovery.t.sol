@@ -7,10 +7,10 @@ import { MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
+contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     using SentinelListHelper for address[];
@@ -29,7 +29,7 @@ contract EmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
+                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
             )
         );
         vm.startPrank(accountAddress);
@@ -87,7 +87,9 @@ contract EmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectRevert(
-            abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, invalidSelector)
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, invalidSelector
+            )
         );
         emailRecoveryModule.disallowValidatorRecovery(
             validatorAddress, prevValidator, "", invalidSelector

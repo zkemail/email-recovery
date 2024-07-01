@@ -2,9 +2,9 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_version_Test is EmailRecoveryModuleBase {
+contract UniversalEmailRecoveryModule_version_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }

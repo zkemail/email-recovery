@@ -7,7 +7,6 @@ import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
@@ -75,7 +74,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.exposed_processRecovery(
             guardian1, templateIdx, subjectParams, nullifier
         );

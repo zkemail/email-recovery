@@ -9,21 +9,21 @@ import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
-    EmailRecoveryModule recoveryModule;
+    UniversalEmailRecoveryModule recoveryModule;
     address recoveryModuleAddress;
 
     bytes4 functionSelector;
 
     // function setUp() public override {
     //     super.setUp();
-    //     recoveryModule = new EmailRecoveryModule(address(emailRecoveryManager));
+    //     recoveryModule = new UniversalEmailRecoveryModule(address(emailRecoveryManager));
     //     recoveryModuleAddress = address(recoveryModule);
 
     //     functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));

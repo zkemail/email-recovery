@@ -7,15 +7,16 @@ import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/
 import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-import { OwnableValidatorRecoveryBase } from
-    "../OwnableValidatorRecovery/OwnableValidatorRecoveryBase.t.sol";
+import { OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base } from
+    "../OwnableValidatorRecovery/UniversalEmailRecoveryModule/UniversalEmailRecoveryModuleBase.t.sol";
 
-contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
+contract EmailRecoveryManager_Integration_Test is
+    OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base
+{
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
@@ -31,7 +32,7 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
@@ -184,7 +185,7 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         vm.stopPrank();
 
         vm.startPrank(accountAddress1);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.configureRecovery(
             guardians1, guardianWeights, threshold, delay, expiry
         );
@@ -192,11 +193,11 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
 
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
 
         emailAuthMsg = getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
@@ -215,11 +216,11 @@ contract EmailRecoveryManager_Integration_Test is OwnableValidatorRecoveryBase {
         vm.warp(12 seconds);
 
         emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], calldataHash1);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
 
         emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], calldataHash1);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 

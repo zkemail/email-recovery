@@ -14,14 +14,7 @@ contract OwnableValidator is ERC7579ValidatorBase {
                             CONSTANTS & STORAGE
     //////////////////////////////////////////////////////////////////////////*/
 
-    error NotAuthorized();
-
     mapping(address subAccout => address owner) public owners;
-
-    /**
-     * account to authorized account to authorization
-     */
-    mapping(address => mapping(address => bool)) public authorized;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
@@ -29,9 +22,8 @@ contract OwnableValidator is ERC7579ValidatorBase {
 
     function onInstall(bytes calldata data) external override {
         if (data.length == 0) return;
-        (address owner, address authorizedAccount) = abi.decode(data, (address, address));
+        (address owner) = abi.decode(data, (address));
         owners[msg.sender] = owner;
-        authorized[msg.sender][authorizedAccount] = true;
     }
 
     /**
@@ -82,33 +74,8 @@ contract OwnableValidator is ERC7579ValidatorBase {
             : EIP1271_FAILED;
     }
 
-    function changeOwner(
-        address account,
-        address authorizedAccount,
-        address newOwner
-    )
-        external
-        onlyAuthorized(authorizedAccount)
-    {
-        owners[account] = newOwner;
-    }
-
-    /**
-     * @notice Adds special permissions for an account to execute priviliged actions
-     * on the module, notably changing the owner. This is useful for adding a recovery module.
-     * @dev in order for this function to remain secure, the delay time must be longer than
-     * the time it takes to authorize an action from the calling account. For example, if there
-     * is a recovery delay of 1 day on a recovery module to protect against malicious guardians,
-     * the delay for this function must be longer than that time so that an attacker could not
-     * authorize itself before the recovery attempt succeeds.
-     */
-    function authorizeAccount(address accountToAuthorize) public {
-        authorized[msg.sender][accountToAuthorize] = true;
-    }
-
-    modifier onlyAuthorized(address account) {
-        if (authorized[msg.sender][account] == false) revert NotAuthorized();
-        _;
+    function changeOwner(address account, address authorizedAccount, address newOwner) external {
+        owners[msg.sender] = newOwner;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

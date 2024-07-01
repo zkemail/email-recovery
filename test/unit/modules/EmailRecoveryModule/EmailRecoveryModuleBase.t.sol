@@ -21,15 +21,15 @@ import {
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
+import { EmailRecoveryManagerHarness } from "../../EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { UniversalEmailRecoveryModuleHarness } from "./UniversalEmailRecoveryModuleHarness.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
-abstract contract UnitBase is RhinestoneModuleKit, Test {
+abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
@@ -43,7 +43,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
-    UniversalEmailRecoveryModuleHarness emailRecoveryModule;
+    EmailRecoveryModule emailRecoveryModule;
 
     // EmailRecoveryManager emailRecoveryManager;
     address emailRecoveryManagerAddress;
@@ -107,6 +107,16 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         address[] memory owners = new address[](1);
         owners[0] = owner;
 
+        // Deploy validator to be recovered
+        validator = new OwnableValidator();
+        validatorAddress = address(validator);
+        isInstalledContext = bytes("0");
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+        recoveryCalldata = abi.encodeWithSignature(
+            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
+        );
+        calldataHash = keccak256(recoveryCalldata);
+
         // Deploy handler, manager and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
         emailRecoveryFactory = new EmailRecoveryFactory();
@@ -119,7 +129,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         );
         emailRecoveryManagerAddress = address(emailRecoveryManager);
 
-        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(emailRecoveryManagerAddress);
+        emailRecoveryModule =
+            new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, functionSelector);
         recoveryModuleAddress = address(emailRecoveryModule);
         emailRecoveryManager.initialize(recoveryModuleAddress);
 
@@ -153,16 +164,6 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         threshold = 3;
         templateIdx = 0;
 
-        // Deploy validator to be recovered
-        validator = new OwnableValidator();
-        validatorAddress = address(validator);
-        isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-        recoveryCalldata = abi.encodeWithSignature(
-            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
-        );
-        calldataHash = keccak256(recoveryCalldata);
-
         // Install modules
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
@@ -172,16 +173,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
-            data: abi.encode(
-                validatorAddress,
-                isInstalledContext,
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
+            data: abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay, expiry)
         });
     }
 

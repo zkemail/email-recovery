@@ -8,7 +8,7 @@ import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
-contract EmailRecoveryModule_getAllowedValidators_Test is UnitBase {
+contract UniversalEmailRecoveryModule_getAllowedValidators_Test is UnitBase {
     using ModuleKitHelpers for *;
     using SentinelListHelper for address[];
 

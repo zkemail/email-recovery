@@ -2,13 +2,13 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { AccountInstance, ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
-import { UnitBase } from "../../UnitBase.t.sol";
+import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 
-contract EmailRecoveryModule_onInstall_Test is UnitBase {
+contract EmailRecoveryModule_onInstall_Test is EmailRecoveryModuleBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {
@@ -21,7 +21,7 @@ contract EmailRecoveryModule_onInstall_Test is UnitBase {
         bytes memory emptyData = new bytes(0);
         assertEq(emptyData.length, 0);
 
-        // FIXME: Error not thrown despite the data being passed has a length of zero
+        // TODO: error not detected as it is not thrown in next function call
         // vm.expectRevert(EmailRecoveryModule.InvalidOnInstallData.selector);
 
         // When installing with empty data and not expecting a revert, the test fails
@@ -32,36 +32,35 @@ contract EmailRecoveryModule_onInstall_Test is UnitBase {
         // });
     }
 
+    function test_OnInstall_RevertWhen_InvalidValidator() public {
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        AccountInstance memory newInstance = makeAccountInstance("new instance");
+        vm.deal(address(newInstance.account), 10 ether);
+
+        // TODO: error not detected as it is not thrown in next function call
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(EmailRecoveryModule.InvalidValidator.selector,
+        // validatorAddress)
+        // );
+        // newInstance.installModule({
+        //     moduleTypeId: MODULE_TYPE_EXECUTOR,
+        //     module: recoveryModuleAddress,
+        //     data: abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay,
+        // expiry)
+        // });
+    }
+
     function test_OnInstall_Succeeds() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: recoveryModuleAddress,
-            data: abi.encode(
-                validatorAddress,
-                isInstalledContext,
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
+            data: abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay, expiry)
         });
 
-        bytes4 allowedSelector =
-            emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress);
-        address allowedValidator =
-            emailRecoveryModule.exposed_selectorToValidator(functionSelector, accountAddress);
+        bool isAuthorizedToRecover = emailRecoveryModule.isAuthorizedToRecover(accountAddress);
 
-        assertEq(allowedSelector, functionSelector);
-        assertEq(allowedValidator, validatorAddress);
-
-        address[] memory allowedValidators =
-            emailRecoveryModule.getAllowedValidators(accountAddress);
-        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
-        assertEq(allowedValidators.length, 1);
-        assertEq(allowedSelectors.length, 1);
+        assertTrue(isAuthorizedToRecover);
     }
 }

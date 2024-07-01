@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract DeploySafeRecoveryScript is Script {
     function run() public {
@@ -20,7 +20,7 @@ contract DeploySafeRecoveryScript is Script {
             verifier, dkimRegistry, emailAuthImpl, address(emailRecoveryHandler)
         );
 
-        new EmailRecoveryModule(address(emailRecoveryManager));
+        new UniversalEmailRecoveryModule(address(emailRecoveryManager));
 
         vm.stopBroadcast();
     }

@@ -5,7 +5,6 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
@@ -39,7 +38,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         vm.stopPrank();
 
         vm.prank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotInstalled.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
         emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
     }
 
@@ -63,7 +62,6 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
                 expiry
             )
         });
-        console2.log("foooo", guardians.length);
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryManager.getRecoveryConfig(accountAddress);

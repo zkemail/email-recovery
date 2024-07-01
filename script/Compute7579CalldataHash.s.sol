@@ -5,7 +5,6 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -66,7 +65,7 @@ contract Compute7579CalldataHash is Script {
         //     console.log("Deployed Email Recovery Factory at", _factory);
         // }
         // EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-        // (address manager, address module) = factory.deployModuleAndManager(
+        // (address manager, address module) = factory.deployAllWithUniversalModule(
         //     verifier,
         //     dkimRegistry,
         //     emailAuthImpl,
