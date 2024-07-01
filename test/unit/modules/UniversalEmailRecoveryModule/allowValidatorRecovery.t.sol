@@ -8,6 +8,7 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { RecoveryModuleBase } from "src/modules/RecoveryModuleBase.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
 contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
@@ -20,7 +21,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
+                RecoveryModuleBase.InvalidSelector.selector, IModule.onInstall.selector
             )
         );
         vm.startPrank(accountAddress);
@@ -32,7 +33,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnUninstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onUninstall.selector
+                RecoveryModuleBase.InvalidSelector.selector, IModule.onUninstall.selector
             )
         );
         vm.startPrank(accountAddress);
@@ -47,7 +48,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
+                RecoveryModuleBase.InvalidValidator.selector, newValidatorAddress
             )
         );
         vm.startPrank(accountAddress);

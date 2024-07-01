@@ -7,6 +7,7 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { RecoveryModuleBase } from "src/modules/RecoveryModuleBase.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -50,9 +51,9 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_EmailRecoveryModule_AssertSelectors() public {
-        assertEq(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(RecoveryModuleBase.InvalidSelector.selector, bytes4(0x12ba286f));
         assertEq(UniversalEmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
-        assertEq(UniversalEmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
+        assertEq(RecoveryModuleBase.InvalidValidator.selector, bytes4(0x11d5c560));
         assertEq(UniversalEmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
         assertEq(
             UniversalEmailRecoveryModule.NotTrustedRecoveryManager.selector, bytes4(0x38f1b648)
