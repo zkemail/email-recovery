@@ -30,7 +30,7 @@
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@zk-email/contracts": "v6.0.3",
     "@matterlabs": "github:matter-labs/era-contracts",
-    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
+    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit#test/safe-latest",
     "erc7579-implementation": "https://github.com/erc7579/erc7579-implementation.git",
     "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
   },
