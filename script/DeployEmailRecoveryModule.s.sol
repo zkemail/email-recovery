@@ -9,14 +9,16 @@ import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-contract Deploy7579ControllerScript is Script {
+contract DeployEmailRecoveryModuleScript is Script {
     function run() public {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        address validatorAddr = vm.envOr("VALIDATOR", address(0));
 
         if (verifier == address(0)) {
             verifier = address(new Verifier());
@@ -34,6 +36,11 @@ contract Deploy7579ControllerScript is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
+        if (validatorAddr == address(0)) {
+            validatorAddr = address(new OwnableValidator());
+            console.log("Deployed Ownable Validator at", validatorAddr);
+        }
+
         EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
@@ -44,17 +51,19 @@ contract Deploy7579ControllerScript is Script {
         {
             EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
             (address module, address manager, address subjectHandler) = factory
-                .deployUniversalEmailRecoveryModule(
+                .deployEmailRecoveryModule(
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
                 type(EmailRecoverySubjectHandler).creationCode,
-                dkimRegistry
+                dkimRegistry,
+                validatorAddr,
+                bytes4(keccak256(bytes("changeOwner(address)")))
             );
 
-            console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
-            console.log("Deployed Email Recovery Manager at", vm.toString(manager));
             console.log("Deployed Email Recovery Module at", vm.toString(module));
+            console.log("Deployed Email Recovery Manager at", vm.toString(manager));
+            console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
             vm.stopBroadcast();
         }
     }

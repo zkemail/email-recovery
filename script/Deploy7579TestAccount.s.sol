@@ -96,7 +96,6 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         validatorAddr = vm.envOr("VALIDATOR", address(0));
         if (validatorAddr == address(0)) {
             validatorAddr = address(new OwnableValidator());
-            // vm.setEnv("VALIDATOR", vm.toString(validatorAddress));
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
         OwnableValidator validator = OwnableValidator(validatorAddr);
