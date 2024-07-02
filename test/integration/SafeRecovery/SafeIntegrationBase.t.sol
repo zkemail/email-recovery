@@ -29,7 +29,22 @@ abstract contract SafeIntegrationBase is IntegrationBase {
 
     uint256 nullifierCount;
 
+    /**
+     * Helper function to return if current account type is safe or not
+     */
+    function isAccountTypeSafe() public returns (bool) {
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (Strings.equal(currentAccountType, "SAFE")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function setUp() public virtual override {
+        if (!isAccountTypeSafe()) {
+            return;
+        }
         super.setUp();
 
         // Deploy handler, manager and module

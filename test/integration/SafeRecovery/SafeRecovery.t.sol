@@ -16,28 +16,14 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
-    string currentAccountType;
-
     function setUp() public override {
         super.setUp();
     }
 
-    /**
-     * Helper function to skip tests if account type is not Safe. These tests only succeed when the
-     * account type is a Safe
-     */
-    function skipIfAccountTypeNotSafe() public {
-        currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
-
-        if (Strings.equal(currentAccountType, "SAFE")) {
-            vm.skip(false);
-        } else {
+    function test_Recover_RotatesOwnerSuccessfully() public {
+        if (!isAccountTypeSafe()) {
             vm.skip(true);
         }
-    }
-
-    function test_Recover_RotatesOwnerSuccessfully() public {
-        skipIfAccountTypeNotSafe();
 
         bytes memory recoveryCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", address(1), owner1, newOwner1
