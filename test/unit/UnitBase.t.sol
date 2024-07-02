@@ -109,7 +109,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
         // Deploy handler, manager and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
-        emailRecoveryFactory = new EmailRecoveryFactory();
+        emailRecoveryFactory = new EmailRecoveryFactory(
+            address(verifier), address(dkimRegistry), address(emailAuthImpl)
+        );
 
         emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),
