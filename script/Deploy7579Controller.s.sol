@@ -45,7 +45,7 @@ contract Deploy7579ControllerScript is Script {
         // );
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
-            _factory = address(new EmailRecoveryFactory(verifier, dkimRegistry, emailAuthImpl));
+            _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));
             // vm.setEnv("RECOVERY_FACTORY", vm.toString(_factory));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
@@ -56,7 +56,8 @@ contract Deploy7579ControllerScript is Script {
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
-                type(EmailRecoverySubjectHandler).creationCode
+                type(EmailRecoverySubjectHandler).creationCode,
+                dkimRegistry
             );
             // vm.setEnv("RECOVERY_MANAGER", vm.toString(manager));
             // vm.setEnv("RECOVERY_MODULE", vm.toString(module));

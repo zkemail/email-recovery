@@ -12,9 +12,7 @@ import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecovery
 contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
     }
 
     function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
@@ -49,7 +47,11 @@ contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBas
 
         (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
         emailRecoveryFactory.deployUniversalEmailRecoveryModule(
-            subjectHandlerSalt, recoveryManagerSalt, recoveryModuleSalt, subjectHandlerBytecode
+            subjectHandlerSalt,
+            recoveryManagerSalt,
+            recoveryModuleSalt,
+            subjectHandlerBytecode,
+            address(dkimRegistry)
         );
 
         assertEq(emailRecoveryManager, expectedManager);

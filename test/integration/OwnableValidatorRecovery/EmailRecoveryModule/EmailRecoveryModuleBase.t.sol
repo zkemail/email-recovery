@@ -50,11 +50,9 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         validator = new OwnableValidator();
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
 
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         // Deploy EmailRecoveryManager & EmailRecoveryModule
@@ -68,20 +66,15 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
             recoveryManagerSalt,
             recoveryModuleSalt,
             subjectHandlerBytecode,
+            address(ecdsaOwnedDkimRegistry),
             validatorAddress,
             functionSelector
         );
         emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
-        recoveryCalldata1 = abi.encodeWithSelector(
-            functionSelector, accountAddress1, recoveryModuleAddress, newOwner1
-        );
-        recoveryCalldata2 = abi.encodeWithSelector(
-            functionSelector, accountAddress2, recoveryModuleAddress, newOwner2
-        );
-        recoveryCalldata3 = abi.encodeWithSelector(
-            functionSelector, accountAddress3, recoveryModuleAddress, newOwner3
-        );
+        recoveryCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
+        recoveryCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
+        recoveryCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
         calldataHash1 = keccak256(recoveryCalldata1);
         calldataHash2 = keccak256(recoveryCalldata2);
         calldataHash3 = keccak256(recoveryCalldata3);

@@ -46,9 +46,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     function setUp() public virtual override {
         super.setUp();
 
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
@@ -58,7 +56,11 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
         (recoveryModuleAddress, emailRecoveryManagerAddress,) = emailRecoveryFactory
             .deployUniversalEmailRecoveryModule(
-            subjectHandlerSalt, recoveryManagerSalt, recoveryModuleSalt, subjectHandlerBytecode
+            subjectHandlerSalt,
+            recoveryManagerSalt,
+            recoveryModuleSalt,
+            subjectHandlerBytecode,
+            address(ecdsaOwnedDkimRegistry)
         );
         emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
 
@@ -66,16 +68,10 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         validator = new OwnableValidator();
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-        recoveryCalldata1 = abi.encodeWithSelector(
-            functionSelector, accountAddress1, recoveryModuleAddress, newOwner1
-        );
-        recoveryCalldata2 = abi.encodeWithSelector(
-            functionSelector, accountAddress2, recoveryModuleAddress, newOwner2
-        );
-        recoveryCalldata3 = abi.encodeWithSelector(
-            functionSelector, accountAddress3, recoveryModuleAddress, newOwner3
-        );
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+        recoveryCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
+        recoveryCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
+        recoveryCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
         calldataHash1 = keccak256(recoveryCalldata1);
         calldataHash2 = keccak256(recoveryCalldata2);
         calldataHash3 = keccak256(recoveryCalldata3);

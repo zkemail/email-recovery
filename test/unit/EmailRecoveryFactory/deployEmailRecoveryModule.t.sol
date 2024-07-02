@@ -12,9 +12,7 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 contract EmailRecoveryFactory_deployAll_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
     }
 
     function test_DeployEmailRecoveryModule_Succeeds() public {
@@ -54,6 +52,7 @@ contract EmailRecoveryFactory_deployAll_Test is UnitBase {
             recoveryManagerSalt,
             recoveryModuleSalt,
             subjectHandlerBytecode,
+            address(dkimRegistry),
             validatorAddress,
             functionSelector
         );
