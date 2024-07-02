@@ -6,7 +6,7 @@ import { console } from "forge-std/console.sol";
 import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "../src/interfaces/IEmailRecoveryManager.sol";
-import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
+import { RhinestoneModuleKit } from "modulekit/ModuleKit.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -48,7 +48,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     PackedUserOperation userOp;
     bytes32 userOpHash;
 
-    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
+    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
 
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");
@@ -114,11 +114,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         BootstrapConfig[] memory executors = new BootstrapConfig[](1);
         managerAddr = vm.envAddress("RECOVERY_MANAGER");
         require(managerAddr != address(0), "RECOVERY_MANAGER is required");
-        // address guardianAddr = EmailAccountRecovery(managerAddr)
-        //     .computeEmailAuthAddress(account, accountSalt);
-        // console.log("Guardian's EmailAuth address", guardianAddr);
-        // guardians[0] = guardianAddr;
-        // guardianWeights[0] = 1;
+
         bytes memory recoveryModuleInstallData = abi.encode(
             validatorAddr,
             bytes("0"),
@@ -226,59 +222,11 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
         console.log("changeThreshold UserOps are executed");
 
-        // AccountInstance memory instance = makeAccountInstance(accountSalt);
-
-        // instance.installModule({
-        //     moduleTypeId: MODULE_TYPE_VALIDATOR,
-        //     module: validatorAddress,
-        //     data: abi.encode(
-        //         vm.envOr("OWNER", deployer),
-        //         vm.envAddress("RECOVERY_MODULE")
-        //     )
-        // });
-
-        // bytes4 functionSelector = bytes4(
-        //     keccak256(bytes("changeOwner(address,address,address)"))
-        // );
-        // managerAddr = vm.envAddress("RECOVERY_MANAGER");
-        // require(managerAddr != address(0), "RECOVERY_MANAGER is required");
-
-        // address guardianAddr = EmailAccountRecovery(managerAddr)
-        //     .computeEmailAuthAddress(instance.account, accountSalt);
-        // console.log("Guardian's EmailAuth address", guardianAddr);
-        // address[] memory guardians = new address[](1);
-        // guardians[0] = guardianAddr;
-        // uint256[] memory guardianWeights = new uint256[](1);
-        // guardianWeights[0] = 1;
-        // uint threshold = 1;
-        // bytes memory recoveryModuleInstallData = abi.encode(
-        //     validatorAddress,
-        //     bytes("0"),
-        //     functionSelector,
-        //     guardians,
-        //     guardianWeights,
-        //     threshold,
-        //     1 seconds,
-        //     2 weeks
-        // );
-        // instance.installModule({
-        //     moduleTypeId: MODULE_TYPE_EXECUTOR,
-        //     module: vm.envAddress("RECOVERY_MODULE"),
-        //     data: recoveryModuleInstallData
-        // });
         vm.stopBroadcast();
     }
 
     function getNonce(address account, address validator) internal returns (uint256 nonce) {
         uint192 key = uint192(bytes24(bytes20(address(validator))));
-        // console.log("shifted key", uint256(key) << 64);
-        // console.log(
-        //     "raw nonce",
-        //     NonceManager(ENTRYPOINT_ADDR).nonceSequenceNumber(
-        //         address(account),
-        //         key
-        //     )
-        // );
         nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(account), key);
     }
 }
