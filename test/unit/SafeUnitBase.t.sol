@@ -2,6 +2,8 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -14,6 +16,7 @@ import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
 
 abstract contract SafeUnitBase is IntegrationBase {
+    using ModuleKitHelpers for *;
     using Strings for uint256;
 
     EmailRecoveryFactory emailRecoveryFactory;
@@ -25,6 +28,7 @@ abstract contract SafeUnitBase is IntegrationBase {
     bytes4 functionSelector;
     bytes recoveryCalldata;
     bytes32 calldataHash;
+    bytes isInstalledContext;
 
     /**
      * Helper function to return if current account type is safe or not
@@ -77,6 +81,7 @@ abstract contract SafeUnitBase is IntegrationBase {
             "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
         );
         calldataHash = keccak256(recoveryCalldata);
+        isInstalledContext = bytes("0");
 
         // Compute guardian addresses
         guardians1 = new address[](3);
@@ -86,6 +91,21 @@ abstract contract SafeUnitBase is IntegrationBase {
             emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
         guardians1[2] =
             emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
+
+        instance1.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: recoveryModuleAddress,
+            data: abi.encode(
+                accountAddress1,
+                isInstalledContext,
+                functionSelector,
+                guardians1,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
+        });
     }
 
     function generateMockEmailProof(
