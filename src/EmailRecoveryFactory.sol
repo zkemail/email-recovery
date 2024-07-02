@@ -8,16 +8,14 @@ import { EmailRecoveryModule } from "./modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryFactory {
     address public immutable verifier;
-    address public immutable dkimRegistry;
     address public immutable emailAuthImpl;
 
     event EmailRecoveryModuleDeployed(
         address emailRecoveryModule, address emailRecoveryManager, address subjectHandler
     );
 
-    constructor(address _verifier, address _dkimRegistry, address _emailAuthImpl) {
+    constructor(address _verifier, address _emailAuthImpl) {
         verifier = _verifier;
-        dkimRegistry = _dkimRegistry;
         emailAuthImpl = _emailAuthImpl;
     }
 
@@ -26,6 +24,7 @@ contract EmailRecoveryFactory {
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
         bytes memory subjectHandlerBytecode,
+        address dkimRegistry,
         address validator,
         bytes4 functionSelector
     )
@@ -60,7 +59,8 @@ contract EmailRecoveryFactory {
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
-        bytes memory subjectHandlerBytecode
+        bytes memory subjectHandlerBytecode,
+        address dkimRegistry
     )
         external
         returns (address, address, address)

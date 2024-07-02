@@ -64,9 +64,7 @@ abstract contract SafeUnitBase is IntegrationBase {
 
         // Deploy handler, manager and module
         safeRecoverySubjectHandler = new SafeRecoverySubjectHandlerHarness();
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
 
         emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),

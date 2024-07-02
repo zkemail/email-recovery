@@ -74,7 +74,7 @@ contract OwnableValidator is ERC7579ValidatorBase {
             : EIP1271_FAILED;
     }
 
-    function changeOwner(address account, address authorizedAccount, address newOwner) external {
+    function changeOwner(address newOwner) external {
         owners[msg.sender] = newOwner;
     }
 

@@ -111,17 +111,13 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         validator = new OwnableValidator();
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("changeOwner(address,address,address)")));
-        recoveryCalldata = abi.encodeWithSignature(
-            "changeOwner(address,address,address)", accountAddress, recoveryModuleAddress, newOwner
-        );
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, newOwner);
         calldataHash = keccak256(recoveryCalldata);
 
         // Deploy handler, manager and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
-        emailRecoveryFactory = new EmailRecoveryFactory(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl)
-        );
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
 
         emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),
