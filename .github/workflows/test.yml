@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@702a00c1cc825d064acdf79f9da56250081727aa"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
 
   test-multi-account:
     needs: ["build"]
