@@ -10,7 +10,8 @@ contract SafeRecoverySubjectHandler_acceptanceSubjectTemplates_Test is SafeUnitB
         super.setUp();
     }
 
-    function test_AcceptanceSubjectTemplates_Succeeds() public view {
+    function test_AcceptanceSubjectTemplates_Succeeds() public {
+        skipIfNotSafeAccountType();
         string[][] memory templates = safeRecoverySubjectHandler.acceptanceSubjectTemplates();
 
         assertEq(templates.length, 1);
