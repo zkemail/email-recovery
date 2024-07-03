@@ -9,7 +9,6 @@ Account recovery has traditionally been one of the most complex UX hurdles that 
 
 ```shell
 pnpm install
-forge install
 ```
 
 ### Build
@@ -27,20 +26,26 @@ forge test
 # ZK Email Recovery
 
 ## High level contracts diagram (WIP).
-<img src="docs/recovery-module-contracts.drawio.png">
+<img src="docs/email-recovery-diagram.drawio.png">
 
-## Core contracts
-The core contracts contain the bulk of the recovery logic.
+The contracts that are used for recovery are:
+1. EmailRecoveryManager
+2. 7579 Recovery modules
+    - EmailRecoveryModule.sol
+    - UniversalEmailRecoveryModule.sol
+2. Email subject handlers
+    - EmailRecoverySubjectHandler.sol
+    - SafeRecoverySubjectHandler.sol
 
 ### EmailRecoveryManager.sol
 
-`EmailRecoveryManager.sol` defines a default implementation for email-based recovery. It is designed to provide the core logic for email based account recovery that can be used across different modular account implementations. For the end user, the core `EmailRecoveryManager` contract aims to provide a robust and simple mechanism to recover accounts via email guardians.
+`EmailRecoveryManager.sol` defines the main logic for email-based recovery. It is designed to provide the core logic for email based account recovery that can be used across different modular account implementations. For the end user, the core `EmailRecoveryManager` contract aims to provide a robust and simple mechanism to recover accounts via email guardians.
 
-It inherits from a zk email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level zk email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level zk email contracts EmailAuth.sol, verifier, dkim registry etc. More info on the underlying EmailAccountRecovery.sol contract: https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract. 
+It inherits from a zk email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level zk email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level zk email contracts `EmailAuth.sol`, verifier, dkim registry etc. More info on the underlying `EmailAccountRecovery.sol` contract: https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract. 
 
-The guardians are represented onchain by EmailAuth.sol instances. EmailAuth.sol is a lower level zk email contract. it is designed to authenticate that a user is a correct holder of the specific email address and authorize anything described in the email. The guardians privacy is protected onchain, for more info on zk email privacy and EmailAuth - see the [zk email docs](https://zkemail.gitbook.io/zk-email).
+The guardians are represented onchain by EmailAuth.sol instances. `EmailAuth.sol` is designed to authenticate that a user is a correct holder of the specific email address and authorize anything described in the email. The guardians privacy is protected onchain, for more info on zk email privacy and EmailAuth - see the [zk email docs](https://zkemail.gitbook.io/zk-email).
 
-EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core ZkEMailRecovery contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. It's functionality can be extended by creating new subject handler contracts such as `EmailRecoverySubjectHandler.sol`. TODO add more info on this
+EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. The (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core ZkEMailRecovery contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. It's functionality can be extended by creating new subject handler contracts such as `EmailRecoverySubjectHandler.sol`. TODO add more info on this
 
 ## EmailRecoveryManager flow walkthrough
 
@@ -99,8 +104,12 @@ function handleRecovery(
 The final function to complete the recovery process. This function completes the recovery process by validating the recovery request and triggering the recovery module to perform the recovery on the account itself.
 
 ```ts
-function completeRecovery(address account) public;
+function completeRecovery(address account, bytes memory recoveryCalldata) public;
 ```
+
+## Subject Handlers
+
+Subject handlers define the subjects for recovery emails and how they should be validated. We define a universal subject handler which essentially gives 7579 module developers recovery for free. The subject is very  
 
 ### EmailRecoverySubjectHandler.sol
 TODO add section
@@ -148,12 +157,22 @@ The subject template is an array of strings, each of which has some fixed string
 
 If you are recovering an account that needs to rotate a public key which is of type `bytes` in solidity, you can use the string type for that for the subject template.
 
-### EmailRecoveryModule.sol
+### UniversalEmailRecoveryModule.sol
 An recovery module that recovers any validator.
 
 The `recover()` function on the module holds the core logic for the module. It defines “how a recovery attempt is executed on the account”. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery attempt has been successful.
 
 `completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. 
+
+### EmailRecoveryModule.sol
+An recovery module that recovers a specific validator.
+
+The `recover()` function on the module holds the core logic for the module. It defines “how a recovery attempt is executed on the account”. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery attempt has been successful.
+
+`completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. 
+
+### EmailRecoveryFactory.sol
+TODO add section
 
 ## Threat model
 Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. This contract is designed to be extended to take these additional considerations into account, but does not provide them by default.
