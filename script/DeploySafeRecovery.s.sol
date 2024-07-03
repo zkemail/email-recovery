@@ -4,8 +4,7 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
-import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -20,7 +19,6 @@ import { IERC7484 } from "safe7579/interfaces/IERC7484.sol";
 // --rpc-url $BASE_SEPOLIA_RPC_URL --broadcast -vvvv`
 contract DeploySafeRecovery_Script is Script {
     function run() public {
-        bytes32 salt = bytes32(uint256(0));
         address entryPoint = address(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
         IERC7484 registry = IERC7484(0xe0cde9239d16bEf05e62Bbf7aA93e420f464c826);
 
@@ -46,22 +44,23 @@ contract DeploySafeRecovery_Script is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
-        address emailRecoveryHandler = address(new SafeRecoverySubjectHandler());
-        address emailRecoveryManager = address(
-            new EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, emailRecoveryHandler)
+        EmailRecoveryFactory factory = new EmailRecoveryFactory(verifier, emailAuthImpl);
+        (address module, address manager, address subjectHandler) = factory
+            .deployUniversalEmailRecoveryModule(
+            bytes32(uint256(0)),
+            bytes32(uint256(0)),
+            bytes32(uint256(0)),
+            type(SafeRecoverySubjectHandler).creationCode,
+            dkimRegistry
         );
-        address emailRecoveryModule =
-            address(new UniversalEmailRecoveryModule(emailRecoveryManager));
 
-        EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
-
-        address safe7579 = address(new Safe7579{ salt: salt }());
+        address safe7579 = address(new Safe7579{ salt: bytes32(uint256(0)) }());
         address safe7579Launchpad =
-            address(new Safe7579Launchpad{ salt: salt }(entryPoint, registry));
+            address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
 
-        console.log("Deployed Email Recovery Module at  ", vm.toString(emailRecoveryModule));
-        console.log("Deployed Email Recovery Manager at ", vm.toString(emailRecoveryManager));
-        console.log("Deployed Email Recovery Handler at ", vm.toString(emailRecoveryHandler));
+        console.log("Deployed Email Recovery Module at  ", vm.toString(module));
+        console.log("Deployed Email Recovery Manager at ", vm.toString(manager));
+        console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
         console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));
 
