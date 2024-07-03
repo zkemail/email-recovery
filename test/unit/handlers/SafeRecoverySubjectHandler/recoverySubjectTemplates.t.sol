@@ -9,7 +9,8 @@ contract SafeRecoverySubjectHandler_recoverySubjectTemplates_Test is SafeUnitBas
         super.setUp();
     }
 
-    function test_RecoverySubjectTemplates_Succeeds() public view {
+    function test_RecoverySubjectTemplates_Succeeds() public {
+        skipIfNotSafeAccountType();
         string[][] memory templates = safeRecoverySubjectHandler.recoverySubjectTemplates();
 
         assertEq(templates.length, 1);

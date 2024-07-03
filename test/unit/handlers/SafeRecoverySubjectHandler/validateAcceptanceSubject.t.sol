@@ -11,6 +11,7 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
+        skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
@@ -18,6 +19,7 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_TooManySubjectParams() public {
+        skipIfNotSafeAccountType();
         bytes[] memory subjectParams = new bytes[](2);
         subjectParams[0] = abi.encode(accountAddress1);
         subjectParams[1] = abi.encode("extra param");
@@ -26,7 +28,8 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
         safeRecoverySubjectHandler.validateAcceptanceSubject(templateIdx, subjectParams);
     }
 
-    function test_ValidateAcceptanceSubject_Succeeds() public view {
+    function test_ValidateAcceptanceSubject_Succeeds() public {
+        skipIfNotSafeAccountType();
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress1);
 

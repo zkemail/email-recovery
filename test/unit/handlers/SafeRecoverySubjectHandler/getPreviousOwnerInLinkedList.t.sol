@@ -11,7 +11,8 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         super.setUp();
     }
 
-    function test_GetPreviousOwnerInLinkedList_InvalidOwner_ReturnsSentinel() public view {
+    function test_GetPreviousOwnerInLinkedList_InvalidOwner_ReturnsSentinel() public {
+        skipIfNotSafeAccountType();
         address invalidOwner = address(0);
 
         address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
@@ -21,7 +22,8 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         assertEq(previousOwner, SENTINEL_OWNERS);
     }
 
-    function test_GetPreviousOwnerInLinkedList_OwnerIsSentinel_ReturnsSentinel() public view {
+    function test_GetPreviousOwnerInLinkedList_OwnerIsSentinel_ReturnsSentinel() public {
+        skipIfNotSafeAccountType();
         address invalidOwner = SENTINEL_OWNERS;
 
         address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
@@ -32,13 +34,15 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
     }
 
     function test_GetPreviousOwnerInLinkedList_RevertWhen_InvalidAccount() public {
+        skipIfNotSafeAccountType();
         address invalidAccount = address(0);
 
         vm.expectRevert();
         safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(invalidAccount, owner1);
     }
 
-    function test_GetPreviousOwnerInLinkedList_Succeeds() public view {
+    function test_GetPreviousOwnerInLinkedList_Succeeds() public {
+        skipIfNotSafeAccountType();
         address expectedPreviousOwner = address(1);
         address previousOwner =
             safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
@@ -47,6 +51,7 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
     }
 
     function test_GetPreviousOwnerInLinkedList_SucceedsWithMultipleAccounts() public {
+        skipIfNotSafeAccountType();
         address expectedPreviousOwner = address(1);
         address previousOwner =
             safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);

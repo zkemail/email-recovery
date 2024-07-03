@@ -21,6 +21,8 @@
     "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
     "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
     "test": "forge test",
+    "test:safe": "ACCOUNT_TYPE=SAFE forge test",
+    "test:kernel": "ACCOUNT_TYPE=KERNEL forge test",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
@@ -28,7 +30,7 @@
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@zk-email/contracts": "v6.0.3",
     "@matterlabs": "github:matter-labs/era-contracts",
-    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
+    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit#test/safe-latest",
     "erc7579-implementation": "https://github.com/erc7579/erc7579-implementation.git",
     "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
   },

@@ -12,7 +12,8 @@ contract SafeRecoverySubjectHandler_extractRecoveredAccountFromAcceptanceSubject
         super.setUp();
     }
 
-    function test_ExtractRecoveredAccountFromAcceptanceSubject_Succeeds() public view {
+    function test_ExtractRecoveredAccountFromAcceptanceSubject_Succeeds() public {
+        skipIfNotSafeAccountType();
         bytes[] memory subjectParams = new bytes[](1);
         subjectParams[0] = abi.encode(accountAddress1);
 

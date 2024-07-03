@@ -22,6 +22,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
+        skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
@@ -31,6 +32,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_TooManySubjectParams() public {
+        skipIfNotSafeAccountType();
         bytes[] memory longSubjectParams = new bytes[](5);
         longSubjectParams[0] = subjectParams[0];
         longSubjectParams[1] = subjectParams[1];
@@ -45,6 +47,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidOldOwner() public {
+        skipIfNotSafeAccountType();
         subjectParams[1] = abi.encode(address(0));
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidOldOwner.selector);
@@ -54,6 +57,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
+        skipIfNotSafeAccountType();
         subjectParams[2] = abi.encode(address(0));
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
@@ -63,6 +67,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     }
 
     function test_ValidateRecoverySubject_RevertWhen_RecoveryModuleAddressIsZero() public {
+        skipIfNotSafeAccountType();
         subjectParams[3] = abi.encode(address(0));
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector);
@@ -74,6 +79,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     function test_ValidateRecoverySubject_RevertWhen_RecoveryModuleNotEqualToExpectedAddress()
         public
     {
+        skipIfNotSafeAccountType();
         subjectParams[3] = abi.encode(address(1));
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector);
@@ -82,7 +88,8 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         );
     }
 
-    function test_ValidateRecoverySubject_Succeeds() public view {
+    function test_ValidateRecoverySubject_Succeeds() public {
+        skipIfNotSafeAccountType();
         (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
             .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
         assertEq(accountFromEmail, accountAddress1);
