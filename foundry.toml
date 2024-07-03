@@ -37,5 +37,5 @@ quote_style = "double"
 tab_width = 4
 wrap_comments = true
 ignore = [
-    "./src/zksyncDeps/contracts/L2ContractHelper.sol",
+    "./src/libraries/L2ContractHelper.sol",
 ]
