@@ -27,7 +27,10 @@ import { GuardianUtils } from "./libraries/GuardianUtils.sol";
  *
  * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
  * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
- * the recovery module defines “how that recovery attempt is executed on the account”.
+ * the recovery module defines “how that recovery attempt is executed on the account”. A
+ * specific email subject handler is also accociated with a recovery manager. A subject handler
+ * defines and validates the recovery email subjects. Developers can write their own subject
+ * handlers to make specifc subjects for recovering modules
  */
 contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailRecoveryManager {
     using GuardianUtils for mapping(address => GuardianConfig);
@@ -142,11 +145,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * @notice Returns a two-dimensional array of strings representing the subject templates for an
      * acceptance by a new guardian.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different acceptance subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
+     * @dev This is retrieved from the associated subject handler. Developers can write their own
+     * subject handlers, this is useful for account implementations which require different data in
+     * the subject or if the email should be in a language that is not English.
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
@@ -157,11 +158,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * @notice Returns a two-dimensional array of strings representing the subject templates for
      * email recovery.
-     * @dev This function is overridden from EmailAccountRecovery. It is also virtual so can be
-     * re-implemented by inheriting contracts
-     * to define different recovery subject templates. This is useful for account implementations
-     * which require different data
-     * in the subject or if the email should be in a language that is not English.
+     * @dev This is retrieved from the associated subject handler. Developers can write their own
+     * subject handlers, this is useful for account implementations which require different data in
+     * the subject or if the email should be in a language that is not English.
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
      * set of fixed strings and matchers for a subject template.
      */
@@ -169,6 +168,13 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         return IEmailRecoverySubjectHandler(subjectHandler).recoverySubjectTemplates();
     }
 
+    /**
+     * @notice Extracts the account address to be recovered from the subject parameters of an
+     * acceptance email.
+     * @dev This is retrieved from the associated subject handler.
+     * @param subjectParams The subject parameters of the acceptance email.
+     * @param templateIdx The index of the acceptance subject template.
+     */
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] memory subjectParams,
         uint256 templateIdx
@@ -182,6 +188,13 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             .extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
     }
 
+    /**
+     * @notice Extracts the account address to be recovered from the subject parameters of a
+     * recovery email.
+     * @dev This is retrieved from the associated subject handler.
+     * @param subjectParams The subject parameters of the recovery email.
+     * @param templateIdx The index of the recovery subject template.
+     */
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] memory subjectParams,
         uint256 templateIdx
@@ -202,8 +215,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * @notice Configures recovery for the caller's account. This is the first core function
      * that must be called during the end-to-end recovery flow
-     * @dev Can only be called once for configuration. Sets up the guardians, deploys a router
-     * contract, and validates config parameters, ensuring that no recovery is in process
+     * @dev Can only be called once for configuration. Sets up the guardians, and validates config
+     * parameters, ensuring that no recovery is in process. It is possible to configure guardians at
+     * a later stage if neccessary
      * @param guardians An array of guardian addresses
      * @param weights An array of weights corresponding to each guardian
      * @param threshold The threshold weight required for recovery
@@ -247,9 +261,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * @notice Updates and validates the recovery configuration for the caller's account
      * @dev Validates and sets the new recovery configuration for the caller's account, ensuring
-     * that no
-     * recovery is in process. Reverts if the recovery module address is invalid, if the
-     * delay is greater than the expiry, or if the recovery window is too short
+     * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
     function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
@@ -281,10 +293,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @notice Accepts a guardian for the specified account. This is the second core function
      * that must be called during the end-to-end recovery flow
      * @dev Called once per guardian added. Although this adds an extra step to recovery, this
-     * acceptance
-     * flow is an important security feature to ensure that no typos are made when adding a guardian
-     * and that the guardian explicitly consents to the role. Called as part of handleAcceptance
-     * in EmailAccountRecovery
+     * acceptance flow is an important security feature to ensure that no typos are made when adding
+     * a guardian, and that the guardian is in control of the specified email address. Called as
+     * part of handleAcceptance in EmailAccountRecovery
      * @param guardian The address of the guardian to be accepted
      * @param templateIdx The index of the template used for acceptance
      * @param subjectParams An array of bytes containing the subject parameters
@@ -333,8 +344,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * @notice Processes a recovery request for a given account. This is the third core function
      * that must be called during the end-to-end recovery flow
-     * @dev Reverts if the guardian address is invalid, if the template index is not zero, or if the
-     * guardian status is not accepted
+     * @dev Called once per guardian until the threshold is reached
      * @param guardian The address of the guardian initiating the recovery
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams An array of bytes containing the subject parameters
@@ -393,11 +403,11 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * anyone.
      * @dev Validates the recovery request by checking the total weight, that the delay has passed,
      * and the request has not expired. Triggers the recovery module to perform the recovery. The
-     * recovery module trusts that this contract has validated the recovery attempt. Deletes the
-     * recovery
-     * request but recovery config state is maintained so future recovery requests can be made
-     * without having to reconfigure everything
+     * recovery module trusts that this contract has validated the recovery attempt. This function
+     * deletes the recovery request but recovery config state is maintained so future recovery
+     * requests can be made without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
+     * @param recoveryCalldata The calldata that is passed to recover the validator
      */
     function completeRecovery(address account, bytes memory recoveryCalldata) public override {
         if (account == address(0)) {
@@ -476,10 +486,22 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /*                       GUARDIAN LOGIC                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    /**
+     * @notice Retrieves the guardian configuration for a given account
+     * @param account The address of the account for which the guardian configuration is being
+     * retrieved
+     * @return GuardianConfig The guardian configuration for the specified account
+     */
     function getGuardianConfig(address account) external view returns (GuardianConfig memory) {
         return guardianConfigs[account];
     }
 
+    /**
+     * @notice Retrieves the guardian storage details for a given guardian and account
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian
+     * @return GuardianStorage The guardian storage details for the specified guardian and account
+     */
     function getGuardian(
         address account,
         address guardian
@@ -491,6 +513,15 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         return guardiansStorage.getGuardianStorage(account, guardian);
     }
 
+    /**
+     * @notice Sets up guardians for a given account with specified weights and threshold
+     * @dev This function can only be called once and ensures the guardians, weights, and threshold
+     * are correctly configured
+     * @param account The address of the account for which guardians are being set up
+     * @param guardians An array of guardian addresses
+     * @param weights An array of weights corresponding to each guardian
+     * @param threshold The threshold weight required for guardians to approve recovery attempts
+     */
     function setupGuardians(
         address account,
         address[] memory guardians,
@@ -502,14 +533,33 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
     }
 
+    /**
+     * @notice Adds a guardian for the caller's account with a specified weight
+     * @dev This function can only be called by the account associated with the guardian and only if
+     * no recovery is in process
+     * @param guardian The address of the guardian to be added
+     * @param weight The weight assigned to the guardian
+     */
     function addGuardian(address guardian, uint256 weight) external onlyWhenNotRecovering {
         guardiansStorage.addGuardian(guardianConfigs, msg.sender, guardian, weight);
     }
 
+    /**
+     * @notice Removes a guardian for the caller's account
+     * @dev This function can only be called by the account associated with the guardian and only if
+     * no recovery is in process
+     * @param guardian The address of the guardian to be removed
+     */
     function removeGuardian(address guardian) external onlyWhenNotRecovering {
         guardiansStorage.removeGuardian(guardianConfigs, msg.sender, guardian);
     }
 
+    /**
+     * @notice Changes the threshold for guardian approvals for the caller's account
+     * @dev This function can only be called by the account associated with the guardian config and
+     * only if no recovery is in process
+     * @param threshold The new threshold for guardian approvals
+     */
     function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
         guardianConfigs.changeThreshold(msg.sender, threshold);
     }

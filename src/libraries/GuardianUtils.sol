@@ -4,6 +4,9 @@ pragma solidity ^0.8.25;
 import { EnumerableGuardianMap, GuardianStorage, GuardianStatus } from "./EnumerableGuardianMap.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 
+/**
+ * A helper library to manage guardians
+ */
 library GuardianUtils {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
@@ -21,6 +24,12 @@ library GuardianUtils {
     error SetupNotCalled();
     error UnauthorizedAccountForGuardian();
 
+    /**
+     * @notice Retrieves the guardian storage details for a given guardian and account
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian
+     * @return GuardianStorage The guardian storage details for the specified guardian and account
+     */
     function getGuardianStorage(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account,
@@ -33,6 +42,16 @@ library GuardianUtils {
         return guardiansStorage[account].get(guardian);
     }
 
+    /**
+     * @notice Sets up guardians for a given account with specified weights and threshold
+     * @dev This function can only be called once and ensures the guardians, weights, and threshold
+     * are correctly configured
+     * @param guardiansStorage The guardian storage associated with an account
+     * @param account The address of the account for which guardians are being set up
+     * @param guardians An array of guardian addresses
+     * @param weights An array of weights corresponding to each guardian
+     * @param threshold The threshold weight required for guardians to approve recovery attempts
+     */
     function setupGuardians(
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
@@ -93,6 +112,12 @@ library GuardianUtils {
         });
     }
 
+    /**
+     * @notice Updates the status for a guardian
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian
+     * @param newStatus The new status for the guardian
+     */
     function updateGuardianStatus(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account,
@@ -112,6 +137,13 @@ library GuardianUtils {
         });
     }
 
+    /**
+     * @notice Adds a guardian for the caller's account with a specified weight
+     * @param guardianConfigs The guardian config storage associated with an account
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian to be added
+     * @param weight The weight assigned to the guardian
+     */
     function addGuardian(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
@@ -151,6 +183,12 @@ library GuardianUtils {
         emit AddedGuardian(account, guardian);
     }
 
+    /**
+     * @notice Removes a guardian for the caller's account
+     * @param guardianConfigs The guardian config storage associated with an account
+     * @param account The address of the account associated with the guardian
+     * @param guardian The address of the guardian to be removed
+     */
     function removeGuardian(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
@@ -179,6 +217,10 @@ library GuardianUtils {
         emit RemovedGuardian(account, guardian);
     }
 
+    /**
+     * @notice Removes all guardians associated with an account
+     * @param account The address of the account associated with the guardians
+     */
     function removeAllGuardians(
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account
@@ -188,6 +230,11 @@ library GuardianUtils {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
     }
 
+    /**
+     * @notice Changes the threshold for guardian approvals for the caller's account
+     * @param account The address of the account associated with the guardians
+     * @param threshold The new threshold for guardian approvals
+     */
     function changeThreshold(
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         address account,

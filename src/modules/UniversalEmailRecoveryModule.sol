@@ -15,6 +15,9 @@ import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
  * integration with a trusted email recovery manager. The module defines how a recovery request is
  * executed on a validator, while the trusted recovery manager defines what a valid
  * recovery request is
+ *
+ * This recovery module is generic and does not target a specific validator. An account may add
+ * multiple validators to this recovery module
  */
 contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
@@ -226,6 +229,11 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
             != 0;
     }
 
+    /**
+     * Check if the recovery module is authorized to recover the account
+     * @param smartAccount The smart account to check
+     * @return true if the module is authorized, false otherwise
+     */
     function isAuthorizedToRecover(address smartAccount) external view returns (bool) {
         return getAllowedValidators(smartAccount).length > 0;
     }
