@@ -13,8 +13,6 @@ import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecovery
 contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryUniversalFactory =
-            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
     }
 
     function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
