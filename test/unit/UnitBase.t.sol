@@ -26,6 +26,7 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 import { UniversalEmailRecoveryModuleHarness } from "./UniversalEmailRecoveryModuleHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 
@@ -41,6 +42,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     EmailAuth emailAuthImpl;
 
     EmailRecoveryFactory emailRecoveryFactory;
+    EmailRecoveryUniversalFactory emailRecoveryUniversalFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManagerHarness emailRecoveryManager;
     UniversalEmailRecoveryModuleHarness emailRecoveryModule;
@@ -110,6 +112,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         // Deploy handler, manager and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
         emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryUniversalFactory =
+            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
 
         emailRecoveryManager = new EmailRecoveryManagerHarness(
             address(verifier),

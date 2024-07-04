@@ -4,9 +4,8 @@ pragma solidity ^0.8.25;
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { EmailRecoveryManager } from "./EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "./modules/UniversalEmailRecoveryModule.sol";
-import { EmailRecoveryModule } from "./modules/EmailRecoveryModule.sol";
 
-contract EmailRecoveryFactory {
+contract EmailRecoveryUniversalFactory {
     address public immutable verifier;
     address public immutable emailAuthImpl;
 
@@ -19,14 +18,12 @@ contract EmailRecoveryFactory {
         emailAuthImpl = _emailAuthImpl;
     }
 
-    function deployEmailRecoveryModule(
+    function deployUniversalEmailRecoveryModule(
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
         bytes memory subjectHandlerBytecode,
-        address dkimRegistry,
-        address validator,
-        bytes4 functionSelector
+        address dkimRegistry
     )
         external
         returns (address, address, address)
@@ -43,9 +40,7 @@ contract EmailRecoveryFactory {
 
         // Deploy recovery module
         address emailRecoveryModule = address(
-            new EmailRecoveryModule{ salt: recoveryModuleSalt }(
-                emailRecoveryManager, validator, functionSelector
-            )
+            new UniversalEmailRecoveryModule{ salt: recoveryModuleSalt }(emailRecoveryManager)
         );
 
         // Initialize recovery manager with module address

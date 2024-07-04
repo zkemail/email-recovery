@@ -13,6 +13,7 @@ import {
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../../IntegrationBase.t.sol";
@@ -23,7 +24,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     using Strings for uint256;
     using Strings for address;
 
-    EmailRecoveryFactory emailRecoveryFactory;
+    EmailRecoveryUniversalFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
     EmailRecoveryManager emailRecoveryManager;
 
@@ -46,7 +47,8 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     function setUp() public virtual override {
         super.setUp();
 
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryFactory =
+            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
