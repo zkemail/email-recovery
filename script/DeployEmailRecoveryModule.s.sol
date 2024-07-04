@@ -58,7 +58,7 @@ contract DeployEmailRecoveryModuleScript is Script {
                 type(EmailRecoverySubjectHandler).creationCode,
                 dkimRegistry,
                 validatorAddr,
-                bytes4(keccak256(bytes("changeOwner(address)")))
+                bytes4(keccak256(bytes("resetOwners(bytes)")))
             );
 
             console.log("Deployed Email Recovery Module at", vm.toString(module));
