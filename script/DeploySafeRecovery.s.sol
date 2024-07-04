@@ -4,8 +4,8 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
-import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
-import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";

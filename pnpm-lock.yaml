@@ -20,12 +20,18 @@ importers:
       '@zk-email/contracts':
         specifier: v6.0.3
         version: 6.0.3
+      email-wallet-sdk:
+        specifier: github:zkemail/email-wallet-sdk
+        version: https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       erc7579-implementation:
-        specifier: https://github.com/erc7579/erc7579-implementation.git
-        version: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/4f27201bfd949348ae3a390ae5aa8e85ea19cc11(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+        specifier: github:erc7579/erc7579-implementation
+        version: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/8ab162604cb4878381bb8a15064fec42f775440b(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+      ether-email-auth:
+        specifier: github:zkemail/ether-email-auth
+        version: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/10a50a599feed9df9fd8db3e151787e3020f52d6
       solidity-stringutils:
-        specifier: https://github.com/Arachnid/solidity-stringutils.git
-        version: solidity-stringutils.git@https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461
+        specifier: github:Arachnid/solidity-stringutils
+        version: https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461
 
 packages:
 
@@ -40,6 +46,10 @@ packages:
   '@babel/highlight@7.24.7':
     resolution: {integrity: sha512-EStJpq4OuY8xYfhGVXngigBJRWxftKX9ksiGDnmlY3o7B/V7KIAc9X4oiK87uPJSc/vs5L869bem5fhZa8caZw==}
     engines: {node: '>=6.9.0'}
+
+  '@email-wallet/contracts@https://gitpkg.now.sh/zkemail/email-wallet/packages/contracts?8ae807dfcfe617a1a3e4b5342a667f0f595b8c82':
+    resolution: {tarball: https://gitpkg.now.sh/zkemail/email-wallet/packages/contracts?8ae807dfcfe617a1a3e4b5342a667f0f595b8c82}
+    version: 1.0.0
 
   '@ethereumjs/rlp@4.0.1':
     resolution: {integrity: sha512-tqsQiBQDQdmPWE1xkkBq4rlSW5QZpLOUJ5RJh2/9fug+q9tnUhuZoVLk7s0scUIKTOzEtR72DFBXI4WiZcMpvw==}
@@ -278,10 +288,16 @@ packages:
     peerDependencies:
       hardhat: ^2.0.4
 
+  '@openzeppelin/contracts-upgradeable@4.9.6':
+    resolution: {integrity: sha512-m4iHazOsOCv1DgM7eD7GupTJ+NFVujRZt1wzddDPSVGpWdKq1SKkla5htKG7+IS4d2XOCtzkUNwRZ7Vq5aEUMA==}
+
   '@openzeppelin/contracts-upgradeable@5.0.1':
     resolution: {integrity: sha512-MvaLoPnVcoZr/qqZP+4cl9piuR4gg0iIGgxVSZ/AL1iId3M6IdEHzz9Naw5Lirl4KKBI6ciTVnX07yL4dOMIJg==}
     peerDependencies:
       '@openzeppelin/contracts': 5.0.1
+
+  '@openzeppelin/contracts@3.4.2-solc-0.7':
+    resolution: {integrity: sha512-W6QmqgkADuFcTLzHL8vVoNBtkwjvQRpYIAom7KiUNoLKghyx3FgH0GBjt8NRvigV1ZmMOBllvE1By1C+bi8WpA==}
 
   '@openzeppelin/contracts@4.9.6':
     resolution: {integrity: sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==}
@@ -314,8 +330,8 @@ packages:
   '@rhinestone/erc4337-validation@0.0.1-alpha.2':
     resolution: {integrity: sha512-sxBSHoR0hV0rN2bv5HfINHR3RyBChfd0OWH0TP8nlA9FolJ1EezLByxcyrvAgi2QLQ2Zf2zVcNky1qYdfF4NjQ==}
 
-  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/a0ad2843be643fffa11ecaf51f7146e301497370':
-    resolution: {tarball: https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/a0ad2843be643fffa11ecaf51f7146e301497370}
+  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/99c4540e6f7f8b0b4a34accca97914c213671274':
+    resolution: {tarball: https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/99c4540e6f7f8b0b4a34accca97914c213671274}
     version: 0.0.1
 
   '@rhinestone/modulekit@https://codeload.github.com/rhinestonewtf/modulekit/tar.gz/924f6aba8a4baab2f98b1a2160aca912bb6546f1':
@@ -441,6 +457,31 @@ packages:
   '@types/secp256k1@4.0.6':
     resolution: {integrity: sha512-hHxJU6PAEUn0TP4S/ZOzuTUvJWuZ6eIKeNKb5RBpODvSl6hp1Wrw4s7ATY50rklRCScUDpHzVA/DQdSjJ3UoYQ==}
 
+  '@uniswap/lib@4.0.1-alpha':
+    resolution: {integrity: sha512-f6UIliwBbRsgVLxIaBANF6w09tYqc6Y/qXdsrbEmXHyFA7ILiKrIwRFXe1yOg8M3cksgVsO9N7yuL2DdCGQKBA==}
+    engines: {node: '>=10'}
+
+  '@uniswap/v2-core@1.0.1':
+    resolution: {integrity: sha512-MtybtkUPSyysqLY2U210NBDeCHX+ltHt3oADGdjqoThZaFRDKwM6k1Nb3F0A3hk5hwuQvytFWhrWHOEq6nVJ8Q==}
+    engines: {node: '>=10'}
+
+  '@uniswap/v3-core@1.0.1':
+    resolution: {integrity: sha512-7pVk4hEm00j9tc71Y9+ssYpO6ytkeI0y7WE9P6UcmNzhxPePwyAxImuhVsTqWK9YFvzgtvzJHi64pBl4jUzKMQ==}
+    engines: {node: '>=10'}
+
+  '@uniswap/v3-core@https://codeload.github.com/Uniswap/v3-core/tar.gz/6562c52e8f75f0c10f9deaf44861847585fc8129':
+    resolution: {tarball: https://codeload.github.com/Uniswap/v3-core/tar.gz/6562c52e8f75f0c10f9deaf44861847585fc8129}
+    version: 1.0.1-solc-0.8
+    engines: {node: '>=10'}
+
+  '@uniswap/v3-periphery@https://codeload.github.com/Uniswap/v3-periphery/tar.gz/697c2474757ea89fec12a4e6db16a574fe259610':
+    resolution: {tarball: https://codeload.github.com/Uniswap/v3-periphery/tar.gz/697c2474757ea89fec12a4e6db16a574fe259610}
+    version: 1.4.4
+    engines: {node: '>=10'}
+
+  '@zk-email/contracts@4.1.0':
+    resolution: {integrity: sha512-5cFgx1kpAPL0Pl5wUb2SA3qaIgYpbp5jjonuYH268BaspvyqSoFS77/UVX+4yjbOQtZmrTntaYXNaseghLLlXw==}
+
   '@zk-email/contracts@6.0.3':
     resolution: {integrity: sha512-nPSG27431Cz5bzPlR/ltn7qa9k+Joc/6LDHUz+JeFWEP/ff9VnzK11P0ay5qdX14qpQ647varPdxGtulosUtxw==}
 
@@ -565,6 +606,9 @@ packages:
 
   base-x@3.0.9:
     resolution: {integrity: sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ==}
+
+  base64-sol@1.0.1:
+    resolution: {integrity: sha512-ld3cCNMeXt4uJXmLZBHFGMvVpK9KsLVEhPpFRXnvSVAqABKbuNZg/+dsq3NuM+wxFLb/UrVkz7m1ciWmkMfTbg==}
 
   bech32@1.1.4:
     resolution: {integrity: sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==}
@@ -817,6 +861,10 @@ packages:
   elliptic@6.5.5:
     resolution: {integrity: sha512-7EjbcmUm17NQFu4Pmgmq2olYMj8nwMnpcddByChSUjArp8F5DQWcIcpriwO4ZToLNAJig0yiyjswfyGNje/ixw==}
 
+  email-wallet-sdk@https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56:
+    resolution: {tarball: https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56}
+    version: 0.0.1
+
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
 
@@ -834,10 +882,6 @@ packages:
   era-contracts@https://codeload.github.com/matter-labs/era-contracts/tar.gz/db9387690502937de081a959b164db5a5262ce0a:
     resolution: {tarball: https://codeload.github.com/matter-labs/era-contracts/tar.gz/db9387690502937de081a959b164db5a5262ce0a}
     version: 0.1.0
-
-  erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/4f27201bfd949348ae3a390ae5aa8e85ea19cc11:
-    resolution: {tarball: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/4f27201bfd949348ae3a390ae5aa8e85ea19cc11}
-    version: 0.3.1
 
   erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/8ab162604cb4878381bb8a15064fec42f775440b:
     resolution: {tarball: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/8ab162604cb4878381bb8a15064fec42f775440b}
@@ -888,6 +932,11 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
+
+  ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/10a50a599feed9df9fd8db3e151787e3020f52d6:
+    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/10a50a599feed9df9fd8db3e151787e3020f52d6}
+    version: 1.0.0
+    engines: {node: '18'}
 
   ethereum-bloom-filters@1.1.0:
     resolution: {integrity: sha512-J1gDRkLpuGNvWYzWslBQR9cDV4nd4kfvVTE/Wy4Kkm4yb3EYRSlyi0eB/inTsSTTVyA0+HyzHgbr95Fn/Z1fSw==}
@@ -1744,6 +1793,9 @@ packages:
     resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
     engines: {node: '>=10'}
 
+  solady@0.0.123:
+    resolution: {integrity: sha512-F/B8OMCplGsS4FrdPrnEG0xdg8HKede5PwC+Rum8soj/LWxfKckA0p+Uwnlbgey2iI82IHvmSOCNhsdbA+lUrw==}
+
   solady@https://codeload.github.com/vectorized/solady/tar.gz/fcb4426857d2464a316544924b20c5d43f2b0088:
     resolution: {tarball: https://codeload.github.com/vectorized/solady/tar.gz/fcb4426857d2464a316544924b20c5d43f2b0088}
     version: 0.0.217
@@ -1767,7 +1819,7 @@ packages:
     peerDependencies:
       hardhat: ^2.11.0
 
-  solidity-stringutils.git@https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461:
+  solidity-stringutils@https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461:
     resolution: {tarball: https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461}
     version: 0.0.0
 
@@ -2051,6 +2103,25 @@ snapshots:
       chalk: 2.4.2
       js-tokens: 4.0.0
       picocolors: 1.0.1
+
+  '@email-wallet/contracts@https://gitpkg.now.sh/zkemail/email-wallet/packages/contracts?8ae807dfcfe617a1a3e4b5342a667f0f595b8c82(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))':
+    dependencies:
+      '@openzeppelin/contracts': 4.9.6
+      '@openzeppelin/contracts-upgradeable': 4.9.6
+      '@uniswap/v3-core': https://codeload.github.com/Uniswap/v3-core/tar.gz/6562c52e8f75f0c10f9deaf44861847585fc8129
+      '@uniswap/v3-periphery': https://codeload.github.com/Uniswap/v3-periphery/tar.gz/697c2474757ea89fec12a4e6db16a574fe259610
+      '@zk-email/contracts': 4.1.0
+      accountabstraction: https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/7174d6d845618dbd11cee68eefa715f5263690b6(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+      solady: 0.0.123
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - ethers
+      - hardhat
+      - lodash
+      - supports-color
+      - typechain
+      - utf-8-validate
 
   '@ethereumjs/rlp@4.0.1': {}
 
@@ -2442,9 +2513,13 @@ snapshots:
       - encoding
       - supports-color
 
+  '@openzeppelin/contracts-upgradeable@4.9.6': {}
+
   '@openzeppelin/contracts-upgradeable@5.0.1(@openzeppelin/contracts@5.0.2)':
     dependencies:
       '@openzeppelin/contracts': 5.0.2
+
+  '@openzeppelin/contracts@3.4.2-solc-0.7': {}
 
   '@openzeppelin/contracts@4.9.6': {}
 
@@ -2492,7 +2567,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/a0ad2843be643fffa11ecaf51f7146e301497370(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))':
+  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/99c4540e6f7f8b0b4a34accca97914c213671274(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))':
     dependencies:
       '@ERC4337/account-abstraction': accountabstraction@https://codeload.github.com/kopy-kat/account-abstraction/tar.gz/c5887153fbfe3ed09b2637cac39873f96d676f38(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       erc7579: erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/8ab162604cb4878381bb8a15064fec42f775440b(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
@@ -2513,7 +2588,7 @@ snapshots:
       '@ERC4337/account-abstraction-v0.6': accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/7174d6d845618dbd11cee68eefa715f5263690b6(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       '@prb/math': 4.0.3
       '@rhinestone/erc4337-validation': 0.0.1-alpha.2(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))(typescript@5.5.2)
-      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/a0ad2843be643fffa11ecaf51f7146e301497370(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/99c4540e6f7f8b0b4a34accca97914c213671274(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       '@rhinestone/safe7579': https://codeload.github.com/rhinestonewtf/safe7579/tar.gz/d961421641b826f6c970e13b0af18111ec10ebad(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))(typescript@5.5.2)
       '@rhinestone/sentinellist': https://codeload.github.com/rhinestonewtf/sentinellist/tar.gz/446b16c3ec5ba1d0acd730ecf2bebd2ac48f915f
       '@safe-global/safe-contracts': 1.4.1(ethers@5.7.2)
@@ -2541,7 +2616,7 @@ snapshots:
       '@ERC4337/account-abstraction-v0.6': accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/7174d6d845618dbd11cee68eefa715f5263690b6(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       '@rhinestone/checknsignatures': https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/a4b89298e28e62a984d62aad14a94dff255abdf0
       '@rhinestone/erc4337-validation': 0.0.1-alpha.2(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))(typescript@5.5.2)
-      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/a0ad2843be643fffa11ecaf51f7146e301497370(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/99c4540e6f7f8b0b4a34accca97914c213671274(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
       '@rhinestone/sentinellist': https://codeload.github.com/rhinestonewtf/sentinellist/tar.gz/446b16c3ec5ba1d0acd730ecf2bebd2ac48f915f
       '@safe-global/safe-contracts': 1.4.1(ethers@5.7.2)
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
@@ -2706,6 +2781,27 @@ snapshots:
   '@types/secp256k1@4.0.6':
     dependencies:
       '@types/node': 20.14.8
+
+  '@uniswap/lib@4.0.1-alpha': {}
+
+  '@uniswap/v2-core@1.0.1': {}
+
+  '@uniswap/v3-core@1.0.1': {}
+
+  '@uniswap/v3-core@https://codeload.github.com/Uniswap/v3-core/tar.gz/6562c52e8f75f0c10f9deaf44861847585fc8129': {}
+
+  '@uniswap/v3-periphery@https://codeload.github.com/Uniswap/v3-periphery/tar.gz/697c2474757ea89fec12a4e6db16a574fe259610':
+    dependencies:
+      '@openzeppelin/contracts': 3.4.2-solc-0.7
+      '@uniswap/lib': 4.0.1-alpha
+      '@uniswap/v2-core': 1.0.1
+      '@uniswap/v3-core': 1.0.1
+      base64-sol: 1.0.1
+
+  '@zk-email/contracts@4.1.0':
+    dependencies:
+      '@openzeppelin/contracts': 4.9.6
+      dotenv: 16.4.5
 
   '@zk-email/contracts@6.0.3':
     dependencies:
@@ -2894,6 +2990,8 @@ snapshots:
   base-x@3.0.9:
     dependencies:
       safe-buffer: 5.2.1
+
+  base64-sol@1.0.1: {}
 
   bech32@1.1.4: {}
 
@@ -3174,6 +3272,26 @@ snapshots:
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
 
+  email-wallet-sdk@https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2)):
+    dependencies:
+      '@email-wallet/contracts': https://gitpkg.now.sh/zkemail/email-wallet/packages/contracts?8ae807dfcfe617a1a3e4b5342a667f0f595b8c82(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
+      '@openzeppelin/contracts': 4.9.6
+      '@openzeppelin/contracts-upgradeable': 4.9.6
+      '@uniswap/v3-core': https://codeload.github.com/Uniswap/v3-core/tar.gz/6562c52e8f75f0c10f9deaf44861847585fc8129
+      '@uniswap/v3-periphery': https://codeload.github.com/Uniswap/v3-periphery/tar.gz/697c2474757ea89fec12a4e6db16a574fe259610
+      '@zk-email/contracts': 4.1.0
+      solady: 0.0.123
+      solidity-stringutils: https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - ethers
+      - hardhat
+      - lodash
+      - supports-color
+      - typechain
+      - utf-8-validate
+
   emoji-regex@8.0.0: {}
 
   encode-utf8@1.0.3: {}
@@ -3186,23 +3304,6 @@ snapshots:
   env-paths@2.2.1: {}
 
   era-contracts@https://codeload.github.com/matter-labs/era-contracts/tar.gz/db9387690502937de081a959b164db5a5262ce0a: {}
-
-  erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/4f27201bfd949348ae3a390ae5aa8e85ea19cc11(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2)):
-    dependencies:
-      '@rhinestone/sentinellist': https://codeload.github.com/rhinestonewtf/sentinellist/tar.gz/446b16c3ec5ba1d0acd730ecf2bebd2ac48f915f
-      account-abstraction: accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/f1c5c11b273b7ddae26bb20809419b33ccb8f043(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2))
-      ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
-      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/07263d193d621c4b2b0ce8b4d54af58f6957d97d
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/fcb4426857d2464a316544924b20c5d43f2b0088
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - ethers
-      - hardhat
-      - lodash
-      - supports-color
-      - typechain
-      - utf-8-validate
 
   erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/8ab162604cb4878381bb8a15064fec42f775440b(ethers@5.7.2)(hardhat@2.22.5(typescript@5.5.2))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.2)):
     dependencies:
@@ -3253,6 +3354,8 @@ snapshots:
   estraverse@1.9.3: {}
 
   esutils@2.0.3: {}
+
+  ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/10a50a599feed9df9fd8db3e151787e3020f52d6: {}
 
   ethereum-bloom-filters@1.1.0:
     dependencies:
@@ -4271,6 +4374,8 @@ snapshots:
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
 
+  solady@0.0.123: {}
+
   solady@https://codeload.github.com/vectorized/solady/tar.gz/fcb4426857d2464a316544924b20c5d43f2b0088: {}
 
   solarray@https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684: {}
@@ -4337,7 +4442,7 @@ snapshots:
       shelljs: 0.8.5
       web3-utils: 1.10.4
 
-  solidity-stringutils.git@https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461: {}
+  solidity-stringutils@https://codeload.github.com/Arachnid/solidity-stringutils/tar.gz/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461: {}
 
   source-map-support@0.5.21:
     dependencies:

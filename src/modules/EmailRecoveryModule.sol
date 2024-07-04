@@ -13,7 +13,10 @@ import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
  * permissioning certain functions to be called on validators. It facilitates recovery by
  * integration with a trusted email recovery manager. The module defines how a recovery request is
  * executed on a validator, while the trusted recovery manager defines what a valid
- * recovery request is
+ * recovery request is.
+ *
+ * This recovery module targets a specific validator, so this contract should be deployed per
+ * validator
  */
 contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -25,8 +28,14 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      */
     address public immutable emailRecoveryManager;
 
+    /**
+     * Validator being recovered
+     */
     address public immutable validator;
 
+    /**
+     * function selector that is called when recovering validator
+     */
     bytes4 public immutable selector;
 
     /**
@@ -58,7 +67,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
     /**
      * Initializes the module with the threshold and guardians
-     * @dev data is encoded as follows: abi.encode(validator, isInstalledContext, initialSelector,
+     * @dev data is encoded as follows: abi.encode(isInstalledContext,
      * guardians, weights, threshold, delay, expiry)
      *
      * @param data encoded data for recovery configuration
@@ -111,6 +120,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
             != 0;
     }
 
+    /**
+     * Check if the recovery module is authorized to recover the account
+     * @param smartAccount The smart account to check
+     * @return true if the module is authorized, false otherwise
+     */
     function isAuthorizedToRecover(address smartAccount) external view returns (bool) {
         return authorized[smartAccount];
     }

@@ -14,6 +14,12 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     error InvalidAccount();
     error InvalidRecoveryModule();
 
+    /**
+     * @notice Returns a hard-coded two-dimensional array of strings representing the subject
+     * templates for an acceptance by a new guardian.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
     function acceptanceSubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](5);
@@ -25,6 +31,12 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return templates;
     }
 
+    /**
+     * @notice Returns a hard-coded two-dimensional array of strings representing the subject
+     * templates for email recovery.
+     * @return string[][] A two-dimensional array of strings, where each inner array represents a
+     * set of fixed strings and matchers for a subject template.
+     */
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](11);
@@ -42,6 +54,11 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return templates;
     }
 
+    /**
+     * @notice Extracts the account address to be recovered from the subject parameters of an
+     * acceptance email.
+     * @param subjectParams The subject parameters of the acceptance email.
+     */
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] memory subjectParams,
         uint256 /* templateIdx */
@@ -53,6 +70,11 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return abi.decode(subjectParams[0], (address));
     }
 
+    /**
+     * @notice Extracts the account address to be recovered from the subject parameters of a
+     * recovery email.
+     * @param subjectParams The subject parameters of the recovery email.
+     */
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] memory subjectParams,
         uint256 /* templateIdx */
@@ -64,6 +86,11 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return abi.decode(subjectParams[0], (address));
     }
 
+    /**
+     * @notice Validates the subject params for an acceptance email
+     * @param subjectParams The subject parameters of the recovery email.
+     * @return accountInEmail The account address in the acceptance email
+     */
     function validateAcceptanceSubject(
         uint256, /* templateIdx */
         bytes[] calldata subjectParams
@@ -81,6 +108,14 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         return accountInEmail;
     }
 
+    /**
+     * @notice Validates the subject params for an acceptance email
+     * @param subjectParams The subject parameters of the recovery email.
+     * @param recoveryManager The recovery manager address. Used to help with validation
+     * @return accountInEmail The account address in the acceptance email
+     * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
+     * recovery is executed
+     */
     function validateRecoverySubject(
         uint256, /* templateIdx */
         bytes[] calldata subjectParams,

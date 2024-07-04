@@ -8,7 +8,7 @@ import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
 contract DeployUniversalEmailRecoveryModuleScript is Script {
     function run() public {

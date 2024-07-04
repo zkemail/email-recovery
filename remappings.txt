@@ -18,10 +18,10 @@ solady/=node_modules/solady/src/
 solarray/=node_modules/solarray/src/
 @prb/math/=node_modules/@prb/math/src/
 
-ether-email-auth/=lib/ether-email-auth/
+ether-email-auth/=node_modules/ether-email-auth/
 @zk-email/contracts/=node_modules/@zk-email/contracts/
 solidity-stringutils/=node_modules/solidity-stringutils/
-@matterlabs/zksync-contracts/l2/=src/zksyncDeps/
+@matterlabs/zksync-contracts/l2/contracts/=src/libraries/
 erc7579-implementation/=node_modules/erc7579-implementation/
 kernel/=node_modules/@zerodev/kernel/src/
 ExcessivelySafeCall/=node_modules/excessively-safe-call/src/
