@@ -1,7 +1,11 @@
 ## ZK Email Recovery
 
 ## Overview
-Account recovery has traditionally been one of the most complex UX hurdles that account holders have to contend with. The ZK Email Recovery contracts provide a robust and simple mechanism for account holders to recover accounts via email guardians.
+Account recovery has traditionally been one of the most complex UX hurdles that account holders have to contend with. The ZK Email Recovery contracts provide a robust and simple mechanism for account holders to recover modular accounts via email guardians.
+
+Modular accounts get account recovery for 'free' by using our pre-deployed universal email recovery module. Since Safe's can be made 7579 compatible, the following contracts also support Safe account recovery out of the box too.
+
+Modular account developers can easily integrate email recovery with richer and more specific email subejcts by writing their own subject handler contracts, which are designed to be simple and contain the modular account-specific logic to recover an account.
 
 ## Usage
 
@@ -25,46 +29,36 @@ forge test
 
 # ZK Email Recovery
 
-## High level contracts diagram (WIP).
+## High level contracts diagram
 <img src="docs/email-recovery-diagram.drawio.png">
 
-The contracts that are used for recovery are:
-1. EmailRecoveryManager
-2. 7579 Recovery modules
-    - EmailRecoveryModule.sol
-    - UniversalEmailRecoveryModule.sol
-2. Email subject handlers
-    - EmailRecoverySubjectHandler.sol
-    - SafeRecoverySubjectHandler.sol
+Note: `EmailAccountRecovery.sol` & `EmailAuth.sol` can be found in the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo
+
 
 ### EmailRecoveryManager.sol
 
 `EmailRecoveryManager.sol` defines the main logic for email-based recovery. It is designed to provide the core logic for email based account recovery that can be used across different modular account implementations. For the end user, the core `EmailRecoveryManager` contract aims to provide a robust and simple mechanism to recover accounts via email guardians.
 
-It inherits from a zk email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level zk email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level zk email contracts `EmailAuth.sol`, verifier, dkim registry etc. More info on the underlying `EmailAccountRecovery.sol` contract: https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract. 
+It inherits from a zk email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level zk email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level zk email contracts `EmailAuth.sol`, verifier, dkim registry etc. More info on the underlying `EmailAccountRecovery.sol` contract can be found [here](https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract). 
 
 The guardians are represented onchain by EmailAuth.sol instances. `EmailAuth.sol` is designed to authenticate that a user is a correct holder of the specific email address and authorize anything described in the email. The guardians privacy is protected onchain, for more info on zk email privacy and EmailAuth - see the [zk email docs](https://zkemail.gitbook.io/zk-email).
 
-EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. The (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core ZkEMailRecovery contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. It's functionality can be extended by creating new subject handler contracts such as `EmailRecoverySubjectHandler.sol`. TODO add more info on this
+`EmailRecoveryManager` relies on a dedicated recovery module to execute a recovery attempt. The `EmailRecoveryManager` contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core `EmailRecoveryManager` contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. It's functionality can be extended by creating new subject handler contracts such as `EmailRecoverySubjectHandler.sol`.
 
 ## EmailRecoveryManager flow walkthrough
 
 The core functions that must be called in the end-to-end flow for recovery are
 1. configureRecovery (does not need to be called again for subsequent recovery attempts)
-2. handleAcceptance - called for each guardian. Defined on EmailAccountRecovery.sol, calls acceptGuardian in this contract
-3. handleRecovery - called for each guardian. Defined on EmailAccountRecovery.sol, calls processRecovery in this contract
+2. handleAcceptance - called for each guardian. Defined on `EmailAccountRecovery.sol`, calls acceptGuardian in this contract
+3. handleRecovery - called for each guardian. Defined on `EmailAccountRecovery.sol`, calls processRecovery in this contract
 4. completeRecovery
 
-Before proceeding, ensure that the following components are correctly set up before deploying a EmailRecoveryManager instance:
-- verifierAddr: Address of the ZKP verifier.
-- dkimAddr: Address of the DKIM registry for email authentication.
-- emailAuthImplementationAddr: Address of the email authentication implementation.
-- subjectHandler: Address of the email subject handler.
+Before proceeding, ensure that you deploy the email recovery contracts via one of the email recovery factories.
 
 ### Configure Recovery
 After deployment, this is the first core function in the recovery flow, setting up the recovery module, guardians, guardian weights, threshold, and delay/expiry. It only needs to be called once. The threshold must be set appropriately to balance security and usability. The same goes for the delay and expiry - there is a minimum recovery window time that protects against an account giving itself a prohibitively small window in which to complete a recovery attempt.
 
-It is strongly recommended that configureRecovery is called during the installation phase of the recovery module. This ensures that a user cannot forget to install the recovery module and end up with a broken recovery config.
+`configureRecovery` is called during the installation phase of the recovery module. This ensures that a user cannot forget to install the recovery module, go to configure recovery, and end up with a broken recovery config.
 
 ```ts
 function configureRecovery(
@@ -77,7 +71,7 @@ function configureRecovery(
 ```
 
 ### Handle Acceptance
-This function handles the acceptance of each guardian. Each guardian must accept their role to be a part of the recovery process. This is an important step as it ensures that the guardian consents to the responsibility of being a guardian for a specific account, and protects against typos from entering a guardian email address. Such a typo would render the guardian unusable. handleAcceptance must be called for each guardian until the threshold is reached.
+This function handles the acceptance of each guardian. Each guardian must accept their role to be a part of the recovery process. This is an important step as it ensures that the guardian consents to the responsibility of being a guardian for a specific account, is in control of the specific email address, and protects against typos from entering the wrong email. Such a typo would render the guardian unusable. `handleAcceptance` must be called for each guardian until the threshold is reached.
 
 ```ts
 function handleAcceptance(
@@ -89,7 +83,7 @@ function handleAcceptance(
 ```
 
 ### Handle Recovery
-This function processes each guardian's recovery request. A Guardian can initiate a recovery request by replying to an email. The contract verifies the guardian's status and checks if the threshold is met. Once the threshold is met and the delay has passed, anyone can complete the recovery process. The recovery delay is a security feature that gives the wallet owner time to react to a recovery attempt in case of a malicious guardian or guardians. This is possible from guardians who act maliciously, but also from attackers who have gotten access to a guardians email address. Although since guardian email privacy is preserved on chain, this reduces the attack surface further since someone with access to a someone elses email account would not know if the email address is used in a recovery setup, or if they did, which account to target. There is also an expiry time, which once expires, invalidates the recovery attempt. This encourages timely execution of recovery attempts and reduces the attack surface that could result from recovery attempts that have been stagnent and uncompleted for long periods of time.
+This function processes each guardian's recovery request. A guardian can initiate a recovery request by replying to an email. The contract verifies the guardian's status and checks if the threshold is met. Once the threshold is met and the delay has passed, anyone can complete the recovery process. The recovery delay is a security feature that gives the wallet owner time to react to a recovery attempt in case of a malicious guardian or guardians. This is possible from guardians who act maliciously, but also from attackers who have access to a guardians email address. Although since guardian email privacy is preserved on chain, this reduces the attack surface further since someone with access to a someone elses email account would not know if the email address is used in a recovery setup, or if they did, which account to target. There is also an expiry time, which once expires, invalidates the recovery attempt. This encourages timely execution of recovery attempts and reduces the attack surface that could result from recovery attempts that have been stagnent and uncompleted for long periods of time.
 
 ```ts
 function handleRecovery(
@@ -109,32 +103,59 @@ function completeRecovery(address account, bytes memory recoveryCalldata) public
 
 ## Subject Handlers
 
-Subject handlers define the subjects for recovery emails and how they should be validated. We define a universal subject handler which essentially gives 7579 module developers recovery for free. The subject is very  
+Subject handlers define the subjects for recovery emails and how they should be validated. They are designed to be simple and self-contained contracts that hold the modular account-specific logic needed for adding email recovery. We define a universal subject handler which essentially gives 7579 module developers recovery for free that is generic to any validator (so long as the validator has functionality to recover itself). We also provide a Safe account subject handler which provides email account recovery for 7579-compatible Safe's.     
+
+Subject handlers contain functions for defining the email subjects, of which there are two subject types - acceptance and recovery subjects. The acceptance subject is for the email that is displayed to the guardian when they have to accept becoming a guardian for an account. The recovery subject is for the email displayed to the guardian when an account is actually being recovered. Handlers also contain helper functions to extract the account address from both subject types. The acceptance and recovery templates can be written to contain any functional info, but they must contain the account address. The subject is an important part of the functional info that is used to generate and verify the zkp.
+
+Once a new subject has been written and audited, the deployment bytecode of the subject handler can be passed into one of the provided factories, which ensures that the deployment of a module, manager and subject handler are tightly coupled. The deployment of these contracts can be attested to via the use of an [ERC-7484 resistry](https://eips.ethereum.org/EIPS/eip-7484).
+
+### Why write your own subject handler?
+The generic subject handler supported out of the box is sufficiently generic for recovering any modular account via the use of a recovery hash in the email subject, which is validated against when executing recovery. A modular account developer may want to provide a more specifc and human readable subject handler for their users. It's also possible to write a subject template in a non-english language to support non-english speakers.
+
+It is important to re-iterate that modular accounts already get account recovery out of the box with these contract, via the use of the unviversal email recovery module.
 
 ### EmailRecoverySubjectHandler.sol
-TODO add section
+`EmailRecoverySubjectHandler` is a generic subject handler that can be used to recovery any validator. 
+
+The acceptance subject template is:
+`Accept guardian request for {ethAddr}`
+
+The recovery subject template is:
+`Recover account {ethAddr} via recovery module {ethAddr} using recovery hash {string}`
 
 ### SafeRecoverySubjectHandler.sol
-TODO update section
-~~`SafeZkEmailRecovery.sol` is an extension of `EmailRecoveryManager.sol` that implements recovery for Safe accounts. It provides a good example of how to extend `EmailRecoveryManager.sol` for different account implementations. The contract follows the same multi-step process that EmailRecoveryManager.sol does, where guardians must first be accepted before they can initiate recovery. The Safe example does not override the acceptance related functions, only the recovery ones. This is because the acceptance subject is broad enough that it can stay the same whereas the recovery attempt subject needs additional info in order to complete the recovery request properly. This will be a common scenario where only the recovery subject-related functions will need overriding. A scenario in which you would definitely need to update both is if you wanted to provide email recovery functionality to users who didn't speak English. In which case you could translate the required subjects into the chosen language~~
 
-## How you can extend EmailRecoveryManager by adding a custom template
+`SafeRecoverySubjectHandler` is a specific subject handler that can be used to recover a Safe. It provides a good example of how to write a custom subject handler for a different account implementation. In contrast to the `EmailRecoverySubjectHandler`, the Safe subject requires additional info in order to complete the recovery request.
+ 
+The acceptance subject remains the same as the acceptance subject is already quite generic. This will be a common scenario where only the recovery subject-related functions will need changing. A scenario in which you would definitely need to update both is if you wanted to provide email recovery functionality to users who didn't speak English. In which case you could translate the required subjects into the chosen language.
 
-~~When you know what recovery specific information you need, you can create a new contract, inherit from `EmailRecoveryManager.sol` and extend the relevant functions - note you only have to extend ones that are relevant:~~
+The acceptance subject template is:
+`Accept guardian request for {ethAddr}`
+
+The recovery subject template is:
+`Recover account {ethAddr} from old owner {ethAddr} to new owner {ethAddr} using recovery module {ethAddr}`
+
+## How you can write a custom subject template
+
+When you know what recovery specific information you need, you can create a new handler contract. The following functions must be implemented:
+
 * `acceptanceSubjectTemplates()`
-* `validateAcceptanceSubjectTemplates()`
+* `extractRecoveredAccountFromAcceptanceSubject(bytes[],uint256)`
+* `validateAcceptanceSubject(uint256,bytes[])`
 
 * `recoverySubjectTemplates()`
-* `validateRecoverySubjectTemplates()`
+* `extractRecoveredAccountFromRecoverySubject(bytes[],uint256)`
+* `validateRecoverySubject(uint256,bytes[],address)`
 
-~~These functions, and the functions to validate the subject params are virtual so they can be overridden if a developer wants to change the subjects for a different implementation. A good example of this would be this code to add Safe compatibility (Safe recovery requires slightly different args in the subject). The account developer can choose any subject that they want if they override the default implementation. Here is some more info on subject params:~~
+
+### How a subject is interpreted
 
 With an email subject of:
 ```bash
 Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f using recovery module 0x344433E549E3F84B68D1aAC5b416Ac5cE2Be1063
 ```
 
-Where the first address in the subject is accountAddress, second the oldOwner, third newOwner and forth the recoveryModule address
+Where the first address in the subject is the account address recovery is being executed for, the second is the new owner address, and the third is the email recovery module address. This subject would lead to the the following subject params
 
 The subject params would be:
 
@@ -146,33 +167,50 @@ subjectParamsForRecovery[2] = abi.encode(recoveryModule);
 ```
 
 ### What can I add to a subject template?
-A subject template defines the expected format of the message in the Subject for each recovery implementation. It allows developers to constrain that message to be in the application-specific format without writing new ZKP circuits. The use of different subject templates in this case allows for a flexible and extensible mechanism to define recovery messages, making it adaptable to different modular account implemtations.
+A subject template defines the expected format of the message in the subject for each recovery implementation. The underlying zkemail contracts are generic for any subject, negating some type and size constraints, so developers can write application-specific messages without writing new zk circuits. The use of different subject templates in this case allows for a flexible and extensible mechanism to define recovery messages, making it adaptable to different modular account implemtations. For recovery subjects using these contracts, the email subjects can be completely generic, but they must return the account address for which recovery is for.
 
-The subject template is an array of strings, each of which has some fixed strings without space and the following variable parts:
-- `"{string}"`: a string. Its Solidity type is `string`.
+The subject template is an array of strings, each of which has some fixed strings without space and the following variable parts. Subject variables must meet the following type constraints:
+- `"{string}"`: a string. Its Solidity type is `string`. The subject string type can be used to add the solidity `bytes` type to email subjects.
 - `"{uint}"`: a decimal string of the unsigned integer. Its Solidity type is `uint256`.
 - `"{int}"`: a decimal string of the signed integer. Its Solidity type is `int256`.
 - `"{decimals}"`: a decimal string of the decimals. Its Solidity type is `uint256`. Its decimal size is fixed to 18. E.g., “2.7” ⇒ `abi.encode(2.7 * (10**18))`.
 - `"{ethAddr}"`: a hex string of the Ethereum address. Its Solidity type is `address`. Its value MUST satisfy the checksum of the Ethereum address.
 
-If you are recovering an account that needs to rotate a public key which is of type `bytes` in solidity, you can use the string type for that for the subject template.
-
-### UniversalEmailRecoveryModule.sol
-An recovery module that recovers any validator.
-
-The `recover()` function on the module holds the core logic for the module. It defines “how a recovery attempt is executed on the account”. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery attempt has been successful.
-
-`completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. 
+If you are recovering an account that needs to rotate a public key which is of type `bytes` in solidity, you can use the string type for that for the subject template. To read more about the underlying zk email contracts that this repo uses, take a look at the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo.
 
 ### EmailRecoveryModule.sol
 An recovery module that recovers a specific validator.
 
-The `recover()` function on the module holds the core logic for the module. It defines “how a recovery attempt is executed on the account”. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery attempt has been successful.
+The target validator and target selector are passed into the module when it is deployed. This means that the module is less generic, but the module is simpler and provides less room for error when confiuring recovery. This is because the module does not have to handle permissioning multiple validators and there is less room for configuration error when installing the module, as the target validator and selector are passed in at deployment instead.
 
-`completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. 
+The `recover()` function on the module is the key entry point where recovery is executed. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery request becomes valid.
+
+`completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. The call from the executor retains the context of the account so the `msg.sender` of the next call is the account itself. This simplifies access control in the validator being recovered as it can just do a `msg.sender` check.
+
+When writing a custom subject handler, an account developer would likely chose to deploy a `EmailRecoveryModule` instance rather than a `UniversalEmailRecoveryModule` instance. This is because a custom subject handler would likely be specific to an validator implementation, so using the recovery module for specific validators is more appropriate than the generic recovery module.
+
+### UniversalEmailRecoveryModule.sol
+A recovery module that recovers any validator.
+
+The target validator and target selector are passed into the module when it is installed. This means that the module is generic and can be used to recover any 7579 validator. The module is slightly more complex as it has to handle permissioning multiple validators. Additionally there is a slightly higher chance of configuration error when installing the module as the target validator and selector are passed in at this stage instead of when the module is deployed.
+
+The `recover()` function on the module is the key entry point where recovery is executed. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery request becomes valid.
+
+`completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. The call from the executor retains the context of the account so the `msg.sender` of the next call is the account itself. This simplifies access control in the validator being recovered as it can just do a `msg.sender` check.
 
 ### EmailRecoveryFactory.sol
-TODO add section
+The factory for deploying new instances of `EmailRecoveryModule.sol` and associated managers and subject handlers. Because the relationship between the recovery module and manager is security critical, The factory ensures there is a tight coupling between a deployed module, and associated manager and subject handler.
+
+The deployment function for this factory deploys an `EmailRecoveryModule`, which takes a target emailRecoveryManager, validator and function selector. The other values passed into the deployment function are the same as the `EmailRecoveryUniversalFactory`, which include deployment salts, subject handler bytecode, and a dkim registry.
+
+When deploying a new recovery module for a specific validator with a more human readable subject, modular account developers can write their own subject handler and pass the deployment bytecode of that handler into the factory. The security of each module deployment and associated contracts can then be attested to via a ERC 7484 registry.
+
+### EmailRecoveryUniversalFactory.sol
+The factory for deploying new instances of `UniversalEmailRecoveryModule.sol` and associated managers and subject handlers.
+
+The deployment function for this factory deploys an `UniversalEmailRecoveryModule`, which only takes the target emailRecoveryManager. The other values passed into the deployment function are the same as the `EmailRecoveryFactory`, which include deployment salts, subject handler bytecode, and a dkim registry. The target validator and target function selector are set when the universal module is installed.
+
+While the subject handler for `EmailRecoveryUniversalFactory` will be more stable in comparison to a subject handlers used for `EmailRecoveryModule`, developers may want to write a generic subject handler in a slightly different way, or even in a non-english lanaguage, so the bytecode is still passed in here directly. The security of each module deployment and associated contracts can then be attested to via a ERC 7484 registry.
 
 ## Threat model
-Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. This contract is designed to be extended to take these additional considerations into account, but does not provide them by default.
+Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. Additionally, the current 7579 spec allows accounts to forcefully uninstall modules in the case of a malicious module, this means an attacker could forcefully uninstall a recovery module anyway. This is expected to be addressed in the future. This contract is designed to recover modular accounts in the case of a lost device/authentication method (private key), but does not provide adequate security for a scenario in which a malicious actor has control of the lost device/authentication method (private key).
