@@ -5,6 +5,7 @@ import { console2 } from "forge-std/console2.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
@@ -12,7 +13,8 @@ import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecovery
 contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryUniversalFactory =
+            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
     }
 
     function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
@@ -22,7 +24,9 @@ contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBas
 
         bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
         address expectedSubjectHandler = Create2.computeAddress(
-            subjectHandlerSalt, keccak256(subjectHandlerBytecode), address(emailRecoveryFactory)
+            subjectHandlerSalt,
+            keccak256(subjectHandlerBytecode),
+            address(emailRecoveryUniversalFactory)
         );
 
         bytes memory recoveryManagerBytecode = abi.encodePacked(
@@ -35,18 +39,22 @@ contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBas
             )
         );
         address expectedManager = Create2.computeAddress(
-            recoveryManagerSalt, keccak256(recoveryManagerBytecode), address(emailRecoveryFactory)
+            recoveryManagerSalt,
+            keccak256(recoveryManagerBytecode),
+            address(emailRecoveryUniversalFactory)
         );
 
         bytes memory recoveryModuleBytecode = abi.encodePacked(
             type(UniversalEmailRecoveryModule).creationCode, abi.encode(expectedManager)
         );
         address expectedModule = Create2.computeAddress(
-            recoveryModuleSalt, keccak256(recoveryModuleBytecode), address(emailRecoveryFactory)
+            recoveryModuleSalt,
+            keccak256(recoveryModuleBytecode),
+            address(emailRecoveryUniversalFactory)
         );
 
         (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
-        emailRecoveryFactory.deployUniversalEmailRecoveryModule(
+        emailRecoveryUniversalFactory.deployUniversalEmailRecoveryModule(
             subjectHandlerSalt,
             recoveryManagerSalt,
             recoveryModuleSalt,

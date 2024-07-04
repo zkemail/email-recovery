@@ -8,7 +8,7 @@ import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 
 contract DeployUniversalEmailRecoveryModuleScript is Script {
     function run() public {
@@ -38,11 +38,11 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
-            _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));
+            _factory = address(new EmailRecoveryUniversalFactory(verifier, emailAuthImpl));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
         {
-            EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
+            EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
             (address module, address manager, address subjectHandler) = factory
                 .deployUniversalEmailRecoveryModule(
                 bytes32(uint256(0)),

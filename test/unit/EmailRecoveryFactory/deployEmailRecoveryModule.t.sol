@@ -5,6 +5,7 @@ import { console2 } from "forge-std/console2.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
@@ -12,7 +13,7 @@ import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 contract EmailRecoveryFactory_deployAll_Test is UnitBase {
     function setUp() public override {
         super.setUp();
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        // emailRecoveryFactory = new EmailRecoveryFactory(address(verifier),
     }
 
     function test_DeployEmailRecoveryModule_Succeeds() public {

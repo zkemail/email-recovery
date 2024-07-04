@@ -5,6 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -44,7 +45,8 @@ contract DeploySafeRecovery_Script is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
-        EmailRecoveryFactory factory = new EmailRecoveryFactory(verifier, emailAuthImpl);
+        EmailRecoveryUniversalFactory factory =
+            new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
         (address module, address manager, address subjectHandler) = factory
             .deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
