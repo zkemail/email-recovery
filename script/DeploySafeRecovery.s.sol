@@ -56,14 +56,14 @@ contract DeploySafeRecovery_Script is Script {
             dkimRegistry
         );
 
-        address safe7579 = address(new Safe7579{ salt: bytes32(uint256(0)) }());
+        address safe7579Adapter = address(new Safe7579{ salt: bytes32(uint256(0)) }());
         address safe7579Launchpad =
             address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
         console.log("Deployed Email Recovery Manager at ", vm.toString(manager));
         console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
-        console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
+        console.log("Deployed Safe 7579 Adapter at      ", vm.toString(safe7579Adapter));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));
 
         vm.stopBroadcast();

@@ -28,6 +28,7 @@
     "@matterlabs": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit#test/safe-latest",
+    "@safe-global/safe-contracts": "1.4.1-build.0",
     "@zk-email/contracts": "v6.0.3",
     "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
