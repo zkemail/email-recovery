@@ -208,8 +208,8 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
                 )
                 ),
             callData: abi.encodeCall(Safe7579Launchpad.setupSafe, (initData)),
-            accountGasLimits: bytes32(abi.encodePacked(uint128(1e6), uint128(3e5))),
-            preVerificationGas: 1e5,
+            accountGasLimits: bytes32(abi.encodePacked(uint128(3e5), uint128(1e5))),
+            preVerificationGas: 2e5,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
             signature: bytes("")
@@ -223,7 +223,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         console.log("init userOps are ready");
-        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e6 }(userOps, payable(deployer));
+        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
         console.log("init UserOps are executed");
 
         // bytes memory _initCode =
@@ -275,6 +275,47 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         // console.log("init userOps are ready");
         // IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e6 }(userOps, payable(deployer));
         // console.log("init UserOps are executed");
+
+        // add an EmailAuth guardian
+        {
+            // Add an EmailAuth guardian
+            address guardianAddr =
+                EmailAccountRecovery(managerAddr).computeEmailAuthAddress(account, accountSalt);
+            console.log("Guardian's EmailAuth address", guardianAddr);
+            userOpCalldata = abi.encodeCall(
+                IERC7579Account.execute,
+                (
+                    ModeLib.encodeSimpleSingle(),
+                    ExecutionLib.encodeSingle(
+                        address(managerAddr),
+                        uint256(0),
+                        abi.encodeCall(IEmailRecoveryManager.addGuardian, (guardianAddr, 1))
+                        )
+                )
+            );
+        }
+        userOp = PackedUserOperation({
+            sender: account,
+            nonce: getNonce(account, validatorAddr),
+            initCode: bytes(""),
+            callData: userOpCalldata,
+            accountGasLimits: bytes32(abi.encodePacked(uint128(1e5), uint128(1e6))),
+            preVerificationGas: 1e5,
+            gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
+            paymasterAndData: bytes(""),
+            signature: bytes("")
+        });
+        {
+            userOpHash = IEntryPoint(ENTRYPOINT_ADDR).getUserOpHash(userOp);
+            (uint8 v, bytes32 r, bytes32 s) =
+                vm.sign(privKey, ECDSA.toEthSignedMessageHash(userOpHash));
+            userOp.signature = abi.encodePacked(r, s, v);
+        }
+        userOps = new PackedUserOperation[](1);
+        userOps[0] = userOp;
+        console.log("addGuardian userOps are ready");
+        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
+        console.log("addGuardian UserOps are executed");
 
         // // set threshold to 1.
         // {
