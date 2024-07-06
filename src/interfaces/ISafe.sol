@@ -7,4 +7,13 @@ interface ISafe {
     function getOwners() external view returns (address[] memory);
     function setFallbackHandler(address handler) external;
     function setGuard(address guard) external;
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    )
+        external
+        returns (bool success);
+    function isModuleEnabled(address module) external view returns (bool);
 }
