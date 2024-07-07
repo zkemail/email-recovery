@@ -55,19 +55,19 @@ contract DeployAccountScript is Script {
             safe7579 = payable(address(new Safe7579()));
         }
 
-        singleton = vm.envOr("SAFE", address(0));
+        singleton = vm.envOr("SAFE_SINGLETON", address(0));
         if (singleton == address(0)) {
             singleton = address(new Safe());
-        }
-
-        launchpad = payable(vm.envOr("VALIDATOR", address(0)));
-        if (launchpad == address(0)) {
-            launchpad = payable(address(new Safe7579Launchpad(ENTRYPOINT_ADDR, registry)));
         }
 
         validator = vm.envOr("SAFE_7579_LAUNCHPAD", address(0));
         if (validator == address(0)) {
             validator = address(new MockValidator());
+        }
+
+        launchpad = payable(vm.envOr("VALIDATOR", address(0)));
+        if (launchpad == address(0)) {
+            launchpad = payable(address(new Safe7579Launchpad(ENTRYPOINT_ADDR, registry)));
         }
 
         safeProxyFactory = vm.envOr("SAFE_PROXY_FACTORY", address(0));
@@ -205,7 +205,7 @@ contract DeployAccountScript is Script {
                 0x00000000000000000000000000060e7400000000000000000000000000051d3c
             ),
             preVerificationGas: 69_660,
-            gasFees: bytes32(0x0000000000000000000000005241210000000000000000000000000ca36194f7),
+            gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
             signature: abi.encodePacked(hex"41414141")
         });

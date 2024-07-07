@@ -15,23 +15,20 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
-        address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
 
         if (verifier == address(0)) {
             verifier = address(new Verifier());
-            console.log("Deployed Verifier at", verifier);
         }
 
         if (dkimRegistry == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
             dkimRegistry = address(new ECDSAOwnedDKIMRegistry(dkimRegistrySigner));
-            console.log("Deployed DKIM Registry at", dkimRegistry);
         }
 
         if (emailAuthImpl == address(0)) {
             emailAuthImpl = address(new EmailAuth());
-            console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
@@ -39,7 +36,6 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryUniversalFactory(verifier, emailAuthImpl));
-            console.log("Deployed Email Recovery Factory at", _factory);
         }
         {
             EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
@@ -52,6 +48,10 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
                 dkimRegistry
             );
 
+            console.log("Deployed Verifier at", verifier);
+            console.log("Deployed DKIM Registry at", dkimRegistry);
+            console.log("Deployed Email Auth at", emailAuthImpl);
+            console.log("Deployed Email Recovery Factory at", _factory);
             console.log("Deployed Email Recovery Module at", vm.toString(module));
             console.log("Deployed Email Recovery Manager at", vm.toString(manager));
             console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
