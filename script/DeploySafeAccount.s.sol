@@ -199,7 +199,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         address account = safe7579Launchpad.predictSafeAddress({
             singleton: address(safe7579Launchpad),
             safeProxyFactory: address(safeProxyFactory),
-            creationCode: type(SafeProxy).creationCode,
+            creationCode: safeProxyFactory.proxyCreationCode(),
             salt: accountSalt,
             factoryInitializer: factoryInitializer
         });
@@ -207,7 +207,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         console.log("Account code size", account.code.length);
         userOp = PackedUserOperation({
             sender: account,
-            nonce: getNonce(account, validatorAddr),
+            nonce: safe7579Adopter.getNonce(account, validatorAddr),
             initCode: abi.encodePacked(
                 address(safeProxyFactory),
                 abi.encodeCall(
@@ -260,11 +260,11 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             );
             userOp = PackedUserOperation({
                 sender: account,
-                nonce: getNonce(account, validatorAddr),
+                nonce: safe7579Adopter.getNonce(account, validatorAddr),
                 initCode: bytes(""),
                 callData: userOpCalldata,
-                accountGasLimits: bytes32(abi.encodePacked(uint128(1e5), uint128(9e6))),
-                preVerificationGas: 1e5,
+                accountGasLimits: bytes32(abi.encodePacked(uint128(3e5), uint128(10e5))),
+                preVerificationGas: 2e5,
                 gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
                 paymasterAndData: bytes(""),
                 signature: bytes("")
@@ -278,7 +278,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             userOps = new PackedUserOperation[](1);
             userOps[0] = userOp;
             console.log("executor installing userOps are ready");
-            IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e10 }(userOps, payable(deployer));
+            IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e7 }(userOps, payable(deployer));
             console.log("executor installing UserOps are executed");
         }
 
