@@ -13,6 +13,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IEntryPoint, ENTRYPOINT_ADDR } from "modulekit/test/predeploy/EntryPoint.sol";
 import { PackedUserOperation } from "erc7579-implementation/src/interfaces/IERC4337Account.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 // import { MSABasic } from "erc7579-implementation/src/MSABasic.sol";
 // import { MSAFactory } from "erc7579-implementation/src/MSAFactory.sol";
 import { Bootstrap, BootstrapConfig } from "erc7579-implementation/src/utils/Bootstrap.sol";
@@ -29,6 +30,7 @@ import {
     SafeProxy,
     SafeProxyFactory
 } from "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 
 contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     using ModuleKitHelpers for *;
@@ -50,20 +52,22 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     address validatorAddr;
     address recoveryModuleAddr;
     address managerAddr;
-    address[] guardians = new address[](0);
-    uint256[] guardianWeights = new uint256[](0);
+    address[] guardians = new address[](1);
+    uint256[] guardianWeights = new uint256[](1);
 
     bytes initCode;
     bytes userOpCalldata;
     PackedUserOperation userOp;
     bytes32 userOpHash;
 
-    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+    bytes4 functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privKey);
         deployer = vm.addr(privKey);
+
+        managerAddr = vm.envAddress("RECOVERY_MANAGER");
 
         accountSalt = vm.envBytes32("ACCOUNT_SALT");
         require(accountSalt != bytes32(0), "ACCOUNT_SALT is required");
@@ -135,27 +139,31 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         address accountOwner = vm.envOr("OWNER", deployer);
         recoveryModuleAddr = vm.envAddress("RECOVERY_MODULE");
         require(recoveryModuleAddr != address(0), "RECOVERY_MODULE is required");
-        validators[0] = ModuleInit({
-            module: validatorAddr,
-            initData: abi.encode(accountOwner, recoveryModuleAddr)
-        });
+        validators[0] = ModuleInit({ module: validatorAddr, initData: abi.encode(accountOwner) });
 
-        ModuleInit[] memory executors = new ModuleInit[](1);
-        managerAddr = vm.envAddress("RECOVERY_MANAGER");
-        require(managerAddr != address(0), "RECOVERY_MANAGER is required");
+        ModuleInit[] memory executors = new ModuleInit[](0);
+        // managerAddr = vm.envOr("RECOVERY_MANAGER", address(0));
+        // if (managerAddr == address(0)) {
+        //     managerAddr = address(
+        //         new EmailRecoveryUniversalFactory(
+        //             vm.envOr("VERIFIER", address(0)), vm.envOr("EMAIL_AUTH_IMPL", address(0))
+        //         )
+        //     );
+        //     console.log("Deployed Email Recovery Manager at", managerAddr);
+        // }
 
-        bytes memory recoveryModuleInstallData = abi.encode(
-            validatorAddr,
-            bytes("0"),
-            functionSelector,
-            guardians,
-            guardianWeights,
-            0,
-            vm.envOr("RECOVERY_DELAY", uint256(1 seconds)),
-            vm.envOr("RECOVERY_EXPIRY", uint256(2 weeks))
-        );
-        executors[0] =
-            ModuleInit({ module: recoveryModuleAddr, initData: recoveryModuleInstallData });
+        // bytes memory recoveryModuleInstallData = abi.encode(
+        //     validatorAddr,
+        //     bytes("0"),
+        //     functionSelector,
+        //     guardians,
+        //     guardianWeights,
+        //     0,
+        //     vm.envOr("RECOVERY_DELAY", uint256(1 seconds)),
+        //     vm.envOr("RECOVERY_EXPIRY", uint256(2 weeks))
+        // );
+        // executors[0] =
+        //     ModuleInit({ module: recoveryModuleAddr, initData: recoveryModuleInstallData });
         ModuleInit[] memory fallbacks = new ModuleInit[](0);
         ModuleInit[] memory hooks = new ModuleInit[](0);
 
@@ -170,7 +178,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             setupData: abi.encodeCall(
                 Safe7579Launchpad.initSafe7579,
                 (address(safe7579Adopter), executors, fallbacks, hooks, attesters, 0)
-                ),
+            ),
             safe7579: ISafe7579(safe7579Adopter),
             validators: validators,
             callData: abi.encodeCall(
@@ -183,7 +191,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
                         callData: abi.encodeCall(MockTarget.set, (1337))
                     })
                 )
-                )
+            )
         });
         bytes32 initHash = safe7579Launchpad.hash(initData);
         bytes memory factoryInitializer =
@@ -206,9 +214,9 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
                     SafeProxyFactory.createProxyWithNonce,
                     (address(safe7579Launchpad), factoryInitializer, uint256(accountSalt))
                 )
-                ),
+            ),
             callData: abi.encodeCall(Safe7579Launchpad.setupSafe, (initData)),
-            accountGasLimits: bytes32(abi.encodePacked(uint128(3e5), uint128(1e5))),
+            accountGasLimits: bytes32(abi.encodePacked(uint128(3e5), uint128(10e5))),
             preVerificationGas: 2e5,
             gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
             paymasterAndData: bytes(""),
@@ -223,8 +231,56 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
         userOps[0] = userOp;
         console.log("init userOps are ready");
-        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
+        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e7 }(userOps, payable(deployer));
         console.log("init UserOps are executed");
+
+        {
+            // Install an executor module
+            address guardianAddr =
+                EmailAccountRecovery(managerAddr).computeEmailAuthAddress(account, accountSalt);
+            console.log("Guardian's EmailAuth address", guardianAddr);
+            guardians[0] = guardianAddr;
+            guardianWeights[0] = 1;
+            userOpCalldata = abi.encodeCall(
+                IERC7579Account.installModule,
+                (
+                    MODULE_TYPE_EXECUTOR,
+                    recoveryModuleAddr,
+                    abi.encode(
+                        validatorAddr,
+                        bytes("0"),
+                        functionSelector,
+                        guardians,
+                        guardianWeights,
+                        1,
+                        vm.envOr("RECOVERY_DELAY", uint256(0 seconds)),
+                        vm.envOr("RECOVERY_EXPIRY", uint256(2 weeks))
+                    )
+                )
+            );
+            userOp = PackedUserOperation({
+                sender: account,
+                nonce: getNonce(account, validatorAddr),
+                initCode: bytes(""),
+                callData: userOpCalldata,
+                accountGasLimits: bytes32(abi.encodePacked(uint128(1e5), uint128(9e6))),
+                preVerificationGas: 1e5,
+                gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
+                paymasterAndData: bytes(""),
+                signature: bytes("")
+            });
+            {
+                userOpHash = IEntryPoint(ENTRYPOINT_ADDR).getUserOpHash(userOp);
+                (uint8 v, bytes32 r, bytes32 s) =
+                    vm.sign(privKey, ECDSA.toEthSignedMessageHash(userOpHash));
+                userOp.signature = abi.encodePacked(r, s, v);
+            }
+            userOps = new PackedUserOperation[](1);
+            userOps[0] = userOp;
+            console.log("executor installing userOps are ready");
+            IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 1e10 }(userOps, payable(deployer));
+            console.log("executor installing UserOps are executed");
+        }
 
         // bytes memory _initCode =
         //     bootstrap._getInitMSACalldata(validators, executors, hookConfig, fallbacks);
@@ -290,32 +346,32 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
                         address(managerAddr),
                         uint256(0),
                         abi.encodeCall(IEmailRecoveryManager.addGuardian, (guardianAddr, 1))
-                        )
+                    )
                 )
             );
         }
-        userOp = PackedUserOperation({
-            sender: account,
-            nonce: getNonce(account, validatorAddr),
-            initCode: bytes(""),
-            callData: userOpCalldata,
-            accountGasLimits: bytes32(abi.encodePacked(uint128(1e5), uint128(1e6))),
-            preVerificationGas: 1e5,
-            gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
-            paymasterAndData: bytes(""),
-            signature: bytes("")
-        });
-        {
-            userOpHash = IEntryPoint(ENTRYPOINT_ADDR).getUserOpHash(userOp);
-            (uint8 v, bytes32 r, bytes32 s) =
-                vm.sign(privKey, ECDSA.toEthSignedMessageHash(userOpHash));
-            userOp.signature = abi.encodePacked(r, s, v);
-        }
-        userOps = new PackedUserOperation[](1);
-        userOps[0] = userOp;
-        console.log("addGuardian userOps are ready");
-        IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
-        console.log("addGuardian UserOps are executed");
+        // userOp = PackedUserOperation({
+        //     sender: account,
+        //     nonce: getNonce(account, validatorAddr),
+        //     initCode: bytes(""),
+        //     callData: userOpCalldata,
+        //     accountGasLimits: bytes32(abi.encodePacked(uint128(1e5), uint128(1e6))),
+        //     preVerificationGas: 1e5,
+        //     gasFees: bytes32(abi.encodePacked(uint128(0), uint128(0))),
+        //     paymasterAndData: bytes(""),
+        //     signature: bytes("")
+        // });
+        // {
+        //     userOpHash = IEntryPoint(ENTRYPOINT_ADDR).getUserOpHash(userOp);
+        //     (uint8 v, bytes32 r, bytes32 s) =
+        //         vm.sign(privKey, ECDSA.toEthSignedMessageHash(userOpHash));
+        //     userOp.signature = abi.encodePacked(r, s, v);
+        // }
+        // userOps = new PackedUserOperation[](1);
+        // userOps[0] = userOp;
+        // console.log("addGuardian userOps are ready");
+        // IEntryPoint(ENTRYPOINT_ADDR).handleOps{ gas: 3e6 }(userOps, payable(deployer));
+        // console.log("addGuardian UserOps are executed");
 
         // // set threshold to 1.
         // {
