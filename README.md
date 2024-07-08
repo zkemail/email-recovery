@@ -213,4 +213,11 @@ The deployment function for this factory deploys an `UniversalEmailRecoveryModul
 While the subject handler for `EmailRecoveryUniversalFactory` will be more stable in comparison to a subject handlers used for `EmailRecoveryModule`, developers may want to write a generic subject handler in a slightly different way, or even in a non-english lanaguage, so the bytecode is still passed in here directly. The security of each module deployment and associated contracts can then be attested to via a ERC 7484 registry.
 
 ## Threat model
-Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. Additionally, the current 7579 spec allows accounts to forcefully uninstall modules in the case of a malicious module, this means an attacker could forcefully uninstall a recovery module anyway. This is expected to be addressed in the future. This contract is designed to recover modular accounts in the case of a lost device/authentication method (private key), but does not provide adequate security for a scenario in which a malicious actor has control of the lost device/authentication method (private key).
+Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. This contract is designed to be extended to take these additional considerations into account, but does not provide them by default.
+
+# Deployment
+
+```
+source .env
+forge script script/DeployEmailRecoveryModule.s.sol:DeployEmailRecoveryModuleScript --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASE_SCAN_API_KEY --verify --broadcast -vvvv
+```
