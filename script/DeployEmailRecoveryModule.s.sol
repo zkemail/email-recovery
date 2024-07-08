@@ -41,12 +41,23 @@ contract DeployEmailRecoveryModuleScript is Script {
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
 
-        EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
+        {
+            EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
+        }
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));
             console.log("Deployed Email Recovery Factory at", _factory);
+        }
+
+        bytes4 functionSelector;
+        {
+            string memory functionName = vm.envOr("FUNCTION_NAME", string("changeOwner(address)"));
+            functionSelector = bytes4(keccak256(bytes(functionName)));
+            console.log("Function Name", functionName);
+            console.log("Function Selector");
+            console.logBytes4(functionSelector);
         }
         {
             EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
@@ -58,9 +69,9 @@ contract DeployEmailRecoveryModuleScript is Script {
                 type(EmailRecoverySubjectHandler).creationCode,
                 dkimRegistry,
                 validatorAddr,
-                bytes4(keccak256(bytes("resetOwners(bytes)")))
+                functionSelector
             );
-
+            
             console.log("Deployed Email Recovery Module at", vm.toString(module));
             console.log("Deployed Email Recovery Manager at", vm.toString(manager));
             console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
