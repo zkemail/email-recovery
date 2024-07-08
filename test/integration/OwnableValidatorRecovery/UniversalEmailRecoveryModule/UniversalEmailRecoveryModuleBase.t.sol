@@ -12,8 +12,8 @@ import {
 } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
-import { EmailRecoveryUniversalFactory } from "src/EmailRecoveryUniversalFactory.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../../IntegrationBase.t.sol";

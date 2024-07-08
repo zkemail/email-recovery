@@ -12,7 +12,7 @@ import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeRecoverySubjectHandlerHarness } from "./SafeRecoverySubjectHandlerHarness.sol";
-import { EmailRecoveryFactory } from "src/EmailRecoveryFactory.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
 
 abstract contract SafeUnitBase is IntegrationBase {

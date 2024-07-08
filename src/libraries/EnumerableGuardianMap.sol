@@ -88,8 +88,6 @@ library EnumerableGuardianMap {
     /**
      * @dev Removes all key-value pairs from a map. O(n) where n <= 32
      *
-     * Returns true if the key was removed from the map, that is if it was present.
-     *
      * @custom:modification This is a new function that did not exist on the
      * original Open Zeppelin library.
      */

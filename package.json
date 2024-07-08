@@ -1,11 +1,11 @@
 {
-  "name": "@rhinestone/module-template",
-  "version": "0.4.1",
-  "description": "A Foundry template for building modules using the ModuleKit",
-  "license": "GPL-3.0",
+  "name": "email-recovery",
+  "version": "0.0.1",
+  "description": "Smart account module and related contracts to enable email recovery for validators",
+  "license": "MIT",
   "author": {
-    "name": "Rhinestone",
-    "url": "https://rhinestone.wtf"
+    "name": "email-recovery",
+    "url": "https://prove.email/"
   },
   "scripts": {
     "build": "forge build",
@@ -21,18 +21,18 @@
     "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
     "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
     "test": "forge test",
-    "test:safe": "ACCOUNT_TYPE=SAFE forge test",
-    "test:kernel": "ACCOUNT_TYPE=KERNEL forge test",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
   "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "v5.0.1",
-    "@zk-email/contracts": "v6.0.3",
     "@matterlabs": "github:matter-labs/era-contracts",
+    "@openzeppelin/contracts-upgradeable": "v5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit#test/safe-latest",
-    "erc7579-implementation": "https://github.com/erc7579/erc7579-implementation.git",
-    "solidity-stringutils": "https://github.com/Arachnid/solidity-stringutils.git"
+    "@zk-email/contracts": "v6.0.3",
+    "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
+    "erc7579-implementation": "github:erc7579/erc7579-implementation",
+    "ether-email-auth": "github:zkemail/ether-email-auth",
+    "solidity-stringutils": "github:Arachnid/solidity-stringutils"
   },
   "files": [
     "src",
@@ -42,18 +42,18 @@
     "foundry.toml",
     "remappings.txt"
   ],
-  "homepage": "https://docs.rhinestone.wtf/module-template",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rhinestonewtf/module-template.git"
+    "url": "git+https://github.com/zkemail/email-recovery.git"
   },
   "bugs": {
-    "url": "https://github.com/rhinestonewtf/module-template/issues"
+    "url": "https://github.com/zkemail/email-recovery/issues"
   },
   "keywords": [
+    "zk email",
+    "recovery",
     "account abstraction",
-    "smart account modules",
-    "module template"
+    "smart account modules"
   ],
   "publishConfig": {
     "access": "public"
