@@ -157,3 +157,10 @@ The `recover()` function on the module holds the core logic for the module. It d
 
 ## Threat model
 Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. This contract is designed to be extended to take these additional considerations into account, but does not provide them by default.
+
+# Deployment
+
+```
+source .env
+forge script script/DeployEmailRecoveryModule.s.sol:DeployEmailRecoveryModuleScript --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASE_SCAN_API_KEY --verify --broadcast -vvvv
+```
