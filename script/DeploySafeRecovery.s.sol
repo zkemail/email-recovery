@@ -22,7 +22,7 @@ contract DeploySafeRecovery_Script is Script {
     function run() public {
         address entryPoint = address(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
         IERC7484 registry = IERC7484(0xe0cde9239d16bEf05e62Bbf7aA93e420f464c826);
-        
+
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
