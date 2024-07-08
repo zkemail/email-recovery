@@ -28,6 +28,7 @@ contract DeploySafeRecovery_Script is Script {
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        bytes32 safeAccountSalt;
 
         if (verifier == address(0)) {
             verifier = address(new Verifier());
@@ -45,6 +46,9 @@ contract DeploySafeRecovery_Script is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
+        safeAccountSalt = vm.envBytes32("SAFE_ACCOUNT_SALT");
+        require(safeAccountSalt != bytes32(0), "SAFE_ACCOUNT_SALT is required");
+
         EmailRecoveryUniversalFactory factory =
             new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
         (address module, address manager, address subjectHandler) = factory
@@ -56,14 +60,14 @@ contract DeploySafeRecovery_Script is Script {
             dkimRegistry
         );
 
-        address safe7579 = address(new Safe7579{ salt: bytes32(uint256(0)) }());
+        address safe7579Adapter = address(new Safe7579{ salt: safeAccountSalt }());
         address safe7579Launchpad =
-            address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
+            address(new Safe7579Launchpad{ salt: safeAccountSalt }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
         console.log("Deployed Email Recovery Manager at ", vm.toString(manager));
         console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
-        console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
+        console.log("Deployed Safe 7579 Adapter at      ", vm.toString(safe7579Adapter));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));
 
         vm.stopBroadcast();

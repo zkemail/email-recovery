@@ -25,3 +25,4 @@ solidity-stringutils/=node_modules/solidity-stringutils/
 erc7579-implementation/=node_modules/erc7579-implementation/
 kernel/=node_modules/@zerodev/kernel/src/
 ExcessivelySafeCall/=node_modules/excessively-safe-call/src/
+@safe-global/safe-contracts/=node_modules/@safe-global/safe-contracts/

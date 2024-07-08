@@ -68,7 +68,7 @@ library GuardianUtils {
             revert IncorrectNumberOfWeights();
         }
 
-        if (threshold == 0) {
+        if (threshold == 0 && guardianCount > 0) {
             revert ThresholdCannotBeZero();
         }
 
