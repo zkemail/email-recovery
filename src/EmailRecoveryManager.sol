@@ -245,12 +245,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryModuleNotAuthorized();
         }
 
-        // Allow recovery configuration without configuring guardians
-        if (guardians.length == 0 && weights.length == 0 && threshold == 0) {
-            guardianConfigs[account].initialized = true;
-        } else {
-            setupGuardians(account, guardians, weights, threshold);
-        }
+        setupGuardians(account, guardians, weights, threshold);
 
         RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
         updateRecoveryConfig(recoveryConfig);
@@ -270,7 +265,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     {
         address account = msg.sender;
 
-        if (!guardianConfigs[account].initialized) {
+        if (guardianConfigs[account].threshold == 0) {
             revert AccountNotConfigured();
         }
         if (recoveryConfig.delay > recoveryConfig.expiry) {

@@ -67,6 +67,5 @@ contract EmailRecoveryManager_deInitRecoveryFromModule_Test is UnitBase {
         assertEq(guardianConfig.guardianCount, 0);
         assertEq(guardianConfig.totalWeight, 0);
         assertEq(guardianConfig.threshold, 0);
-        assertEq(guardianConfig.initialized, false);
     }
 }

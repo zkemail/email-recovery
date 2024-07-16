@@ -39,10 +39,9 @@ interface IEmailRecoveryManager {
      * Config should be maintained over subsequent recovery attempts unless explicitly modified
      */
     struct GuardianConfig {
-        uint256 guardianCount;
-        uint256 totalWeight;
-        uint256 threshold;
-        bool initialized;
+        uint256 guardianCount; // total count for all guardians
+        uint256 totalWeight; // combined weight for all guardians
+        uint256 threshold; // the threshold required to successfully process a recovery attempt
     }
 
     /*//////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,6 @@ import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol"
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 import { UnitBase } from "../UnitBase.t.sol";
-import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 
 contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
@@ -74,7 +73,6 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.totalWeight, totalWeight);
         assertEq(guardianConfig.threshold, threshold);
-        assertEq(guardianConfig.initialized, true);
 
         GuardianStorage memory guardian =
             emailRecoveryManager.getGuardian(accountAddress, guardians[0]);
@@ -124,44 +122,19 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         );
     }
 
-    function test_ConfigureRecovery_SucceedsWithNoGuardians() public {
+    function test_ConfigureRecovery_RevetrWhen_NoGuardians() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, isInstalledContext, functionSelector
+        );
 
         address[] memory zeroGuardians;
         uint256[] memory zeroGuardianWeights;
-        uint256 zeroThreshold = 0;
 
-        // Install recovery module - configureRecovery is called on `onInstall`
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(
-                validatorAddress,
-                isInstalledContext,
-                functionSelector,
-                zeroGuardians,
-                zeroGuardianWeights,
-                zeroThreshold,
-                delay,
-                expiry
-            )
-        });
-
-        IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            emailRecoveryManager.getRecoveryConfig(accountAddress);
-        assertEq(recoveryConfig.delay, delay);
-        assertEq(recoveryConfig.expiry, expiry);
-
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
-        assertEq(guardianConfig.guardianCount, zeroGuardians.length);
-        assertEq(guardianConfig.totalWeight, 0);
-        assertEq(guardianConfig.threshold, zeroThreshold);
-        assertEq(guardianConfig.initialized, true);
-
-        GuardianStorage memory guardian =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[0]);
-        assertEq(uint256(guardian.status), uint256(GuardianStatus.NONE));
-        assertEq(guardian.weight, 0);
+        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        emailRecoveryManager.configureRecovery(
+            zeroGuardians, zeroGuardianWeights, threshold, delay, expiry
+        );
     }
 }

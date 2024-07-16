@@ -107,8 +107,7 @@ library GuardianUtils {
         guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig({
             guardianCount: guardianCount,
             totalWeight: totalWeight,
-            threshold: threshold,
-            initialized: true
+            threshold: threshold
         });
     }
 
@@ -153,9 +152,9 @@ library GuardianUtils {
     )
         internal
     {
-        // Initialized can only be false at initialization.
+        // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
-        if (!guardianConfigs[account].initialized) {
+        if (guardianConfigs[account].threshold == 0) {
             revert SetupNotCalled();
         }
 
@@ -242,9 +241,9 @@ library GuardianUtils {
     )
         internal
     {
-        // Initialized can only be false at initialization.
+        // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
-        if (!guardianConfigs[account].initialized) {
+        if (guardianConfigs[account].threshold == 0) {
             revert SetupNotCalled();
         }
 
