@@ -15,12 +15,14 @@ import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 // errors
 contract LogErrorSelectors_Test is Test {
     function test_EmailRecoverySubjectHandler_AssertSelectors() public {
+        assertEq(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
         assertEq(EmailRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0xd743ae6c));
         assertEq(EmailRecoverySubjectHandler.InvalidAccount.selector, bytes4(0x6d187b28));
         assertEq(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0x7f263111));
     }
 
     function test_SafeRecoverySubjectHandler_AssertSelectors() public {
+        assertEq(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
         assertEq(SafeRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0xd743ae6c));
         assertEq(SafeRecoverySubjectHandler.InvalidOldOwner.selector, bytes4(0xa9ab2692));
         assertEq(SafeRecoverySubjectHandler.InvalidNewOwner.selector, bytes4(0x54a56786));
@@ -37,7 +39,6 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector, bytes4(0xbfa7d2a9));
         assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0x655a4874));
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x12fa0714));
-        assertEq(IEmailRecoveryManager.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
         assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x8f8457ba));
         assertEq(IEmailRecoveryManager.InvalidGuardianStatus.selector, bytes4(0x5689b51a));
         assertEq(IEmailRecoveryManager.InvalidAccountAddress.selector, bytes4(0x401b6ade));

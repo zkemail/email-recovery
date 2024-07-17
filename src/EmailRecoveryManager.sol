@@ -304,10 +304,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         internal
         override
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         address account = IEmailRecoverySubjectHandler(subjectHandler).validateAcceptanceSubject(
             templateIdx, subjectParams
         );
@@ -354,10 +350,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         internal
         override
     {
-        if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
-        }
-
         (address account, bytes32 calldataHash) = IEmailRecoverySubjectHandler(subjectHandler)
             .validateRecoverySubject(templateIdx, subjectParams, address(this));
 

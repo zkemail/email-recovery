@@ -23,15 +23,6 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
-    function test_AcceptGuardian_RevertWhen_InvalidTemplateIndex() public {
-        uint256 invalidTemplateIdx = 1;
-
-        vm.expectRevert(IEmailRecoveryManager.InvalidTemplateIndex.selector);
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, invalidTemplateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_AcceptGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);

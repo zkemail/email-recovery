@@ -10,6 +10,16 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
         super.setUp();
     }
 
+    function test_ValidateAcceptanceSubject_RevertWhen_InvalidTemplateIndex() public {
+        skipIfNotSafeAccountType();
+        bytes[] memory subjectParams = new bytes[](1);
+        subjectParams[0] = abi.encode(accountAddress1);
+        uint256 invalidTemplateIdx = 1;
+
+        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        safeRecoverySubjectHandler.validateAcceptanceSubject(invalidTemplateIdx, subjectParams);
+    }
+
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
         skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;

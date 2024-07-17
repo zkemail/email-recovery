@@ -10,6 +10,7 @@ import { StringUtils } from "../libraries/StringUtils.sol";
  * This is the default subject handler that will work with any validator.
  */
 contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
+    error InvalidTemplateIndex();
     error InvalidSubjectParams();
     error InvalidAccount();
     error InvalidRecoveryModule();
@@ -88,18 +89,24 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     /**
      * @notice Validates the subject params for an acceptance email
+     * @param templateIdx The index of the template used for acceptance
      * @param subjectParams The subject parameters of the recovery email.
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
-        uint256, /* templateIdx */
+        uint256 templateIdx,
         bytes[] calldata subjectParams
     )
         external
         pure
         returns (address)
     {
-        if (subjectParams.length != 1) revert InvalidSubjectParams();
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+        if (subjectParams.length != 1) {
+            revert InvalidSubjectParams();
+        }
 
         // The GuardianStatus check in acceptGuardian implicitly
         // validates the account, so no need to re-validate here
@@ -110,14 +117,15 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     /**
      * @notice Validates the subject params for an acceptance email
-     * @param subjectParams The subject parameters of the recovery email.
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams The subject parameters of the recovery email
      * @param recoveryManager The recovery manager address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
      * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
      * recovery is executed
      */
     function validateRecoverySubject(
-        uint256, /* templateIdx */
+        uint256 templateIdx,
         bytes[] calldata subjectParams,
         address recoveryManager
     )
@@ -125,6 +133,9 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         view
         returns (address, bytes32)
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
         if (subjectParams.length != 3) {
             revert InvalidSubjectParams();
         }

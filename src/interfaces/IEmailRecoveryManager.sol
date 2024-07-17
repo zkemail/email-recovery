@@ -75,7 +75,6 @@ interface IEmailRecoveryManager {
     error RecoveryModuleNotAuthorized();
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
-    error InvalidTemplateIndex();
     error ThresholdExceedsAcceptedWeight();
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus

@@ -23,6 +23,15 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         subjectParams[2] = abi.encode(calldataHashString);
     }
 
+    function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
+        uint256 invalidTemplateIdx = 1;
+
+        vm.expectRevert(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        emailRecoveryHandler.validateRecoverySubject(
+            invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
     function test_ValidateRecoverySubject_RevertWhen_NoSubjectParams() public {
         bytes[] memory emptySubjectParams;
 

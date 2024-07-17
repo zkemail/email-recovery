@@ -29,15 +29,6 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
-    function test_ProcessRecovery_RevertWhen_InvalidTemplateIndex() public {
-        uint256 invalidTemplateIdx = 1;
-
-        vm.expectRevert(IEmailRecoveryManager.InvalidTemplateIndex.selector);
-        emailRecoveryManager.exposed_processRecovery(
-            guardian1, invalidTemplateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_ProcessRecovery_RevertWhen_GuardianStatusIsNONE() public {
         address invalidGuardian = address(1);
 

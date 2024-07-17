@@ -21,6 +21,16 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
+    function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
+        skipIfNotSafeAccountType();
+        uint256 invalidTemplateIdx = 1;
+
+        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        safeRecoverySubjectHandler.validateRecoverySubject(
+            invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
         skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
