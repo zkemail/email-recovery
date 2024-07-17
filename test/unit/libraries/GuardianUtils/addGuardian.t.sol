@@ -63,6 +63,7 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
 
         uint256 expectedGuardianCount = guardians.length + 1;
         uint256 expectedTotalWeight = totalWeight + newGuardianWeight;
+        uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold; // same threshold
 
         vm.startPrank(accountAddress);
@@ -79,6 +80,7 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
     }
 }

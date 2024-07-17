@@ -34,6 +34,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
 
     function test_AcceptGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -95,5 +96,9 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardian(accountAddress, guardian1);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage.weight, uint256(1));
+
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            emailRecoveryManager.getGuardianConfig(accountAddress);
+        assertEq(guardianConfig.acceptedWeight, guardianStorage.weight);
     }
 }

@@ -18,6 +18,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
 
     function test_ConfigureRecovery_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -72,6 +73,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.totalWeight, totalWeight);
+        assertEq(guardianConfig.acceptedWeight, 0); // no guardians accepted yet
         assertEq(guardianConfig.threshold, threshold);
 
         GuardianStorage memory guardian =
@@ -132,7 +134,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         address[] memory zeroGuardians;
         uint256[] memory zeroGuardianWeights;
 
-        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
         emailRecoveryManager.configureRecovery(
             zeroGuardians, zeroGuardianWeights, threshold, delay, expiry
         );

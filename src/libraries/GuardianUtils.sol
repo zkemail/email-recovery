@@ -19,7 +19,7 @@ library GuardianUtils {
     error InvalidGuardianAddress();
     error InvalidGuardianWeight();
     error AddressAlreadyGuardian();
-    error ThresholdCannotExceedTotalWeight();
+    error ThresholdExceedsTotalWeight();
     error StatusCannotBeTheSame();
     error SetupNotCalled();
     error UnauthorizedAccountForGuardian();
@@ -101,12 +101,13 @@ library GuardianUtils {
         }
 
         if (threshold > totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
         guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig({
             guardianCount: guardianCount,
             totalWeight: totalWeight,
+            acceptedWeight: 0,
             threshold: threshold
         });
     }
@@ -138,6 +139,7 @@ library GuardianUtils {
 
     /**
      * @notice Adds a guardian for the caller's account with a specified weight
+     * @dev A guardian is added, but not accepted after this function has been called
      * @param guardianConfigs The guardian config storage associated with an account
      * @param account The address of the account associated with the guardian
      * @param guardian The address of the guardian to be added
@@ -206,18 +208,23 @@ library GuardianUtils {
 
         // Only allow guardian removal if threshold can still be reached.
         if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
         guardiansStorage[account].remove(guardian);
         guardianConfigs[account].guardianCount--;
         guardianConfigs[account].totalWeight -= guardianStorage.weight;
+        if (guardianStorage.status == GuardianStatus.ACCEPTED) {
+            guardianConfigs[account].acceptedWeight -= guardianStorage.weight;
+        }
 
         emit RemovedGuardian(account, guardian);
     }
 
     /**
      * @notice Removes all guardians associated with an account
+     * @dev Does not remove guardian config, this should be modified at the same time as calling
+     * this function
      * @param account The address of the account associated with the guardians
      */
     function removeAllGuardians(
@@ -249,7 +256,7 @@ library GuardianUtils {
 
         // Validate that threshold is smaller than the total weight.
         if (threshold > guardianConfigs[account].totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
         // Guardian weight should be at least 1

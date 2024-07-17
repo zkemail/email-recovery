@@ -40,7 +40,13 @@ interface IEmailRecoveryManager {
      */
     struct GuardianConfig {
         uint256 guardianCount; // total count for all guardians
-        uint256 totalWeight; // combined weight for all guardians
+        uint256 totalWeight; // combined weight for all guardians. Important for checking that
+            // thresholds are valid.
+        uint256 acceptedWeight; // combined weight for all accepted guardians. This is separated
+            // from totalWeight as it is important to prevent recovery starting without enough
+            // accepted guardians to meet the threshold. Storing this in a variable avoids the need
+            // to loop over accepted guardians whenever checking if a recovery attempt can be
+            // started without being broken
         uint256 threshold; // the threshold required to successfully process a recovery attempt
     }
 
@@ -70,6 +76,7 @@ interface IEmailRecoveryManager {
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
     error InvalidTemplateIndex();
+    error ThresholdExceedsAcceptedWeight();
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );

@@ -9,7 +9,6 @@ import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol"
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
-import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 // Helper test to associate custom error bytes with error names. Could just write the selector bytes
 // in the contracts but this method reduces human error from copying values and also when updating
@@ -39,6 +38,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0x655a4874));
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x12fa0714));
         assertEq(IEmailRecoveryManager.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
+        assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x8f8457ba));
         assertEq(IEmailRecoveryManager.InvalidGuardianStatus.selector, bytes4(0x5689b51a));
         assertEq(IEmailRecoveryManager.InvalidAccountAddress.selector, bytes4(0x401b6ade));
         assertEq(IEmailRecoveryManager.NoRecoveryConfigured.selector, bytes4(0xa66e66b6));
@@ -70,7 +70,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(GuardianUtils.InvalidGuardianAddress.selector, bytes4(0x1b081054));
         assertEq(GuardianUtils.InvalidGuardianWeight.selector, bytes4(0x148f78e0));
         assertEq(GuardianUtils.AddressAlreadyGuardian.selector, bytes4(0xe4e1614e));
-        assertEq(GuardianUtils.ThresholdCannotExceedTotalWeight.selector, bytes4(0x717c498a));
+        assertEq(GuardianUtils.ThresholdExceedsTotalWeight.selector, bytes4(0x3c7a2aad));
         assertEq(GuardianUtils.StatusCannotBeTheSame.selector, bytes4(0x115e823f));
         assertEq(GuardianUtils.SetupNotCalled.selector, bytes4(0xae69115b));
         assertEq(GuardianUtils.UnauthorizedAccountForGuardian.selector, bytes4(0xe4c3248f));

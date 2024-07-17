@@ -18,6 +18,7 @@ contract EmailRecoveryManager_deInitRecoveryFromModule_Test is UnitBase {
 
     function test_DeInitRecoveryFromModule_RevertWhen_RecoveryInProcess() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -66,6 +67,7 @@ contract EmailRecoveryManager_deInitRecoveryFromModule_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, 0);
         assertEq(guardianConfig.totalWeight, 0);
+        assertEq(guardianConfig.acceptedWeight, 0);
         assertEq(guardianConfig.threshold, 0);
     }
 }

@@ -81,7 +81,7 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, invalidThreshold
         );
@@ -90,6 +90,7 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_Succeeds() public {
         uint256 expectedGuardianCount = guardians.length;
         uint256 expectedTotalWeight = totalWeight;
+        uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold;
 
         vm.prank(accountAddress);
@@ -117,6 +118,7 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
     }
 }

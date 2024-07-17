@@ -13,6 +13,7 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
 
     function test_GetRecoveryRequest_Succeeds() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 

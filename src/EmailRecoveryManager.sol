@@ -328,6 +328,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         }
 
         guardiansStorage.updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED);
+        guardianConfigs[account].acceptedWeight += guardianStorage.weight;
 
         emit GuardianAccepted(account, guardian);
     }
@@ -364,6 +365,11 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryModuleNotAuthorized();
         }
 
+        GuardianConfig memory guardianConfig = guardianConfigs[account];
+        if (guardianConfig.threshold > guardianConfig.acceptedWeight) {
+            revert ThresholdExceedsAcceptedWeight();
+        }
+
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
@@ -375,8 +381,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
 
         recoveryRequest.currentWeight += guardianStorage.weight;
 
-        uint256 threshold = guardianConfigs[account].threshold;
-        if (recoveryRequest.currentWeight >= threshold) {
+        if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
 

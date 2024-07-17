@@ -14,6 +14,7 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
     function test_AddGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -28,6 +29,7 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
         uint256 expectedGuardianCount = guardians.length + 1;
         uint256 expectedTotalWeight = totalWeight + newGuardianWeight;
+        uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold; // same threshold
 
         vm.startPrank(accountAddress);
@@ -44,6 +46,7 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
     }
 }

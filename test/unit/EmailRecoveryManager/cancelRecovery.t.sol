@@ -17,6 +17,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         address otherAddress = address(99);
 
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -39,6 +40,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
 
     function test_CancelRecovery_PartialRequest_Succeeds() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 

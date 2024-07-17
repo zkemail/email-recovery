@@ -48,6 +48,7 @@ contract EmailRecoveryManager_Integration_Test is
 
     function test_RevertWhen_HandleAcceptanceCalled_DuringRecovery() public {
         acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[1]);
         vm.warp(12 seconds);
         handleRecovery(accountAddress1, guardians1[0], calldataHash1);
 
@@ -116,11 +117,12 @@ contract EmailRecoveryManager_Integration_Test is
         public
     {
         acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[1]);
         vm.warp(12 seconds);
         handleRecovery(accountAddress1, guardians1[0], calldataHash1);
 
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], calldataHash1);
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[2], calldataHash1);
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);

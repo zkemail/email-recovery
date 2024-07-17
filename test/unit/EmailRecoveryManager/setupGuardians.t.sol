@@ -45,6 +45,7 @@ contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, 0); // no guardians accepted
         assertEq(guardianConfig.threshold, expectedThreshold);
     }
 }
