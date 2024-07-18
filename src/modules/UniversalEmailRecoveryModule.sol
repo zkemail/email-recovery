@@ -148,7 +148,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
             revert InvalidValidator(validator);
         }
 
-        if (validatorCount[msg.sender] > MAX_VALIDATORS) {
+        if (validatorCount[msg.sender] >= MAX_VALIDATORS) {
             revert MaxValidatorsReached();
         }
         validators[msg.sender].push(validator);

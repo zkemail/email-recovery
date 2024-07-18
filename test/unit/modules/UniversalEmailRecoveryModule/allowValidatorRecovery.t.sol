@@ -66,6 +66,34 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         emailRecoveryModule.allowValidatorRecovery(validatorAddress, "", functionSelector);
     }
 
+    function test_AllowValidatorRecovery_RevertWhen_MaxValidatorsReached() public {
+        vm.startPrank(accountAddress);
+
+        // One validator is already installed from setup
+        for (uint256 i = 1; i <= 31; i++) {
+            address newValidatorAddress = address(new OwnableValidator());
+            instance.installModule({
+                moduleTypeId: MODULE_TYPE_VALIDATOR,
+                module: newValidatorAddress,
+                data: abi.encode(owner)
+            });
+            emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", functionSelector);
+        }
+
+        vm.startPrank(accountAddress);
+        address newValidatorAddress = address(new OwnableValidator());
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: newValidatorAddress,
+            data: abi.encode(owner)
+        });
+        vm.expectRevert(UniversalEmailRecoveryModule.MaxValidatorsReached.selector);
+        emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", functionSelector);
+
+        uint256 validatorCount = emailRecoveryModule.validatorCount(accountAddress);
+        assertEq(validatorCount, 32);
+    }
+
     function test_AllowValidatorRecovery_SucceedsWhenAlreadyInitialized() public {
         // Deplopy and install new validator
         OwnableValidator newValidator = new OwnableValidator();
@@ -73,7 +101,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
 
         vm.startPrank(accountAddress);

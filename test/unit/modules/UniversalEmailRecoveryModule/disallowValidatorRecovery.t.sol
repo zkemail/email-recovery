@@ -60,7 +60,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
 
         address[] memory allowedValidators =
@@ -124,7 +124,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
 
         vm.startPrank(accountAddress);

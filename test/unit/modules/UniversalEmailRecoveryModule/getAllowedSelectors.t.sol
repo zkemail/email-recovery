@@ -28,7 +28,7 @@ contract UniversalEmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
         bytes4 newFunctionSelector = bytes4(keccak256(bytes("rotateOwner(address,address)")));
 
