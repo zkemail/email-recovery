@@ -67,12 +67,14 @@ library EnumerableGuardianMap {
         internal
         returns (bool)
     {
+        map._values[key] = value;
+        bool success = map._keys.add(key);
+
         uint256 length = map._keys.length();
-        if (length >= MAX_NUMBER_OF_GUARDIANS) {
+        if (success && length > MAX_NUMBER_OF_GUARDIANS) {
             revert MaxNumberOfGuardiansReached();
         }
-        map._values[key] = value;
-        return map._keys.add(key);
+        return success;
     }
 
     /**

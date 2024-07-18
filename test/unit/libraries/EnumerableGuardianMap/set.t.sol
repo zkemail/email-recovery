@@ -106,4 +106,29 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
     }
+
+    function test_Set_UpdatesValueWhenMaxNumberOfGuardiansReached() public {
+        bool result;
+        for (uint256 i = 1; i <= 32; i++) {
+            result = guardiansStorage[accountAddress].set({
+                key: vm.addr(i),
+                value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
+            });
+            assertEq(result, true);
+        }
+
+        bool success = guardiansStorage[accountAddress].set({
+            key: vm.addr(1), // update first guardian added in loop
+            value: GuardianStorage(GuardianStatus.ACCEPTED, guardianWeights[0])
+        });
+        assertEq(success, false);
+        require(
+            guardiansStorage[accountAddress]._values[vm.addr(1)].status == GuardianStatus.ACCEPTED,
+            "Expected status to be ACCEPTED"
+        );
+        require(
+            guardiansStorage[accountAddress]._values[vm.addr(1)].weight == guardianWeights[0],
+            "Expected weight to be 1"
+        );
+    }
 }
