@@ -85,6 +85,7 @@ interface IEmailRecoveryManager {
     error DelayNotPassed();
     error RecoveryRequestExpired();
     error InvalidCalldataHash();
+    error NoRecoveryInProcess();
     error NotRecoveryModule();
 
     /*//////////////////////////////////////////////////////////////////////////

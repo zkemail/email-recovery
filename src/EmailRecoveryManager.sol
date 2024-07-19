@@ -445,6 +445,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @dev Deletes the current recovery request associated with the caller's account
      */
     function cancelRecovery() external virtual {
+        if (recoveryRequests[msg.sender].currentWeight == 0) {
+            revert NoRecoveryInProcess();
+        }
         delete recoveryRequests[msg.sender];
         emit RecoveryCancelled(msg.sender);
     }
