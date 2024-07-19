@@ -6,6 +6,7 @@ import { console2 } from "forge-std/console2.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
@@ -51,7 +52,18 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_EmailRecoveryModule_AssertSelectors() public {
+        assertEq(EmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(EmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
+        assertEq(EmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
+        assertEq(EmailRecoveryModule.NotTrustedRecoveryManager.selector, bytes4(0x38f1b648));
+        assertEq(EmailRecoveryModule.RecoveryNotAuthorizedForAccount.selector, bytes4(0xba14d9ef));
+    }
+
+    function test_UniversalEmailRecoveryModule_AssertSelectors() public {
         assertEq(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(
+            UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector, bytes4(0x0b088c23)
+        );
         assertEq(UniversalEmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
         assertEq(UniversalEmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
         assertEq(UniversalEmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
