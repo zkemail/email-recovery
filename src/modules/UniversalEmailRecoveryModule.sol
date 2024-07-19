@@ -41,6 +41,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     event RecoveryExecuted();
 
     error InvalidSelector(bytes4 selector);
+    error RecoveryModuleNotInitialized();
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
     error MaxValidatorsReached();
@@ -82,6 +83,16 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
             revert InvalidSelector(recoverySelector);
         }
 
+        _;
+    }
+
+    /**
+     * @notice Modifier to check whether the recovery module is initialized
+     */
+    modifier onlyWhenInitialized() {
+        if (!validators[msg.sender].alreadyInitialized()) {
+            revert RecoveryModuleNotInitialized();
+        }
         _;
     }
 
@@ -138,6 +149,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         bytes4 recoverySelector
     )
         public
+        onlyWhenInitialized
         withoutUnsafeSelector(recoverySelector)
     {
         if (
@@ -175,6 +187,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         bytes4 recoverySelector
     )
         public
+        onlyWhenInitialized
     {
         if (
             !IERC7579Account(msg.sender).isModuleInstalled(
@@ -224,7 +237,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      * @param smartAccount The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) external view returns (bool) {
+    function isInitialized(address smartAccount) public view returns (bool) {
         return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
             != 0;
     }

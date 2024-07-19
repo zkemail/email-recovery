@@ -10,6 +10,10 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
 
     constructor(address emailRecoveryManager) UniversalEmailRecoveryModule(emailRecoveryManager) { }
 
+    function workaround_validatorsPush(address account, address validator) external {
+        validators[account].push(validator);
+    }
+
     function exposed_allowedSelectors(
         address validator,
         address account

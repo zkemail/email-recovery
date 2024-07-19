@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_VALIDATOR, MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -17,6 +17,17 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_DisallowValidatorRecovery_RevertWhen_RecoveryModuleNotInitialized() public {
+        // Uninstall module so module is not initialized
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector);
+        emailRecoveryModule.disallowValidatorRecovery(
+            validatorAddress, address(1), bytes("0"), functionSelector
+        );
     }
 
     function test_DisallowValidatorRecovery_RevertWhen_InvalidValidator() public {
@@ -40,7 +51,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
     function test_DisallowValidatorRecovery_RevertWhen_InvalidPreviousValidator() public {
         OwnableValidator newValidator = new OwnableValidator();
-        address invalidPreviousOwner = address(newValidator);
+        address invalidPreviousValidator = address(newValidator);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(
@@ -49,7 +60,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, invalidPreviousOwner, "", functionSelector
+            validatorAddress, invalidPreviousValidator, "", functionSelector
         );
     }
 

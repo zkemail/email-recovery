@@ -17,6 +17,15 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         super.setUp();
     }
 
+    function test_AllowValidatorRecovery_RevertWhen_RecoveryModuleNotInitialized() public {
+        // Uninstall module so module is not initialized
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector);
+        emailRecoveryModule.allowValidatorRecovery(validatorAddress, bytes("0"), functionSelector);
+    }
+
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -123,8 +132,20 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         // Uninstall module so state is reset
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(validatorAddress, "", functionSelector);
+        instance.installModule(
+            MODULE_TYPE_EXECUTOR,
+            recoveryModuleAddress,
+            abi.encode(
+                validatorAddress,
+                isInstalledContext,
+                functionSelector,
+                guardians,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
+        );
 
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);

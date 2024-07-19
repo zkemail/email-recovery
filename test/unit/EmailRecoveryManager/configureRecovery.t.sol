@@ -85,9 +85,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     function test_ConfigureRecovery_RevertWhen_ZeroGuardians() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, isInstalledContext, functionSelector
-        );
+        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
         address[] memory zeroGuardians;
 
         vm.expectRevert(GuardianUtils.IncorrectNumberOfWeights.selector);
@@ -99,9 +97,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     function test_ConfigureRecovery_RevertWhen_ZeroGuardianWeights() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, isInstalledContext, functionSelector
-        );
+        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
         uint256[] memory zeroGuardianWeights;
 
         vm.expectRevert(GuardianUtils.IncorrectNumberOfWeights.selector);
@@ -113,9 +109,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     function test_ConfigureRecovery_RevertWhen_ZeroThreshold() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, isInstalledContext, functionSelector
-        );
+        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
         uint256 zeroThreshold = 0;
 
         vm.expectRevert(GuardianUtils.ThresholdCannotBeZero.selector);
@@ -127,9 +121,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     function test_ConfigureRecovery_RevetrWhen_NoGuardians() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, isInstalledContext, functionSelector
-        );
+        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
 
         address[] memory zeroGuardians;
         uint256[] memory zeroGuardianWeights;
