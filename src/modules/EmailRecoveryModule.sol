@@ -129,6 +129,18 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
         return authorized[smartAccount];
     }
 
+    /**
+     * Check if a recovery request can be initiated based on guardian acceptance
+     * @param smartAccount The smart account to check
+     * @return true if the recovery request can be started, false otherwise
+     */
+    function canStartRecoveryRequest(address smartAccount) external view returns (bool) {
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount);
+
+        return guardianConfig.acceptedWeight >= guardianConfig.threshold;
+    }
+
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                        MODULE LOGIC                        */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/

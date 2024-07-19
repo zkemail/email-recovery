@@ -243,6 +243,27 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         return getAllowedValidators(smartAccount).length > 0;
     }
 
+    /**
+     * Check if a recovery request can be initiated based on guardian acceptance
+     * @param smartAccount The smart account to check
+     * @param validator The validator to check
+     * @return true if the recovery request can be started, false otherwise
+     */
+    function canStartRecoveryRequest(
+        address smartAccount,
+        address validator
+    )
+        external
+        view
+        returns (bool)
+    {
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount);
+
+        return guardianConfig.acceptedWeight >= guardianConfig.threshold
+            && validators[smartAccount].contains(validator);
+    }
+
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                        MODULE LOGIC                        */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
