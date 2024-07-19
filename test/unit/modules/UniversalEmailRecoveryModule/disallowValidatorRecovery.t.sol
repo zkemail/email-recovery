@@ -30,25 +30,6 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         );
     }
 
-    function test_DisallowValidatorRecovery_RevertWhen_InvalidValidator() public {
-        address[] memory allowedValidators =
-            emailRecoveryModule.getAllowedValidators(accountAddress);
-        address prevValidator = allowedValidators.findPrevious(validatorAddress);
-
-        OwnableValidator newValidator = new OwnableValidator();
-        address newValidatorAddress = address(newValidator);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
-            )
-        );
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.disallowValidatorRecovery(
-            newValidatorAddress, prevValidator, bytes("0"), functionSelector
-        );
-    }
-
     function test_DisallowValidatorRecovery_RevertWhen_InvalidPreviousValidator() public {
         OwnableValidator newValidator = new OwnableValidator();
         address invalidPreviousValidator = address(newValidator);
@@ -120,6 +101,24 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
             validatorAddress, prevValidator, "", functionSelector
+        );
+
+        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        assertEq(allowedValidators.length, 0);
+        assertEq(allowedSelectors.length, 0);
+    }
+
+    function test_DisallowValidatorRecovery_SucceedsWhenValidatorUninstalled() public {
+        instance.uninstallModule(MODULE_TYPE_VALIDATOR, validatorAddress, "");
+
+        address[] memory allowedValidators =
+            emailRecoveryModule.getAllowedValidators(accountAddress);
+        address prevValidator = allowedValidators.findPrevious(validatorAddress);
+
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.disallowValidatorRecovery(
+            validatorAddress, prevValidator, bytes("0"), functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);

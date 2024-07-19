@@ -189,14 +189,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         public
         onlyWhenInitialized
     {
-        if (
-            !IERC7579Account(msg.sender).isModuleInstalled(
-                TYPE_VALIDATOR, validator, isInstalledContext
-            )
-        ) {
-            revert InvalidValidator(validator);
-        }
-
         validators[msg.sender].pop(prevValidator, validator);
         validatorCount[msg.sender]--;
 
