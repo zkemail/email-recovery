@@ -294,12 +294,14 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param guardian The address of the guardian to be accepted
      * @param templateIdx The index of the template used for acceptance
      * @param subjectParams An array of bytes containing the subject parameters
+     * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
+     * but it is not required in this implementation
      */
     function acceptGuardian(
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
-        bytes32
+        bytes32 /* nullifier */
     )
         internal
         override
@@ -340,12 +342,14 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param guardian The address of the guardian initiating the recovery
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams An array of bytes containing the subject parameters
+     * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
+     * but it is not required in this implementation
      */
     function processRecovery(
         address guardian,
         uint256 templateIdx,
         bytes[] memory subjectParams,
-        bytes32
+        bytes32 /* nullifier */
     )
         internal
         override
