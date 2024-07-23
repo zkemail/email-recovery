@@ -67,9 +67,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
     /**
      * Initializes the module with the threshold and guardians
-     * @dev data is encoded as follows: abi.encode(isInstalledContext,
-     * guardians, weights, threshold, delay, expiry)
-     *
+     * @dev You cannot install this module during account deployment as it breaks the 4337
+     * validation rules. ERC7579 does not mandate that executors abide by the validation rules
+     * during account setup  - if required, install this module after the account has been setup. The
+     * data is encoded as follows: abi.encode(isInstalledContext, guardians, weights, threshold,
+     * delay, expiry)
      * @param data encoded data for recovery configuration
      */
     function onInstall(bytes calldata data) external {
