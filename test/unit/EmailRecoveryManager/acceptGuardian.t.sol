@@ -79,6 +79,8 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     }
 
     function test_AcceptGuardian_Succeeds() public {
+        vm.expectEmit();
+        emit IEmailRecoveryManager.GuardianAccepted(accountAddress, guardian1);
         emailRecoveryManager.exposed_acceptGuardian(
             guardian1, templateIdx, subjectParams, nullifier
         );

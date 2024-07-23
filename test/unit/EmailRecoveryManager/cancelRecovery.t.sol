@@ -77,6 +77,8 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.calldataHash, calldataHash);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
         emailRecoveryManager.cancelRecovery();
 
         recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);

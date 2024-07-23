@@ -47,8 +47,9 @@ contract EmailRecoveryManagerHarness is EmailRecoveryManager {
         uint256 threshold
     )
         external
+        returns (uint256, uint256)
     {
-        setupGuardians(account, guardians, weights, threshold);
+        return setupGuardians(account, guardians, weights, threshold);
     }
 
     function exposed_updateGuardianStatus(

@@ -10,8 +10,11 @@ import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 library GuardianUtils {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
-    event AddedGuardian(address indexed account, address indexed guardian);
-    event RemovedGuardian(address indexed account, address indexed guardian);
+    event AddedGuardian(address indexed account, address indexed guardian, uint256 weight);
+    event GuardianStatusUpdated(
+        address indexed account, address indexed guardian, GuardianStatus newStatus
+    );
+    event RemovedGuardian(address indexed account, address indexed guardian, uint256 weight);
     event ChangedThreshold(address indexed account, uint256 threshold);
 
     error IncorrectNumberOfWeights();
@@ -61,6 +64,7 @@ library GuardianUtils {
         uint256 threshold
     )
         internal
+        returns (uint256, uint256)
     {
         uint256 guardianCount = guardians.length;
 
@@ -74,30 +78,27 @@ library GuardianUtils {
 
         uint256 totalWeight = 0;
         for (uint256 i = 0; i < guardianCount; i++) {
-            address guardian = guardians[i];
-            uint256 weight = weights[i];
-
-            if (guardian == address(0) || guardian == account) {
+            if (guardians[i] == address(0) || guardians[i] == account) {
                 revert InvalidGuardianAddress();
             }
 
             // As long as weights are 1 or above, there will be enough total weight to reach the
             // required threshold. This is because we check the guardian count cannot be less
             // than the threshold and there is an equal amount of guardians to weights.
-            if (weight == 0) {
+            if (weights[i] == 0) {
                 revert InvalidGuardianWeight();
             }
 
-            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
+            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardians[i]);
             if (guardianStorage.status != GuardianStatus.NONE) {
                 revert AddressAlreadyGuardian();
             }
 
             guardiansStorage[account].set({
-                key: guardian,
-                value: GuardianStorage(GuardianStatus.REQUESTED, weight)
+                key: guardians[i],
+                value: GuardianStorage(GuardianStatus.REQUESTED, weights[i])
             });
-            totalWeight += weight;
+            totalWeight += weights[i];
         }
 
         if (threshold > totalWeight) {
@@ -110,6 +111,8 @@ library GuardianUtils {
             acceptedWeight: 0,
             threshold: threshold
         });
+
+        return (guardianCount, totalWeight);
     }
 
     /**
@@ -135,6 +138,7 @@ library GuardianUtils {
             key: guardian,
             value: GuardianStorage(newStatus, guardianStorage.weight)
         });
+        emit GuardianStatusUpdated(account, guardian, newStatus);
     }
 
     /**
@@ -181,7 +185,7 @@ library GuardianUtils {
         guardianConfigs[account].guardianCount++;
         guardianConfigs[account].totalWeight += weight;
 
-        emit AddedGuardian(account, guardian);
+        emit AddedGuardian(account, guardian, weight);
     }
 
     /**
@@ -218,7 +222,7 @@ library GuardianUtils {
             guardianConfigs[account].acceptedWeight -= guardianStorage.weight;
         }
 
-        emit RemovedGuardian(account, guardian);
+        emit RemovedGuardian(account, guardian, guardianStorage.weight);
     }
 
     /**

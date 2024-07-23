@@ -43,6 +43,8 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
 
     function test_Recover_Succeeds() public {
         vm.startPrank(emailRecoveryManagerAddress);
+        vm.expectEmit();
+        emit UniversalEmailRecoveryModule.RecoveryExecuted(accountAddress, validatorAddress);
         emailRecoveryModule.recover(accountAddress, recoveryCalldata);
 
         address updatedOwner = validator.owners(accountAddress);

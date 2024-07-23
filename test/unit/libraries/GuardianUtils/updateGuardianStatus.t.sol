@@ -74,6 +74,8 @@ contract GuardianUtils_updateGuardianStatus_Test is UnitBase {
     function test_UpdateGuardianStatus_UpdatesStatusToACCEPTED() public {
         GuardianStatus newStatus = GuardianStatus.ACCEPTED;
 
+        vm.expectEmit();
+        emit GuardianUtils.GuardianStatusUpdated(accountAddress, guardian1, newStatus);
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
 
         GuardianStorage memory guardianStorage =

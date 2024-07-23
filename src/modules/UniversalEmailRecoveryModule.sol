@@ -36,9 +36,13 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     address public immutable emailRecoveryManager;
 
-    event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
-    event RemovedValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
-    event RecoveryExecuted();
+    event NewValidatorRecovery(
+        address indexed account, address indexed validator, bytes4 recoverySelector
+    );
+    event RemovedValidatorRecovery(
+        address indexed account, address indexed validator, bytes4 recoverySelector
+    );
+    event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
     error RecoveryModuleNotInitialized();
@@ -168,8 +172,11 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
         allowedSelectors[validator][msg.sender] = recoverySelector;
         selectorToValidator[recoverySelector][msg.sender] = validator;
-
-        emit NewValidatorRecovery({ validatorModule: validator, recoverySelector: recoverySelector });
+        emit NewValidatorRecovery({
+            account: msg.sender,
+            validator: validator,
+            recoverySelector: recoverySelector
+        });
     }
 
     /**
@@ -200,7 +207,8 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         delete selectorToValidator[recoverySelector][msg.sender];
 
         emit RemovedValidatorRecovery({
-            validatorModule: validator,
+            account: msg.sender,
+            validator: validator,
             recoverySelector: recoverySelector
         });
     }
@@ -289,7 +297,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
         _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
 
-        emit RecoveryExecuted();
+        emit RecoveryExecuted(account, validator);
     }
 
     /**

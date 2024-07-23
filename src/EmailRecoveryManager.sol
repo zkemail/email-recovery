@@ -245,12 +245,13 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryModuleNotAuthorized();
         }
 
-        setupGuardians(account, guardians, weights, threshold);
+        (uint256 guardianCount, uint256 totalWeight) =
+            setupGuardians(account, guardians, weights, threshold);
 
         RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
         updateRecoveryConfig(recoveryConfig);
 
-        emit RecoveryConfigured(account, guardians.length);
+        emit RecoveryConfigured(account, guardianCount, totalWeight, threshold);
     }
 
     /**
@@ -389,7 +390,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             recoveryRequest.executeBefore = executeBefore;
             recoveryRequest.calldataHash = calldataHash;
 
-            emit RecoveryProcessed(account, executeAfter, executeBefore);
+            emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, calldataHash);
         }
     }
 
@@ -532,8 +533,10 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         uint256 threshold
     )
         internal
+        returns (uint256, uint256)
     {
-        guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
+        return
+            guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
     }
 
     /**

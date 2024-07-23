@@ -24,7 +24,11 @@ contract EmailRecoveryFactory {
     address public immutable emailAuthImpl;
 
     event EmailRecoveryModuleDeployed(
-        address emailRecoveryModule, address emailRecoveryManager, address subjectHandler
+        address emailRecoveryModule,
+        address emailRecoveryManager,
+        address subjectHandler,
+        address validator,
+        bytes4 functionSelector
     );
 
     constructor(address _verifier, address _emailAuthImpl) {
@@ -84,7 +88,9 @@ contract EmailRecoveryFactory {
 
         // Initialize recovery manager with module address
         EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
-        emit EmailRecoveryModuleDeployed(emailRecoveryModule, emailRecoveryManager, subjectHandler);
+        emit EmailRecoveryModuleDeployed(
+            emailRecoveryModule, emailRecoveryManager, subjectHandler, validator, functionSelector
+        );
 
         return (emailRecoveryModule, emailRecoveryManager, subjectHandler);
     }

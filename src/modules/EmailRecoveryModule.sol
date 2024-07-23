@@ -43,7 +43,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      */
     mapping(address account => bool isAuthorized) internal authorized;
 
-    event RecoveryExecuted();
+    event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
@@ -167,7 +167,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
         _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
 
-        emit RecoveryExecuted();
+        emit RecoveryExecuted(account, validator);
     }
 
     /**

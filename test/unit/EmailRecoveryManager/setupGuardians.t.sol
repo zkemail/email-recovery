@@ -24,7 +24,7 @@ contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        emailRecoveryManager.exposed_setupGuardians(
+        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
 
@@ -40,6 +40,9 @@ contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
         assertEq(guardianStorage2.weight, guardianWeights[1]);
         assertEq(uint256(guardianStorage3.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage3.weight, guardianWeights[2]);
+
+        assertEq(guardianCount, expectedGuardianCount);
+        assertEq(totalWeight, expectedTotalWeight);
 
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =
             emailRecoveryManager.getGuardianConfig(accountAddress);

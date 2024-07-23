@@ -114,6 +114,12 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         });
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit UniversalEmailRecoveryModule.NewValidatorRecovery({
+            account: accountAddress,
+            validator: newValidatorAddress,
+            recoverySelector: functionSelector
+        });
         emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", functionSelector);
 
         address[] memory allowedValidators =

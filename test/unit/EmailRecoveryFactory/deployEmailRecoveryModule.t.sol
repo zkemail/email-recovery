@@ -46,6 +46,14 @@ contract EmailRecoveryFactory_deployAll_Test is UnitBase {
             recoveryModuleSalt, keccak256(recoveryModuleBytecode), address(emailRecoveryFactory)
         );
 
+        vm.expectEmit();
+        emit EmailRecoveryFactory.EmailRecoveryModuleDeployed(
+            expectedModule,
+            expectedManager,
+            expectedSubjectHandler,
+            validatorAddress,
+            functionSelector
+        );
         (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
         emailRecoveryFactory.deployEmailRecoveryModule(
             subjectHandlerSalt,

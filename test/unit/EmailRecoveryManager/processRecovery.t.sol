@@ -138,6 +138,14 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         // Call processRecovery with guardian2 which increases currentWeight to >= threshold
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryProcessed(
+            accountAddress,
+            guardian2,
+            block.timestamp + delay,
+            block.timestamp + expiry,
+            calldataHash
+        );
         emailRecoveryManager.exposed_processRecovery(
             guardian2, templateIdx, subjectParams, nullifier
         );

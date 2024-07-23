@@ -16,7 +16,7 @@ contract EmailRecoveryUniversalFactory {
     address public immutable verifier;
     address public immutable emailAuthImpl;
 
-    event EmailRecoveryModuleDeployed(
+    event UniversalEmailRecoveryModuleDeployed(
         address emailRecoveryModule, address emailRecoveryManager, address subjectHandler
     );
 
@@ -75,7 +75,9 @@ contract EmailRecoveryUniversalFactory {
 
         // Initialize recovery manager with module address
         EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
-        emit EmailRecoveryModuleDeployed(emailRecoveryModule, emailRecoveryManager, subjectHandler);
+        emit UniversalEmailRecoveryModuleDeployed(
+            emailRecoveryModule, emailRecoveryManager, subjectHandler
+        );
 
         return (emailRecoveryModule, emailRecoveryManager, subjectHandler);
     }

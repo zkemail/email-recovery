@@ -78,6 +78,8 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         acceptGuardian(accountSalt2); // weight = 2
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit GuardianUtils.RemovedGuardian(accountAddress, guardian, guardianWeights[0]);
         emailRecoveryManager.removeGuardian(guardian);
 
         GuardianStorage memory guardianStorage =

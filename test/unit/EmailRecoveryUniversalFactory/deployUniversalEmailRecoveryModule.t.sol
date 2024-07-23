@@ -10,7 +10,7 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
-contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
+contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }
@@ -51,6 +51,10 @@ contract EmailRecoveryFactory_deployUniversalEmailRecoveryModule_Test is UnitBas
             address(emailRecoveryUniversalFactory)
         );
 
+        vm.expectEmit();
+        emit EmailRecoveryUniversalFactory.UniversalEmailRecoveryModuleDeployed(
+            expectedModule, expectedManager, expectedSubjectHandler
+        );
         (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
         emailRecoveryUniversalFactory.deployUniversalEmailRecoveryModule(
             subjectHandlerSalt,

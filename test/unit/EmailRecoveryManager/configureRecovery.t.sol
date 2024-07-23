@@ -45,24 +45,14 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
 
     function test_ConfigureRecovery_Succeeds() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
 
-        // Install recovery module - configureRecovery is called on `onInstall`
-        // vm.expectEmit();
-        // emit IEmailRecoveryManager.RecoveryConfigured(instance.account, guardians.length);
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(
-                validatorAddress,
-                isInstalledContext,
-                functionSelector,
-                guardians,
-                guardianWeights,
-                threshold,
-                delay,
-                expiry
-            )
-        });
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryConfigured(
+            instance.account, guardians.length, totalWeight, threshold
+        );
+        emailRecoveryManager.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryManager.getRecoveryConfig(accountAddress);

@@ -34,7 +34,7 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.AddedGuardian(accountAddress, newGuardian);
+        emit GuardianUtils.AddedGuardian(accountAddress, newGuardian, newGuardianWeight);
         emailRecoveryManager.addGuardian(newGuardian, newGuardianWeight);
 
         GuardianStorage memory guardianStorage =

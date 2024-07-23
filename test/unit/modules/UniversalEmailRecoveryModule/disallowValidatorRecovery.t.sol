@@ -145,6 +145,12 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         address prevValidator = allowedValidators.findPrevious(validatorAddress);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit UniversalEmailRecoveryModule.RemovedValidatorRecovery({
+            account: accountAddress,
+            validator: validatorAddress,
+            recoverySelector: functionSelector
+        });
         emailRecoveryModule.disallowValidatorRecovery(
             validatorAddress, prevValidator, "", functionSelector
         );
