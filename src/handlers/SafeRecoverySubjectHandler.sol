@@ -129,8 +129,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the recovery email
      * @param recoveryManager The recovery manager address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
-     * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
-     * recovery is executed
      */
     function validateRecoverySubject(
         uint256 templateIdx,
@@ -139,7 +137,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, bytes32)
+        returns (address)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
@@ -172,15 +170,38 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidRecoveryModule();
         }
 
+        return accountInEmail;
+    }
+
+    /**
+     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * verified against later when recovery is executed
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams The subject parameters of the recovery email
+     * @return calldataHash The keccak256 hash of the recovery calldata
+     */
+    function parseRecoveryCalldataHash(
+        uint256 templateIdx,
+        bytes[] calldata subjectParams
+    )
+        external
+        returns (bytes32)
+    {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
+        address newOwnerInEmail = abi.decode(subjectParams[2], (address));
+
         address previousOwnerInLinkedList =
             getPreviousOwnerInLinkedList(accountInEmail, oldOwnerInEmail);
         string memory functionSignature = "swapOwner(address,address,address)";
         bytes memory recoveryCallData = abi.encodeWithSignature(
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        bytes32 calldataHash = keccak256(recoveryCallData);
-
-        return (accountInEmail, calldataHash);
+        return keccak256(recoveryCallData);
     }
 
     /**

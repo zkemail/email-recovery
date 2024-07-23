@@ -83,10 +83,28 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         );
     }
 
+    function test_ValidateRecoverySubject_RevertWhen_ZeroCalldataHash() public {
+        subjectParams[2] = abi.encode(bytes32(0));
+
+        vm.expectRevert("invalid hex prefix");
+        emailRecoveryHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
+    function test_ValidateRecoverySubject_RevertWhen_InvalidHashLength() public {
+        subjectParams[2] = abi.encode(uint256(calldataHash).toHexString(33));
+
+        vm.expectRevert("invalid hex string length");
+        emailRecoveryHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
     function test_ValidateRecoverySubject_Succeeds() public view {
-        (address accountFromEmail, bytes32 calldataHashFromEmail) = emailRecoveryHandler
-            .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
+        address accountFromEmail = emailRecoveryHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
         assertEq(accountFromEmail, accountAddress);
-        assertEq(calldataHashFromEmail, calldataHash);
     }
 }

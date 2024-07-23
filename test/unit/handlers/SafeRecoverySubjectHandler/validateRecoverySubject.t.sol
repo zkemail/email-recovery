@@ -100,9 +100,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
 
     function test_ValidateRecoverySubject_Succeeds() public {
         skipIfNotSafeAccountType();
-        (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
-            .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
+        address accountFromEmail = safeRecoverySubjectHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
         assertEq(accountFromEmail, accountAddress1);
-        assertEq(calldataHashFromEmail, calldataHash);
     }
 }

@@ -354,8 +354,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         internal
         override
     {
-        (address account, bytes32 calldataHash) = IEmailRecoverySubjectHandler(subjectHandler)
-            .validateRecoverySubject(templateIdx, subjectParams, address(this));
+        address account = IEmailRecoverySubjectHandler(subjectHandler).validateRecoverySubject(
+            templateIdx, subjectParams, address(this)
+        );
 
         if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
             revert RecoveryModuleNotAuthorized();
@@ -378,6 +379,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         recoveryRequest.currentWeight += guardianStorage.weight;
 
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
+            bytes32 calldataHash = IEmailRecoverySubjectHandler(subjectHandler)
+                .parseRecoveryCalldataHash(templateIdx, subjectParams);
+
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
 

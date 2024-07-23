@@ -121,8 +121,6 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the recovery email
      * @param recoveryManager The recovery manager address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
-     * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
-     * recovery is executed
      */
     function validateRecoverySubject(
         uint256 templateIdx,
@@ -131,7 +129,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     )
         public
         view
-        returns (address, bytes32)
+        returns (address)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex();
@@ -159,6 +157,28 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidRecoveryModule();
         }
 
-        return (accountInEmail, calldataHash);
+        return accountInEmail;
+    }
+
+    /**
+     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * verified against later when recovery is executed
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams The subject parameters of the recovery email
+     * @return calldataHash The keccak256 hash of the recovery calldata
+     */
+    function parseRecoveryCalldataHash(
+        uint256 templateIdx,
+        bytes[] calldata subjectParams
+    )
+        external
+        returns (bytes32)
+    {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
+        return StringUtils.hexToBytes32(calldataHashInEmail);
     }
 }
