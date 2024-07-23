@@ -547,6 +547,12 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param weight The weight assigned to the guardian
      */
     function addGuardian(address guardian, uint256 weight) external onlyWhenNotRecovering {
+        // Threshold can only be 0 at initialization.
+        // Check ensures that setup function should be called first
+        if (guardianConfigs[msg.sender].threshold == 0) {
+            revert SetupNotCalled();
+        }
+
         guardiansStorage.addGuardian(guardianConfigs, msg.sender, guardian, weight);
     }
 

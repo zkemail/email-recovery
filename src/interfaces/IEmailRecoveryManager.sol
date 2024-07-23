@@ -95,6 +95,7 @@ interface IEmailRecoveryManager {
     error InvalidCalldataHash();
     error NoRecoveryInProcess();
     error NotRecoveryModule();
+    error SetupNotCalled();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS

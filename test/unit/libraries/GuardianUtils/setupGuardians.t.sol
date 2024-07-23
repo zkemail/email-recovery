@@ -57,6 +57,10 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     }
 
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
         guardianWeights[0] = 0;
 
         vm.expectRevert(GuardianUtils.InvalidGuardianWeight.selector);

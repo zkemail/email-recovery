@@ -76,41 +76,16 @@ library GuardianUtils {
             revert ThresholdCannotBeZero();
         }
 
-        uint256 totalWeight = 0;
         for (uint256 i = 0; i < guardianCount; i++) {
-            if (guardians[i] == address(0) || guardians[i] == account) {
-                revert InvalidGuardianAddress();
-            }
-
-            // As long as weights are 1 or above, there will be enough total weight to reach the
-            // required threshold. This is because we check the guardian count cannot be less
-            // than the threshold and there is an equal amount of guardians to weights.
-            if (weights[i] == 0) {
-                revert InvalidGuardianWeight();
-            }
-
-            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardians[i]);
-            if (guardianStorage.status != GuardianStatus.NONE) {
-                revert AddressAlreadyGuardian();
-            }
-
-            guardiansStorage[account].set({
-                key: guardians[i],
-                value: GuardianStorage(GuardianStatus.REQUESTED, weights[i])
-            });
-            totalWeight += weights[i];
+            addGuardian(guardiansStorage, guardianConfigs, account, guardians[i], weights[i]);
         }
 
+        uint256 totalWeight = guardianConfigs[account].totalWeight;
         if (threshold > totalWeight) {
             revert ThresholdExceedsTotalWeight();
         }
 
-        guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig({
-            guardianCount: guardianCount,
-            totalWeight: totalWeight,
-            acceptedWeight: 0,
-            threshold: threshold
-        });
+        guardianConfigs[account].threshold = threshold;
 
         return (guardianCount, totalWeight);
     }
@@ -158,12 +133,6 @@ library GuardianUtils {
     )
         internal
     {
-        // Threshold can only be 0 at initialization.
-        // Check ensures that setup function should be called first
-        if (guardianConfigs[account].threshold == 0) {
-            revert SetupNotCalled();
-        }
-
         if (guardian == address(0) || guardian == account) {
             revert InvalidGuardianAddress();
         }

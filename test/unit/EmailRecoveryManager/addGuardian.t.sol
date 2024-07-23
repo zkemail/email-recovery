@@ -2,12 +2,16 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 
 contract EmailRecoveryManager_addGuardian_Test is UnitBase {
+    using ModuleKitHelpers for *;
+
     function setUp() public override {
         super.setUp();
     }
@@ -20,6 +24,16 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
+        emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
+    }
+
+    function test_AddGuardian_RevertWhen_SetupNotCalled() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.SetupNotCalled.selector);
         emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
     }
 

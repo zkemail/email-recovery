@@ -16,16 +16,6 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
         super.setUp();
     }
 
-    function test_AddGuardian_RevertWhen_SetupNotCalled() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.stopPrank();
-
-        vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.SetupNotCalled.selector);
-        emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
-    }
-
     function test_AddGuardian_RevertWhen_InvalidGuardianAddress() public {
         address invalidGuardianAddress = address(0);
 
