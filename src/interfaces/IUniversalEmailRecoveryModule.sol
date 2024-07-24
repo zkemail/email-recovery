@@ -3,8 +3,14 @@ pragma solidity ^0.8.25;
 
 interface IUniversalEmailRecoveryModule {
     function isAuthorizedToRecover(address account) external returns (bool);
+    function canStartRecoveryRequest(
+        address account,
+        address validator
+    )
+        external
+        view
+        returns (bool);
     function recover(address account, bytes memory recoveryCalldata) external;
-    function getTrustedRecoveryManager() external returns (address);
     /**
      * Returns validators in reverse order that they were added
      */

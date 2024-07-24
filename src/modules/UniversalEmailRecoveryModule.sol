@@ -303,14 +303,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     }
 
     /**
-     * @notice Returns the address of the trusted recovery manager.
-     * @return address The address of the email recovery manager.
-     */
-    function getTrustedRecoveryManager() external view returns (address) {
-        return emailRecoveryManager;
-    }
-
-    /**
      * @notice Retrieves the list of allowed validators for a given account.
      * @param account The address of the account.
      * @return address[] An array of the allowed validator addresses.

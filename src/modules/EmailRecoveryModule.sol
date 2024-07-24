@@ -172,14 +172,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
         emit RecoveryExecuted(account, validator);
     }
 
-    /**
-     * @notice Returns the address of the trusted recovery manager.
-     * @return address The address of the email recovery manager.
-     */
-    function getTrustedRecoveryManager() external view returns (address) {
-        return emailRecoveryManager;
-    }
-
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                         METADATA                           */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
