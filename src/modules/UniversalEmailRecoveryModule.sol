@@ -249,7 +249,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      * @param smartAccount The smart account to check
      * @return true if the module is authorized, false otherwise
      */
-    function isAuthorizedToRecover(address smartAccount) external view returns (bool) {
+    function isAuthorizedToBeRecovered(address smartAccount) external view returns (bool) {
         return getAllowedValidators(smartAccount).length > 0;
     }
 

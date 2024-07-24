@@ -59,8 +59,8 @@ contract EmailRecoveryModule_onInstall_Test is EmailRecoveryModuleBase {
             data: abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay, expiry)
         });
 
-        bool isAuthorizedToRecover = emailRecoveryModule.isAuthorizedToRecover(accountAddress);
+        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
 
-        assertTrue(isAuthorizedToRecover);
+        assertTrue(isAuthorizedToBeRecovered);
     }
 }

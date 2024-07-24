@@ -241,7 +241,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert SetupAlreadyCalled();
         }
 
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
             revert RecoveryModuleNotAuthorized();
         }
 
@@ -315,7 +315,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryInProcess();
         }
 
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
             revert RecoveryModuleNotAuthorized();
         }
 
@@ -359,7 +359,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             templateIdx, subjectParams, address(this)
         );
 
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToRecover(account)) {
+        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
             revert RecoveryModuleNotAuthorized();
         }
 
