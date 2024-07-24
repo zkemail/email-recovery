@@ -25,7 +25,7 @@ library GuardianUtils {
     error ThresholdExceedsTotalWeight();
     error StatusCannotBeTheSame();
     error SetupNotCalled();
-    error UnauthorizedAccountForGuardian();
+    error AddressNotGuardianForAccount();
 
     /**
      * @notice Retrieves the guardian storage details for a given guardian and account
@@ -137,20 +137,18 @@ library GuardianUtils {
             revert InvalidGuardianAddress();
         }
 
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-
-        if (guardianStorage.status != GuardianStatus.NONE) {
-            revert AddressAlreadyGuardian();
-        }
-
         if (weight == 0) {
             revert InvalidGuardianWeight();
         }
 
-        guardiansStorage[account].set({
+        bool success = guardiansStorage[account].set({
             key: guardian,
             value: GuardianStorage(GuardianStatus.REQUESTED, weight)
         });
+        if (!success) {
+            revert AddressAlreadyGuardian();
+        }
+
         guardianConfigs[account].guardianCount++;
         guardianConfigs[account].totalWeight += weight;
 
@@ -174,9 +172,11 @@ library GuardianUtils {
         IEmailRecoveryManager.GuardianConfig memory guardianConfig = guardianConfigs[account];
         GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
 
-        bool isGuardian = guardianStorage.status != GuardianStatus.NONE;
-        if (!isGuardian) {
-            revert UnauthorizedAccountForGuardian();
+        bool success = guardiansStorage[account].remove(guardian);
+        if (!success) {
+            // false means that the guardian was not present in the map. This serves as a proxy that
+            // the account is not authorized to remove this guardian
+            revert AddressNotGuardianForAccount();
         }
 
         // Only allow guardian removal if threshold can still be reached.
@@ -184,7 +184,6 @@ library GuardianUtils {
             revert ThresholdExceedsTotalWeight();
         }
 
-        guardiansStorage[account].remove(guardian);
         guardianConfigs[account].guardianCount--;
         guardianConfigs[account].totalWeight -= guardianStorage.weight;
         if (guardianStorage.status == GuardianStatus.ACCEPTED) {

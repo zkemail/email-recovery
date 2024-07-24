@@ -88,6 +88,6 @@ contract LogErrorSelectors_Test is Test {
         assertEq(GuardianUtils.ThresholdExceedsTotalWeight.selector, bytes4(0x3c7a2aad));
         assertEq(GuardianUtils.StatusCannotBeTheSame.selector, bytes4(0x115e823f));
         assertEq(GuardianUtils.SetupNotCalled.selector, bytes4(0xae69115b));
-        assertEq(GuardianUtils.UnauthorizedAccountForGuardian.selector, bytes4(0xe4c3248f));
+        assertEq(GuardianUtils.AddressNotGuardianForAccount.selector, bytes4(0xf3f77749));
     }
 }

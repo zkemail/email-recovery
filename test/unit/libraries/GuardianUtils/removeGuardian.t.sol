@@ -13,11 +13,11 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         super.setUp();
     }
 
-    function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian() public {
+    function test_RemoveGuardian_RevertWhen_AddressNotGuardianForAccount() public {
         address unauthorizedAccount = guardian1;
 
         vm.startPrank(unauthorizedAccount);
-        vm.expectRevert(GuardianUtils.UnauthorizedAccountForGuardian.selector);
+        vm.expectRevert(GuardianUtils.AddressNotGuardianForAccount.selector);
         emailRecoveryManager.removeGuardian(guardian1);
     }
 
