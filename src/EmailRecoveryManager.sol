@@ -59,7 +59,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     /**
      * Deployer address stored to prevent frontrunning at initialization
      */
-    address private deployer;
+    address private immutable deployer;
 
     /**
      * Account address to recovery config
