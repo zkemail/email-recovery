@@ -66,9 +66,19 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         );
     }
 
-    function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
+    function test_ValidateRecoverySubject_RevertWhen_ZeroNewOwner() public {
         skipIfNotSafeAccountType();
         subjectParams[2] = abi.encode(address(0));
+
+        vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
+        safeRecoverySubjectHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
+    function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
+        skipIfNotSafeAccountType();
+        subjectParams[2] = abi.encode(owner1);
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
         safeRecoverySubjectHandler.validateRecoverySubject(

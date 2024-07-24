@@ -151,12 +151,13 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address newOwnerInEmail = abi.decode(subjectParams[2], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[3], (address));
 
-        bool isOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
-        if (!isOwner) {
+        bool isOldAddressOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
+        if (!isOldAddressOwner) {
             revert InvalidOldOwner();
         }
 
-        if (newOwnerInEmail == address(0)) {
+        bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
+        if (isNewAddressOwner) {
             revert InvalidNewOwner();
         }
 
