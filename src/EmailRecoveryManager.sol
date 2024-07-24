@@ -82,6 +82,16 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian) internal
         guardiansStorage;
 
+    /**
+     * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
+     */
+    modifier onlyWhenNotRecovering() {
+        if (recoveryRequests[msg.sender].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
+        _;
+    }
+
     constructor(
         address _verifier,
         address _dkimRegistry,
@@ -115,16 +125,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert InvalidRecoveryModule();
         }
         emailRecoveryModule = _emailRecoveryModule;
-    }
-
-    /**
-     * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
-     */
-    modifier onlyWhenNotRecovering() {
-        if (recoveryRequests[msg.sender].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
-        _;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

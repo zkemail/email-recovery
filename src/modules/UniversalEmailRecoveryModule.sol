@@ -72,13 +72,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     mapping(bytes4 selector => mapping(address account => address validator)) internal
         selectorToValidator;
 
-    constructor(address _emailRecoveryManager) {
-        if (_emailRecoveryManager == address(0)) {
-            revert InvalidManager();
-        }
-        emailRecoveryManager = _emailRecoveryManager;
-    }
-
     /**
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
      * "onInstall" or "onUninstall"
@@ -102,6 +95,13 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
             revert RecoveryModuleNotInitialized();
         }
         _;
+    }
+
+    constructor(address _emailRecoveryManager) {
+        if (_emailRecoveryManager == address(0)) {
+            revert InvalidManager();
+        }
+        emailRecoveryManager = _emailRecoveryManager;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
