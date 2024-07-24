@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
@@ -11,8 +10,6 @@ import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    using Strings for uint256;
-
     error InvalidSubjectParams();
     error InvalidTemplateIndex();
     error InvalidOldOwner();
