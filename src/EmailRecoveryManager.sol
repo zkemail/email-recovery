@@ -88,13 +88,22 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         address _emailAuthImpl,
         address _subjectHandler
     ) {
+        if (_verifier == address(0)) {
+            revert InvalidVerifier();
+        }
+        if (_dkimRegistry == address(0)) {
+            revert InvalidDkimRegistry();
+        }
+        if (_emailAuthImpl == address(0)) {
+            revert InvalidEmailAuthImpl();
+        }
+        if (_subjectHandler == address(0)) {
+            revert InvalidSubjectHandler();
+        }
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
         subjectHandler = _subjectHandler;
-        if (_subjectHandler == address(0)) {
-            revert InvalidSubjectHandler();
-        }
         deployer = msg.sender;
     }
 

@@ -6,6 +6,8 @@ import { console2 } from "forge-std/console2.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
@@ -31,6 +33,9 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_IEmailRecoveryManager_AssertSelectors() public {
+        assertEq(IEmailRecoveryManager.InvalidVerifier.selector, bytes4(0xbaa3de5f));
+        assertEq(IEmailRecoveryManager.InvalidDkimRegistry.selector, bytes4(0x260ce05b));
+        assertEq(IEmailRecoveryManager.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
         assertEq(IEmailRecoveryManager.InvalidSubjectHandler.selector, bytes4(0x436dcac5));
         assertEq(IEmailRecoveryManager.InitializerNotDeployer.selector, bytes4(0x3b141fc4));
         assertEq(IEmailRecoveryManager.InvalidRecoveryModule.selector, bytes4(0x7f263111));
@@ -53,8 +58,19 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.SetupNotCalled.selector, bytes4(0xae69115b));
     }
 
+    function test_EmailRecoveryUniversalFactory_AssertSelectors() public {
+        assertEq(EmailRecoveryUniversalFactory.InvalidVerifier.selector, bytes4(0xbaa3de5f));
+        assertEq(EmailRecoveryUniversalFactory.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
+    }
+
+    function test_EmailRecoveryFactory_AssertSelectors() public {
+        assertEq(EmailRecoveryFactory.InvalidVerifier.selector, bytes4(0xbaa3de5f));
+        assertEq(EmailRecoveryFactory.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
+    }
+
     function test_EmailRecoveryModule_AssertSelectors() public {
         assertEq(EmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(EmailRecoveryModule.InvalidManager.selector, bytes4(0x34e70f7a));
         assertEq(EmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
         assertEq(EmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
         assertEq(EmailRecoveryModule.NotTrustedRecoveryManager.selector, bytes4(0x38f1b648));
@@ -62,6 +78,7 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_UniversalEmailRecoveryModule_AssertSelectors() public {
+        assertEq(UniversalEmailRecoveryModule.InvalidManager.selector, bytes4(0x34e70f7a));
         assertEq(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
         assertEq(
             UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector, bytes4(0x0b088c23)

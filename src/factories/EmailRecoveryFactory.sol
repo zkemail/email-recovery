@@ -23,6 +23,9 @@ contract EmailRecoveryFactory {
      */
     address public immutable emailAuthImpl;
 
+    error InvalidVerifier();
+    error InvalidEmailAuthImpl();
+
     event EmailRecoveryModuleDeployed(
         address emailRecoveryModule,
         address emailRecoveryManager,
@@ -32,6 +35,12 @@ contract EmailRecoveryFactory {
     );
 
     constructor(address _verifier, address _emailAuthImpl) {
+        if (_verifier == address(0)) {
+            revert InvalidVerifier();
+        }
+        if (_emailAuthImpl == address(0)) {
+            revert InvalidEmailAuthImpl();
+        }
         verifier = _verifier;
         emailAuthImpl = _emailAuthImpl;
     }

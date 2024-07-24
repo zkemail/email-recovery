@@ -11,6 +11,36 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         super.setUp();
     }
 
+    function test_Constructor_RevertWhen_InvalidVerifier() public {
+        address invalidVerifier = address(0);
+        vm.expectRevert(IEmailRecoveryManager.InvalidVerifier.selector);
+        new EmailRecoveryManager(
+            invalidVerifier,
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
+        );
+    }
+
+    function test_Constructor_RevertWhen_InvalidDkimRegistry() public {
+        address invalidDkim = address(0);
+        vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
+        new EmailRecoveryManager(
+            address(verifier), invalidDkim, address(emailAuthImpl), address(emailRecoveryHandler)
+        );
+    }
+
+    function test_Constructor_RevertWhen_InvalidEmailAuthImpl() public {
+        address invalidEmailAuth = address(0);
+        vm.expectRevert(IEmailRecoveryManager.InvalidEmailAuthImpl.selector);
+        new EmailRecoveryManager(
+            address(verifier),
+            address(dkimRegistry),
+            invalidEmailAuth,
+            address(emailRecoveryHandler)
+        );
+    }
+
     function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
         address invalidHandler = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidSubjectHandler.selector);

@@ -11,6 +11,20 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
         super.setUp();
     }
 
+    function test_Constructor_RevertWhen_InvalidManager() public {
+        address invalidManager = address(0);
+        vm.expectRevert(EmailRecoveryModule.InvalidManager.selector);
+        new EmailRecoveryModule(invalidManager, validatorAddress, functionSelector);
+    }
+
+    function test_Constructor_RevertWhen_InvalidValidator() public {
+        address invalidValidator = address(0);
+        vm.expectRevert(
+            abi.encodeWithSelector(EmailRecoveryModule.InvalidValidator.selector, invalidValidator)
+        );
+        new EmailRecoveryModule(emailRecoveryManagerAddress, invalidValidator, functionSelector);
+    }
+
     function test_Constructor_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -31,6 +45,13 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
         new EmailRecoveryModule(
             emailRecoveryManagerAddress, validatorAddress, IModule.onUninstall.selector
         );
+    }
+
+    function test_Constructor_RevertWhen_InvalidSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, bytes4(0))
+        );
+        new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, bytes4(0));
     }
 
     function test_Constructor() public {

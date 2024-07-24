@@ -44,6 +44,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     );
     event RecoveryExecuted(address indexed account, address indexed validator);
 
+    error InvalidManager();
     error InvalidSelector(bytes4 selector);
     error RecoveryModuleNotInitialized();
     error InvalidOnInstallData();
@@ -72,6 +73,9 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         selectorToValidator;
 
     constructor(address _emailRecoveryManager) {
+        if (_emailRecoveryManager == address(0)) {
+            revert InvalidManager();
+        }
         emailRecoveryManager = _emailRecoveryManager;
     }
 

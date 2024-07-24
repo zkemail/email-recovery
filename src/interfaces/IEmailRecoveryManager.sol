@@ -74,6 +74,9 @@ interface IEmailRecoveryManager {
                                     ERRORS
     //////////////////////////////////////////////////////////////////////////*/
 
+    error InvalidVerifier();
+    error InvalidDkimRegistry();
+    error InvalidEmailAuthImpl();
     error InvalidSubjectHandler();
     error InitializerNotDeployer();
     error InvalidRecoveryModule();

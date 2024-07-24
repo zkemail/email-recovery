@@ -46,13 +46,23 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
     event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
+    error InvalidManager();
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
     error NotTrustedRecoveryManager();
     error RecoveryNotAuthorizedForAccount();
 
     constructor(address _emailRecoveryManager, address _validator, bytes4 _selector) {
-        if (_selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector) {
+        if (_emailRecoveryManager == address(0)) {
+            revert InvalidManager();
+        }
+        if (_validator == address(0)) {
+            revert InvalidValidator(_validator);
+        }
+        if (
+            _selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector
+                || _selector == bytes4(0)
+        ) {
             revert InvalidSelector(_selector);
         }
 
