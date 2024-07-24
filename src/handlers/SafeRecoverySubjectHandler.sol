@@ -69,7 +69,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the acceptance email.
      */
     function extractRecoveredAccountFromAcceptanceSubject(
-        bytes[] memory subjectParams,
+        bytes[] calldata subjectParams,
         uint256 /* templateIdx */
     )
         public
@@ -85,7 +85,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the recovery email.
      */
     function extractRecoveredAccountFromRecoverySubject(
-        bytes[] memory subjectParams,
+        bytes[] calldata subjectParams,
         uint256 /* templateIdx */
     )
         public

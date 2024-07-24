@@ -61,7 +61,7 @@ contract EmailRecoveryFactory {
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
-        bytes memory subjectHandlerBytecode,
+        bytes calldata subjectHandlerBytecode,
         address dkimRegistry,
         address validator,
         bytes4 functionSelector

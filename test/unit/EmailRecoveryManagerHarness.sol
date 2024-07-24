@@ -42,8 +42,8 @@ contract EmailRecoveryManagerHarness is EmailRecoveryManager {
 
     function exposed_setupGuardians(
         address account,
-        address[] memory guardians,
-        uint256[] memory weights,
+        address[] calldata guardians,
+        uint256[] calldata weights,
         uint256 threshold
     )
         external

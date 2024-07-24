@@ -225,8 +225,8 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param expiry The expiry time after which the recovery attempt is invalid
      */
     function configureRecovery(
-        address[] memory guardians,
-        uint256[] memory weights,
+        address[] calldata guardians,
+        uint256[] calldata weights,
         uint256 threshold,
         uint256 delay,
         uint256 expiry
@@ -410,7 +410,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param account The address of the account for which the recovery is being completed
      * @param recoveryCalldata The calldata that is passed to recover the validator
      */
-    function completeRecovery(address account, bytes memory recoveryCalldata) public override {
+    function completeRecovery(address account, bytes calldata recoveryCalldata) public override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -528,8 +528,8 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      */
     function setupGuardians(
         address account,
-        address[] memory guardians,
-        uint256[] memory weights,
+        address[] calldata guardians,
+        uint256[] calldata weights,
         uint256 threshold
     )
         internal

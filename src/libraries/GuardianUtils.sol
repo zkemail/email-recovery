@@ -59,8 +59,8 @@ library GuardianUtils {
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account,
-        address[] memory guardians,
-        uint256[] memory weights,
+        address[] calldata guardians,
+        uint256[] calldata weights,
         uint256 threshold
     )
         internal

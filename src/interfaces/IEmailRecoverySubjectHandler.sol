@@ -40,7 +40,7 @@ interface IEmailRecoverySubjectHandler {
 
     function parseRecoveryCalldataHash(
         uint256 templateIdx,
-        bytes[] calldata subjectParams
+        bytes[] memory subjectParams
     )
         external
         returns (bytes32);

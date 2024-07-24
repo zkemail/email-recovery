@@ -192,7 +192,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     function disallowValidatorRecovery(
         address validator,
         address prevValidator,
-        bytes memory isInstalledContext,
+        bytes calldata isInstalledContext,
         bytes4 recoverySelector
     )
         public
