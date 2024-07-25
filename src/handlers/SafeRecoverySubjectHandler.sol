@@ -154,7 +154,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         }
 
         bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
-        if (isNewAddressOwner) {
+        if (newOwnerInEmail == address(0) || isNewAddressOwner) {
             revert InvalidNewOwner();
         }
 
