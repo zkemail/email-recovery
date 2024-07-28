@@ -12,6 +12,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
 
     function workaround_validatorsPush(address account, address validator) external {
         validators[account].push(validator);
+        validatorCount[account]++;
     }
 
     function workaround_validatorsContains(

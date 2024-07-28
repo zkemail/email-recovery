@@ -232,31 +232,30 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
     /**
      * Check if the module is initialized
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) public view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
-            != 0;
+    function isInitialized(address account) public view returns (bool) {
+        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account).threshold != 0;
     }
 
     /**
      * Check if the recovery module is authorized to recover the account
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is authorized, false otherwise
      */
-    function isAuthorizedToBeRecovered(address smartAccount) external view returns (bool) {
-        return getAllowedValidators(smartAccount).length > 0;
+    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
+        return validatorCount[account] > 0;
     }
 
     /**
      * Check if a recovery request can be initiated based on guardian acceptance
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @param validator The validator to check
      * @return true if the recovery request can be started, false otherwise
      */
     function canStartRecoveryRequest(
-        address smartAccount,
+        address account,
         address validator
     )
         external
@@ -264,10 +263,10 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         returns (bool)
     {
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount);
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account);
 
         return guardianConfig.acceptedWeight >= guardianConfig.threshold
-            && validators[smartAccount].contains(validator);
+            && validators[account].contains(validator);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -322,10 +321,10 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
         address[] memory allowedValidators = getAllowedValidators(account);
-        uint256 allowedValidatorsLength = allowedValidators.length;
+        uint256 validatorCount = allowedValidators.length;
 
-        bytes4[] memory selectors = new bytes4[](allowedValidatorsLength);
-        for (uint256 i; i < allowedValidatorsLength; i++) {
+        bytes4[] memory selectors = new bytes4[](validatorCount);
+        for (uint256 i; i < validatorCount; i++) {
             selectors[i] = allowedSelectors[allowedValidators[i]][account];
         }
 

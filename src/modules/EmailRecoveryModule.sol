@@ -124,31 +124,30 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
     /**
      * Check if the module is initialized
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) external view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
-            != 0;
+    function isInitialized(address account) external view returns (bool) {
+        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account).threshold != 0;
     }
 
     /**
      * Check if the recovery module is authorized to recover the account
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is authorized, false otherwise
      */
-    function isAuthorizedToBeRecovered(address smartAccount) external view returns (bool) {
-        return authorized[smartAccount];
+    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
+        return authorized[account];
     }
 
     /**
      * Check if a recovery request can be initiated based on guardian acceptance
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the recovery request can be started, false otherwise
      */
-    function canStartRecoveryRequest(address smartAccount) external view returns (bool) {
+    function canStartRecoveryRequest(address account) external view returns (bool) {
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount);
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account);
 
         return guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
