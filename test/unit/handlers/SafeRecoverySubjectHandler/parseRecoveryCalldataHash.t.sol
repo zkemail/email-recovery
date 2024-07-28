@@ -28,11 +28,10 @@ contract SafeRecoverySubjectHandler_parseRecoveryCalldataHash_Test is SafeUnitBa
 
     function test_ParseRecoveryCalldataHash_Succeeds() public {
         skipIfNotSafeAccountType();
-        bytes32 expectedCalldataHash = keccak256(recoveryCalldata);
 
-        bytes32 calldataHash =
+        bytes32 actualCalldataHash =
             safeRecoverySubjectHandler.parseRecoveryCalldataHash(templateIdx, subjectParams);
 
-        assertEq(calldataHash, expectedCalldataHash);
+        assertEq(actualCalldataHash, calldataHash);
     }
 }

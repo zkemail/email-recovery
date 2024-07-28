@@ -29,13 +29,32 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
 
     function test_Recover_RevertWhen_InvalidCalldataSelector() public {
         bytes4 invalidSelector = bytes4(keccak256(bytes("wrongSelector(address,address,address)")));
-        bytes memory invalidCalldata =
+        bytes memory changeOwnerCalldata =
             abi.encodeWithSelector(invalidSelector, accountAddress, recoveryModuleAddress, newOwner);
+        bytes memory invalidCalldata = abi.encode(accountAddress, changeOwnerCalldata);
 
         vm.startPrank(emailRecoveryManagerAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
                 UniversalEmailRecoveryModule.InvalidSelector.selector, invalidSelector
+            )
+        );
+        emailRecoveryModule.recover(accountAddress, invalidCalldata);
+    }
+
+    function test_Recover_RevertWhen_InvalidZeroCalldataSelector() public {
+        bytes memory invalidChangeOwnerCaldata = bytes("0x");
+        bytes memory invalidCalldata = abi.encode(accountAddress, invalidChangeOwnerCaldata);
+
+        bytes4 expectedSelector;
+        assembly {
+            expectedSelector := mload(add(invalidChangeOwnerCaldata, 32))
+        }
+
+        vm.startPrank(emailRecoveryManagerAddress);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, expectedSelector
             )
         );
         emailRecoveryModule.recover(accountAddress, invalidCalldata);

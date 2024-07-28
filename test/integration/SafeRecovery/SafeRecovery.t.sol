@@ -25,9 +25,10 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
             vm.skip(true);
         }
 
-        bytes memory recoveryCalldata = abi.encodeWithSignature(
+        bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", address(1), owner1, newOwner1
         );
+        bytes memory recoveryCalldata = abi.encode(accountAddress1, swapOwnerCalldata);
         bytes32 calldataHash = keccak256(recoveryCalldata);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](4);

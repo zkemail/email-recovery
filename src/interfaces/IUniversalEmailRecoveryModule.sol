@@ -10,7 +10,7 @@ interface IUniversalEmailRecoveryModule {
         external
         view
         returns (bool);
-    function recover(address account, bytes memory recoveryCalldata) external;
+    function recover(address account, bytes memory recoveryData) external;
     /**
      * Returns validators in reverse order that they were added
      */

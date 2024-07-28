@@ -34,15 +34,4 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     {
         return allowedSelectors[validator][account];
     }
-
-    function exposed_selectorToValidator(
-        bytes4 selector,
-        address account
-    )
-        external
-        view
-        returns (address)
-    {
-        return selectorToValidator[selector][account];
-    }
 }

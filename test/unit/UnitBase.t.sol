@@ -162,7 +162,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
-        recoveryCalldata = abi.encodeWithSelector(functionSelector, newOwner);
+        bytes memory changeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner);
+        recoveryCalldata = abi.encode(validatorAddress, changeOwnerCalldata);
         calldataHash = keccak256(recoveryCalldata);
 
         // Install modules

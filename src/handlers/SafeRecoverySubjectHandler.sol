@@ -199,7 +199,8 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes memory recoveryCallData = abi.encodeWithSignature(
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        return keccak256(recoveryCallData);
+        bytes memory recoveryData = abi.encode(accountInEmail, recoveryCallData);
+        return keccak256(recoveryData);
     }
 
     /**

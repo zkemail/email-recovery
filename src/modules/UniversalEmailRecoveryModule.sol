@@ -66,11 +66,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
-    /**
-     * function selector to account address to validator address
-     */
-    mapping(bytes4 selector => mapping(address account => address validator)) internal
-        selectorToValidator;
 
     /**
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
@@ -177,7 +172,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         validatorCount[msg.sender]++;
 
         allowedSelectors[validator][msg.sender] = recoverySelector;
-        selectorToValidator[recoverySelector][msg.sender] = validator;
         emit NewValidatorRecovery({
             account: msg.sender,
             validator: validator,
@@ -210,7 +204,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         }
 
         delete allowedSelectors[validator][msg.sender];
-        delete selectorToValidator[recoverySelector][msg.sender];
 
         emit RemovedValidatorRecovery({
             account: msg.sender,
@@ -228,7 +221,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
         for (uint256 i; i < allowedValidators.length; i++) {
             bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
-            delete selectorToValidator[allowedSelector][msg.sender];
             delete allowedSelectors[allowedValidators[i]][msg.sender];
         }
 
@@ -285,17 +277,22 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     /**
      * @notice Executes recovery on a validator. Must be called by the trusted recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryCalldata The recovery calldata that should be executed on the validator
-     * being recovered
+     * @param recoveryData The recovery calldata that should be executed on the validator being
+     * recovered, along with the target validator
      */
-    function recover(address account, bytes calldata recoveryCalldata) external {
+    function recover(address account, bytes calldata recoveryData) external {
         if (msg.sender != emailRecoveryManager) {
             revert NotTrustedRecoveryManager();
         }
 
-        bytes4 selector = bytes4(recoveryCalldata[:4]);
+        (address validator, bytes memory recoveryCalldata) =
+            abi.decode(recoveryData, (address, bytes));
 
-        address validator = selectorToValidator[selector][account];
+        bytes4 selector;
+        assembly {
+            selector := mload(add(recoveryCalldata, 32))
+        }
+
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {
             revert InvalidSelector(selector);

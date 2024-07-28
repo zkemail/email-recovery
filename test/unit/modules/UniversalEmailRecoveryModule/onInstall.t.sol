@@ -52,11 +52,8 @@ contract UniversalEmailRecoveryModule_onInstall_Test is UnitBase {
 
         bytes4 allowedSelector =
             emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress);
-        address allowedValidator =
-            emailRecoveryModule.exposed_selectorToValidator(functionSelector, accountAddress);
 
         assertEq(allowedSelector, functionSelector);
-        assertEq(allowedValidator, validatorAddress);
 
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);

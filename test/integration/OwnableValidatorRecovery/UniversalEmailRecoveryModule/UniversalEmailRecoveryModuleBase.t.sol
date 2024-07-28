@@ -71,9 +71,12 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         validatorAddress = address(validator);
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
-        recoveryCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
-        recoveryCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
-        recoveryCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
+        bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
+        bytes memory changeOwnerCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
+        bytes memory changeOwnerCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
+        recoveryCalldata1 = abi.encode(validatorAddress, changeOwnerCalldata1);
+        recoveryCalldata2 = abi.encode(validatorAddress, changeOwnerCalldata2);
+        recoveryCalldata3 = abi.encode(validatorAddress, changeOwnerCalldata3);
         calldataHash1 = keccak256(recoveryCalldata1);
         calldataHash2 = keccak256(recoveryCalldata2);
         calldataHash3 = keccak256(recoveryCalldata3);
