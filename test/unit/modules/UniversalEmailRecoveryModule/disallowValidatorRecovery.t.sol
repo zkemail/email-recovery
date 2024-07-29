@@ -26,7 +26,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         vm.startPrank(accountAddress);
         vm.expectRevert(UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, address(1), bytes("0"), functionSelector
+            validatorAddress, address(1), functionSelector
         );
     }
 
@@ -41,7 +41,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, invalidPreviousValidator, "", functionSelector
+            validatorAddress, invalidPreviousValidator, functionSelector
         );
     }
 
@@ -66,7 +66,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            newValidatorAddress, prevValidator, "", functionSelector
+            newValidatorAddress, prevValidator, functionSelector
         );
     }
 
@@ -84,7 +84,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", invalidSelector
+            validatorAddress, prevValidator, invalidSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -100,7 +100,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -118,7 +118,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, bytes("0"), functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -152,7 +152,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             recoverySelector: functionSelector
         });
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);

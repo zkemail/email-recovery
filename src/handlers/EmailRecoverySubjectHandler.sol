@@ -141,7 +141,8 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address accountInEmail = abi.decode(subjectParams[0], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
         string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
-        bytes32 calldataHash = StringUtils.hexToBytes32(calldataHashInEmail);
+        // hexToBytes32 validates the calldataHash is not zero bytes and has the correct length
+        StringUtils.hexToBytes32(calldataHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
@@ -172,6 +173,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         external
+        pure
         returns (bytes32)
     {
         if (templateIdx != 0) {

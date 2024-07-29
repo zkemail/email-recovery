@@ -23,7 +23,7 @@ contract UniversalEmailRecoveryModule_getAllowedValidators_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
         vm.stopPrank();
 

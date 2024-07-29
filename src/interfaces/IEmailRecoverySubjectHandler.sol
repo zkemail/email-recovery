@@ -43,5 +43,6 @@ interface IEmailRecoverySubjectHandler {
         bytes[] memory subjectParams
     )
         external
+        view
         returns (bytes32);
 }

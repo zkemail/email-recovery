@@ -183,14 +183,11 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      * @notice Disallows a validator and function selector that has been configured for recovery
      * @param validator The validator to disallow
      * @param prevValidator The previous validator in the validators linked list
-     * @param isInstalledContext additional context data that the smart account may
-     * interpret to identifiy conditions under which the module is installed.
      * @param recoverySelector The function selector to disallow
      */
     function disallowValidatorRecovery(
         address validator,
         address prevValidator,
-        bytes calldata isInstalledContext,
         bytes4 recoverySelector
     )
         public
@@ -220,7 +217,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
 
         for (uint256 i; i < allowedValidators.length; i++) {
-            bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
             delete allowedSelectors[allowedValidators[i]][msg.sender];
         }
 
@@ -321,10 +317,10 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
         address[] memory allowedValidators = getAllowedValidators(account);
-        uint256 validatorCount = allowedValidators.length;
+        uint256 validatorsLength = allowedValidators.length;
 
-        bytes4[] memory selectors = new bytes4[](validatorCount);
-        for (uint256 i; i < validatorCount; i++) {
+        bytes4[] memory selectors = new bytes4[](validatorsLength);
+        for (uint256 i; i < validatorsLength; i++) {
             selectors[i] = allowedSelectors[allowedValidators[i]][account];
         }
 

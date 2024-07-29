@@ -183,6 +183,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         external
+        view
         returns (bytes32)
     {
         if (templateIdx != 0) {
