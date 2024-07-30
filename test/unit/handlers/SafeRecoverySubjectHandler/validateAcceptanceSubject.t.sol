@@ -16,7 +16,11 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
         subjectParams[0] = abi.encode(accountAddress1);
         uint256 invalidTemplateIdx = 1;
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         safeRecoverySubjectHandler.validateAcceptanceSubject(invalidTemplateIdx, subjectParams);
     }
 
@@ -24,7 +28,13 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
         skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidSubjectParams.selector,
+                emptySubjectParams.length,
+                1
+            )
+        );
         safeRecoverySubjectHandler.validateAcceptanceSubject(templateIdx, emptySubjectParams);
     }
 
@@ -34,7 +44,11 @@ contract SafeRecoverySubjectHandler_validateAcceptanceSubject_Test is SafeUnitBa
         subjectParams[0] = abi.encode(accountAddress1);
         subjectParams[1] = abi.encode("extra param");
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidSubjectParams.selector, subjectParams.length, 1
+            )
+        );
         safeRecoverySubjectHandler.validateAcceptanceSubject(templateIdx, subjectParams);
     }
 

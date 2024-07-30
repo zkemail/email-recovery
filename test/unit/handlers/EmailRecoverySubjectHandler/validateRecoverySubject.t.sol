@@ -26,7 +26,11 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
         uint256 invalidTemplateIdx = 1;
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         emailRecoveryHandler.validateRecoverySubject(
             invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -35,7 +39,13 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     function test_ValidateRecoverySubject_RevertWhen_NoSubjectParams() public {
         bytes[] memory emptySubjectParams;
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidSubjectParams.selector,
+                emptySubjectParams.length,
+                3
+            )
+        );
         emailRecoveryHandler.validateRecoverySubject(
             templateIdx, emptySubjectParams, emailRecoveryManagerAddress
         );
@@ -48,7 +58,13 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         longSubjectParams[2] = abi.encode(calldataHashString);
         longSubjectParams[3] = abi.encode("extra param");
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidSubjectParams.selector,
+                longSubjectParams.length,
+                3
+            )
+        );
         emailRecoveryHandler.validateRecoverySubject(
             templateIdx, longSubjectParams, emailRecoveryManagerAddress
         );
@@ -66,7 +82,11 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     function test_ValidateRecoverySubject_RevertWhen_RecoveryModuleAddressIsZero() public {
         subjectParams[1] = abi.encode(address(0));
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, address(0)
+            )
+        );
         emailRecoveryHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -77,7 +97,11 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     {
         subjectParams[1] = abi.encode(address(1));
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, address(1)
+            )
+        );
         emailRecoveryHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );

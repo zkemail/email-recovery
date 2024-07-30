@@ -25,7 +25,11 @@ contract EmailRecoverySubjectHandler_parseRecoveryCalldataHash_Test is UnitBase 
 
     function test_ParseRecoveryCalldataHash_RevertWhen_InvalidTemplateIndex() public {
         uint256 invalidTemplateIdx = 1;
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         emailRecoveryHandler.parseRecoveryCalldataHash(invalidTemplateIdx, subjectParams);
     }
 

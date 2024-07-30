@@ -74,28 +74,28 @@ interface IEmailRecoveryManager {
                                     ERRORS
     //////////////////////////////////////////////////////////////////////////*/
 
+    error RecoveryInProcess();
     error InvalidVerifier();
     error InvalidDkimRegistry();
     error InvalidEmailAuthImpl();
     error InvalidSubjectHandler();
     error InitializerNotDeployer();
     error InvalidRecoveryModule();
-    error RecoveryInProcess();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
     error RecoveryModuleNotAuthorized();
-    error DelayMoreThanExpiry();
-    error RecoveryWindowTooShort();
-    error ThresholdExceedsAcceptedWeight();
+    error DelayMoreThanExpiry(uint256 delay, uint256 expiry);
+    error RecoveryWindowTooShort(uint256 recoveryWindow);
+    error ThresholdExceedsAcceptedWeight(uint256 threshold, uint256 acceptedWeight);
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
     error InvalidAccountAddress();
     error NoRecoveryConfigured();
-    error NotEnoughApprovals();
-    error DelayNotPassed();
-    error RecoveryRequestExpired();
-    error InvalidCalldataHash();
+    error NotEnoughApprovals(uint256 currentWeight, uint256 threshold);
+    error DelayNotPassed(uint256 blockTimestamp, uint256 executeAfter);
+    error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
+    error InvalidCalldataHash(bytes32 calldataHash, bytes32 expectedCalldataHash);
     error NoRecoveryInProcess();
     error NotRecoveryModule();
     error SetupNotCalled();

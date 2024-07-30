@@ -279,10 +279,11 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert AccountNotConfigured();
         }
         if (recoveryConfig.delay > recoveryConfig.expiry) {
-            revert DelayMoreThanExpiry();
+            revert DelayMoreThanExpiry(recoveryConfig.delay, recoveryConfig.expiry);
         }
-        if (recoveryConfig.expiry - recoveryConfig.delay < MINIMUM_RECOVERY_WINDOW) {
-            revert RecoveryWindowTooShort();
+        uint256 recoveryWindow = recoveryConfig.expiry - recoveryConfig.delay;
+        if (recoveryWindow < MINIMUM_RECOVERY_WINDOW) {
+            revert RecoveryWindowTooShort(recoveryWindow);
         }
 
         recoveryConfigs[account] = recoveryConfig;
@@ -374,7 +375,9 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
 
         GuardianConfig memory guardianConfig = guardianConfigs[account];
         if (guardianConfig.threshold > guardianConfig.acceptedWeight) {
-            revert ThresholdExceedsAcceptedWeight();
+            revert ThresholdExceedsAcceptedWeight(
+                guardianConfig.threshold, guardianConfig.acceptedWeight
+            );
         }
 
         // This check ensures GuardianStatus is correct and also implicitly that the
@@ -431,20 +434,20 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         }
 
         if (recoveryRequest.currentWeight < threshold) {
-            revert NotEnoughApprovals();
+            revert NotEnoughApprovals(recoveryRequest.currentWeight, threshold);
         }
 
         if (block.timestamp < recoveryRequest.executeAfter) {
-            revert DelayNotPassed();
+            revert DelayNotPassed(block.timestamp, recoveryRequest.executeAfter);
         }
 
         if (block.timestamp >= recoveryRequest.executeBefore) {
-            revert RecoveryRequestExpired();
+            revert RecoveryRequestExpired(block.timestamp, recoveryRequest.executeBefore);
         }
 
         bytes32 calldataHash = keccak256(recoveryCalldata);
         if (calldataHash != recoveryRequest.calldataHash) {
-            revert InvalidCalldataHash();
+            revert InvalidCalldataHash(calldataHash, recoveryRequest.calldataHash);
         }
 
         delete recoveryRequests[account];

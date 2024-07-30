@@ -170,14 +170,18 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeHandleAcceptance() public {
-        vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IEmailRecoveryManager.NotEnoughApprovals.selector, 0, threshold)
+        );
         emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeProcessRecovery() public {
         acceptGuardian(accountAddress1, guardians1[0]);
 
-        vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IEmailRecoveryManager.NotEnoughApprovals.selector, 0, threshold)
+        );
         emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
@@ -241,10 +245,15 @@ contract EmailRecoveryManager_Integration_Test is
         vm.warp(12 seconds);
         handleRecovery(accountAddress1, guardians1[0], calldataHash1);
         handleRecovery(accountAddress1, guardians1[1], calldataHash1);
+        uint256 executeAfter = block.timestamp + expiry;
 
         vm.warp(10 weeks);
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
 
         // Can cancel recovery even when stale

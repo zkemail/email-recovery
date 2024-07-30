@@ -25,7 +25,11 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         uint256 invalidTemplateIdx = 1;
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -35,7 +39,13 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidSubjectParams.selector,
+                emptySubjectParams.length,
+                4
+            )
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, emptySubjectParams, emailRecoveryManagerAddress
         );
@@ -50,7 +60,13 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         longSubjectParams[3] = subjectParams[3];
         longSubjectParams[4] = abi.encode("extra param");
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidSubjectParams.selector,
+                longSubjectParams.length,
+                4
+            )
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, longSubjectParams, emailRecoveryManagerAddress
         );
@@ -60,7 +76,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         subjectParams[1] = abi.encode(address(0));
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidOldOwner.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidOldOwner.selector, address(0))
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -70,7 +88,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         subjectParams[2] = abi.encode(address(0));
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, address(0))
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -80,7 +100,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         subjectParams[2] = abi.encode(owner1);
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, owner1)
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -90,7 +112,11 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         subjectParams[3] = abi.encode(address(0));
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, address(0)
+            )
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );
@@ -102,7 +128,11 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         skipIfNotSafeAccountType();
         subjectParams[3] = abi.encode(address(1));
 
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, address(1)
+            )
+        );
         safeRecoverySubjectHandler.validateRecoverySubject(
             templateIdx, subjectParams, emailRecoveryManagerAddress
         );

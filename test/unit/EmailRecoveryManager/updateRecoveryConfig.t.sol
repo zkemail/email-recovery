@@ -42,7 +42,11 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(invalidDelay, expiry);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.DelayMoreThanExpiry.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.DelayMoreThanExpiry.selector, invalidDelay, expiry
+            )
+        );
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
     }
 
@@ -54,7 +58,11 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryWindowTooShort.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
+            )
+        );
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
     }
 
@@ -66,7 +74,11 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryWindowTooShort.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
+            )
+        );
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
     }
 

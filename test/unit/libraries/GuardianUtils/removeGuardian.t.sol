@@ -34,7 +34,13 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.ThresholdExceedsTotalWeight.selector,
+                totalWeight - guardianWeights[1],
+                threshold
+            )
+        );
         emailRecoveryManager.removeGuardian(guardian);
     }
 

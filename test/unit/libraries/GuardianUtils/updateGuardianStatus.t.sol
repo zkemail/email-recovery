@@ -23,7 +23,9 @@ contract GuardianUtils_updateGuardianStatus_Test is UnitBase {
     function test_UpdateGuardianStatus_RevertWhen_StatusIsAlreadyNONE() public {
         GuardianStatus newStatus = GuardianStatus.NONE;
 
-        vm.expectRevert(GuardianUtils.StatusCannotBeTheSame.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.StatusCannotBeTheSame.selector, uint256(newStatus))
+        );
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
     }
 
@@ -32,7 +34,9 @@ contract GuardianUtils_updateGuardianStatus_Test is UnitBase {
 
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
 
-        vm.expectRevert(GuardianUtils.StatusCannotBeTheSame.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.StatusCannotBeTheSame.selector, uint256(newStatus))
+        );
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
     }
 
@@ -41,7 +45,9 @@ contract GuardianUtils_updateGuardianStatus_Test is UnitBase {
 
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
 
-        vm.expectRevert(GuardianUtils.StatusCannotBeTheSame.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.StatusCannotBeTheSame.selector, uint256(newStatus))
+        );
         emailRecoveryManager.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
     }
 

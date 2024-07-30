@@ -103,7 +103,11 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.warp(12 seconds);
 
-        vm.expectRevert(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, newThreshold, 3
+            )
+        );
         emailRecoveryManager.exposed_processRecovery(
             guardian2, templateIdx, subjectParams, nullifier
         );
