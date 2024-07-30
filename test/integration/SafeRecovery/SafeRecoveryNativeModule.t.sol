@@ -20,13 +20,12 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
     }
 
     function testIntegration_AccountRecovery() public {
-        bool moduleEnabled = safe.isModuleEnabled(address(safeEmailRecoveryModule));
+        skipIfNotSafeAccountType();
 
         address newOwner = owner2;
-
         // Configure recovery
         vm.startPrank(safeAddress);
-        safeEmailRecoveryModule.configureRecovery(
+        emailRecoveryManager.configureRecovery(
             guardians1, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
@@ -44,17 +43,17 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         // Accept guardian
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[0]);
-        safeEmailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage1 =
-            safeEmailRecoveryModule.getGuardian(safeAddress, guardians1[0]);
+            emailRecoveryManager.getGuardian(safeAddress, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
         emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[1]);
-        safeEmailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage2 =
-            safeEmailRecoveryModule.getGuardian(safeAddress, guardians1[1]);
+            emailRecoveryManager.getGuardian(safeAddress, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage2.weight, uint256(2));
 
@@ -63,17 +62,17 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         // handle recovery request for guardian 1
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, owner, newOwner, guardians1[0]);
-        safeEmailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            safeEmailRecoveryModule.getRecoveryRequest(safeAddress);
+            emailRecoveryManager.getRecoveryRequest(safeAddress);
         assertEq(recoveryRequest.currentWeight, 1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, owner, newOwner, guardians1[1]);
-        safeEmailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-        recoveryRequest = safeEmailRecoveryModule.getRecoveryRequest(safeAddress);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        recoveryRequest = emailRecoveryManager.getRecoveryRequest(safeAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 3);
@@ -81,9 +80,9 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        safeEmailRecoveryModule.completeRecovery(safeAddress, recoveryCalldata);
+        emailRecoveryManager.completeRecovery(safeAddress, recoveryCalldata);
 
-        recoveryRequest = safeEmailRecoveryModule.getRecoveryRequest(safeAddress);
+        recoveryRequest = emailRecoveryManager.getRecoveryRequest(safeAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);

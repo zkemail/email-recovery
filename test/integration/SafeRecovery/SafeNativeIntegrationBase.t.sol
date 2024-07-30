@@ -22,6 +22,8 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
     using Strings for uint256;
     using Strings for address;
 
+    EmailRecoveryManager emailRecoveryManager;
+    address emailRecoveryManagerAddress;
     SafeEmailRecoveryModule safeEmailRecoveryModule;
     Safe public safeSingleton;
     Safe public safe;
@@ -30,6 +32,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
     bytes isInstalledContext;
     bytes4 functionSelector;
     uint256 nullifierCount;
+    address subjectHandler;
 
     /**
      * Helper function to return if current account type is safe or not
@@ -43,15 +46,31 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         }
     }
 
+    function skipIfNotSafeAccountType() public {
+        if (isAccountTypeSafe()) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
+    }
+
     function setUp() public virtual override {
         if (!isAccountTypeSafe()) {
             return;
         }
         super.setUp();
 
-        safeEmailRecoveryModule = new SafeEmailRecoveryModule(
-            address(verifier), address(ecdsaOwnedDkimRegistry), address(emailAuthImpl)
+        subjectHandler = address(new SafeRecoverySubjectHandler());
+        emailRecoveryManager = new EmailRecoveryManager(
+            address(verifier),
+            address(ecdsaOwnedDkimRegistry),
+            address(emailAuthImpl),
+            address(subjectHandler)
         );
+        emailRecoveryManagerAddress = address(emailRecoveryManager);
+
+        safeEmailRecoveryModule = new SafeEmailRecoveryModule(emailRecoveryManagerAddress);
+        emailRecoveryManager.initialize(address(safeEmailRecoveryModule));
 
         safeSingleton = new Safe();
         SafeProxy safeProxy = new SafeProxy(address(safeSingleton));
@@ -65,9 +84,9 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
 
         // Compute guardian addresses
         guardians1 = new address[](3);
-        guardians1[0] = safeEmailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt1);
-        guardians1[1] = safeEmailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt2);
-        guardians1[2] = safeEmailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt3);
+        guardians1[0] = emailRecoveryManager.computeEmailAuthAddress(safeAddress, accountSalt1);
+        guardians1[1] = emailRecoveryManager.computeEmailAuthAddress(safeAddress, accountSalt2);
+        guardians1[2] = emailRecoveryManager.computeEmailAuthAddress(safeAddress, accountSalt3);
 
         address[] memory owners = new address[](1);
         owner = owner1;
@@ -138,7 +157,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
 
     function acceptGuardian(address account, address guardian) public {
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        safeEmailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function getAcceptanceEmailAuthMessage(
@@ -158,7 +177,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
-            templateId: safeEmailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
@@ -175,7 +194,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
     {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, oldOwner, newOwner, guardian);
-        safeEmailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function getRecoveryEmailAuthMessage(
@@ -215,7 +234,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         subjectParamsForRecovery[3] = abi.encode(address(safeEmailRecoveryModule));
 
         return EmailAuthMsg({
-            templateId: safeEmailRecoveryModule.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof

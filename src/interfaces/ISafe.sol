@@ -15,5 +15,13 @@ interface ISafe {
     )
         external
         returns (bool success);
+    function execTransactionFromModuleReturnData(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    )
+        external
+        returns (bool success, bytes memory returnData);
     function isModuleEnabled(address module) external view returns (bool);
 }
