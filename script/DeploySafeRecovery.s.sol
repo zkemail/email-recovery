@@ -47,9 +47,7 @@ contract DeploySafeRecovery_Script is Script {
 
         EmailRecoveryUniversalFactory factory =
             new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
-        (address module, address manager, address subjectHandler) = factory
-            .deployUniversalEmailRecoveryModule(
-            bytes32(uint256(0)),
+        (address module, address subjectHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(SafeRecoverySubjectHandler).creationCode,
@@ -61,7 +59,6 @@ contract DeploySafeRecovery_Script is Script {
             address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
-        console.log("Deployed Email Recovery Manager at ", vm.toString(manager));
         console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
         console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));

@@ -17,16 +17,16 @@ contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);
+        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
 
     function test_GetRecoveryConfig_Succeeds() public {
         IEmailRecoveryManager.RecoveryConfig memory result =
-            emailRecoveryManager.getRecoveryConfig(accountAddress);
+            emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(result.delay, newDelay);
         assertEq(result.expiry, newExpiry);
     }

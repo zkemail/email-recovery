@@ -21,7 +21,7 @@ contract UniversalEmailRecoveryModule_onInstall_Test is UnitBase {
         bytes memory emptyData = new bytes(0);
         assertEq(emptyData.length, 0);
 
-        // FIXME: Error not thrown despite the data being passed has a length of zero
+        // FIXME: call function directly to detect error
         // vm.expectRevert(UniversalEmailRecoveryModule.InvalidOnInstallData.selector);
 
         // When installing with empty data and not expecting a revert, the test fails

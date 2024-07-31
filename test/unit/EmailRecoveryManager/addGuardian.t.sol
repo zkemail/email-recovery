@@ -6,8 +6,9 @@ import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { GuardianManager } from "src/GuardianManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 
 contract EmailRecoveryManager_addGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
@@ -23,8 +24,8 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
+        vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
+        emailRecoveryModule.addGuardian(guardians[0], guardianWeights[0]);
     }
 
     function test_AddGuardian_RevertWhen_SetupNotCalled() public {
@@ -33,8 +34,8 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
         vm.stopPrank();
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.SetupNotCalled.selector);
-        emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
+        vm.expectRevert(IGuardianManager.SetupNotCalled.selector);
+        emailRecoveryModule.addGuardian(guardians[0], guardianWeights[0]);
     }
 
     function test_AddGuardian_AddGuardian_Succeeds() public {
@@ -48,16 +49,16 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.AddedGuardian(accountAddress, newGuardian, newGuardianWeight);
-        emailRecoveryManager.addGuardian(newGuardian, newGuardianWeight);
+        emit IGuardianManager.AddedGuardian(accountAddress, newGuardian, newGuardianWeight); //
+        emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryManager.getGuardian(accountAddress, newGuardian);
+            emailRecoveryModule.getGuardian(accountAddress, newGuardian);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage.weight, newGuardianWeight);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);

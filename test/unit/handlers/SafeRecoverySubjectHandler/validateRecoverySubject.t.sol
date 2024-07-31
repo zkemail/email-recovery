@@ -31,7 +31,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             )
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
+            invalidTemplateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -47,7 +47,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             )
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, emptySubjectParams, emailRecoveryManagerAddress
+            templateIdx, emptySubjectParams, recoveryModuleAddress
         );
     }
 
@@ -68,7 +68,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             )
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, longSubjectParams, emailRecoveryManagerAddress
+            templateIdx, longSubjectParams, recoveryModuleAddress
         );
     }
 
@@ -80,7 +80,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidOldOwner.selector, address(0))
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -92,7 +92,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, address(0))
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -104,7 +104,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, owner1)
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -118,7 +118,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             )
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -134,14 +134,14 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             )
         );
         safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
     function test_ValidateRecoverySubject_Succeeds() public {
         skipIfNotSafeAccountType();
         address accountFromEmail = safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
         assertEq(accountFromEmail, accountAddress1);
     }

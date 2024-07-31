@@ -3,12 +3,88 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
+import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
 
-    constructor(address emailRecoveryManager) UniversalEmailRecoveryModule(emailRecoveryManager) { }
+    constructor(
+        address verifier,
+        address dkimRegistry,
+        address emailAuthImpl,
+        address subjectHandler
+    )
+        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+    { }
+
+    function exposed_configureRecovery(
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold,
+        uint256 delay,
+        uint256 expiry
+    )
+        external
+    {
+        configureRecovery(guardians, weights, threshold, delay, expiry);
+    }
+
+    function exposed_acceptGuardian(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory subjectParams,
+        bytes32 nullifier
+    )
+        external
+    {
+        acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
+    }
+
+    function exposed_processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory subjectParams,
+        bytes32 nullifier
+    )
+        external
+    {
+        processRecovery(guardian, templateIdx, subjectParams, nullifier);
+    }
+
+    function exposed_recover(address account, bytes calldata recoveryCalldata) external {
+        recover(account, recoveryCalldata);
+    }
+
+    function exposed_deInitRecoveryModule(address account) external {
+        deInitRecoveryModule(account);
+    }
+
+    function exposed_setupGuardians(
+        address account,
+        address[] calldata guardians,
+        uint256[] calldata weights,
+        uint256 threshold
+    )
+        external
+        returns (uint256, uint256)
+    {
+        return setupGuardians(account, guardians, weights, threshold);
+    }
+
+    function exposed_updateGuardianStatus(
+        address account,
+        address guardian,
+        GuardianStatus newStatus
+    )
+        external
+    {
+        updateGuardianStatus(account, guardian, newStatus);
+    }
+
+    function exposed_removeAllGuardians(address account) external {
+        removeAllGuardians(account);
+    }
 
     function workaround_validatorsPush(address account, address validator) external {
         validators[account].push(validator);

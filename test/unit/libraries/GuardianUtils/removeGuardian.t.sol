@@ -4,9 +4,8 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 
 import { UnitBase } from "../../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract GuardianUtils_removeGuardian_Test is UnitBase {
     function setUp() public override {
@@ -17,8 +16,8 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         address unauthorizedAccount = guardian1;
 
         vm.startPrank(unauthorizedAccount);
-        vm.expectRevert(GuardianUtils.AddressNotGuardianForAccount.selector);
-        emailRecoveryManager.removeGuardian(guardian1);
+        vm.expectRevert(IGuardianManager.AddressNotGuardianForAccount.selector);
+        emailRecoveryModule.removeGuardian(guardian1);
     }
 
     function test_RemoveGuardian_RevertWhen_ThresholdExceedsTotalWeight() public {
@@ -36,12 +35,12 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         vm.startPrank(accountAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
-                GuardianUtils.ThresholdExceedsTotalWeight.selector,
+                IGuardianManager.ThresholdExceedsTotalWeight.selector,
                 totalWeight - guardianWeights[1],
                 threshold
             )
         );
-        emailRecoveryManager.removeGuardian(guardian);
+        emailRecoveryModule.removeGuardian(guardian);
     }
 
     function test_RemoveGuardian_Succeeds() public {
@@ -55,15 +54,15 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         // (weight < threshold == 3 < 3) = succeeds
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.removeGuardian(guardian);
+        emailRecoveryModule.removeGuardian(guardian);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryManager.getGuardian(accountAddress, guardian);
+            emailRecoveryModule.getGuardian(accountAddress, guardian);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage.weight, 0);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length - 1);
         assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
         assertEq(guardianConfig.acceptedWeight, 0);
@@ -85,16 +84,16 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.RemovedGuardian(accountAddress, guardian, guardianWeights[0]);
-        emailRecoveryManager.removeGuardian(guardian);
+        emit IGuardianManager.RemovedGuardian(accountAddress, guardian, guardianWeights[0]);
+        emailRecoveryModule.removeGuardian(guardian);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryManager.getGuardian(accountAddress, guardian);
+            emailRecoveryModule.getGuardian(accountAddress, guardian);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage.weight, 0);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length - 1);
         assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
 

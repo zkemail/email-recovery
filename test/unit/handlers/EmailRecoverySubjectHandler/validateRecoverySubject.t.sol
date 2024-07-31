@@ -32,7 +32,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
             )
         );
         emailRecoveryHandler.validateRecoverySubject(
-            invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
+            invalidTemplateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -47,7 +47,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
             )
         );
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, emptySubjectParams, emailRecoveryManagerAddress
+            templateIdx, emptySubjectParams, recoveryModuleAddress
         );
     }
 
@@ -66,7 +66,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
             )
         );
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, longSubjectParams, emailRecoveryManagerAddress
+            templateIdx, longSubjectParams, recoveryModuleAddress
         );
     }
 
@@ -75,7 +75,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
 
         vm.expectRevert(EmailRecoverySubjectHandler.InvalidAccount.selector);
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -88,7 +88,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
             )
         );
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -103,7 +103,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
             )
         );
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -112,7 +112,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
 
         vm.expectRevert("invalid hex prefix");
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
@@ -121,13 +121,13 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
 
         vm.expectRevert("invalid hex string length");
         emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
     }
 
     function test_ValidateRecoverySubject_Succeeds() public view {
         address accountFromEmail = emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams, emailRecoveryManagerAddress
+            templateIdx, subjectParams, recoveryModuleAddress
         );
         assertEq(accountFromEmail, accountAddress);
     }

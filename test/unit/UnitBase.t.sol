@@ -21,7 +21,6 @@ import {
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { UniversalEmailRecoveryModuleHarness } from "./UniversalEmailRecoveryModuleHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
@@ -44,11 +43,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoveryUniversalFactory emailRecoveryUniversalFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
-    EmailRecoveryManagerHarness emailRecoveryManager;
     UniversalEmailRecoveryModuleHarness emailRecoveryModule;
 
-    // EmailRecoveryManager emailRecoveryManager;
-    address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
     address validatorAddress;
 
@@ -115,17 +111,13 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         emailRecoveryUniversalFactory =
             new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
 
-        emailRecoveryManager = new EmailRecoveryManagerHarness(
+        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
-        emailRecoveryManagerAddress = address(emailRecoveryManager);
-
-        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
-        emailRecoveryManager.initialize(recoveryModuleAddress);
 
         // Deploy and fund the account
         instance = makeAccountInstance("account");
@@ -137,9 +129,9 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         accountSalt3 = keccak256(abi.encode("account salt 3"));
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt3);
+        guardian1 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt1);
+        guardian2 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt2);
+        guardian3 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;
@@ -255,13 +247,13 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(
@@ -289,11 +281,11 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

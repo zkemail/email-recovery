@@ -16,7 +16,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
     function test_CancelRecovery_RevertWhen_NoRecoveryInProcess() public {
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
-        emailRecoveryManager.cancelRecovery();
+        emailRecoveryModule.cancelRecovery();
     }
 
     function test_CancelRecovery_CannotCancelWrongRecoveryRequest() public {
@@ -28,7 +28,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
@@ -36,7 +36,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
 
         vm.startPrank(otherAddress);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
-        emailRecoveryManager.cancelRecovery();
+        emailRecoveryModule.cancelRecovery();
     }
 
     function test_CancelRecovery_PartialRequest_Succeeds() public {
@@ -46,16 +46,16 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
         assertEq(recoveryRequest.calldataHash, "");
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.cancelRecovery();
+        emailRecoveryModule.cancelRecovery();
 
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
@@ -70,7 +70,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
         assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, 3);
@@ -79,9 +79,9 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         vm.startPrank(accountAddress);
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
-        emailRecoveryManager.cancelRecovery();
+        emailRecoveryModule.cancelRecovery();
 
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);

@@ -50,9 +50,7 @@ contract DeployEmailRecoveryModuleScript is Script {
         }
         {
             EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-            (address module, address manager, address subjectHandler) = factory
-                .deployEmailRecoveryModule(
-                bytes32(uint256(0)),
+            (address module, address subjectHandler) = factory.deployEmailRecoveryModule(
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
                 type(EmailRecoverySubjectHandler).creationCode,
@@ -62,7 +60,6 @@ contract DeployEmailRecoveryModuleScript is Script {
             );
 
             console.log("Deployed Email Recovery Module at", vm.toString(module));
-            console.log("Deployed Email Recovery Manager at", vm.toString(manager));
             console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
             vm.stopBroadcast();
         }

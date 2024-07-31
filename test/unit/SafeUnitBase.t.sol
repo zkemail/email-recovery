@@ -8,7 +8,6 @@ import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/sr
 import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { EmailRecoveryManagerHarness } from "./EmailRecoveryManagerHarness.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeRecoverySubjectHandlerHarness } from "./SafeRecoverySubjectHandlerHarness.sol";
@@ -21,8 +20,7 @@ abstract contract SafeUnitBase is IntegrationBase {
 
     EmailRecoveryFactory emailRecoveryFactory;
     SafeRecoverySubjectHandlerHarness safeRecoverySubjectHandler;
-    EmailRecoveryManager emailRecoveryManager;
-    address emailRecoveryManagerAddress;
+    UniversalEmailRecoveryModule emailRecoveryModule;
     address recoveryModuleAddress;
 
     bytes4 functionSelector;
@@ -60,18 +58,13 @@ abstract contract SafeUnitBase is IntegrationBase {
         safeRecoverySubjectHandler = new SafeRecoverySubjectHandlerHarness();
         emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
 
-        emailRecoveryManager = new EmailRecoveryManagerHarness(
+        emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
-            address(ecdsaOwnedDkimRegistry),
+            address(dkimRegistry),
             address(emailAuthImpl),
             address(safeRecoverySubjectHandler)
         );
-        emailRecoveryManagerAddress = address(emailRecoveryManager);
-
-        UniversalEmailRecoveryModule emailRecoveryModule =
-            new UniversalEmailRecoveryModule(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
-        emailRecoveryManager.initialize(recoveryModuleAddress);
 
         functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
         address previousOwnerInLinkedList = address(1);
@@ -86,12 +79,9 @@ abstract contract SafeUnitBase is IntegrationBase {
 
         // Compute guardian addresses
         guardians1 = new address[](3);
-        guardians1[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt1);
-        guardians1[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
-        guardians1[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
+        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt1);
+        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt2);
+        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt3);
 
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
@@ -147,12 +137,12 @@ abstract contract SafeUnitBase is IntegrationBase {
         subjectParamsForAcceptance[0] = abi.encode(account);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(address account, bytes32 accountSalt) public {
@@ -176,11 +166,11 @@ abstract contract SafeUnitBase is IntegrationBase {
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

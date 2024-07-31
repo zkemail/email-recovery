@@ -7,7 +7,6 @@ import { UnitBase } from "../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
@@ -16,7 +15,6 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
     }
 
     function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
-        bytes32 recoveryManagerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
         bytes32 subjectHandlerSalt = bytes32(uint256(0));
 
@@ -27,23 +25,14 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
             address(emailRecoveryUniversalFactory)
         );
 
-        bytes memory recoveryManagerBytecode = abi.encodePacked(
-            type(EmailRecoveryManager).creationCode,
+        bytes memory recoveryModuleBytecode = abi.encodePacked(
+            type(UniversalEmailRecoveryModule).creationCode,
             abi.encode(
                 address(verifier),
                 address(dkimRegistry),
                 address(emailAuthImpl),
                 expectedSubjectHandler
             )
-        );
-        address expectedManager = Create2.computeAddress(
-            recoveryManagerSalt,
-            keccak256(recoveryManagerBytecode),
-            address(emailRecoveryUniversalFactory)
-        );
-
-        bytes memory recoveryModuleBytecode = abi.encodePacked(
-            type(UniversalEmailRecoveryModule).creationCode, abi.encode(expectedManager)
         );
         address expectedModule = Create2.computeAddress(
             recoveryModuleSalt,
@@ -53,18 +42,13 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
 
         vm.expectEmit();
         emit EmailRecoveryUniversalFactory.UniversalEmailRecoveryModuleDeployed(
-            expectedModule, expectedManager, expectedSubjectHandler
+            expectedModule, expectedSubjectHandler
         );
-        (address emailRecoveryModule, address emailRecoveryManager, address subjectHandler) =
-        emailRecoveryUniversalFactory.deployUniversalEmailRecoveryModule(
-            subjectHandlerSalt,
-            recoveryManagerSalt,
-            recoveryModuleSalt,
-            subjectHandlerBytecode,
-            address(dkimRegistry)
+        (address emailRecoveryModule, address subjectHandler) = emailRecoveryUniversalFactory
+            .deployUniversalEmailRecoveryModule(
+            subjectHandlerSalt, recoveryModuleSalt, subjectHandlerBytecode, address(dkimRegistry)
         );
 
-        assertEq(emailRecoveryManager, expectedManager);
         assertEq(emailRecoveryModule, expectedModule);
         assertEq(subjectHandler, expectedSubjectHandler);
     }

@@ -18,7 +18,7 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);

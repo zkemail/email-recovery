@@ -21,10 +21,8 @@ import {
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { EmailRecoveryManagerHarness } from "../../EmailRecoveryManagerHarness.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
@@ -42,11 +40,8 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
 
     EmailRecoveryFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
-    EmailRecoveryManagerHarness emailRecoveryManager;
-    EmailRecoveryModule emailRecoveryModule;
+    EmailRecoveryModuleHarness emailRecoveryModule;
 
-    // EmailRecoveryManager emailRecoveryManager;
-    address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
     address validatorAddress;
 
@@ -115,22 +110,19 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         recoveryCalldata = abi.encodeWithSelector(functionSelector, newOwner);
         calldataHash = keccak256(recoveryCalldata);
 
-        // Deploy handler, manager and module
+        // Deploy handler and module
         emailRecoveryHandler = new EmailRecoverySubjectHandler();
         emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
 
-        emailRecoveryManager = new EmailRecoveryManagerHarness(
+        emailRecoveryModule = new EmailRecoveryModuleHarness(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler)
+            address(emailRecoveryHandler),
+            validatorAddress,
+            functionSelector
         );
-        emailRecoveryManagerAddress = address(emailRecoveryManager);
-
-        emailRecoveryModule =
-            new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, functionSelector);
         recoveryModuleAddress = address(emailRecoveryModule);
-        emailRecoveryManager.initialize(recoveryModuleAddress);
 
         // Deploy and fund the account
         instance = makeAccountInstance("account");
@@ -142,9 +134,9 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         accountSalt3 = keccak256(abi.encode("account salt 3"));
 
         // Compute guardian addresses
-        guardian1 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt1);
-        guardian2 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt2);
-        guardian3 = emailRecoveryManager.computeEmailAuthAddress(instance.account, accountSalt3);
+        guardian1 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt1);
+        guardian2 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt2);
+        guardian3 = emailRecoveryModule.computeEmailAuthAddress(instance.account, accountSalt3);
 
         guardians = new address[](3);
         guardians[0] = guardian1;
@@ -242,13 +234,13 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
 
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function handleRecovery(
@@ -276,11 +268,11 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof
         });
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

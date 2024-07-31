@@ -14,7 +14,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         address invalidAccount = address(0);
 
         vm.expectRevert(IEmailRecoveryManager.InvalidAccountAddress.selector);
-        emailRecoveryManager.completeRecovery(invalidAccount, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(invalidAccount, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_NotEnoughApprovals() public {
@@ -29,7 +29,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.NotEnoughApprovals.selector, guardianWeights[0], threshold
             )
         );
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_DelayNotPassed() public {
@@ -49,7 +49,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 block.timestamp + delay
             )
         );
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampEqualToExpiry()
@@ -70,7 +70,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
             )
         );
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampMoreThanExpiry()
@@ -91,7 +91,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
             )
         );
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
     }
 
     function test_CompleteRecovery_RevertWhen_InvalidCalldataHash() public {
@@ -112,7 +112,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 calldataHash
             )
         );
-        emailRecoveryManager.completeRecovery(accountAddress, invalidRecoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, invalidRecoveryCalldata);
     }
 
     function test_CompleteRecovery_Succeeds() public {
@@ -126,10 +126,10 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
@@ -147,10 +147,10 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
-        emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress, recoveryCalldata);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);

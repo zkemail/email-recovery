@@ -5,7 +5,7 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
@@ -24,16 +24,16 @@ contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryManager.exposed_setupGuardians(
+        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
 
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[0]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[0]);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[1]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[1]);
         GuardianStorage memory guardianStorage3 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[2]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[2]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage1.weight, guardianWeights[0]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.REQUESTED));
@@ -44,8 +44,8 @@ contract EmailRecoveryManager_setupGuardians_Test is UnitBase {
         assertEq(guardianCount, expectedGuardianCount);
         assertEq(totalWeight, expectedTotalWeight);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, 0); // no guardians accepted

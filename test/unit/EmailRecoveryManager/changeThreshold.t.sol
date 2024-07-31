@@ -3,8 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract EmailRecoveryManager_changeThreshold_Test is UnitBase {
     function setUp() public override {
@@ -18,8 +17,8 @@ contract EmailRecoveryManager_changeThreshold_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        emailRecoveryManager.changeThreshold(threshold);
+        vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
+        emailRecoveryModule.changeThreshold(threshold);
     }
 
     function test_ChangeThreshold_IncreaseThreshold() public {
@@ -27,11 +26,11 @@ contract EmailRecoveryManager_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.ChangedThreshold(accountAddress, newThreshold);
-        emailRecoveryManager.changeThreshold(newThreshold);
+        emit IGuardianManager.ChangedThreshold(accountAddress, newThreshold);
+        emailRecoveryModule.changeThreshold(newThreshold);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }
@@ -41,11 +40,11 @@ contract EmailRecoveryManager_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.ChangedThreshold(accountAddress, newThreshold);
-        emailRecoveryManager.changeThreshold(newThreshold);
+        emit IGuardianManager.ChangedThreshold(accountAddress, newThreshold);
+        emailRecoveryModule.changeThreshold(newThreshold);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }

@@ -20,8 +20,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     using Strings for address;
 
     SafeRecoverySubjectHandler safeRecoverySubjectHandler;
-    EmailRecoveryManager emailRecoveryManager;
-    address emailRecoveryManagerAddress;
+    UniversalEmailRecoveryModule emailRecoveryModule;
     address recoveryModuleAddress;
 
     bytes isInstalledContext;
@@ -50,41 +49,30 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         // Deploy handler, manager and module
         safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
 
-        emailRecoveryManager = new EmailRecoveryManager(
+        emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
-            address(ecdsaOwnedDkimRegistry),
+            address(dkimRegistry),
             address(emailAuthImpl),
             address(safeRecoverySubjectHandler)
         );
-        emailRecoveryManagerAddress = address(emailRecoveryManager);
-
-        UniversalEmailRecoveryModule emailRecoveryModule =
-            new UniversalEmailRecoveryModule(emailRecoveryManagerAddress);
         recoveryModuleAddress = address(emailRecoveryModule);
-        emailRecoveryManager.initialize(recoveryModuleAddress);
 
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
         // Compute guardian addresses
         guardians1 = new address[](3);
-        guardians1[0] = emailRecoveryManager.computeEmailAuthAddress(accountAddress1, accountSalt1);
-        guardians1[1] = emailRecoveryManager.computeEmailAuthAddress(accountAddress1, accountSalt2);
-        guardians1[2] = emailRecoveryManager.computeEmailAuthAddress(accountAddress1, accountSalt3);
+        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt1);
+        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt2);
+        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt3);
         guardians2 = new address[](3);
-        guardians2[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt1);
-        guardians2[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt2);
-        guardians2[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt3);
+        guardians2[0] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt1);
+        guardians2[1] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt2);
+        guardians2[2] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt3);
         guardians3 = new address[](3);
-        guardians3[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt1);
-        guardians3[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt2);
-        guardians3[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt3);
+        guardians3[0] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt1);
+        guardians3[1] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt2);
+        guardians3[2] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt3);
 
         vm.prank(accountAddress1);
         instance1.installModule({
@@ -150,7 +138,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
 
     function acceptGuardian(address account, address guardian) public {
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function getAcceptanceEmailAuthMessage(
@@ -170,7 +158,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
@@ -187,7 +175,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, oldOwner, newOwner, guardian);
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function getRecoveryEmailAuthMessage(
@@ -227,7 +215,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
         return EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof

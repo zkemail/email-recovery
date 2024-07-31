@@ -3,8 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract GuardianUtils_changeThreshold_Test is UnitBase {
     function setUp() public override {
@@ -12,8 +11,8 @@ contract GuardianUtils_changeThreshold_Test is UnitBase {
     }
 
     function test_RevertWhen_SetupNotCalled() public {
-        vm.expectRevert(GuardianUtils.SetupNotCalled.selector);
-        emailRecoveryManager.changeThreshold(threshold);
+        vm.expectRevert(IGuardianManager.SetupNotCalled.selector);
+        emailRecoveryModule.changeThreshold(threshold);
     }
 
     function test_RevertWhen_ThresholdExceedsTotalWeight() public {
@@ -22,18 +21,18 @@ contract GuardianUtils_changeThreshold_Test is UnitBase {
         vm.startPrank(accountAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
-                GuardianUtils.ThresholdExceedsTotalWeight.selector, highThreshold, totalWeight
+                IGuardianManager.ThresholdExceedsTotalWeight.selector, highThreshold, totalWeight
             )
         );
-        emailRecoveryManager.changeThreshold(highThreshold);
+        emailRecoveryModule.changeThreshold(highThreshold);
     }
 
     function test_RevertWhen_ThresholdIsZero() public {
         uint256 zeroThreshold = 0;
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.ThresholdCannotBeZero.selector);
-        emailRecoveryManager.changeThreshold(zeroThreshold);
+        vm.expectRevert(IGuardianManager.ThresholdCannotBeZero.selector);
+        emailRecoveryModule.changeThreshold(zeroThreshold);
     }
 
     function test_ChangeThreshold_IncreaseThreshold() public {
@@ -41,11 +40,11 @@ contract GuardianUtils_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.ChangedThreshold(accountAddress, newThreshold);
-        emailRecoveryManager.changeThreshold(newThreshold);
+        emit IGuardianManager.ChangedThreshold(accountAddress, newThreshold);
+        emailRecoveryModule.changeThreshold(newThreshold);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }
@@ -55,11 +54,11 @@ contract GuardianUtils_changeThreshold_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.ChangedThreshold(accountAddress, newThreshold);
-        emailRecoveryManager.changeThreshold(newThreshold);
+        emit IGuardianManager.ChangedThreshold(accountAddress, newThreshold);
+        emailRecoveryModule.changeThreshold(newThreshold);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length);
         assertEq(guardianConfig.threshold, newThreshold);
     }

@@ -5,6 +5,8 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { GuardianManager } from "src/GuardianManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
@@ -29,10 +31,8 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, templateIdx, subjectParams, nullifier
-        );
+        vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
     }
 
     function test_AcceptGuardian_RevertWhen_RecoveryModuleNotInstalled() public {
@@ -40,10 +40,14 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, templateIdx, subjectParams, nullifier
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.InvalidGuardianStatus.selector,
+                uint256(GuardianStatus.NONE),
+                uint256(GuardianStatus.REQUESTED)
+            )
         );
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
     }
 
     function test_AcceptGuardian_RevertWhen_GuardianStatusIsNONE() public {
@@ -56,15 +60,13 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
                 uint256(GuardianStatus.REQUESTED)
             )
         );
-        emailRecoveryManager.exposed_acceptGuardian(
+        emailRecoveryModule.exposed_acceptGuardian(
             invalidGuardian, templateIdx, subjectParams, nullifier
         );
     }
 
     function test_AcceptGuardian_RevertWhen_GuardianStatusIsACCEPTED() public {
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, templateIdx, subjectParams, nullifier
-        );
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -73,25 +75,21 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
                 uint256(GuardianStatus.REQUESTED)
             )
         );
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, templateIdx, subjectParams, nullifier
-        );
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
     }
 
     function test_AcceptGuardian_Succeeds() public {
         vm.expectEmit();
         emit IEmailRecoveryManager.GuardianAccepted(accountAddress, guardian1);
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, templateIdx, subjectParams, nullifier
-        );
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryManager.getGuardian(accountAddress, guardian1);
+            emailRecoveryModule.getGuardian(accountAddress, guardian1);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage.weight, uint256(1));
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.acceptedWeight, guardianStorage.weight);
     }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
     function setUp() public override {
@@ -21,8 +22,8 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(IEmailRecoveryManager.RecoveryInProcess.selector);
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_AccountNotConfigured() public {
@@ -32,7 +33,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
 
         vm.startPrank(nonConfiguredAccount);
         vm.expectRevert(IEmailRecoveryManager.AccountNotConfigured.selector);
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_DelayMoreThanExpiry() public {
@@ -47,7 +48,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
                 IEmailRecoveryManager.DelayMoreThanExpiry.selector, invalidDelay, expiry
             )
         );
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShort() public {
@@ -63,7 +64,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
             )
         );
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_RecoveryWindowTooShortByOneSecond() public {
@@ -79,7 +80,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
             )
         );
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_SucceedsWhenRecoveryWindowEqualsMinimumRecoveryWindow()
@@ -92,9 +93,9 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);
+        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
@@ -111,9 +112,9 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryConfigUpdated(
             accountAddress, recoveryConfig.delay, recoveryConfig.expiry
         );
-        emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);
+        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
