@@ -5,7 +5,7 @@ Account recovery has traditionally been one of the most complex UX hurdles that 
 
 Modular accounts get account recovery for 'free' by using our pre-deployed universal email recovery module. Since Safe's can be made 7579 compatible, the following contracts also support Safe account recovery out of the box too.
 
-Modular account developers can easily integrate email recovery with richer and more specific email subejcts by writing their own subject handler contracts, which are designed to be simple and contain the modular account-specific logic to recover an account.
+Modular account developers can easily integrate email recovery with richer and more specific email subjects by writing their own subject handler contracts, which are designed to be simple and contain the modular account-specific logic to recover an account.
 
 ## Usage
 
