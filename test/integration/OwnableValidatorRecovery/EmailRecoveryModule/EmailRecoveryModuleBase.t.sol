@@ -201,6 +201,19 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function acceptGuardianWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 optionalAccountSalt
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg =
+            getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, optionalAccountSalt);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+    }
+
     function getAcceptanceEmailAuthMessage(
         address account,
         address guardian
@@ -208,10 +221,28 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         public
         returns (EmailAuthMsg memory)
     {
+        return getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, bytes32(0));
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function getAcceptanceEmailAuthMessageWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 optionalAccountSalt
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory subject = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
@@ -231,10 +262,39 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function handleRecoveryWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 calldataHash,
+        bytes32 optionalAccountSalt
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
+            account, guardian, calldataHash, optionalAccountSalt
+        );
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+    }
+
     function getRecoveryEmailAuthMessage(
         address account,
         address guardian,
         bytes32 calldataHash
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
+        return
+            getRecoveryEmailAuthMessageWithAccountSalt(account, guardian, calldataHash, bytes32(0));
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function getRecoveryEmailAuthMessageWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 calldataHash,
+        bytes32 optionalAccountSalt
     )
         public
         returns (EmailAuthMsg memory)
@@ -249,7 +309,13 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
 
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
