@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { ISafe } from "../interfaces/ISafe.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { IUniversalEmailRecoveryModule } from "../interfaces/IUniversalEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
@@ -71,14 +72,15 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
      * "onInstall" or "onUninstall"
      */
-    modifier withoutUnsafeSelector(bytes4 recoverySelector) {
+    modifier withoutUnsafeSelector(bytes4 selector) {
         if (
-            recoverySelector == IModule.onUninstall.selector
-                || recoverySelector == IModule.onInstall.selector
+            selector == IModule.onUninstall.selector || selector == IModule.onInstall.selector
+                || selector == IERC7579Account.execute.selector
+                || selector == ISafe.setFallbackHandler.selector || selector == ISafe.setGuard.selector
+                || selector == bytes4(0)
         ) {
-            revert InvalidSelector(recoverySelector);
+            revert InvalidSelector(selector);
         }
-
         _;
     }
 

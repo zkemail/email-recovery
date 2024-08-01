@@ -5,6 +5,8 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
+import { ISafe } from "src/interfaces/ISafe.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
@@ -48,6 +50,52 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         emailRecoveryModule.allowValidatorRecovery(
             validatorAddress, bytes("0"), IModule.onUninstall.selector
         );
+    }
+
+    function test_AllowValidatorRecovery_RevertWhen_UnsafeExecuteSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector,
+                IERC7579Account.execute.selector
+            )
+        );
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), IERC7579Account.execute.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector,
+                ISafe.setFallbackHandler.selector
+            )
+        );
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), ISafe.setFallbackHandler.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_RevertWhen_UnsafeSetGuardSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
+            )
+        );
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), ISafe.setGuard.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_RevertWhen_InvalidSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0))
+        );
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(validatorAddress, bytes("0"), bytes4(0));
     }
 
     function test_AllowValidatorRecovery_RevertWhen_InvalidValidator() public {

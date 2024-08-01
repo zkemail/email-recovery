@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 
@@ -61,7 +62,9 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
         }
         if (
             _selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector
-                || _selector == bytes4(0)
+                || _selector == IERC7579Account.execute.selector
+                || _selector == ISafe.setFallbackHandler.selector
+                || _selector == ISafe.setGuard.selector || _selector == bytes4(0)
         ) {
             revert InvalidSelector(_selector);
         }
