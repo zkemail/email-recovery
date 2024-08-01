@@ -34,22 +34,6 @@ interface IEmailRecoveryManager {
             // recovery attempt
     }
 
-    /**
-     * A struct representing the values required for guardian configuration
-     * Config should be maintained over subsequent recovery attempts unless explicitly modified
-     */
-    struct GuardianConfig {
-        uint256 guardianCount; // total count for all guardians
-        uint256 totalWeight; // combined weight for all guardians. Important for checking that
-            // thresholds are valid.
-        uint256 acceptedWeight; // combined weight for all accepted guardians. This is separated
-            // from totalWeight as it is important to prevent recovery starting without enough
-            // accepted guardians to meet the threshold. Storing this in a variable avoids the need
-            // to loop over accepted guardians whenever checking if a recovery attempt can be
-            // started without being broken
-        uint256 threshold; // the threshold required to successfully process a recovery attempt
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                                     EVENTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -74,16 +58,12 @@ interface IEmailRecoveryManager {
                                     ERRORS
     //////////////////////////////////////////////////////////////////////////*/
 
-    error RecoveryInProcess();
     error InvalidVerifier();
     error InvalidDkimRegistry();
     error InvalidEmailAuthImpl();
     error InvalidSubjectHandler();
-    error InitializerNotDeployer();
-    error InvalidRecoveryModule();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
-    error RecoveryModuleNotAuthorized();
     error DelayMoreThanExpiry(uint256 delay, uint256 expiry);
     error RecoveryWindowTooShort(uint256 recoveryWindow);
     error ThresholdExceedsAcceptedWeight(uint256 threshold, uint256 acceptedWeight);
@@ -97,8 +77,6 @@ interface IEmailRecoveryManager {
     error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
     error InvalidCalldataHash(bytes32 calldataHash, bytes32 expectedCalldataHash);
     error NoRecoveryInProcess();
-    error NotRecoveryModule();
-    error SetupNotCalled();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS
@@ -108,38 +86,7 @@ interface IEmailRecoveryManager {
 
     function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
 
-    function configureRecovery(
-        address[] memory guardians,
-        uint256[] memory weights,
-        uint256 threshold,
-        uint256 delay,
-        uint256 expiry
-    )
-        external;
-
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 
-    function deInitRecoveryFromModule(address account) external;
-
     function cancelRecovery() external;
-
-    /*//////////////////////////////////////////////////////////////////////////
-                                GUARDIAN LOGIC
-    //////////////////////////////////////////////////////////////////////////*/
-
-    function getGuardianConfig(address account) external view returns (GuardianConfig memory);
-
-    function getGuardian(
-        address account,
-        address guardian
-    )
-        external
-        view
-        returns (GuardianStorage memory);
-
-    function addGuardian(address guardian, uint256 weight) external;
-
-    function removeGuardian(address guardian) external;
-
-    function changeThreshold(uint256 threshold) external;
 }

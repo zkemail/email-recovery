@@ -23,14 +23,14 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         // Accept guardian 1
         acceptGuardian(accountAddress1, guardians1[0]);
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryManager.getGuardian(accountAddress1, guardians1[0]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian 2
         acceptGuardian(accountAddress1, guardians1[1]);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryManager.getGuardian(accountAddress1, guardians1[1]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage2.weight, uint256(2));
 
@@ -39,7 +39,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         // handle recovery request for guardian 1
         handleRecovery(accountAddress1, guardians1[0], calldataHash1);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress1);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
@@ -48,7 +48,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
         handleRecovery(accountAddress1, guardians1[1], calldataHash1);
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 3);
@@ -57,9 +57,9 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata1);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
 
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         address updatedOwner = validator.owners(accountAddress1);
 
         assertEq(recoveryRequest.executeAfter, 0);
@@ -87,7 +87,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
     //             GuardianStatus.ACCEPTED
     //         )
     //     );
-    //     emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    //     emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     // }
 
     // function test_Recover_CannotMixAccountHandleRecovery() public {
@@ -109,7 +109,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
     //             GuardianStatus.ACCEPTED
     //         )
     //     );
-    //     emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+    //     emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     // }
 
     // Helper function
@@ -126,7 +126,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         handleRecovery(account, guardians1[0], calldataHash);
         handleRecovery(account, guardians1[1], calldataHash);
         vm.warp(block.timestamp + delay);
-        emailRecoveryManager.completeRecovery(account, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(account, recoveryCalldata);
     }
 
     // function test_Recover_RotatesMultipleOwnersSuccessfully() public {
@@ -164,6 +164,6 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
     //     );
 
     //     vm.expectRevert("invalid timestamp");
-    //     emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+    //     emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     // }
 }

@@ -15,7 +15,7 @@ import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     // ZK Email contracts and variables
     address zkEmailDeployer = vm.addr(1);
-    ECDSAOwnedDKIMRegistry ecdsaOwnedDkimRegistry;
+    ECDSAOwnedDKIMRegistry dkimRegistry;
     MockGroth16Verifier verifier;
     EmailAuth emailAuthImpl;
 
@@ -58,14 +58,14 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
 
         // Create ZK Email contracts
         vm.startPrank(zkEmailDeployer);
-        ecdsaOwnedDkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
-        string memory signedMsg = ecdsaOwnedDkimRegistry.computeSignedMsg(
-            ecdsaOwnedDkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
+        dkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
+        string memory signedMsg = dkimRegistry.computeSignedMsg(
+            dkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
         );
         bytes32 digest = ECDSA.toEthSignedMessageHash(bytes(signedMsg));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
-        ecdsaOwnedDkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
+        dkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
 
         verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();

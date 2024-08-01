@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract EmailRecoveryManager_constructor_Test is UnitBase {
     function setUp() public override {
@@ -14,7 +14,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor_RevertWhen_InvalidVerifier() public {
         address invalidVerifier = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidVerifier.selector);
-        new EmailRecoveryManager(
+        new UniversalEmailRecoveryModule(
             invalidVerifier,
             address(dkimRegistry),
             address(emailAuthImpl),
@@ -25,7 +25,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor_RevertWhen_InvalidDkimRegistry() public {
         address invalidDkim = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
-        new EmailRecoveryManager(
+        new UniversalEmailRecoveryModule(
             address(verifier), invalidDkim, address(emailAuthImpl), address(emailRecoveryHandler)
         );
     }
@@ -33,7 +33,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor_RevertWhen_InvalidEmailAuthImpl() public {
         address invalidEmailAuth = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidEmailAuthImpl.selector);
-        new EmailRecoveryManager(
+        new UniversalEmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             invalidEmailAuth,
@@ -44,22 +44,22 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
         address invalidHandler = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidSubjectHandler.selector);
-        new EmailRecoveryManager(
+        new UniversalEmailRecoveryModule(
             address(verifier), address(dkimRegistry), address(emailAuthImpl), invalidHandler
         );
     }
 
     function test_Constructor() public {
-        EmailRecoveryManager emailRecoveryManager = new EmailRecoveryManager(
+        UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
             address(emailRecoveryHandler)
         );
 
-        assertEq(address(verifier), emailRecoveryManager.verifier());
-        assertEq(address(dkimRegistry), emailRecoveryManager.dkim());
-        assertEq(address(emailAuthImpl), emailRecoveryManager.emailAuthImplementation());
-        assertEq(address(emailRecoveryHandler), emailRecoveryManager.subjectHandler());
+        assertEq(address(verifier), emailRecoveryModule.verifier());
+        assertEq(address(dkimRegistry), emailRecoveryModule.dkim());
+        assertEq(address(emailAuthImpl), emailRecoveryModule.emailAuthImplementation());
+        assertEq(address(emailRecoveryHandler), emailRecoveryModule.subjectHandler());
     }
 }

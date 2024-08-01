@@ -10,36 +10,23 @@ contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
         super.setUp();
     }
 
-    function test_Recover_RevertWhen_NotTrustedRecoveryContract() public {
-        vm.expectRevert(EmailRecoveryModule.NotTrustedRecoveryManager.selector);
-        emailRecoveryModule.recover(accountAddress, recoveryCalldata);
-    }
-
-    function test_Recover_RevertWhen_RecoveryNotAuthorizedForAccount() public {
-        address invalidAccount = address(1);
-
-        vm.startPrank(emailRecoveryManagerAddress);
-        vm.expectRevert(EmailRecoveryModule.RecoveryNotAuthorizedForAccount.selector);
-        emailRecoveryModule.recover(invalidAccount, recoveryCalldata);
-    }
-
     function test_Recover_RevertWhen_InvalidCalldataSelector() public {
         bytes4 invalidSelector = bytes4(keccak256(bytes("wrongSelector(address,address,address)")));
         bytes memory invalidCalldata =
             abi.encodeWithSelector(invalidSelector, accountAddress, recoveryModuleAddress, newOwner);
 
-        vm.startPrank(emailRecoveryManagerAddress);
+        vm.startPrank(recoveryModuleAddress);
         vm.expectRevert(
             abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, invalidSelector)
         );
-        emailRecoveryModule.recover(accountAddress, invalidCalldata);
+        emailRecoveryModule.exposed_recover(accountAddress, invalidCalldata);
     }
 
     function test_Recover_Succeeds() public {
-        vm.startPrank(emailRecoveryManagerAddress);
+        vm.startPrank(recoveryModuleAddress);
         vm.expectEmit();
         emit EmailRecoveryModule.RecoveryExecuted(accountAddress, validatorAddress);
-        emailRecoveryModule.recover(accountAddress, recoveryCalldata);
+        emailRecoveryModule.exposed_recover(accountAddress, recoveryCalldata);
 
         address updatedOwner = validator.owners(accountAddress);
         assertEq(updatedOwner, newOwner);

@@ -6,28 +6,23 @@ import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
-import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
+import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import { GuardianManager } from "../GuardianManager.sol";
 
 /**
  * @title EmailRecoveryModule
  * @notice This contract provides a simple mechanism for recovering account validators by
  * permissioning certain functions to be called on validators. It facilitates recovery by
- * integration with a trusted email recovery manager. The module defines how a recovery request is
- * executed on a validator, while the trusted recovery manager defines what a valid
- * recovery request is.
+ * integration with the email recovery manager contract. The module defines how a recovery request
+ * is executed on a validator, while the recovery manager defines what a valid recovery request is.
  *
  * This recovery module targets a specific validator, so this contract should be deployed per
  * validator
  */
-contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
+contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmailRecoveryModule {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    /**
-     * Trusted email recovery manager contract that handles recovery requests
-     */
-    address public immutable emailRecoveryManager;
 
     /**
      * Validator being recovered
@@ -39,24 +34,22 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      */
     bytes4 public immutable selector;
 
-    /**
-     * Account address to authorized validator
-     */
-    mapping(address account => bool isAuthorized) internal authorized;
-
     event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
-    error InvalidManager();
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
-    error NotTrustedRecoveryManager();
-    error RecoveryNotAuthorizedForAccount();
 
-    constructor(address _emailRecoveryManager, address _validator, bytes4 _selector) {
-        if (_emailRecoveryManager == address(0)) {
-            revert InvalidManager();
-        }
+    constructor(
+        address verifier,
+        address dkimRegistry,
+        address emailAuthImpl,
+        address subjectHandler,
+        address _validator,
+        bytes4 _selector
+    )
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+    {
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);
         }
@@ -69,7 +62,6 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
             revert InvalidSelector(_selector);
         }
 
-        emailRecoveryManager = _emailRecoveryManager;
         validator = _validator;
         selector = _selector;
     }
@@ -105,15 +97,8 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
         ) {
             revert InvalidValidator(validator);
         }
-        authorized[msg.sender] = true;
 
-        _execute({
-            to: emailRecoveryManager,
-            value: 0,
-            data: abi.encodeCall(
-                IEmailRecoveryManager.configureRecovery, (guardians, weights, threshold, delay, expiry)
-            )
-        });
+        configureRecovery(guardians, weights, threshold, delay, expiry);
     }
 
     /**
@@ -121,8 +106,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      * @dev the data parameter is not used
      */
     function onUninstall(bytes calldata /* data */ ) external {
-        authorized[msg.sender] = false;
-        IEmailRecoveryManager(emailRecoveryManager).deInitRecoveryFromModule(msg.sender);
+        deInitRecoveryModule();
     }
 
     /**
@@ -131,16 +115,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address account) external view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account).threshold != 0;
-    }
-
-    /**
-     * Check if the recovery module is authorized to recover the account
-     * @param account The smart account to check
-     * @return true if the module is authorized, false otherwise
-     */
-    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
-        return authorized[account];
+        return getGuardianConfig(account).threshold != 0;
     }
 
     /**
@@ -149,8 +124,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      * @return true if the recovery request can be started, false otherwise
      */
     function canStartRecoveryRequest(address account) external view returns (bool) {
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account);
+        GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
         return guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
@@ -160,20 +134,12 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * @notice Executes recovery on a validator. Must be called by the trusted recovery manager
+     * @notice Executes recovery on a validator. Called from the recovery manager
      * @param account The account to execute recovery for
      * @param recoveryCalldata The recovery calldata that should be executed on the validator
      * being recovered
      */
-    function recover(address account, bytes calldata recoveryCalldata) external {
-        if (msg.sender != emailRecoveryManager) {
-            revert NotTrustedRecoveryManager();
-        }
-
-        if (!authorized[account]) {
-            revert RecoveryNotAuthorizedForAccount();
-        }
-
+    function recover(address account, bytes calldata recoveryCalldata) internal override {
         bytes4 calldataSelector = bytes4(recoveryCalldata[:4]);
         if (calldataSelector != selector) {
             revert InvalidSelector(calldataSelector);

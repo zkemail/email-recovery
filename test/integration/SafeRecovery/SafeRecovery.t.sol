@@ -38,18 +38,18 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryManager.getGuardian(accountAddress1, guardians1[0]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
 
         // Accept guardian
         acceptGuardian(accountAddress1, guardians1[0]);
-        guardianStorage1 = emailRecoveryManager.getGuardian(accountAddress1, guardians1[0]);
+        guardianStorage1 = emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
         acceptGuardian(accountAddress1, guardians1[1]);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryManager.getGuardian(accountAddress1, guardians1[1]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage2.weight, uint256(2));
 
@@ -59,14 +59,14 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         // handle recovery request for guardian 1
         handleRecovery(accountAddress1, owner1, newOwner1, guardians1[0]);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress1);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.currentWeight, 1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
         handleRecovery(accountAddress1, owner1, newOwner1, guardians1[1]);
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 3);
@@ -74,9 +74,9 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        emailRecoveryManager.completeRecovery(accountAddress1, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata);
 
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress1);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
@@ -94,7 +94,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // configure and complete an entire recovery request
     //     test_Recover_RotatesOwnerSuccessfully();
     //     address router =
-    //         emailRecoveryManager.computeRouterAddress(keccak256(abi.encode(accountAddress1)));
+    //         emailRecoveryModule.computeRouterAddress(keccak256(abi.encode(accountAddress1)));
     //     IERC7579Account account = IERC7579Account(accountAddress1);
 
     //     // Uninstall module
@@ -111,14 +111,14 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that recovery config has been cleared successfully
     //     IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-    //         emailRecoveryManager.getRecoveryConfig(accountAddress1);
+    //         emailRecoveryModule.getRecoveryConfig(accountAddress1);
     //     assertEq(recoveryConfig.recoveryModule, address(0));
     //     assertEq(recoveryConfig.delay, 0);
     //     assertEq(recoveryConfig.expiry, 0);
 
     //     // assert that the recovery request has been cleared successfully
     //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-    //         emailRecoveryManager.getRecoveryRequest(accountAddress1);
+    //         emailRecoveryModule.getRecoveryRequest(accountAddress1);
     //     assertEq(recoveryRequest.executeAfter, 0);
     //     assertEq(recoveryRequest.executeBefore, 0);
     //     assertEq(recoveryRequest.currentWeight, 0);
@@ -126,26 +126,26 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // assert that guardian storage has been cleared successfully for guardian 1
     //     GuardianStorage memory guardianStorage1 =
-    //         emailRecoveryManager.getGuardian(accountAddress1, guardians1[0]);
+    //         emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
     //     assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.NONE));
     //     assertEq(guardianStorage1.weight, uint256(0));
 
     //     // assert that guardian storage has been cleared successfully for guardian 2
     //     GuardianStorage memory guardianStorage2 =
-    //         emailRecoveryManager.getGuardian(accountAddress1, guardians1[1]);
+    //         emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
     //     assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.NONE));
     //     assertEq(guardianStorage2.weight, uint256(0));
 
     //     // assert that guardian config has been cleared successfully
-    //     IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-    //         emailRecoveryManager.getGuardianConfig(accountAddress1);
+    //     GuardianManager.GuardianConfig memory guardianConfig =
+    //         emailRecoveryModule.getGuardianConfig(accountAddress1);
     //     assertEq(guardianConfig.guardianCount, 0);
     //     assertEq(guardianConfig.totalWeight, 0);
     //     assertEq(guardianConfig.threshold, 0);
 
     //     // assert that the recovery router mappings have been cleared successfully
-    //     address accountForRouter = emailRecoveryManager.getAccountForRouter(router);
-    //     address routerForAccount = emailRecoveryManager.getRouterForAccount(accountAddress1);
+    //     address accountForRouter = emailRecoveryModule.getAccountForRouter(router);
+    //     address routerForAccount = emailRecoveryModule.getRouterForAccount(accountAddress1);
     //     assertEq(accountForRouter, address(0));
     //     assertEq(routerForAccount, address(0));
     // }

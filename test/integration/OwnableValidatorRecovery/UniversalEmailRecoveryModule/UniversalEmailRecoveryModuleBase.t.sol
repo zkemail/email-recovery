@@ -15,6 +15,9 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
+import { UniversalEmailRecoveryModuleHarness } from
+    "../../../unit/UniversalEmailRecoveryModuleHarness.sol";
+// test/unit/UniversalEmailRecoveryModuleHarness.sol
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../../IntegrationBase.t.sol";
 
@@ -26,9 +29,8 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
     EmailRecoveryUniversalFactory emailRecoveryFactory;
     EmailRecoverySubjectHandler emailRecoveryHandler;
-    EmailRecoveryManager emailRecoveryManager;
+    UniversalEmailRecoveryModuleHarness emailRecoveryModule;
 
-    address emailRecoveryManagerAddress;
     address recoveryModuleAddress;
     address validatorAddress;
 
@@ -53,18 +55,15 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
         bytes32 subjectHandlerSalt = bytes32(uint256(0));
-        bytes32 recoveryManagerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
         bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
-        (recoveryModuleAddress, emailRecoveryManagerAddress,) = emailRecoveryFactory
-            .deployUniversalEmailRecoveryModule(
-            subjectHandlerSalt,
-            recoveryManagerSalt,
-            recoveryModuleSalt,
-            subjectHandlerBytecode,
-            address(ecdsaOwnedDkimRegistry)
+        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
         );
-        emailRecoveryManager = EmailRecoveryManager(emailRecoveryManagerAddress);
+        recoveryModuleAddress = address(emailRecoveryModule);
 
         // Deploy validator to be recovered
         validator = new OwnableValidator();
@@ -83,26 +82,17 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
         // Compute guardian addresses
         guardians1 = new address[](3);
-        guardians1[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt1);
-        guardians1[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt2);
-        guardians1[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance1.account, accountSalt3);
+        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt1);
+        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt2);
+        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt3);
         guardians2 = new address[](3);
-        guardians2[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt1);
-        guardians2[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt2);
-        guardians2[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance2.account, accountSalt3);
+        guardians2[0] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt1);
+        guardians2[1] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt2);
+        guardians2[2] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt3);
         guardians3 = new address[](3);
-        guardians3[0] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt1);
-        guardians3[1] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt2);
-        guardians3[2] =
-            emailRecoveryManager.computeEmailAuthAddress(instance3.account, accountSalt3);
+        guardians3[0] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt1);
+        guardians3[1] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt2);
+        guardians3[2] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt3);
 
         bytes memory recoveryModuleInstallData1 = abi.encode(
             validatorAddress,
@@ -236,7 +226,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
     function acceptGuardian(address account, address guardian) public {
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        emailRecoveryManager.handleAcceptance(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
     function getAcceptanceEmailAuthMessage(
@@ -256,7 +246,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
         subjectParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
-            templateId: emailRecoveryManager.computeAcceptanceTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
             skipedSubjectPrefix: 0,
             proof: emailProof
@@ -266,7 +256,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     function handleRecovery(address account, address guardian, bytes32 calldataHash) public {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, guardian, calldataHash);
-        emailRecoveryManager.handleRecovery(emailAuthMsg, templateIdx);
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function getRecoveryEmailAuthMessage(
@@ -297,7 +287,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         subjectParamsForRecovery[2] = abi.encode(calldataHashString);
 
         return EmailAuthMsg({
-            templateId: emailRecoveryManager.computeRecoveryTemplateId(templateIdx),
+            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
             skipedSubjectPrefix: 0,
             proof: emailProof

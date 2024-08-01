@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
     function setUp() public override {
@@ -15,8 +15,8 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
             emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
 
         // Checking accepted weight and sentinel list storage are what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         bool contains =
             emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
 
@@ -35,8 +35,8 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
             emailRecoveryModule.canStartRecoveryRequest(accountAddress, invalidValidatorAddress);
 
         // Checking accepted weight and sentinel list storage are what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         bool contains = emailRecoveryModule.workaround_validatorsContains(
             accountAddress, invalidValidatorAddress
         );
@@ -59,8 +59,8 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
             emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
 
         // Checking accepted weight and sentinel list storage are what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         bool contains =
             emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
 
@@ -81,8 +81,8 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
             emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
 
         // Checking accepted weight and sentinel list storage are what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         bool contains =
             emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
 

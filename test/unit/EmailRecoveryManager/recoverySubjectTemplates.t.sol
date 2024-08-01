@@ -10,7 +10,7 @@ contract EmailRecoveryManager_recoverySubjectTemplates_Test is UnitBase {
     }
 
     function test_RecoverySubjectTemplates_Succeeds() public view {
-        string[][] memory templates = emailRecoveryManager.recoverySubjectTemplates();
+        string[][] memory templates = emailRecoveryModule.recoverySubjectTemplates();
 
         assertEq(templates.length, 1);
         assertEq(templates[0].length, 11);

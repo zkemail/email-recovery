@@ -20,7 +20,7 @@ contract EmailRecoveryModule_onUninstall_Test is EmailRecoveryModuleBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
-        assertFalse(isAuthorizedToBeRecovered);
+        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
+        assertFalse(isInitialized);
     }
 }

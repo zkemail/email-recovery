@@ -4,12 +4,11 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { UnitBase } from "../UnitBase.t.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
-contract GuardianUtils_setupGuardians_Test is UnitBase {
+contract GuardianManager_setupGuardians_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {
@@ -25,12 +24,12 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                GuardianUtils.IncorrectNumberOfWeights.selector,
+                IGuardianManager.IncorrectNumberOfWeights.selector,
                 guardians.length,
                 invalidGuardianWeights.length
             )
         );
-        emailRecoveryManager.exposed_setupGuardians(
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, invalidGuardianWeights, threshold
         );
     }
@@ -38,8 +37,8 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_ThresholdIsZero() public {
         uint256 zeroThreshold = 0;
 
-        vm.expectRevert(GuardianUtils.ThresholdCannotBeZero.selector);
-        emailRecoveryManager.exposed_setupGuardians(
+        vm.expectRevert(IGuardianManager.ThresholdCannotBeZero.selector);
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, zeroThreshold
         );
     }
@@ -48,9 +47,9 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         guardians[0] = address(0);
 
         vm.expectRevert(
-            abi.encodeWithSelector(GuardianUtils.InvalidGuardianAddress.selector, guardians[0])
+            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians[0])
         );
-        emailRecoveryManager.exposed_setupGuardians(
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
     }
@@ -59,9 +58,9 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         guardians[0] = accountAddress;
 
         vm.expectRevert(
-            abi.encodeWithSelector(GuardianUtils.InvalidGuardianAddress.selector, guardians[0])
+            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians[0])
         );
-        emailRecoveryManager.exposed_setupGuardians(
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
     }
@@ -73,8 +72,8 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
 
         guardianWeights[0] = 0;
 
-        vm.expectRevert(GuardianUtils.InvalidGuardianWeight.selector);
-        emailRecoveryManager.exposed_setupGuardians(
+        vm.expectRevert(IGuardianManager.InvalidGuardianWeight.selector);
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
     }
@@ -82,8 +81,8 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_AddressAlreadyGuardian() public {
         guardians[0] = guardians[1];
 
-        vm.expectRevert(GuardianUtils.AddressAlreadyGuardian.selector);
-        emailRecoveryManager.exposed_setupGuardians(
+        vm.expectRevert(IGuardianManager.AddressAlreadyGuardian.selector);
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
     }
@@ -97,10 +96,10 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                GuardianUtils.ThresholdExceedsTotalWeight.selector, invalidThreshold, totalWeight
+                IGuardianManager.ThresholdExceedsTotalWeight.selector, invalidThreshold, totalWeight
             )
         );
-        emailRecoveryManager.exposed_setupGuardians(
+        emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, invalidThreshold
         );
     }
@@ -115,16 +114,16 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryManager.exposed_setupGuardians(
+        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryModule.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
 
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[0]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[0]);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[1]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[1]);
         GuardianStorage memory guardianStorage3 =
-            emailRecoveryManager.getGuardian(accountAddress, guardians[2]);
+            emailRecoveryModule.getGuardian(accountAddress, guardians[2]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage1.weight, guardianWeights[0]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.REQUESTED));
@@ -135,8 +134,8 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         assertEq(guardianCount, expectedGuardianCount);
         assertEq(totalWeight, expectedTotalWeight);
 
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
@@ -24,13 +24,13 @@ contract EmailRecoveryManager_getGuardianConfig_Test is UnitBase {
         expectedThreshold = threshold;
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.addGuardian(newGuardian, newGuardianWeight);
+        emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
         vm.stopPrank();
     }
 
     function test_GetGuardianConfig_Succeeds() public {
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            emailRecoveryManager.getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);

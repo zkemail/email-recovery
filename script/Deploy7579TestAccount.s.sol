@@ -5,7 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
-import { IEmailRecoveryManager } from "../src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { RhinestoneModuleKit } from "modulekit/ModuleKit.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
@@ -38,7 +38,6 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     bytes32 accountSalt;
     address validatorAddr;
     address recoveryModuleAddr;
-    address managerAddr;
     address[] guardians = new address[](0);
     uint256[] guardianWeights = new uint256[](0);
 
@@ -111,8 +110,6 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         });
 
         BootstrapConfig[] memory executors = new BootstrapConfig[](1);
-        managerAddr = vm.envAddress("RECOVERY_MANAGER");
-        require(managerAddr != address(0), "RECOVERY_MANAGER is required");
 
         bytes memory recoveryModuleInstallData = abi.encode(
             validatorAddr,
@@ -140,17 +137,18 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
 
         {
             // Add an EmailAuth guardian
-            address guardianAddr =
-                EmailAccountRecovery(managerAddr).computeEmailAuthAddress(account, accountSalt);
+            address guardianAddr = EmailAccountRecovery(recoveryModuleAddr).computeEmailAuthAddress(
+                account, accountSalt
+            );
             console.log("Guardian's EmailAuth address", guardianAddr);
             userOpCalldata = abi.encodeCall(
                 IERC7579Account.execute,
                 (
                     ModeLib.encodeSimpleSingle(),
                     ExecutionLib.encodeSingle(
-                        address(managerAddr),
+                        address(recoveryModuleAddr),
                         uint256(0),
-                        abi.encodeCall(IEmailRecoveryManager.addGuardian, (guardianAddr, 1))
+                        abi.encodeCall(IGuardianManager.addGuardian, (guardianAddr, 1))
                     )
                 )
             );
@@ -183,17 +181,18 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         // set threshold to 1.
         {
             // Add an EmailAuth guardian
-            address guardianAddr =
-                EmailAccountRecovery(managerAddr).computeEmailAuthAddress(account, accountSalt);
+            address guardianAddr = EmailAccountRecovery(recoveryModuleAddr).computeEmailAuthAddress(
+                account, accountSalt
+            );
             console.log("Guardian's EmailAuth address", guardianAddr);
             userOpCalldata = abi.encodeCall(
                 IERC7579Account.execute,
                 (
                     ModeLib.encodeSimpleSingle(),
                     ExecutionLib.encodeSingle(
-                        address(managerAddr),
+                        address(recoveryModuleAddr),
                         uint256(0),
-                        abi.encodeCall(IEmailRecoveryManager.changeThreshold, 1)
+                        abi.encodeCall(IGuardianManager.changeThreshold, 1)
                     )
                 )
             );

@@ -8,15 +8,9 @@ import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
-contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
+contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
     function setUp() public override {
         super.setUp();
-    }
-
-    function test_Constructor_RevertWhen_InvalidManager() public {
-        address invalidManager = address(0);
-        vm.expectRevert(EmailRecoveryModule.InvalidManager.selector);
-        new EmailRecoveryModule(invalidManager, validatorAddress, functionSelector);
     }
 
     function test_Constructor_RevertWhen_InvalidValidator() public {
@@ -24,7 +18,14 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
         vm.expectRevert(
             abi.encodeWithSelector(EmailRecoveryModule.InvalidValidator.selector, invalidValidator)
         );
-        new EmailRecoveryModule(emailRecoveryManagerAddress, invalidValidator, functionSelector);
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            invalidValidator,
+            functionSelector
+        );
     }
 
     function test_Constructor_RevertWhen_UnsafeOnInstallSelector() public {
@@ -34,7 +35,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, IModule.onInstall.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            IModule.onInstall.selector
         );
     }
 
@@ -45,7 +51,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, IModule.onUninstall.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            IModule.onUninstall.selector
         );
     }
 
@@ -56,7 +67,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, IERC7579Account.execute.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            IERC7579Account.execute.selector
         );
     }
 
@@ -67,7 +83,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, ISafe.setFallbackHandler.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.setFallbackHandler.selector
         );
     }
 
@@ -78,7 +99,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, ISafe.setGuard.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.setGuard.selector
         );
     }
 
@@ -86,14 +112,26 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
         vm.expectRevert(
             abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, bytes4(0))
         );
-        new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, bytes4(0));
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            bytes4(0)
+        );
     }
 
     function test_Constructor() public {
-        EmailRecoveryModule emailRecoveryModule =
-            new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, functionSelector);
+        EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            functionSelector
+        );
 
-        assertEq(emailRecoveryManagerAddress, emailRecoveryModule.emailRecoveryManager());
         assertEq(validatorAddress, emailRecoveryModule.validator());
         assertEq(functionSelector, emailRecoveryModule.selector());
     }

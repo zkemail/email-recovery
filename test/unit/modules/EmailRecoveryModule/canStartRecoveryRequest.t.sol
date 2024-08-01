@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 
 contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModuleBase {
@@ -15,8 +15,8 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
 
         // Checking accepted weight is what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
 
         // No guardians have accepted
         assertFalse(canStartRecoveryRequest);
@@ -31,8 +31,8 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
 
         // Checking accepted weight is what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
 
         // Enough guardians have accepted so that accepted weight is higher than the threshold
         assertTrue(canStartRecoveryRequest);
@@ -46,8 +46,8 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
 
         // Checking accepted weight is what we expect for this test case
-        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
-            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(accountAddress);
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress);
 
         // Enough guardians have accepted so that accepted weight is equal to the threshold
         assertTrue(canStartRecoveryRequest);

@@ -1,19 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-
 import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoverySubjectHandler } from "./interfaces/IEmailRecoverySubjectHandler.sol";
-import { IEmailRecoveryModule } from "./interfaces/IEmailRecoveryModule.sol";
-import {
-    EnumerableGuardianMap,
-    GuardianStorage,
-    GuardianStatus
-} from "./libraries/EnumerableGuardianMap.sol";
-import { GuardianUtils } from "./libraries/GuardianUtils.sol";
+import { GuardianManager } from "./GuardianManager.sol";
+import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
 
 /**
  * @title EmailRecoveryManager
@@ -32,10 +25,11 @@ import { GuardianUtils } from "./libraries/GuardianUtils.sol";
  * defines and validates the recovery email subjects. Developers can write their own subject
  * handlers to make specifc subjects for recovering modules
  */
-contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailRecoveryManager {
-    using GuardianUtils for mapping(address => GuardianConfig);
-    using GuardianUtils for mapping(address => EnumerableGuardianMap.AddressToGuardianMap);
-
+abstract contract EmailRecoveryManager is
+    EmailAccountRecovery,
+    GuardianManager,
+    IEmailRecoveryManager
+{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -52,16 +46,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
     address public immutable subjectHandler;
 
     /**
-     * The recovery module that is responsible for recovering an account
-     */
-    address public emailRecoveryModule;
-
-    /**
-     * Deployer address stored to prevent frontrunning at initialization
-     */
-    address private immutable deployer;
-
-    /**
      * Account address to recovery config
      */
     mapping(address account => RecoveryConfig recoveryConfig) internal recoveryConfigs;
@@ -70,27 +54,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * Account address to recovery request
      */
     mapping(address account => RecoveryRequest recoveryRequest) internal recoveryRequests;
-
-    /**
-     * Account to guardian config
-     */
-    mapping(address account => GuardianConfig guardianConfig) internal guardianConfigs;
-
-    /**
-     * Account address to guardian address to guardian storage
-     */
-    mapping(address account => EnumerableGuardianMap.AddressToGuardianMap guardian) internal
-        guardiansStorage;
-
-    /**
-     * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
-     */
-    modifier onlyWhenNotRecovering() {
-        if (recoveryRequests[msg.sender].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
-        _;
-    }
 
     constructor(
         address _verifier,
@@ -114,17 +77,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
         subjectHandler = _subjectHandler;
-        deployer = msg.sender;
-    }
-
-    function initialize(address _emailRecoveryModule) external initializer {
-        if (msg.sender != deployer) {
-            revert InitializerNotDeployer();
-        }
-        if (_emailRecoveryModule == address(0)) {
-            revert InvalidRecoveryModule();
-        }
-        emailRecoveryModule = _emailRecoveryModule;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -234,13 +186,13 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param expiry The expiry time after which the recovery attempt is invalid
      */
     function configureRecovery(
-        address[] calldata guardians,
-        uint256[] calldata weights,
+        address[] memory guardians,
+        uint256[] memory weights,
         uint256 threshold,
         uint256 delay,
         uint256 expiry
     )
-        external
+        internal
     {
         address account = msg.sender;
 
@@ -248,10 +200,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         // Check ensures that setup function can only be called once.
         if (guardianConfigs[account].threshold > 0) {
             revert SetupAlreadyCalled();
-        }
-
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
-            revert RecoveryModuleNotAuthorized();
         }
 
         (uint256 guardianCount, uint256 totalWeight) =
@@ -325,10 +273,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert RecoveryInProcess();
         }
 
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
-            revert RecoveryModuleNotAuthorized();
-        }
-
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
@@ -336,7 +280,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
         }
 
-        guardiansStorage.updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED);
+        updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED);
         guardianConfigs[account].acceptedWeight += guardianStorage.weight;
 
         emit GuardianAccepted(account, guardian);
@@ -368,10 +312,6 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
         address account = IEmailRecoverySubjectHandler(subjectHandler).validateRecoverySubject(
             templateIdx, subjectParams, address(this)
         );
-
-        if (!IEmailRecoveryModule(emailRecoveryModule).isAuthorizedToBeRecovered(account)) {
-            revert RecoveryModuleNotAuthorized();
-        }
 
         GuardianConfig memory guardianConfig = guardianConfigs[account];
         if (guardianConfig.threshold > guardianConfig.acceptedWeight) {
@@ -422,7 +362,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @param account The address of the account for which the recovery is being completed
      * @param recoveryCalldata The calldata that is passed to recover the validator
      */
-    function completeRecovery(address account, bytes calldata recoveryCalldata) public override {
+    function completeRecovery(address account, bytes calldata recoveryCalldata) external override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -452,10 +392,12 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
 
         delete recoveryRequests[account];
 
-        IEmailRecoveryModule(emailRecoveryModule).recover(account, recoveryCalldata);
+        recover(account, recoveryCalldata);
 
         emit RecoveryCompleted(account);
     }
+
+    function recover(address account, bytes calldata recoveryCalldata) internal virtual;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CANCEL/DE-INIT LOGIC                    */
@@ -465,7 +407,7 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * @notice Cancels the recovery request for the caller's account
      * @dev Deletes the current recovery request associated with the caller's account
      */
-    function cancelRecovery() external virtual {
+    function cancelRecovery() external {
         if (recoveryRequests[msg.sender].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
@@ -478,113 +420,14 @@ contract EmailRecoveryManager is EmailAccountRecovery, Initializable, IEmailReco
      * module
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
      * should be deinitialized. This should include remove state accociated with an account.
-     * @param account The account to delete state for
      */
-    function deInitRecoveryFromModule(address account) external {
-        if (emailRecoveryModule != msg.sender) {
-            revert NotRecoveryModule();
-        }
+    function deInitRecoveryModule() internal onlyWhenNotRecovering {
+        delete recoveryConfigs[msg.sender];
+        delete recoveryRequests[msg.sender];
 
-        if (recoveryRequests[account].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
+        removeAllGuardians(msg.sender);
+        delete guardianConfigs[msg.sender];
 
-        delete recoveryConfigs[account];
-        delete recoveryRequests[account];
-
-        guardiansStorage.removeAllGuardians(account);
-        delete guardianConfigs[account];
-
-        emit RecoveryDeInitialized(account);
-    }
-
-    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
-    /*                       GUARDIAN LOGIC                       */
-    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    /**
-     * @notice Retrieves the guardian configuration for a given account
-     * @param account The address of the account for which the guardian configuration is being
-     * retrieved
-     * @return GuardianConfig The guardian configuration for the specified account
-     */
-    function getGuardianConfig(address account) external view returns (GuardianConfig memory) {
-        return guardianConfigs[account];
-    }
-
-    /**
-     * @notice Retrieves the guardian storage details for a given guardian and account
-     * @param account The address of the account associated with the guardian
-     * @param guardian The address of the guardian
-     * @return GuardianStorage The guardian storage details for the specified guardian and account
-     */
-    function getGuardian(
-        address account,
-        address guardian
-    )
-        public
-        view
-        returns (GuardianStorage memory)
-    {
-        return guardiansStorage.getGuardianStorage(account, guardian);
-    }
-
-    /**
-     * @notice Sets up guardians for a given account with specified weights and threshold
-     * @dev This function can only be called once and ensures the guardians, weights, and threshold
-     * are correctly configured
-     * @param account The address of the account for which guardians are being set up
-     * @param guardians An array of guardian addresses
-     * @param weights An array of weights corresponding to each guardian
-     * @param threshold The threshold weight required for guardians to approve recovery attempts
-     */
-    function setupGuardians(
-        address account,
-        address[] calldata guardians,
-        uint256[] calldata weights,
-        uint256 threshold
-    )
-        internal
-        returns (uint256, uint256)
-    {
-        return
-            guardianConfigs.setupGuardians(guardiansStorage, account, guardians, weights, threshold);
-    }
-
-    /**
-     * @notice Adds a guardian for the caller's account with a specified weight
-     * @dev This function can only be called by the account associated with the guardian and only if
-     * no recovery is in process
-     * @param guardian The address of the guardian to be added
-     * @param weight The weight assigned to the guardian
-     */
-    function addGuardian(address guardian, uint256 weight) external onlyWhenNotRecovering {
-        // Threshold can only be 0 at initialization.
-        // Check ensures that setup function should be called first
-        if (guardianConfigs[msg.sender].threshold == 0) {
-            revert SetupNotCalled();
-        }
-
-        guardiansStorage.addGuardian(guardianConfigs, msg.sender, guardian, weight);
-    }
-
-    /**
-     * @notice Removes a guardian for the caller's account
-     * @dev This function can only be called by the account associated with the guardian and only if
-     * no recovery is in process
-     * @param guardian The address of the guardian to be removed
-     */
-    function removeGuardian(address guardian) external onlyWhenNotRecovering {
-        guardiansStorage.removeGuardian(guardianConfigs, msg.sender, guardian);
-    }
-
-    /**
-     * @notice Changes the threshold for guardian approvals for the caller's account
-     * @dev This function can only be called by the account associated with the guardian config and
-     * only if no recovery is in process
-     * @param threshold The new threshold for guardian approvals
-     */
-    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
-        guardianConfigs.changeThreshold(msg.sender, threshold);
+        emit RecoveryDeInitialized(msg.sender);
     }
 }

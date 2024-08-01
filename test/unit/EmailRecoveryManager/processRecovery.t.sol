@@ -43,7 +43,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        emailRecoveryManager.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery(
             invalidGuardian, templateIdx, subjectParams, nullifier
         );
     }
@@ -61,7 +61,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        emailRecoveryManager.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery(
             guardian1, templateIdx, subjectParams, nullifier
         );
     }
@@ -71,8 +71,14 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector);
-        emailRecoveryManager.exposed_processRecovery(
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.InvalidGuardianStatus.selector,
+                uint256(GuardianStatus.NONE),
+                uint256(GuardianStatus.ACCEPTED)
+            )
+        );
+        emailRecoveryModule.exposed_processRecovery(
             guardian1, templateIdx, subjectParams, nullifier
         );
     }
@@ -94,8 +100,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         uint256 newThreshold = 5;
 
         vm.startPrank(accountAddress);
-        emailRecoveryManager.addGuardian(newGuardian, newWeight);
-        emailRecoveryManager.changeThreshold(newThreshold);
+        emailRecoveryModule.addGuardian(newGuardian, newWeight);
+        emailRecoveryModule.changeThreshold(newThreshold);
         vm.stopPrank();
         // total weight = 5
         // threshold = 5
@@ -108,7 +114,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
                 IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, newThreshold, 3
             )
         );
-        emailRecoveryManager.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery(
             guardian2, templateIdx, subjectParams, nullifier
         );
     }
@@ -119,12 +125,12 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
 
-        emailRecoveryManager.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery(
             guardian1, templateIdx, subjectParams, nullifier
         );
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, guardian1Weight);
@@ -150,12 +156,12 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             block.timestamp + expiry,
             calldataHash
         );
-        emailRecoveryManager.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery(
             guardian2, templateIdx, subjectParams, nullifier
         );
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryManager.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
         assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, guardian1Weight + guardian2Weight);

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
-import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 import { StringUtils } from "../libraries/StringUtils.sol";
 
 /**
@@ -119,13 +118,13 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @param recoveryManager The recovery manager address. Used to help with validation
+     * @param expectedRecoveryModule The recovery module address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
      */
     function validateRecoverySubject(
         uint256 templateIdx,
         bytes[] calldata subjectParams,
-        address recoveryManager
+        address expectedRecoveryModule
     )
         public
         view
@@ -148,11 +147,10 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidAccount();
         }
 
-        // Even though someone could use a malicious contract as the recoveryManager argument, it
-        // does not matter in this case as this is only used as part of the recovery flow in the
-        // recovery manager. Passing the recovery manager in the constructor here would result
-        // in a circular dependency
-        address expectedRecoveryModule = EmailRecoveryManager(recoveryManager).emailRecoveryModule();
+        // Even though someone could use a malicious contract as the expectedRecoveryModule
+        // argument, it does not matter in this case as this is only used as part of the recovery
+        // flow in the recovery module. Passing the recovery module in the constructor here would
+        // result in a circular dependency
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
         {
             revert InvalidRecoveryModule(recoveryModuleInEmail);
