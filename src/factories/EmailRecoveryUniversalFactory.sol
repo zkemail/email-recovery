@@ -12,7 +12,14 @@ import { UniversalEmailRecoveryModule } from "../modules/UniversalEmailRecoveryM
  * attestations
  */
 contract EmailRecoveryUniversalFactory {
+    /**
+     * @notice Address of the verifier used by the recovery module.
+     */
     address public immutable verifier;
+
+    /**
+     * @notice Address of the EmailAuth.sol implementation.
+     */
     address public immutable emailAuthImpl;
 
     event UniversalEmailRecoveryModuleDeployed(address emailRecoveryModule, address subjectHandler);

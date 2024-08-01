@@ -420,19 +420,14 @@ abstract contract EmailRecoveryManager is
      * module
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
      * should be deinitialized. This should include remove state accociated with an account.
-     * @param account The account to delete state for
      */
-    function deInitRecoveryModule(address account) internal {
-        if (recoveryRequests[account].currentWeight > 0) {
-            revert RecoveryInProcess();
-        }
+    function deInitRecoveryModule() internal onlyWhenNotRecovering {
+        delete recoveryConfigs[msg.sender];
+        delete recoveryRequests[msg.sender];
 
-        delete recoveryConfigs[account];
-        delete recoveryRequests[account];
+        removeAllGuardians(msg.sender);
+        delete guardianConfigs[msg.sender];
 
-        removeAllGuardians(account);
-        delete guardianConfigs[account];
-
-        emit RecoveryDeInitialized(account);
+        emit RecoveryDeInitialized(msg.sender);
     }
 }

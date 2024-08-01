@@ -21,15 +21,9 @@ contract UniversalEmailRecoveryModule_onInstall_Test is UnitBase {
         bytes memory emptyData = new bytes(0);
         assertEq(emptyData.length, 0);
 
-        // FIXME: call function directly to detect error
-        // vm.expectRevert(UniversalEmailRecoveryModule.InvalidOnInstallData.selector);
-
-        // When installing with empty data and not expecting a revert, the test fails
-        // instance.installModule({
-        //     moduleTypeId: MODULE_TYPE_EXECUTOR,
-        //     module: recoveryModuleAddress,
-        //     data: emptyData
-        // });
+        vm.startPrank(accountAddress);
+        vm.expectRevert(UniversalEmailRecoveryModule.InvalidOnInstallData.selector);
+        emailRecoveryModule.onInstall(emptyData);
     }
 
     function test_OnInstall_Succeeds() public {

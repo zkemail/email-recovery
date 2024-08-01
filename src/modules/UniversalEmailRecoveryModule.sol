@@ -217,7 +217,7 @@ contract UniversalEmailRecoveryModule is
         validators[msg.sender].popAll();
         validatorCount[msg.sender] = 0;
 
-        deInitRecoveryModule(msg.sender);
+        deInitRecoveryModule();
     }
 
     /**
@@ -227,15 +227,6 @@ contract UniversalEmailRecoveryModule is
      */
     function isInitialized(address account) public view returns (bool) {
         return getGuardianConfig(account).threshold != 0;
-    }
-
-    /**
-     * Check if the recovery module is authorized to recover the account
-     * @param account The smart account to check
-     * @return true if the module is authorized, false otherwise
-     */
-    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
-        return validatorCount[account] > 0;
     }
 
     /**

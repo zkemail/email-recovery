@@ -56,8 +56,8 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         recover(account, recoveryCalldata);
     }
 
-    function exposed_deInitRecoveryModule(address account) external {
-        deInitRecoveryModule(account);
+    function exposed_deInitRecoveryModule() external {
+        deInitRecoveryModule();
     }
 
     function exposed_setupGuardians(

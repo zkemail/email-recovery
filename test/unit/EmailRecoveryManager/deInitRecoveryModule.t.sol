@@ -19,19 +19,19 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
-        vm.prank(recoveryModuleAddress);
+        vm.prank(accountAddress);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
-        emailRecoveryModule.exposed_deInitRecoveryModule(accountAddress);
+        emailRecoveryModule.exposed_deInitRecoveryModule();
     }
 
     function test_DeInitRecoveryModule_Succeeds() public {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
 
-        vm.prank(recoveryModuleAddress);
+        vm.prank(accountAddress);
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryDeInitialized(accountAddress);
-        emailRecoveryModule.exposed_deInitRecoveryModule(accountAddress);
+        emailRecoveryModule.exposed_deInitRecoveryModule();
 
         // assert that recovery config has been cleared successfully
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =

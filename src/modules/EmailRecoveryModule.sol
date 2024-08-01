@@ -34,17 +34,11 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     bytes4 public immutable selector;
 
-    /**
-     * Account address to authorized validator
-     */
-    mapping(address account => bool isAuthorized) internal authorized;
-
     event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
-    error RecoveryNotAuthorizedForAccount();
 
     constructor(
         address verifier,
@@ -103,7 +97,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         ) {
             revert InvalidValidator(validator);
         }
-        authorized[msg.sender] = true;
 
         configureRecovery(guardians, weights, threshold, delay, expiry);
     }
@@ -113,8 +106,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * @dev the data parameter is not used
      */
     function onUninstall(bytes calldata /* data */ ) external {
-        authorized[msg.sender] = false;
-        deInitRecoveryModule(msg.sender);
+        deInitRecoveryModule();
     }
 
     /**
@@ -124,15 +116,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     function isInitialized(address account) external view returns (bool) {
         return getGuardianConfig(account).threshold != 0;
-    }
-
-    /**
-     * Check if the recovery module is authorized to recover the account
-     * @param account The smart account to check
-     * @return true if the module is authorized, false otherwise
-     */
-    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
-        return authorized[account];
     }
 
     /**
@@ -157,10 +140,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * being recovered
      */
     function recover(address account, bytes calldata recoveryCalldata) internal override {
-        if (!authorized[account]) {
-            revert RecoveryNotAuthorizedForAccount();
-        }
-
         bytes4 calldataSelector = bytes4(recoveryCalldata[:4]);
         if (calldataSelector != selector) {
             revert InvalidSelector(calldataSelector);

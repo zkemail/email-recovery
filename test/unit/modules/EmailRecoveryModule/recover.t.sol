@@ -10,14 +10,6 @@ contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
         super.setUp();
     }
 
-    function test_Recover_RevertWhen_RecoveryNotAuthorizedForAccount() public {
-        address invalidAccount = address(1);
-
-        vm.startPrank(recoveryModuleAddress);
-        vm.expectRevert(EmailRecoveryModule.RecoveryNotAuthorizedForAccount.selector);
-        emailRecoveryModule.exposed_recover(invalidAccount, recoveryCalldata);
-    }
-
     function test_Recover_RevertWhen_InvalidCalldataSelector() public {
         bytes4 invalidSelector = bytes4(keccak256(bytes("wrongSelector(address,address,address)")));
         bytes memory invalidCalldata =
