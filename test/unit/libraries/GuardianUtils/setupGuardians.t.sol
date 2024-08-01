@@ -23,7 +23,13 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         invalidGuardianWeights[2] = 1;
         invalidGuardianWeights[3] = 1;
 
-        vm.expectRevert(GuardianUtils.IncorrectNumberOfWeights.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.IncorrectNumberOfWeights.selector,
+                guardians.length,
+                invalidGuardianWeights.length
+            )
+        );
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, invalidGuardianWeights, threshold
         );
@@ -41,7 +47,9 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_InvalidGuardianAddress() public {
         guardians[0] = address(0);
 
-        vm.expectRevert(GuardianUtils.InvalidGuardianAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.InvalidGuardianAddress.selector, guardians[0])
+        );
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -50,7 +58,9 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_GuardianAddressIsAccountAddress() public {
         guardians[0] = accountAddress;
 
-        vm.expectRevert(GuardianUtils.InvalidGuardianAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.InvalidGuardianAddress.selector, guardians[0])
+        );
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
@@ -85,7 +95,11 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.ThresholdExceedsTotalWeight.selector, invalidThreshold, totalWeight
+            )
+        );
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, invalidThreshold
         );

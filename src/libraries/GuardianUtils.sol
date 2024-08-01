@@ -17,13 +17,13 @@ library GuardianUtils {
     event RemovedGuardian(address indexed account, address indexed guardian, uint256 weight);
     event ChangedThreshold(address indexed account, uint256 threshold);
 
-    error IncorrectNumberOfWeights();
+    error IncorrectNumberOfWeights(uint256 guardianCount, uint256 weightCount);
     error ThresholdCannotBeZero();
-    error InvalidGuardianAddress();
+    error InvalidGuardianAddress(address guardian);
     error InvalidGuardianWeight();
     error AddressAlreadyGuardian();
-    error ThresholdExceedsTotalWeight();
-    error StatusCannotBeTheSame();
+    error ThresholdExceedsTotalWeight(uint256 threshold, uint256 totalWeight);
+    error StatusCannotBeTheSame(GuardianStatus newStatus);
     error SetupNotCalled();
     error AddressNotGuardianForAccount();
 
@@ -69,7 +69,7 @@ library GuardianUtils {
         uint256 guardianCount = guardians.length;
 
         if (guardianCount != weights.length) {
-            revert IncorrectNumberOfWeights();
+            revert IncorrectNumberOfWeights(guardianCount, weights.length);
         }
 
         if (threshold == 0) {
@@ -82,7 +82,7 @@ library GuardianUtils {
 
         uint256 totalWeight = guardianConfigs[account].totalWeight;
         if (threshold > totalWeight) {
-            revert ThresholdExceedsTotalWeight();
+            revert ThresholdExceedsTotalWeight(threshold, totalWeight);
         }
 
         guardianConfigs[account].threshold = threshold;
@@ -106,7 +106,7 @@ library GuardianUtils {
     {
         GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
         if (newStatus == guardianStorage.status) {
-            revert StatusCannotBeTheSame();
+            revert StatusCannotBeTheSame(newStatus);
         }
 
         guardiansStorage[account].set({
@@ -134,7 +134,7 @@ library GuardianUtils {
         internal
     {
         if (guardian == address(0) || guardian == account) {
-            revert InvalidGuardianAddress();
+            revert InvalidGuardianAddress(guardian);
         }
 
         if (weight == 0) {
@@ -180,8 +180,9 @@ library GuardianUtils {
         }
 
         // Only allow guardian removal if threshold can still be reached.
-        if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {
-            revert ThresholdExceedsTotalWeight();
+        uint256 newTotalWeight = guardianConfig.totalWeight - guardianStorage.weight;
+        if (newTotalWeight < guardianConfig.threshold) {
+            revert ThresholdExceedsTotalWeight(newTotalWeight, guardianConfig.threshold);
         }
 
         guardianConfigs[account].guardianCount--;
@@ -228,7 +229,7 @@ library GuardianUtils {
 
         // Validate that threshold is smaller than the total weight.
         if (threshold > guardianConfigs[account].totalWeight) {
-            revert ThresholdExceedsTotalWeight();
+            revert ThresholdExceedsTotalWeight(threshold, guardianConfigs[account].totalWeight);
         }
 
         // Guardian weight should be at least 1

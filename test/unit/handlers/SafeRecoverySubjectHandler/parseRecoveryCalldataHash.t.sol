@@ -22,7 +22,11 @@ contract SafeRecoverySubjectHandler_parseRecoveryCalldataHash_Test is SafeUnitBa
         skipIfNotSafeAccountType();
 
         uint256 invalidTemplateIdx = 1;
-        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         safeRecoverySubjectHandler.parseRecoveryCalldataHash(invalidTemplateIdx, subjectParams);
     }
 

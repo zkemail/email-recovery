@@ -15,14 +15,24 @@ contract EmailRecoverySubjectHandler_validateAcceptanceSubject_Test is UnitBase 
         subjectParams[0] = abi.encode(accountAddress);
         uint256 invalidTemplateIdx = 1;
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+            )
+        );
         emailRecoveryHandler.validateAcceptanceSubject(invalidTemplateIdx, subjectParams);
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
         bytes[] memory emptySubjectParams;
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidSubjectParams.selector,
+                emptySubjectParams.length,
+                1
+            )
+        );
         emailRecoveryHandler.validateAcceptanceSubject(templateIdx, emptySubjectParams);
     }
 
@@ -31,7 +41,11 @@ contract EmailRecoverySubjectHandler_validateAcceptanceSubject_Test is UnitBase 
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode("extra param");
 
-        vm.expectRevert(EmailRecoverySubjectHandler.InvalidSubjectParams.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoverySubjectHandler.InvalidSubjectParams.selector, subjectParams.length, 1
+            )
+        );
         emailRecoveryHandler.validateAcceptanceSubject(templateIdx, subjectParams);
     }
 

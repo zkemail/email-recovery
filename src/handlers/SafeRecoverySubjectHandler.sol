@@ -10,11 +10,11 @@ import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    error InvalidSubjectParams();
-    error InvalidTemplateIndex();
-    error InvalidOldOwner();
-    error InvalidNewOwner();
-    error InvalidRecoveryModule();
+    error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
+    error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
+    error InvalidOldOwner(address oldOwner);
+    error InvalidNewOwner(address newOwner);
+    error InvalidRecoveryModule(address recoveryModule);
 
     /**
      * @notice Returns a hard-coded two-dimensional array of strings representing the subject
@@ -107,10 +107,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (address)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
         if (subjectParams.length != 1) {
-            revert InvalidSubjectParams();
+            revert InvalidSubjectParams(subjectParams.length, 1);
         }
 
         // The GuardianStatus check in acceptGuardian implicitly
@@ -137,10 +137,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (address)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
         if (subjectParams.length != 4) {
-            revert InvalidSubjectParams();
+            revert InvalidSubjectParams(subjectParams.length, 4);
         }
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
@@ -150,12 +150,12 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
         bool isOldAddressOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
         if (!isOldAddressOwner) {
-            revert InvalidOldOwner();
+            revert InvalidOldOwner(oldOwnerInEmail);
         }
 
         bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
         if (newOwnerInEmail == address(0) || isNewAddressOwner) {
-            revert InvalidNewOwner();
+            revert InvalidNewOwner(newOwnerInEmail);
         }
 
         // Even though someone could use a malicious contract as the recoveryManager argument, it
@@ -165,7 +165,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address expectedRecoveryModule = EmailRecoveryManager(recoveryManager).emailRecoveryModule();
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
         {
-            revert InvalidRecoveryModule();
+            revert InvalidRecoveryModule(recoveryModuleInEmail);
         }
 
         return accountInEmail;
@@ -187,7 +187,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (bytes32)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
 
         address accountInEmail = abi.decode(subjectParams[0], (address));

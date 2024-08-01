@@ -24,7 +24,11 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
         // only one guardian added and one approval
 
-        vm.expectRevert(IEmailRecoveryManager.NotEnoughApprovals.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.NotEnoughApprovals.selector, guardianWeights[0], threshold
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
@@ -38,7 +42,13 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         // one second before it should be valid
         vm.warp(block.timestamp + delay - 1 seconds);
 
-        vm.expectRevert(IEmailRecoveryManager.DelayNotPassed.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.DelayNotPassed.selector,
+                block.timestamp,
+                block.timestamp + delay
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
@@ -50,11 +60,16 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        uint256 executeAfter = block.timestamp + expiry;
 
         // block.timestamp == recoveryRequest.executeBefore
         vm.warp(block.timestamp + expiry);
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
@@ -66,11 +81,16 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt2);
+        uint256 executeAfter = block.timestamp + expiry;
 
         // block.timestamp > recoveryRequest.executeBefore
         vm.warp(block.timestamp + expiry + 1 seconds);
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryRequestExpired.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress, recoveryCalldata);
     }
 
@@ -85,7 +105,13 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
         vm.warp(block.timestamp + delay);
 
-        vm.expectRevert(IEmailRecoveryManager.InvalidCalldataHash.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.InvalidCalldataHash.selector,
+                keccak256(invalidRecoveryCalldata),
+                calldataHash
+            )
+        );
         emailRecoveryManager.completeRecovery(accountAddress, invalidRecoveryCalldata);
     }
 

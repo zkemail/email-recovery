@@ -10,10 +10,10 @@ import { StringUtils } from "../libraries/StringUtils.sol";
  * This is the default subject handler that will work with any validator.
  */
 contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    error InvalidTemplateIndex();
-    error InvalidSubjectParams();
+    error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
+    error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
     error InvalidAccount();
-    error InvalidRecoveryModule();
+    error InvalidRecoveryModule(address recoveryModule);
 
     /**
      * @notice Returns a hard-coded two-dimensional array of strings representing the subject
@@ -102,10 +102,10 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (address)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
         if (subjectParams.length != 1) {
-            revert InvalidSubjectParams();
+            revert InvalidSubjectParams(subjectParams.length, 1);
         }
 
         // The GuardianStatus check in acceptGuardian implicitly
@@ -132,10 +132,10 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (address)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
         if (subjectParams.length != 3) {
-            revert InvalidSubjectParams();
+            revert InvalidSubjectParams(subjectParams.length, 3);
         }
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
@@ -155,7 +155,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address expectedRecoveryModule = EmailRecoveryManager(recoveryManager).emailRecoveryModule();
         if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
         {
-            revert InvalidRecoveryModule();
+            revert InvalidRecoveryModule(recoveryModuleInEmail);
         }
 
         return accountInEmail;
@@ -177,7 +177,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         returns (bytes32)
     {
         if (templateIdx != 0) {
-            revert InvalidTemplateIndex();
+            revert InvalidTemplateIndex(templateIdx, 0);
         }
 
         string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));

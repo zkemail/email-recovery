@@ -18,18 +18,18 @@ import { GuardianUtils } from "src/libraries/GuardianUtils.sol";
 // errors
 contract LogErrorSelectors_Test is Test {
     function test_EmailRecoverySubjectHandler_AssertSelectors() public {
-        assertEq(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
-        assertEq(EmailRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0xd743ae6c));
+        assertEq(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
+        assertEq(EmailRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025));
         assertEq(EmailRecoverySubjectHandler.InvalidAccount.selector, bytes4(0x6d187b28));
-        assertEq(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0x7f263111));
+        assertEq(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0xa01f773d));
     }
 
     function test_SafeRecoverySubjectHandler_AssertSelectors() public {
-        assertEq(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5abe71c9));
-        assertEq(SafeRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0xd743ae6c));
-        assertEq(SafeRecoverySubjectHandler.InvalidOldOwner.selector, bytes4(0xa9ab2692));
-        assertEq(SafeRecoverySubjectHandler.InvalidNewOwner.selector, bytes4(0x54a56786));
-        assertEq(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0x7f263111));
+        assertEq(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
+        assertEq(SafeRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025));
+        assertEq(SafeRecoverySubjectHandler.InvalidOldOwner.selector, bytes4(0x377abe51));
+        assertEq(SafeRecoverySubjectHandler.InvalidNewOwner.selector, bytes4(0x896d9ad0));
+        assertEq(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0xa01f773d));
     }
 
     function test_IEmailRecoveryManager_AssertSelectors() public {
@@ -43,16 +43,16 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.SetupAlreadyCalled.selector, bytes4(0xb3af5593));
         assertEq(IEmailRecoveryManager.AccountNotConfigured.selector, bytes4(0x66ecbd6d));
         assertEq(IEmailRecoveryManager.RecoveryModuleNotAuthorized.selector, bytes4(0xbfa7d2a9));
-        assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0x655a4874));
-        assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x12fa0714));
-        assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x8f8457ba));
+        assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0xb742a43c));
+        assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x50799cce));
+        assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x7c3e983c));
         assertEq(IEmailRecoveryManager.InvalidGuardianStatus.selector, bytes4(0x5689b51a));
         assertEq(IEmailRecoveryManager.InvalidAccountAddress.selector, bytes4(0x401b6ade));
         assertEq(IEmailRecoveryManager.NoRecoveryConfigured.selector, bytes4(0xa66e66b6));
-        assertEq(IEmailRecoveryManager.NotEnoughApprovals.selector, bytes4(0x24bcdbea));
-        assertEq(IEmailRecoveryManager.DelayNotPassed.selector, bytes4(0xc806ff6e));
-        assertEq(IEmailRecoveryManager.RecoveryRequestExpired.selector, bytes4(0x4c2babb1));
-        assertEq(IEmailRecoveryManager.InvalidCalldataHash.selector, bytes4(0xf05609de));
+        assertEq(IEmailRecoveryManager.NotEnoughApprovals.selector, bytes4(0x443282f5));
+        assertEq(IEmailRecoveryManager.DelayNotPassed.selector, bytes4(0x2f37ae39));
+        assertEq(IEmailRecoveryManager.RecoveryRequestExpired.selector, bytes4(0x566ad75e));
+        assertEq(IEmailRecoveryManager.InvalidCalldataHash.selector, bytes4(0x54d53855));
         assertEq(IEmailRecoveryManager.NoRecoveryInProcess.selector, bytes4(0x87434f51));
         assertEq(IEmailRecoveryManager.NotRecoveryModule.selector, bytes4(0x2f6ef3d6));
         assertEq(IEmailRecoveryManager.SetupNotCalled.selector, bytes4(0xae69115b));
@@ -97,13 +97,13 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_GuardianUtils_AssertSelectors() public {
-        assertEq(GuardianUtils.IncorrectNumberOfWeights.selector, bytes4(0xf4a950ef));
+        assertEq(GuardianUtils.IncorrectNumberOfWeights.selector, bytes4(0x166e79bd));
         assertEq(GuardianUtils.ThresholdCannotBeZero.selector, bytes4(0xf4124166));
-        assertEq(GuardianUtils.InvalidGuardianAddress.selector, bytes4(0x1b081054));
+        assertEq(GuardianUtils.InvalidGuardianAddress.selector, bytes4(0x1af74975));
         assertEq(GuardianUtils.InvalidGuardianWeight.selector, bytes4(0x148f78e0));
         assertEq(GuardianUtils.AddressAlreadyGuardian.selector, bytes4(0xe4e1614e));
-        assertEq(GuardianUtils.ThresholdExceedsTotalWeight.selector, bytes4(0x3c7a2aad));
-        assertEq(GuardianUtils.StatusCannotBeTheSame.selector, bytes4(0x115e823f));
+        assertEq(GuardianUtils.ThresholdExceedsTotalWeight.selector, bytes4(0xeb912f71));
+        assertEq(GuardianUtils.StatusCannotBeTheSame.selector, bytes4(0x7e120711));
         assertEq(GuardianUtils.SetupNotCalled.selector, bytes4(0xae69115b));
         assertEq(GuardianUtils.AddressNotGuardianForAccount.selector, bytes4(0xf3f77749));
     }

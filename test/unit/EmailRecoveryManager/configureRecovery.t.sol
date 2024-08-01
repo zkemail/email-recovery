@@ -78,7 +78,13 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
         address[] memory zeroGuardians;
 
-        vm.expectRevert(GuardianUtils.IncorrectNumberOfWeights.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.IncorrectNumberOfWeights.selector,
+                zeroGuardians.length,
+                guardianWeights.length
+            )
+        );
         emailRecoveryManager.configureRecovery(
             zeroGuardians, guardianWeights, threshold, delay, expiry
         );
@@ -90,7 +96,13 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
         uint256[] memory zeroGuardianWeights;
 
-        vm.expectRevert(GuardianUtils.IncorrectNumberOfWeights.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.IncorrectNumberOfWeights.selector,
+                guardians.length,
+                zeroGuardianWeights.length
+            )
+        );
         emailRecoveryManager.configureRecovery(
             guardians, zeroGuardianWeights, threshold, delay, expiry
         );
@@ -108,7 +120,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         );
     }
 
-    function test_ConfigureRecovery_RevetrWhen_NoGuardians() public {
+    function test_ConfigureRecovery_RevertWhen_NoGuardians() public {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.startPrank(accountAddress);
         emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
@@ -116,7 +128,9 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         address[] memory zeroGuardians;
         uint256[] memory zeroGuardianWeights;
 
-        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(GuardianUtils.ThresholdExceedsTotalWeight.selector, threshold, 0)
+        );
         emailRecoveryManager.configureRecovery(
             zeroGuardians, zeroGuardianWeights, threshold, delay, expiry
         );

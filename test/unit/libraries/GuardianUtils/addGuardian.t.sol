@@ -20,7 +20,11 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
         address invalidGuardianAddress = address(0);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.InvalidGuardianAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.InvalidGuardianAddress.selector, invalidGuardianAddress
+            )
+        );
         emailRecoveryManager.addGuardian(invalidGuardianAddress, guardianWeights[0]);
     }
 
@@ -28,7 +32,11 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
         address invalidGuardianAddress = accountAddress;
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.InvalidGuardianAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GuardianUtils.InvalidGuardianAddress.selector, invalidGuardianAddress
+            )
+        );
         emailRecoveryManager.addGuardian(invalidGuardianAddress, guardianWeights[0]);
     }
 
