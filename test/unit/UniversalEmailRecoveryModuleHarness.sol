@@ -18,18 +18,6 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
     { }
 
-    function exposed_configureRecovery(
-        address[] memory guardians,
-        uint256[] memory weights,
-        uint256 threshold,
-        uint256 delay,
-        uint256 expiry
-    )
-        external
-    {
-        configureRecovery(guardians, weights, threshold, delay, expiry);
-    }
-
     function exposed_acceptGuardian(
         address guardian,
         uint256 templateIdx,

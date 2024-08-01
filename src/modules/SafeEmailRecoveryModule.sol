@@ -3,59 +3,54 @@ pragma solidity ^0.8.25;
 
 import { ISafe } from "../interfaces/ISafe.sol";
 import { Enum } from "@safe-global/safe-contracts/contracts/common/Enum.sol";
+import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /**
  * A safe module that recovers a safe owner via ZK Email
  */
-contract SafeEmailRecoveryModule {
+contract SafeEmailRecoveryModule is EmailRecoveryManager {
     bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
-
-    /**
-     * Trusted email recovery manager contract that handles recovery requests
-     */
-    address public immutable emailRecoveryManager;
 
     event RecoveryExecuted(address indexed account);
 
-    error ModuleEnabledCheckFailed(address account, address module);
-    error NotTrustedRecoveryManager();
     error InvalidSelector(bytes4 selector);
     error RecoveryFailed(address account);
 
-    constructor(address _emailRecoveryManager) {
-        emailRecoveryManager = _emailRecoveryManager;
-    }
+    constructor(
+        address verifier,
+        address dkimRegistry,
+        address emailAuthImpl,
+        address subjectHandler
+    )
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+    { }
 
     /**
-     * Check if the recovery module is authorized to recover the account
+     * Check if a recovery request can be initiated based on guardian acceptance
      * @param account The smart account to check
-     * @return true if the module is authorized, false otherwise
+     * @return true if the recovery request can be started, false otherwise
      */
-    function isAuthorizedToRecover(address account) external returns (bool) {
-        (bool success, bytes memory returnData) = ISafe(account).execTransactionFromModuleReturnData({
-            to: account,
-            value: 0,
-            data: abi.encodeWithSignature("isModuleEnabled(address)", address(this)),
-            operation: uint8(Enum.Operation.Call)
-        });
-        if (!success) {
-            revert ModuleEnabledCheckFailed(account, address(this));
-        }
-        return abi.decode(returnData, (bool));
+    function canStartRecoveryRequest(address account) external view returns (bool) {
+        GuardianConfig memory guardianConfig = getGuardianConfig(account);
+
+        return guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /**
      * @notice Executes recovery on a Safe account. Must be called by the trusted recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryCalldata The recovery calldata that should be executed on the Safe
+     * @param recoveryData The recovery calldata that should be executed on the Safe
      * being recovered
      */
-    function recover(address account, bytes calldata recoveryCalldata) public {
-        if (msg.sender != emailRecoveryManager) {
-            revert NotTrustedRecoveryManager();
+    function recover(address account, bytes calldata recoveryData) internal override {
+        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
+        // FIXME: What if you use this module with a different subject handler? It could chose
+        // not to encode the account/validator along with the calldata
+        bytes4 calldataSelector;
+        assembly {
+            calldataSelector := mload(add(recoveryCalldata, 32))
         }
 
-        bytes4 calldataSelector = bytes4(recoveryCalldata[:4]);
         if (calldataSelector != selector) {
             revert InvalidSelector(calldataSelector);
         }

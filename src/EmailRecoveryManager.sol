@@ -201,7 +201,7 @@ abstract contract EmailRecoveryManager is
         uint256 delay,
         uint256 expiry
     )
-        internal
+        public
     {
         address account = msg.sender;
 
