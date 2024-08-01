@@ -8,7 +8,7 @@ import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
-contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
+contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
     function setUp() public override {
         super.setUp();
     }
@@ -67,7 +67,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, IERC7579Account.execute.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            IERC7579Account.execute.selector
         );
     }
 
@@ -78,7 +83,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, ISafe.setFallbackHandler.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.setFallbackHandler.selector
         );
     }
 
@@ -89,7 +99,12 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
             )
         );
         new EmailRecoveryModule(
-            emailRecoveryManagerAddress, validatorAddress, ISafe.setGuard.selector
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.setGuard.selector
         );
     }
 
