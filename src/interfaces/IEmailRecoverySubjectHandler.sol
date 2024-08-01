@@ -36,5 +36,13 @@ interface IEmailRecoverySubjectHandler {
     )
         external
         view
-        returns (address, bytes32);
+        returns (address);
+
+    function parseRecoveryCalldataHash(
+        uint256 templateIdx,
+        bytes[] memory subjectParams
+    )
+        external
+        view
+        returns (bytes32);
 }

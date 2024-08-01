@@ -10,8 +10,11 @@ import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 library GuardianUtils {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
-    event AddedGuardian(address indexed account, address indexed guardian);
-    event RemovedGuardian(address indexed account, address indexed guardian);
+    event AddedGuardian(address indexed account, address indexed guardian, uint256 weight);
+    event GuardianStatusUpdated(
+        address indexed account, address indexed guardian, GuardianStatus newStatus
+    );
+    event RemovedGuardian(address indexed account, address indexed guardian, uint256 weight);
     event ChangedThreshold(address indexed account, uint256 threshold);
 
     error IncorrectNumberOfWeights();
@@ -19,10 +22,10 @@ library GuardianUtils {
     error InvalidGuardianAddress();
     error InvalidGuardianWeight();
     error AddressAlreadyGuardian();
-    error ThresholdCannotExceedTotalWeight();
+    error ThresholdExceedsTotalWeight();
     error StatusCannotBeTheSame();
     error SetupNotCalled();
-    error UnauthorizedAccountForGuardian();
+    error AddressNotGuardianForAccount();
 
     /**
      * @notice Retrieves the guardian storage details for a given guardian and account
@@ -56,11 +59,12 @@ library GuardianUtils {
         mapping(address => IEmailRecoveryManager.GuardianConfig) storage guardianConfigs,
         mapping(address => EnumerableGuardianMap.AddressToGuardianMap) storage guardiansStorage,
         address account,
-        address[] memory guardians,
-        uint256[] memory weights,
+        address[] calldata guardians,
+        uint256[] calldata weights,
         uint256 threshold
     )
         internal
+        returns (uint256, uint256)
     {
         uint256 guardianCount = guardians.length;
 
@@ -72,44 +76,18 @@ library GuardianUtils {
             revert ThresholdCannotBeZero();
         }
 
-        uint256 totalWeight = 0;
         for (uint256 i = 0; i < guardianCount; i++) {
-            address guardian = guardians[i];
-            uint256 weight = weights[i];
-
-            if (guardian == address(0) || guardian == account) {
-                revert InvalidGuardianAddress();
-            }
-
-            // As long as weights are 1 or above, there will be enough total weight to reach the
-            // required threshold. This is because we check the guardian count cannot be less
-            // than the threshold and there is an equal amount of guardians to weights.
-            if (weight == 0) {
-                revert InvalidGuardianWeight();
-            }
-
-            GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-            if (guardianStorage.status != GuardianStatus.NONE) {
-                revert AddressAlreadyGuardian();
-            }
-
-            guardiansStorage[account].set({
-                key: guardian,
-                value: GuardianStorage(GuardianStatus.REQUESTED, weight)
-            });
-            totalWeight += weight;
+            addGuardian(guardiansStorage, guardianConfigs, account, guardians[i], weights[i]);
         }
 
+        uint256 totalWeight = guardianConfigs[account].totalWeight;
         if (threshold > totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
-        guardianConfigs[account] = IEmailRecoveryManager.GuardianConfig({
-            guardianCount: guardianCount,
-            totalWeight: totalWeight,
-            threshold: threshold,
-            initialized: true
-        });
+        guardianConfigs[account].threshold = threshold;
+
+        return (guardianCount, totalWeight);
     }
 
     /**
@@ -135,10 +113,12 @@ library GuardianUtils {
             key: guardian,
             value: GuardianStorage(newStatus, guardianStorage.weight)
         });
+        emit GuardianStatusUpdated(account, guardian, newStatus);
     }
 
     /**
      * @notice Adds a guardian for the caller's account with a specified weight
+     * @dev A guardian is added, but not accepted after this function has been called
      * @param guardianConfigs The guardian config storage associated with an account
      * @param account The address of the account associated with the guardian
      * @param guardian The address of the guardian to be added
@@ -153,34 +133,26 @@ library GuardianUtils {
     )
         internal
     {
-        // Initialized can only be false at initialization.
-        // Check ensures that setup function should be called first
-        if (!guardianConfigs[account].initialized) {
-            revert SetupNotCalled();
-        }
-
         if (guardian == address(0) || guardian == account) {
             revert InvalidGuardianAddress();
-        }
-
-        GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
-
-        if (guardianStorage.status != GuardianStatus.NONE) {
-            revert AddressAlreadyGuardian();
         }
 
         if (weight == 0) {
             revert InvalidGuardianWeight();
         }
 
-        guardiansStorage[account].set({
+        bool success = guardiansStorage[account].set({
             key: guardian,
             value: GuardianStorage(GuardianStatus.REQUESTED, weight)
         });
+        if (!success) {
+            revert AddressAlreadyGuardian();
+        }
+
         guardianConfigs[account].guardianCount++;
         guardianConfigs[account].totalWeight += weight;
 
-        emit AddedGuardian(account, guardian);
+        emit AddedGuardian(account, guardian, weight);
     }
 
     /**
@@ -200,25 +172,31 @@ library GuardianUtils {
         IEmailRecoveryManager.GuardianConfig memory guardianConfig = guardianConfigs[account];
         GuardianStorage memory guardianStorage = guardiansStorage[account].get(guardian);
 
-        bool isGuardian = guardianStorage.status != GuardianStatus.NONE;
-        if (!isGuardian) {
-            revert UnauthorizedAccountForGuardian();
+        bool success = guardiansStorage[account].remove(guardian);
+        if (!success) {
+            // false means that the guardian was not present in the map. This serves as a proxy that
+            // the account is not authorized to remove this guardian
+            revert AddressNotGuardianForAccount();
         }
 
         // Only allow guardian removal if threshold can still be reached.
         if (guardianConfig.totalWeight - guardianStorage.weight < guardianConfig.threshold) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
-        guardiansStorage[account].remove(guardian);
         guardianConfigs[account].guardianCount--;
         guardianConfigs[account].totalWeight -= guardianStorage.weight;
+        if (guardianStorage.status == GuardianStatus.ACCEPTED) {
+            guardianConfigs[account].acceptedWeight -= guardianStorage.weight;
+        }
 
-        emit RemovedGuardian(account, guardian);
+        emit RemovedGuardian(account, guardian, guardianStorage.weight);
     }
 
     /**
      * @notice Removes all guardians associated with an account
+     * @dev Does not remove guardian config, this should be modified at the same time as calling
+     * this function
      * @param account The address of the account associated with the guardians
      */
     function removeAllGuardians(
@@ -242,15 +220,15 @@ library GuardianUtils {
     )
         internal
     {
-        // Initialized can only be false at initialization.
+        // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
-        if (!guardianConfigs[account].initialized) {
+        if (guardianConfigs[account].threshold == 0) {
             revert SetupNotCalled();
         }
 
         // Validate that threshold is smaller than the total weight.
         if (threshold > guardianConfigs[account].totalWeight) {
-            revert ThresholdCannotExceedTotalWeight();
+            revert ThresholdExceedsTotalWeight();
         }
 
         // Guardian weight should be at least 1

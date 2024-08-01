@@ -189,6 +189,8 @@ The `recover()` function on the module is the key entry point where recovery is 
 
 When writing a custom subject handler, an account developer would likely chose to deploy a `EmailRecoveryModule` instance rather than a `UniversalEmailRecoveryModule` instance. This is because a custom subject handler would likely be specific to an validator implementation, so using the recovery module for specific validators is more appropriate than the generic recovery module.
 
+**Note:** This module is an executor and does not abide by the 4337 validation rules. The `onInstall` function breaks the validation rules and it is possible for it to be called during account deployment in the first userOp. So you cannot install this module during account deployment as onInstall will be called as part of the validation phase. Supporting executor initialization during account deployment is not mandated by ERC7579 - if required, install this module after the account has been setup.
+
 ### UniversalEmailRecoveryModule.sol
 A recovery module that recovers any validator.
 
@@ -197,6 +199,8 @@ The target validator and target selector are passed into the module when it is i
 The `recover()` function on the module is the key entry point where recovery is executed. This function must be called from the trusted recovery contract. The function that calls `recover()` from `EmailRecoveryManager.sol` is `completeRecovery()` which can be called by anyone, but normally the relayer. It is the final function that is called once a recovery request becomes valid.
 
 `completeRecovery()` calls into the account specific recovery module and can call executeFromExecutor to execute the account specific recovery logic. The call from the executor retains the context of the account so the `msg.sender` of the next call is the account itself. This simplifies access control in the validator being recovered as it can just do a `msg.sender` check.
+
+**Note:** This module is an executor and does not abide by the 4337 validation rules. The `onInstall` function breaks the validation rules and it is possible for it to be called during account deployment in the first userOp. So you cannot install this module during account deployment as `onInstall` will be called as part of the validation phase. Supporting executor initialization during account deployment is not mandated by ERC7579 - if required, install this module after the account has been setup.
 
 ### EmailRecoveryFactory.sol
 The factory for deploying new instances of `EmailRecoveryModule.sol` and associated managers and subject handlers. Because the relationship between the recovery module and manager is security critical, The factory ensures there is a tight coupling between a deployed module, and associated manager and subject handler.

@@ -57,6 +57,10 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     }
 
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
+        vm.prank(accountAddress);
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.stopPrank();
+
         guardianWeights[0] = 0;
 
         vm.expectRevert(GuardianUtils.InvalidGuardianWeight.selector);
@@ -81,7 +85,7 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
         emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, invalidThreshold
         );
@@ -90,13 +94,14 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_Succeeds() public {
         uint256 expectedGuardianCount = guardians.length;
         uint256 expectedTotalWeight = totalWeight;
+        uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold;
 
         vm.prank(accountAddress);
         instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        emailRecoveryManager.exposed_setupGuardians(
+        (uint256 guardianCount, uint256 totalWeight) = emailRecoveryManager.exposed_setupGuardians(
             accountAddress, guardians, guardianWeights, threshold
         );
 
@@ -113,11 +118,14 @@ contract GuardianUtils_setupGuardians_Test is UnitBase {
         assertEq(uint256(guardianStorage3.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage3.weight, guardianWeights[2]);
 
+        assertEq(guardianCount, expectedGuardianCount);
+        assertEq(totalWeight, expectedTotalWeight);
+
         IEmailRecoveryManager.GuardianConfig memory guardianConfig =
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
-        assertEq(guardianConfig.initialized, true);
     }
 }

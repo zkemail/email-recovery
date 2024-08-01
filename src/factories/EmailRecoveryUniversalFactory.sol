@@ -16,11 +16,20 @@ contract EmailRecoveryUniversalFactory {
     address public immutable verifier;
     address public immutable emailAuthImpl;
 
-    event EmailRecoveryModuleDeployed(
+    event UniversalEmailRecoveryModuleDeployed(
         address emailRecoveryModule, address emailRecoveryManager, address subjectHandler
     );
 
+    error InvalidVerifier();
+    error InvalidEmailAuthImpl();
+
     constructor(address _verifier, address _emailAuthImpl) {
+        if (_verifier == address(0)) {
+            revert InvalidVerifier();
+        }
+        if (_emailAuthImpl == address(0)) {
+            revert InvalidEmailAuthImpl();
+        }
         verifier = _verifier;
         emailAuthImpl = _emailAuthImpl;
     }
@@ -52,7 +61,7 @@ contract EmailRecoveryUniversalFactory {
         bytes32 subjectHandlerSalt,
         bytes32 recoveryManagerSalt,
         bytes32 recoveryModuleSalt,
-        bytes memory subjectHandlerBytecode,
+        bytes calldata subjectHandlerBytecode,
         address dkimRegistry
     )
         external
@@ -75,7 +84,9 @@ contract EmailRecoveryUniversalFactory {
 
         // Initialize recovery manager with module address
         EmailRecoveryManager(emailRecoveryManager).initialize(emailRecoveryModule);
-        emit EmailRecoveryModuleDeployed(emailRecoveryModule, emailRecoveryManager, subjectHandler);
+        emit UniversalEmailRecoveryModuleDeployed(
+            emailRecoveryModule, emailRecoveryManager, subjectHandler
+        );
 
         return (emailRecoveryModule, emailRecoveryManager, subjectHandler);
     }

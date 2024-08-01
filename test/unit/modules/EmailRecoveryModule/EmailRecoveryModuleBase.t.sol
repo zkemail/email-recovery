@@ -166,7 +166,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: validatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,

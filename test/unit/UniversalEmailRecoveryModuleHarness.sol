@@ -10,6 +10,21 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
 
     constructor(address emailRecoveryManager) UniversalEmailRecoveryModule(emailRecoveryManager) { }
 
+    function workaround_validatorsPush(address account, address validator) external {
+        validators[account].push(validator);
+        validatorCount[account]++;
+    }
+
+    function workaround_validatorsContains(
+        address account,
+        address validator
+    )
+        external
+        returns (bool)
+    {
+        return validators[account].contains(validator);
+    }
+
     function exposed_allowedSelectors(
         address validator,
         address account
@@ -19,16 +34,5 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         returns (bytes4)
     {
         return allowedSelectors[validator][account];
-    }
-
-    function exposed_selectorToValidator(
-        bytes4 selector,
-        address account
-    )
-        external
-        view
-        returns (address)
-    {
-        return selectorToValidator[selector][account];
     }
 }

@@ -19,6 +19,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
     function test_CompleteRecovery_RevertWhen_NotEnoughApprovals() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
         // only one guardian added and one approval

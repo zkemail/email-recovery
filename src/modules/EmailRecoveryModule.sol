@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
 
@@ -43,16 +44,28 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
      */
     mapping(address account => bool isAuthorized) internal authorized;
 
-    event RecoveryExecuted();
+    event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
+    error InvalidManager();
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
     error NotTrustedRecoveryManager();
     error RecoveryNotAuthorizedForAccount();
 
     constructor(address _emailRecoveryManager, address _validator, bytes4 _selector) {
-        if (_selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector) {
+        if (_emailRecoveryManager == address(0)) {
+            revert InvalidManager();
+        }
+        if (_validator == address(0)) {
+            revert InvalidValidator(_validator);
+        }
+        if (
+            _selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector
+                || _selector == IERC7579Account.execute.selector
+                || _selector == ISafe.setFallbackHandler.selector
+                || _selector == ISafe.setGuard.selector || _selector == bytes4(0)
+        ) {
             revert InvalidSelector(_selector);
         }
 
@@ -67,9 +80,11 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
     /**
      * Initializes the module with the threshold and guardians
-     * @dev data is encoded as follows: abi.encode(isInstalledContext,
-     * guardians, weights, threshold, delay, expiry)
-     *
+     * @dev You cannot install this module during account deployment as it breaks the 4337
+     * validation rules. ERC7579 does not mandate that executors abide by the validation rules
+     * during account setup  - if required, install this module after the account has been setup. The
+     * data is encoded as follows: abi.encode(isInstalledContext, guardians, weights, threshold,
+     * delay, expiry)
      * @param data encoded data for recovery configuration
      */
     function onInstall(bytes calldata data) external {
@@ -112,21 +127,32 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
     /**
      * Check if the module is initialized
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) external view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
-            != 0;
+    function isInitialized(address account) external view returns (bool) {
+        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account).threshold != 0;
     }
 
     /**
      * Check if the recovery module is authorized to recover the account
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is authorized, false otherwise
      */
-    function isAuthorizedToRecover(address smartAccount) external view returns (bool) {
-        return authorized[smartAccount];
+    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
+        return authorized[account];
+    }
+
+    /**
+     * Check if a recovery request can be initiated based on guardian acceptance
+     * @param account The smart account to check
+     * @return true if the recovery request can be started, false otherwise
+     */
+    function canStartRecoveryRequest(address account) external view returns (bool) {
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account);
+
+        return guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -155,15 +181,7 @@ contract EmailRecoveryModule is ERC7579ExecutorBase, IEmailRecoveryModule {
 
         _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
 
-        emit RecoveryExecuted();
-    }
-
-    /**
-     * @notice Returns the address of the trusted recovery manager.
-     * @return address The address of the email recovery manager.
-     */
-    function getTrustedRecoveryManager() external view returns (address) {
-        return emailRecoveryManager;
+        emit RecoveryExecuted(account, validator);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

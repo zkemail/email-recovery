@@ -95,6 +95,10 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryConfigUpdated(
+            accountAddress, recoveryConfig.delay, recoveryConfig.expiry
+        );
         emailRecoveryManager.updateRecoveryConfig(recoveryConfig);
 
         recoveryConfig = emailRecoveryManager.getRecoveryConfig(accountAddress);

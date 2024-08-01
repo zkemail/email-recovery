@@ -10,6 +10,12 @@ contract UniversalEmailRecoveryManager_constructor_Test is UnitBase {
         super.setUp();
     }
 
+    function test_Constructor_RevertWhen_InvalidManager() public {
+        address invalidManager = address(0);
+        vm.expectRevert(UniversalEmailRecoveryModule.InvalidManager.selector);
+        new UniversalEmailRecoveryModule(invalidManager);
+    }
+
     function test_Constructor() public {
         UniversalEmailRecoveryModule emailRecoveryModule =
             new UniversalEmailRecoveryModule(emailRecoveryManagerAddress);

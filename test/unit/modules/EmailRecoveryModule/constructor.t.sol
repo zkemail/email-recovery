@@ -3,12 +3,28 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
+import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_Constructor_RevertWhen_InvalidManager() public {
+        address invalidManager = address(0);
+        vm.expectRevert(EmailRecoveryModule.InvalidManager.selector);
+        new EmailRecoveryModule(invalidManager, validatorAddress, functionSelector);
+    }
+
+    function test_Constructor_RevertWhen_InvalidValidator() public {
+        address invalidValidator = address(0);
+        vm.expectRevert(
+            abi.encodeWithSelector(EmailRecoveryModule.InvalidValidator.selector, invalidValidator)
+        );
+        new EmailRecoveryModule(emailRecoveryManagerAddress, invalidValidator, functionSelector);
     }
 
     function test_Constructor_RevertWhen_UnsafeOnInstallSelector() public {
@@ -31,6 +47,46 @@ contract EmailRecoveryManager_constructor_Test is EmailRecoveryModuleBase {
         new EmailRecoveryModule(
             emailRecoveryManagerAddress, validatorAddress, IModule.onUninstall.selector
         );
+    }
+
+    function test_Constructor_RevertWhen_UnsafeExecuteSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoveryModule.InvalidSelector.selector, IERC7579Account.execute.selector
+            )
+        );
+        new EmailRecoveryModule(
+            emailRecoveryManagerAddress, validatorAddress, IERC7579Account.execute.selector
+        );
+    }
+
+    function test_Constructor_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoveryModule.InvalidSelector.selector, ISafe.setFallbackHandler.selector
+            )
+        );
+        new EmailRecoveryModule(
+            emailRecoveryManagerAddress, validatorAddress, ISafe.setFallbackHandler.selector
+        );
+    }
+
+    function test_Constructor_RevertWhen_UnsafeSetGuardSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
+            )
+        );
+        new EmailRecoveryModule(
+            emailRecoveryManagerAddress, validatorAddress, ISafe.setGuard.selector
+        );
+    }
+
+    function test_Constructor_RevertWhen_InvalidSelector() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, bytes4(0))
+        );
+        new EmailRecoveryModule(emailRecoveryManagerAddress, validatorAddress, bytes4(0));
     }
 
     function test_Constructor() public {

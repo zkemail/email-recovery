@@ -21,6 +21,16 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
+    function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
+        skipIfNotSafeAccountType();
+        uint256 invalidTemplateIdx = 1;
+
+        vm.expectRevert(SafeRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        safeRecoverySubjectHandler.validateRecoverySubject(
+            invalidTemplateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
         skipIfNotSafeAccountType();
         bytes[] memory emptySubjectParams;
@@ -56,9 +66,19 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         );
     }
 
-    function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
+    function test_ValidateRecoverySubject_RevertWhen_ZeroNewOwner() public {
         skipIfNotSafeAccountType();
         subjectParams[2] = abi.encode(address(0));
+
+        vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
+        safeRecoverySubjectHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
+    }
+
+    function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
+        skipIfNotSafeAccountType();
+        subjectParams[2] = abi.encode(owner1);
 
         vm.expectRevert(SafeRecoverySubjectHandler.InvalidNewOwner.selector);
         safeRecoverySubjectHandler.validateRecoverySubject(
@@ -90,9 +110,9 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
 
     function test_ValidateRecoverySubject_Succeeds() public {
         skipIfNotSafeAccountType();
-        (address accountFromEmail, bytes32 calldataHashFromEmail) = safeRecoverySubjectHandler
-            .validateRecoverySubject(templateIdx, subjectParams, emailRecoveryManagerAddress);
+        address accountFromEmail = safeRecoverySubjectHandler.validateRecoverySubject(
+            templateIdx, subjectParams, emailRecoveryManagerAddress
+        );
         assertEq(accountFromEmail, accountAddress1);
-        assertEq(calldataHashFromEmail, calldataHash);
     }
 }

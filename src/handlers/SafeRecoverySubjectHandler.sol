@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
@@ -11,9 +10,8 @@ import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    using Strings for uint256;
-
     error InvalidSubjectParams();
+    error InvalidTemplateIndex();
     error InvalidOldOwner();
     error InvalidNewOwner();
     error InvalidRecoveryModule();
@@ -68,7 +66,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the acceptance email.
      */
     function extractRecoveredAccountFromAcceptanceSubject(
-        bytes[] memory subjectParams,
+        bytes[] calldata subjectParams,
         uint256 /* templateIdx */
     )
         public
@@ -84,7 +82,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the recovery email.
      */
     function extractRecoveredAccountFromRecoverySubject(
-        bytes[] memory subjectParams,
+        bytes[] calldata subjectParams,
         uint256 /* templateIdx */
     )
         public
@@ -96,18 +94,24 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     /**
      * @notice Validates the subject params for an acceptance email
-     * @param subjectParams The subject parameters of the recovery email.
+     * @param templateIdx The index of the template used for acceptance
+     * @param subjectParams The subject parameters of the recovery email
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
-        uint256, /* templateIdx */
+        uint256 templateIdx,
         bytes[] calldata subjectParams
     )
         external
         pure
         returns (address)
     {
-        if (subjectParams.length != 1) revert InvalidSubjectParams();
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+        if (subjectParams.length != 1) {
+            revert InvalidSubjectParams();
+        }
 
         // The GuardianStatus check in acceptGuardian implicitly
         // validates the account, so no need to re-validate here
@@ -118,21 +122,23 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
     /**
      * @notice Validates the subject params for an acceptance email
-     * @param subjectParams The subject parameters of the recovery email.
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams The subject parameters of the recovery email
      * @param recoveryManager The recovery manager address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
-     * @return calldataHash The keccak256 hash of the recovery calldata. Verified against later when
-     * recovery is executed
      */
     function validateRecoverySubject(
-        uint256, /* templateIdx */
+        uint256 templateIdx,
         bytes[] calldata subjectParams,
         address recoveryManager
     )
         public
         view
-        returns (address, bytes32)
+        returns (address)
     {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
         if (subjectParams.length != 4) {
             revert InvalidSubjectParams();
         }
@@ -142,12 +148,13 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address newOwnerInEmail = abi.decode(subjectParams[2], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[3], (address));
 
-        bool isOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
-        if (!isOwner) {
+        bool isOldAddressOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
+        if (!isOldAddressOwner) {
             revert InvalidOldOwner();
         }
 
-        if (newOwnerInEmail == address(0)) {
+        bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
+        if (newOwnerInEmail == address(0) || isNewAddressOwner) {
             revert InvalidNewOwner();
         }
 
@@ -161,15 +168,40 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidRecoveryModule();
         }
 
+        return accountInEmail;
+    }
+
+    /**
+     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * verified against later when recovery is executed
+     * @param templateIdx The index of the template used for the recovery request
+     * @param subjectParams The subject parameters of the recovery email
+     * @return calldataHash The keccak256 hash of the recovery calldata
+     */
+    function parseRecoveryCalldataHash(
+        uint256 templateIdx,
+        bytes[] calldata subjectParams
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        if (templateIdx != 0) {
+            revert InvalidTemplateIndex();
+        }
+
+        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
+        address newOwnerInEmail = abi.decode(subjectParams[2], (address));
+
         address previousOwnerInLinkedList =
             getPreviousOwnerInLinkedList(accountInEmail, oldOwnerInEmail);
         string memory functionSignature = "swapOwner(address,address,address)";
         bytes memory recoveryCallData = abi.encodeWithSignature(
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        bytes32 calldataHash = keccak256(recoveryCallData);
-
-        return (accountInEmail, calldataHash);
+        bytes memory recoveryData = abi.encode(accountInEmail, recoveryCallData);
+        return keccak256(recoveryData);
     }
 
     /**

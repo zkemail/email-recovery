@@ -16,16 +16,6 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
         super.setUp();
     }
 
-    function test_AddGuardian_RevertWhen_SetupNotCalled() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.stopPrank();
-
-        vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.SetupNotCalled.selector);
-        emailRecoveryManager.addGuardian(guardians[0], guardianWeights[0]);
-    }
-
     function test_AddGuardian_RevertWhen_InvalidGuardianAddress() public {
         address invalidGuardianAddress = address(0);
 
@@ -63,11 +53,12 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
 
         uint256 expectedGuardianCount = guardians.length + 1;
         uint256 expectedTotalWeight = totalWeight + newGuardianWeight;
+        uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold; // same threshold
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit GuardianUtils.AddedGuardian(accountAddress, newGuardian);
+        emit GuardianUtils.AddedGuardian(accountAddress, newGuardian, newGuardianWeight);
         emailRecoveryManager.addGuardian(newGuardian, newGuardianWeight);
 
         GuardianStorage memory guardianStorage =
@@ -79,6 +70,7 @@ contract GuardianUtils_addGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
+        assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
         assertEq(guardianConfig.threshold, expectedThreshold);
     }
 }

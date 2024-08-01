@@ -20,7 +20,7 @@ contract GuardianUtils_changeThreshold_Test is UnitBase {
         uint256 highThreshold = totalWeight + 1;
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
         emailRecoveryManager.changeThreshold(highThreshold);
     }
 

@@ -23,17 +23,9 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
-    function test_AcceptGuardian_RevertWhen_InvalidTemplateIndex() public {
-        uint256 invalidTemplateIdx = 1;
-
-        vm.expectRevert(IEmailRecoveryManager.InvalidTemplateIndex.selector);
-        emailRecoveryManager.exposed_acceptGuardian(
-            guardian1, invalidTemplateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_AcceptGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -87,6 +79,8 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     }
 
     function test_AcceptGuardian_Succeeds() public {
+        vm.expectEmit();
+        emit IEmailRecoveryManager.GuardianAccepted(accountAddress, guardian1);
         emailRecoveryManager.exposed_acceptGuardian(
             guardian1, templateIdx, subjectParams, nullifier
         );
@@ -95,5 +89,9 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardian(accountAddress, guardian1);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage.weight, uint256(1));
+
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            emailRecoveryManager.getGuardianConfig(accountAddress);
+        assertEq(guardianConfig.acceptedWeight, guardianStorage.weight);
     }
 }

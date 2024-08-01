@@ -29,17 +29,11 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
-    function test_ProcessRecovery_RevertWhen_InvalidTemplateIndex() public {
-        uint256 invalidTemplateIdx = 1;
-
-        vm.expectRevert(IEmailRecoveryManager.InvalidTemplateIndex.selector);
-        emailRecoveryManager.exposed_processRecovery(
-            guardian1, invalidTemplateIdx, subjectParams, nullifier
-        );
-    }
-
     function test_ProcessRecovery_RevertWhen_GuardianStatusIsNONE() public {
         address invalidGuardian = address(1);
+
+        acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
 
         // invalidGuardian has not been configured nor accepted, so the guardian status is NONE
         vm.expectRevert(
@@ -55,6 +49,9 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     }
 
     function test_ProcessRecovery_RevertWhen_GuardianStatusIsREQUESTED() public {
+        acceptGuardian(accountSalt2);
+        acceptGuardian(accountSalt3);
+
         // Valid guardian but we haven't called acceptGuardian(), so the guardian
         // status is still REQUESTED
         vm.expectRevert(
@@ -80,10 +77,43 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         );
     }
 
+    function test_ProcessRecovery_RevertWhen_ThresholdExceedsAcceptedWeight() public {
+        // total weight = 4
+        // threshold = 3
+        // useable weight from accepted guardians = 0
+
+        acceptGuardian(accountSalt1); // weight = 1
+        acceptGuardian(accountSalt2); // weight = 2
+
+        // total weight = 4
+        // threshold = 3
+        // useable weight from accepted guardians = 3
+
+        address newGuardian = address(1);
+        uint256 newWeight = 1;
+        uint256 newThreshold = 5;
+
+        vm.startPrank(accountAddress);
+        emailRecoveryManager.addGuardian(newGuardian, newWeight);
+        emailRecoveryManager.changeThreshold(newThreshold);
+        vm.stopPrank();
+        // total weight = 5
+        // threshold = 5
+        // useable weight from accepted guardians = 3
+
+        vm.warp(12 seconds);
+
+        vm.expectRevert(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector);
+        emailRecoveryManager.exposed_processRecovery(
+            guardian2, templateIdx, subjectParams, nullifier
+        );
+    }
+
     function test_ProcessRecovery_IncreasesTotalWeight() public {
         uint256 guardian1Weight = guardianWeights[0];
 
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
 
         emailRecoveryManager.exposed_processRecovery(
             guardian1, templateIdx, subjectParams, nullifier
@@ -108,6 +138,14 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
         // Call processRecovery with guardian2 which increases currentWeight to >= threshold
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryProcessed(
+            accountAddress,
+            guardian2,
+            block.timestamp + delay,
+            block.timestamp + expiry,
+            calldataHash
+        );
         emailRecoveryManager.exposed_processRecovery(
             guardian2, templateIdx, subjectParams, nullifier
         );

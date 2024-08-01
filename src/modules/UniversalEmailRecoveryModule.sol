@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
+import { ISafe } from "../interfaces/ISafe.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { IUniversalEmailRecoveryModule } from "../interfaces/IUniversalEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "../interfaces/IEmailRecoveryManager.sol";
@@ -36,11 +37,17 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     address public immutable emailRecoveryManager;
 
-    event NewValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
-    event RemovedValidatorRecovery(address indexed validatorModule, bytes4 recoverySelector);
-    event RecoveryExecuted();
+    event NewValidatorRecovery(
+        address indexed account, address indexed validator, bytes4 recoverySelector
+    );
+    event RemovedValidatorRecovery(
+        address indexed account, address indexed validator, bytes4 recoverySelector
+    );
+    event RecoveryExecuted(address indexed account, address indexed validator);
 
+    error InvalidManager();
     error InvalidSelector(bytes4 selector);
+    error RecoveryModuleNotInitialized();
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
     error MaxValidatorsReached();
@@ -60,29 +67,38 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
         allowedSelectors;
-    /**
-     * function selector to account address to validator address
-     */
-    mapping(bytes4 selector => mapping(address account => address validator)) internal
-        selectorToValidator;
-
-    constructor(address _emailRecoveryManager) {
-        emailRecoveryManager = _emailRecoveryManager;
-    }
 
     /**
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
      * "onInstall" or "onUninstall"
      */
-    modifier withoutUnsafeSelector(bytes4 recoverySelector) {
+    modifier withoutUnsafeSelector(bytes4 selector) {
         if (
-            recoverySelector == IModule.onUninstall.selector
-                || recoverySelector == IModule.onInstall.selector
+            selector == IModule.onUninstall.selector || selector == IModule.onInstall.selector
+                || selector == IERC7579Account.execute.selector
+                || selector == ISafe.setFallbackHandler.selector || selector == ISafe.setGuard.selector
+                || selector == bytes4(0)
         ) {
-            revert InvalidSelector(recoverySelector);
+            revert InvalidSelector(selector);
         }
-
         _;
+    }
+
+    /**
+     * @notice Modifier to check whether the recovery module is initialized
+     */
+    modifier onlyWhenInitialized() {
+        if (!validators[msg.sender].alreadyInitialized()) {
+            revert RecoveryModuleNotInitialized();
+        }
+        _;
+    }
+
+    constructor(address _emailRecoveryManager) {
+        if (_emailRecoveryManager == address(0)) {
+            revert InvalidManager();
+        }
+        emailRecoveryManager = _emailRecoveryManager;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -91,9 +107,11 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
     /**
      * Initializes the module with the threshold and guardians
-     * @dev data is encoded as follows: abi.encode(validator, isInstalledContext, initialSelector,
+     * @dev You cannot install this module during account deployment as it breaks the 4337
+     * validation rules. ERC7579 does not mandate that executors abide by the validation rules
+     * during account setup - if required, install this module after the account has been setup. The
+     * data is encoded as follows: abi.encode(validator, isInstalledContext, initialSelector,
      * guardians, weights, threshold, delay, expiry)
-     *
      * @param data encoded data for recovery configuration
      */
     function onInstall(bytes calldata data) external {
@@ -138,6 +156,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         bytes4 recoverySelector
     )
         public
+        onlyWhenInitialized
         withoutUnsafeSelector(recoverySelector)
     {
         if (
@@ -148,42 +167,34 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
             revert InvalidValidator(validator);
         }
 
-        if (validatorCount[msg.sender] > MAX_VALIDATORS) {
+        if (validatorCount[msg.sender] >= MAX_VALIDATORS) {
             revert MaxValidatorsReached();
         }
         validators[msg.sender].push(validator);
         validatorCount[msg.sender]++;
 
         allowedSelectors[validator][msg.sender] = recoverySelector;
-        selectorToValidator[recoverySelector][msg.sender] = validator;
-
-        emit NewValidatorRecovery({ validatorModule: validator, recoverySelector: recoverySelector });
+        emit NewValidatorRecovery({
+            account: msg.sender,
+            validator: validator,
+            recoverySelector: recoverySelector
+        });
     }
 
     /**
      * @notice Disallows a validator and function selector that has been configured for recovery
      * @param validator The validator to disallow
      * @param prevValidator The previous validator in the validators linked list
-     * @param isInstalledContext additional context data that the smart account may
-     * interpret to identifiy conditions under which the module is installed.
      * @param recoverySelector The function selector to disallow
      */
     function disallowValidatorRecovery(
         address validator,
         address prevValidator,
-        bytes memory isInstalledContext,
         bytes4 recoverySelector
     )
         public
+        onlyWhenInitialized
     {
-        if (
-            !IERC7579Account(msg.sender).isModuleInstalled(
-                TYPE_VALIDATOR, validator, isInstalledContext
-            )
-        ) {
-            revert InvalidValidator(validator);
-        }
-
         validators[msg.sender].pop(prevValidator, validator);
         validatorCount[msg.sender]--;
 
@@ -192,10 +203,10 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         }
 
         delete allowedSelectors[validator][msg.sender];
-        delete selectorToValidator[recoverySelector][msg.sender];
 
         emit RemovedValidatorRecovery({
-            validatorModule: validator,
+            account: msg.sender,
+            validator: validator,
             recoverySelector: recoverySelector
         });
     }
@@ -208,8 +219,6 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
 
         for (uint256 i; i < allowedValidators.length; i++) {
-            bytes4 allowedSelector = allowedSelectors[allowedValidators[i]][msg.sender];
-            delete selectorToValidator[allowedSelector][msg.sender];
             delete allowedSelectors[allowedValidators[i]][msg.sender];
         }
 
@@ -221,21 +230,41 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
     /**
      * Check if the module is initialized
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is initialized, false otherwise
      */
-    function isInitialized(address smartAccount) external view returns (bool) {
-        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(smartAccount).threshold
-            != 0;
+    function isInitialized(address account) public view returns (bool) {
+        return IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account).threshold != 0;
     }
 
     /**
      * Check if the recovery module is authorized to recover the account
-     * @param smartAccount The smart account to check
+     * @param account The smart account to check
      * @return true if the module is authorized, false otherwise
      */
-    function isAuthorizedToRecover(address smartAccount) external view returns (bool) {
-        return getAllowedValidators(smartAccount).length > 0;
+    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
+        return validatorCount[account] > 0;
+    }
+
+    /**
+     * Check if a recovery request can be initiated based on guardian acceptance
+     * @param account The smart account to check
+     * @param validator The validator to check
+     * @return true if the recovery request can be started, false otherwise
+     */
+    function canStartRecoveryRequest(
+        address account,
+        address validator
+    )
+        external
+        view
+        returns (bool)
+    {
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            IEmailRecoveryManager(emailRecoveryManager).getGuardianConfig(account);
+
+        return guardianConfig.acceptedWeight >= guardianConfig.threshold
+            && validators[account].contains(validator);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -245,17 +274,22 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
     /**
      * @notice Executes recovery on a validator. Must be called by the trusted recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryCalldata The recovery calldata that should be executed on the validator
-     * being recovered
+     * @param recoveryData The recovery calldata that should be executed on the validator being
+     * recovered, along with the target validator
      */
-    function recover(address account, bytes calldata recoveryCalldata) external {
+    function recover(address account, bytes calldata recoveryData) external {
         if (msg.sender != emailRecoveryManager) {
             revert NotTrustedRecoveryManager();
         }
 
-        bytes4 selector = bytes4(recoveryCalldata[:4]);
+        (address validator, bytes memory recoveryCalldata) =
+            abi.decode(recoveryData, (address, bytes));
 
-        address validator = selectorToValidator[selector][account];
+        bytes4 selector;
+        assembly {
+            selector := mload(add(recoveryCalldata, 32))
+        }
+
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {
             revert InvalidSelector(selector);
@@ -263,15 +297,7 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
 
         _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
 
-        emit RecoveryExecuted();
-    }
-
-    /**
-     * @notice Returns the address of the trusted recovery manager.
-     * @return address The address of the email recovery manager.
-     */
-    function getTrustedRecoveryManager() external view returns (address) {
-        return emailRecoveryManager;
+        emit RecoveryExecuted(account, validator);
     }
 
     /**
@@ -293,10 +319,10 @@ contract UniversalEmailRecoveryModule is ERC7579ExecutorBase, IUniversalEmailRec
      */
     function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
         address[] memory allowedValidators = getAllowedValidators(account);
-        uint256 allowedValidatorsLength = allowedValidators.length;
+        uint256 validatorsLength = allowedValidators.length;
 
-        bytes4[] memory selectors = new bytes4[](allowedValidatorsLength);
-        for (uint256 i; i < allowedValidatorsLength; i++) {
+        bytes4[] memory selectors = new bytes4[](validatorsLength);
+        for (uint256 i; i < validatorsLength; i++) {
             selectors[i] = allowedSelectors[allowedValidators[i]][account];
         }
 

@@ -17,6 +17,7 @@ contract EmailRecoveryManager_removeGuardian_Test is UnitBase {
         address guardian = guardian1;
 
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -38,6 +39,8 @@ contract EmailRecoveryManager_removeGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit GuardianUtils.RemovedGuardian(accountAddress, guardian, guardianWeights[0]);
         emailRecoveryManager.removeGuardian(guardian);
 
         GuardianStorage memory guardianStorage =
@@ -49,6 +52,7 @@ contract EmailRecoveryManager_removeGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length - 1);
         assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
+        assertEq(guardianConfig.acceptedWeight, 0); // 1 - 1 = 0
         assertEq(guardianConfig.threshold, threshold);
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_VALIDATOR, MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -19,28 +19,20 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         super.setUp();
     }
 
-    function test_DisallowValidatorRecovery_RevertWhen_InvalidValidator() public {
-        address[] memory allowedValidators =
-            emailRecoveryModule.getAllowedValidators(accountAddress);
-        address prevValidator = allowedValidators.findPrevious(validatorAddress);
+    function test_DisallowValidatorRecovery_RevertWhen_RecoveryModuleNotInitialized() public {
+        // Uninstall module so module is not initialized
+        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
-        OwnableValidator newValidator = new OwnableValidator();
-        address newValidatorAddress = address(newValidator);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
-            )
-        );
         vm.startPrank(accountAddress);
+        vm.expectRevert(UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector);
         emailRecoveryModule.disallowValidatorRecovery(
-            newValidatorAddress, prevValidator, bytes("0"), functionSelector
+            validatorAddress, address(1), functionSelector
         );
     }
 
     function test_DisallowValidatorRecovery_RevertWhen_InvalidPreviousValidator() public {
         OwnableValidator newValidator = new OwnableValidator();
-        address invalidPreviousOwner = address(newValidator);
+        address invalidPreviousValidator = address(newValidator);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(
@@ -49,7 +41,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, invalidPreviousOwner, "", functionSelector
+            validatorAddress, invalidPreviousValidator, functionSelector
         );
     }
 
@@ -60,7 +52,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
 
         address[] memory allowedValidators =
@@ -74,7 +66,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            newValidatorAddress, prevValidator, "", functionSelector
+            newValidatorAddress, prevValidator, functionSelector
         );
     }
 
@@ -92,7 +84,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
             )
         );
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", invalidSelector
+            validatorAddress, prevValidator, invalidSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -108,7 +100,25 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
+        );
+
+        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        assertEq(allowedValidators.length, 0);
+        assertEq(allowedSelectors.length, 0);
+    }
+
+    function test_DisallowValidatorRecovery_SucceedsWhenValidatorUninstalled() public {
+        instance.uninstallModule(MODULE_TYPE_VALIDATOR, validatorAddress, "");
+
+        address[] memory allowedValidators =
+            emailRecoveryModule.getAllowedValidators(accountAddress);
+        address prevValidator = allowedValidators.findPrevious(validatorAddress);
+
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.disallowValidatorRecovery(
+            validatorAddress, prevValidator, functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -124,7 +134,7 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
 
         vm.startPrank(accountAddress);
@@ -135,8 +145,14 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
         address prevValidator = allowedValidators.findPrevious(validatorAddress);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit UniversalEmailRecoveryModule.RemovedValidatorRecovery({
+            account: accountAddress,
+            validator: validatorAddress,
+            recoverySelector: functionSelector
+        });
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);

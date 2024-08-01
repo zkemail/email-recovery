@@ -13,10 +13,17 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         super.setUp();
     }
 
+    function test_CancelRecovery_RevertWhen_NoRecoveryInProcess() public {
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
+        emailRecoveryManager.cancelRecovery();
+    }
+
     function test_CancelRecovery_CannotCancelWrongRecoveryRequest() public {
         address otherAddress = address(99);
 
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -28,17 +35,13 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.calldataHash, "");
 
         vm.startPrank(otherAddress);
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
         emailRecoveryManager.cancelRecovery();
-
-        recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.calldataHash, "");
     }
 
     function test_CancelRecovery_PartialRequest_Succeeds() public {
         acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
 
@@ -74,6 +77,8 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.calldataHash, calldataHash);
 
         vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
         emailRecoveryManager.cancelRecovery();
 
         recoveryRequest = emailRecoveryManager.getRecoveryRequest(accountAddress);

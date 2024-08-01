@@ -37,6 +37,8 @@ contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
 
     function test_Recover_Succeeds() public {
         vm.startPrank(emailRecoveryManagerAddress);
+        vm.expectEmit();
+        emit EmailRecoveryModule.RecoveryExecuted(accountAddress, validatorAddress);
         emailRecoveryModule.recover(accountAddress, recoveryCalldata);
 
         address updatedOwner = validator.owners(accountAddress);

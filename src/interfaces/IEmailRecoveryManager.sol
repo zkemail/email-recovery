@@ -39,20 +39,33 @@ interface IEmailRecoveryManager {
      * Config should be maintained over subsequent recovery attempts unless explicitly modified
      */
     struct GuardianConfig {
-        uint256 guardianCount;
-        uint256 totalWeight;
-        uint256 threshold;
-        bool initialized;
+        uint256 guardianCount; // total count for all guardians
+        uint256 totalWeight; // combined weight for all guardians. Important for checking that
+            // thresholds are valid.
+        uint256 acceptedWeight; // combined weight for all accepted guardians. This is separated
+            // from totalWeight as it is important to prevent recovery starting without enough
+            // accepted guardians to meet the threshold. Storing this in a variable avoids the need
+            // to loop over accepted guardians whenever checking if a recovery attempt can be
+            // started without being broken
+        uint256 threshold; // the threshold required to successfully process a recovery attempt
     }
 
     /*//////////////////////////////////////////////////////////////////////////
                                     EVENTS
     //////////////////////////////////////////////////////////////////////////*/
 
-    event RecoveryConfigured(address indexed account, uint256 guardianCount);
+    event RecoveryConfigured(
+        address indexed account, uint256 guardianCount, uint256 totalWeight, uint256 threshold
+    );
     event RecoveryConfigUpdated(address indexed account, uint256 delay, uint256 expiry);
     event GuardianAccepted(address indexed account, address indexed guardian);
-    event RecoveryProcessed(address indexed account, uint256 executeAfter, uint256 executeBefore);
+    event RecoveryProcessed(
+        address indexed account,
+        address indexed guardian,
+        uint256 executeAfter,
+        uint256 executeBefore,
+        bytes32 calldataHash
+    );
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
     event RecoveryDeInitialized(address indexed account);
@@ -61,6 +74,9 @@ interface IEmailRecoveryManager {
                                     ERRORS
     //////////////////////////////////////////////////////////////////////////*/
 
+    error InvalidVerifier();
+    error InvalidDkimRegistry();
+    error InvalidEmailAuthImpl();
     error InvalidSubjectHandler();
     error InitializerNotDeployer();
     error InvalidRecoveryModule();
@@ -70,7 +86,7 @@ interface IEmailRecoveryManager {
     error RecoveryModuleNotAuthorized();
     error DelayMoreThanExpiry();
     error RecoveryWindowTooShort();
-    error InvalidTemplateIndex();
+    error ThresholdExceedsAcceptedWeight();
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
@@ -80,7 +96,9 @@ interface IEmailRecoveryManager {
     error DelayNotPassed();
     error RecoveryRequestExpired();
     error InvalidCalldataHash();
+    error NoRecoveryInProcess();
     error NotRecoveryModule();
+    error SetupNotCalled();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS

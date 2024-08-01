@@ -13,11 +13,11 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         super.setUp();
     }
 
-    function test_RemoveGuardian_RevertWhen_UnauthorizedAccountForGuardian() public {
+    function test_RemoveGuardian_RevertWhen_AddressNotGuardianForAccount() public {
         address unauthorizedAccount = guardian1;
 
         vm.startPrank(unauthorizedAccount);
-        vm.expectRevert(GuardianUtils.UnauthorizedAccountForGuardian.selector);
+        vm.expectRevert(GuardianUtils.AddressNotGuardianForAccount.selector);
         emailRecoveryManager.removeGuardian(guardian1);
     }
 
@@ -34,7 +34,7 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
 
         vm.startPrank(accountAddress);
-        vm.expectRevert(GuardianUtils.ThresholdCannotExceedTotalWeight.selector);
+        vm.expectRevert(GuardianUtils.ThresholdExceedsTotalWeight.selector);
         emailRecoveryManager.removeGuardian(guardian);
     }
 
@@ -48,8 +48,6 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
         // (totalWeight - weight == 4 - 1) = 3
         // (weight < threshold == 3 < 3) = succeeds
 
-        acceptGuardian(accountSalt1);
-
         vm.startPrank(accountAddress);
         emailRecoveryManager.removeGuardian(guardian);
 
@@ -62,6 +60,41 @@ contract GuardianUtils_removeGuardian_Test is UnitBase {
             emailRecoveryManager.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, guardians.length - 1);
         assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
+        assertEq(guardianConfig.acceptedWeight, 0);
+        assertEq(guardianConfig.threshold, threshold);
+    }
+
+    function test_RemoveGuardian_SucceedsWithAcceptedGuardian() public {
+        address guardian = guardian1; // guardian 1 weight is 1
+        // threshold = 3
+        // totalWeight = 4
+        // weight = 1
+
+        // Fails if totalWeight - weight < threshold
+        // (totalWeight - weight == 4 - 1) = 3
+        // (weight < threshold == 3 < 3) = succeeds
+
+        acceptGuardian(accountSalt1); // weight = 1
+        acceptGuardian(accountSalt2); // weight = 2
+
+        vm.startPrank(accountAddress);
+        vm.expectEmit();
+        emit GuardianUtils.RemovedGuardian(accountAddress, guardian, guardianWeights[0]);
+        emailRecoveryManager.removeGuardian(guardian);
+
+        GuardianStorage memory guardianStorage =
+            emailRecoveryManager.getGuardian(accountAddress, guardian);
+        assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.NONE));
+        assertEq(guardianStorage.weight, 0);
+
+        IEmailRecoveryManager.GuardianConfig memory guardianConfig =
+            emailRecoveryManager.getGuardianConfig(accountAddress);
+        assertEq(guardianConfig.guardianCount, guardians.length - 1);
+        assertEq(guardianConfig.totalWeight, totalWeight - guardianWeights[0]);
+
+        // Accepted weight before guardian is removed = 3
+        // acceptedWeight = 3 - 1
+        assertEq(guardianConfig.acceptedWeight, 2);
         assertEq(guardianConfig.threshold, threshold);
     }
 }

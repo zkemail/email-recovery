@@ -10,6 +10,15 @@ contract EmailRecoverySubjectHandler_validateAcceptanceSubject_Test is UnitBase 
         super.setUp();
     }
 
+    function test_ValidateAcceptanceSubject_RevertWhen_InvalidTemplateIndex() public {
+        bytes[] memory subjectParams = new bytes[](1);
+        subjectParams[0] = abi.encode(accountAddress);
+        uint256 invalidTemplateIdx = 1;
+
+        vm.expectRevert(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector);
+        emailRecoveryHandler.validateAcceptanceSubject(invalidTemplateIdx, subjectParams);
+    }
+
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
         bytes[] memory emptySubjectParams;
 

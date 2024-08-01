@@ -29,10 +29,7 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
 
         bytes4 allowedSelector =
             emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress);
-        address allowedValidator =
-            emailRecoveryModule.exposed_selectorToValidator(functionSelector, accountAddress);
         assertEq(allowedSelector, bytes4(0));
-        assertEq(allowedValidator, address(0));
 
         address[] memory allowedValidators =
             emailRecoveryModule.getAllowedValidators(accountAddress);
@@ -48,7 +45,7 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
         vm.stopPrank();
 

@@ -77,9 +77,10 @@ abstract contract SafeUnitBase is IntegrationBase {
         address previousOwnerInLinkedList = address(1);
         // address previousOwnerInLinkedList =
         //     safeRecoverySubjectHandler.previousOwnerInLinkedList(accountAddress, owner);
-        recoveryCalldata = abi.encodeWithSignature(
+        bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
         );
+        bytes memory recoveryCalldata = abi.encode(accountAddress1, swapOwnerCalldata);
         calldataHash = keccak256(recoveryCalldata);
         isInstalledContext = bytes("0");
 

@@ -23,7 +23,7 @@ contract UniversalEmailRecoveryModule_getAllowedValidators_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.disallowValidatorRecovery(
-            validatorAddress, prevValidator, "", functionSelector
+            validatorAddress, prevValidator, functionSelector
         );
         vm.stopPrank();
 
@@ -47,7 +47,7 @@ contract UniversalEmailRecoveryModule_getAllowedValidators_Test is UnitBase {
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner, recoveryModuleAddress)
+            data: abi.encode(owner)
         });
         bytes4 newFunctionSelector = bytes4(keccak256(bytes("rotateOwner(address,address)")));
 
