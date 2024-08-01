@@ -5,12 +5,10 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../UnitBase.t.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianManager } from "src/GuardianManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
-contract EmailRecoveryManager_addGuardian_Test is UnitBase {
+contract GuardianManager_addGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {
@@ -38,6 +36,45 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
         emailRecoveryModule.addGuardian(guardians[0], guardianWeights[0]);
     }
 
+    function test_AddGuardian_RevertWhen_InvalidGuardianAddress() public {
+        address invalidGuardianAddress = address(0);
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGuardianManager.InvalidGuardianAddress.selector, invalidGuardianAddress
+            )
+        );
+        emailRecoveryModule.addGuardian(invalidGuardianAddress, guardianWeights[0]);
+    }
+
+    function test_AddGuardian_RevertWhen_GuardianAddressIsAccountAddress() public {
+        address invalidGuardianAddress = accountAddress;
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGuardianManager.InvalidGuardianAddress.selector, invalidGuardianAddress
+            )
+        );
+        emailRecoveryModule.addGuardian(invalidGuardianAddress, guardianWeights[0]);
+    }
+
+    function test_AddGuardian_RevertWhen_AddressAlreadyGuardian() public {
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IGuardianManager.AddressAlreadyGuardian.selector);
+        emailRecoveryModule.addGuardian(guardians[0], guardianWeights[0]);
+    }
+
+    function test_AddGuardian_RevertWhen_InvalidGuardianWeight() public {
+        address newGuardian = address(1);
+        uint256 invalidGuardianWeight = 0;
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IGuardianManager.InvalidGuardianWeight.selector);
+        emailRecoveryModule.addGuardian(newGuardian, invalidGuardianWeight);
+    }
+
     function test_AddGuardian_AddGuardian_Succeeds() public {
         address newGuardian = address(1);
         uint256 newGuardianWeight = 1;
@@ -49,7 +86,7 @@ contract EmailRecoveryManager_addGuardian_Test is UnitBase {
 
         vm.startPrank(accountAddress);
         vm.expectEmit();
-        emit IGuardianManager.AddedGuardian(accountAddress, newGuardian, newGuardianWeight); //
+        emit IGuardianManager.AddedGuardian(accountAddress, newGuardian, newGuardianWeight);
         emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
 
         GuardianStorage memory guardianStorage =

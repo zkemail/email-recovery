@@ -2,14 +2,14 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
+import { UnitBase } from "../UnitBase.t.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
     GuardianStatus
 } from "src/libraries/EnumerableGuardianMap.sol";
 
-contract GuardianUtils_removeAllGuardians_Test is UnitBase {
+contract GuardianManager_removeAllGuardians_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }

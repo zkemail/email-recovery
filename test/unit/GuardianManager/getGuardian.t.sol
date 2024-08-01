@@ -5,7 +5,7 @@ import { console2 } from "forge-std/console2.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
-contract EmailRecoveryManager_getGuardian_Test is UnitBase {
+contract GuardianManager_getGuardian_Test is UnitBase {
     address newGuardian = address(1);
     uint256 newGuardianWeight = 1;
 

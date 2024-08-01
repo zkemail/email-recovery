@@ -4,11 +4,11 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
+import { UnitBase } from "../UnitBase.t.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
-contract GuardianUtils_setupGuardians_Test is UnitBase {
+contract GuardianManager_setupGuardians_Test is UnitBase {
     using ModuleKitHelpers for *;
 
     function setUp() public override {

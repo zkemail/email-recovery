@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { UnitBase } from "../UnitBase.t.sol";
+import { UnitBase } from "../../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 
 contract EmailRecoveryFactory_constructor_Test is UnitBase {

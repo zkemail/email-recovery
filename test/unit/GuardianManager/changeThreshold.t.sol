@@ -2,12 +2,23 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
+import { UnitBase } from "../UnitBase.t.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
-contract GuardianUtils_changeThreshold_Test is UnitBase {
+contract GuardianManager_changeThreshold_Test is UnitBase {
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_RevertWhen_AlreadyRecovering() public {
+        acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
+        vm.warp(12 seconds);
+        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+
+        vm.startPrank(accountAddress);
+        vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
+        emailRecoveryModule.changeThreshold(threshold);
     }
 
     function test_RevertWhen_SetupNotCalled() public {
