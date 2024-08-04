@@ -34,12 +34,17 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     bytes4 public immutable selector;
 
+    /**
+     * Mapping of Account address to authorized validator
+     */
+    mapping(address account => bool isAuthorized) internal authorized;
+
     event RecoveryExecuted(address indexed account, address indexed validator);
 
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
-
+    
     constructor(
         address verifier,
         address dkimRegistry,
@@ -97,7 +102,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         ) {
             revert InvalidValidator(validator);
         }
-
+        authorized[msg.sender] = true;
         configureRecovery(guardians, weights, threshold, delay, expiry);
     }
 
@@ -106,6 +111,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * @dev the data parameter is not used
      */
     function onUninstall(bytes calldata /* data */ ) external {
+        authorized[msg.sender] = false;
         deInitRecoveryModule();
     }
 
@@ -116,6 +122,15 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     function isInitialized(address account) external view returns (bool) {
         return getGuardianConfig(account).threshold != 0;
+    }
+
+    /**
+     * Check if the recovery module is authorized to recover the account
+     * @param account The smart account to check
+     * @return true if the module is authorized, false otherwise
+     */
+    function isAuthorizedToBeRecovered(address account) external view returns (bool) {
+        return authorized[account];
     }
 
     /**

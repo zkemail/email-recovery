@@ -104,6 +104,16 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
+     * @notice Checks if the recovery is activated for a given account
+     * @param recoveredAccount The address of the recovered account for which the activation status is being checked
+     * @return bool True if the recovery request is activated, false otherwise
+     */     
+    function isActivated(address recoveredAccount) public view override returns (bool) {
+        return guardianConfigs[recoveredAccount].threshold > 0;
+    }
+
+
+    /**
      * @notice Returns a two-dimensional array of strings representing the subject templates for an
      * acceptance by a new guardian.
      * @dev This is retrieved from the associated subject handler. Developers can write their own

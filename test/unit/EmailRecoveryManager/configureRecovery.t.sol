@@ -42,6 +42,9 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         vm.startPrank(accountAddress);
         emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
 
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertFalse(isActivated);
+
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryConfigured(
             instance.account, guardians.length, totalWeight, threshold
@@ -66,6 +69,9 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
             emailRecoveryModule.getGuardian(accountAddress, guardians[0]);
         assertEq(uint256(guardian.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardian.weight, guardianWeights[0]);
+
+        isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertTrue(isActivated);
     }
 
     function test_ConfigureRecovery_RevertWhen_ZeroGuardians() public {

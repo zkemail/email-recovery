@@ -49,5 +49,8 @@ contract EmailRecoveryModule_onInstall_Test is EmailRecoveryModuleBase {
 
         bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
         assertTrue(isInitialized);
+
+        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
+        assertTrue(isAuthorizedToBeRecovered);
     }
 }

@@ -54,5 +54,8 @@ contract UniversalEmailRecoveryModule_onInstall_Test is UnitBase {
         bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
         assertEq(allowedValidators.length, 1);
         assertEq(allowedSelectors.length, 1);
+
+        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
+        assertTrue(isAuthorizedToBeRecovered);
     }
 }
