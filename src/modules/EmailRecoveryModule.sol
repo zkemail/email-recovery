@@ -97,7 +97,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         ) {
             revert InvalidValidator(validator);
         }
-
         configureRecovery(guardians, weights, threshold, delay, expiry);
     }
 

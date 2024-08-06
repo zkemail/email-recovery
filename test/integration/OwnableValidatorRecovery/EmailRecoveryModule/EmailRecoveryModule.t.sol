@@ -141,13 +141,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.REQUESTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
@@ -160,13 +154,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[1]);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.REQUESTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
@@ -181,13 +169,8 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
             getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], calldataHash1);
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.ACCEPTED)
-            )
-        );
+
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
@@ -227,13 +210,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.REQUESTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 

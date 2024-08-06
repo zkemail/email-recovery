@@ -28,6 +28,9 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
 
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertTrue(isActivated);
+
         vm.prank(accountAddress);
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryDeInitialized(accountAddress);
@@ -66,5 +69,8 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         assertEq(guardianConfig.totalWeight, 0);
         assertEq(guardianConfig.acceptedWeight, 0);
         assertEq(guardianConfig.threshold, 0);
+
+        isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertFalse(isActivated);
     }
 }
