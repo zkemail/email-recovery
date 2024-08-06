@@ -63,7 +63,7 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
         assertEq(allowedValidators.length, 0);
         assertEq(allowedSelectors.length, 0);
 
-        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
-        assertFalse(isAuthorizedToBeRecovered);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertFalse(isActivated);
     }
 }

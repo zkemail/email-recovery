@@ -134,6 +134,9 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(recoveryRequest.calldataHash, "");
+
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertTrue(isActivated);
     }
 
     function test_CompleteRecovery_SucceedsAlmostExpiry() public {
@@ -155,5 +158,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
         assertEq(recoveryRequest.calldataHash, "");
+
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertTrue(isActivated);
     }
 }

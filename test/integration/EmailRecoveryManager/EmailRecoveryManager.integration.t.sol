@@ -32,13 +32,7 @@ contract EmailRecoveryManager_Integration_Test is
         EmailAuthMsg memory emailAuthMsg =
             getAcceptanceEmailAuthMessage(accountAddress1, guardians1[0]);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.REQUESTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
@@ -171,7 +165,7 @@ contract EmailRecoveryManager_Integration_Test is
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
@@ -206,23 +200,11 @@ contract EmailRecoveryManager_Integration_Test is
         vm.warp(12 seconds);
 
         emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], calldataHash1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.ACCEPTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
 
         emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], calldataHash1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidGuardianStatus.selector,
-                uint256(GuardianStatus.NONE),
-                uint256(GuardianStatus.ACCEPTED)
-            )
-        );
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
@@ -231,7 +213,7 @@ contract EmailRecoveryManager_Integration_Test is
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
+        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 

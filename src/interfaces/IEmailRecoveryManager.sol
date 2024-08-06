@@ -77,6 +77,7 @@ interface IEmailRecoveryManager {
     error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
     error InvalidCalldataHash(bytes32 calldataHash, bytes32 expectedCalldataHash);
     error NoRecoveryInProcess();
+    error RecoveryIsNotActivated();
 
     /*//////////////////////////////////////////////////////////////////////////
                                     FUNCTIONS

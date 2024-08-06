@@ -105,13 +105,12 @@ abstract contract EmailRecoveryManager is
 
     /**
      * @notice Checks if the recovery is activated for a given account
-     * @param recoveredAccount The address of the recovered account for which the activation status is being checked
+     * @param account The address of the account for which the activation status is being checked
      * @return bool True if the recovery request is activated, false otherwise
      */     
-    function isActivated(address recoveredAccount) public view override returns (bool) {
-        return guardianConfigs[recoveredAccount].threshold > 0;
+    function isActivated(address account) public view override returns (bool) {
+        return guardianConfigs[account].threshold > 0;
     }
-
 
     /**
      * @notice Returns a two-dimensional array of strings representing the subject templates for an
@@ -283,6 +282,10 @@ abstract contract EmailRecoveryManager is
             revert RecoveryInProcess();
         }
 
+        if (!isActivated(account)) {
+            revert RecoveryIsNotActivated();
+        }
+
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
@@ -322,6 +325,10 @@ abstract contract EmailRecoveryManager is
         address account = IEmailRecoverySubjectHandler(subjectHandler).validateRecoverySubject(
             templateIdx, subjectParams, address(this)
         );
+
+        if (!isActivated(account)) {
+            revert RecoveryIsNotActivated();
+        }
 
         GuardianConfig memory guardianConfig = guardianConfigs[account];
         if (guardianConfig.threshold > guardianConfig.acceptedWeight) {
@@ -378,6 +385,10 @@ abstract contract EmailRecoveryManager is
         }
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
+        if (!isActivated(account)) {
+            revert RecoveryIsNotActivated();
+        }
+        
         uint256 threshold = guardianConfigs[account].threshold;
         if (threshold == 0) {
             revert NoRecoveryConfigured();

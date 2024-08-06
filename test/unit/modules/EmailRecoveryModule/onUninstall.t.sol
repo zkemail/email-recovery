@@ -23,7 +23,7 @@ contract EmailRecoveryModule_onUninstall_Test is EmailRecoveryModuleBase {
         bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
         assertFalse(isInitialized);
 
-        bool isAuthorizedToBeRecovered = emailRecoveryModule.isAuthorizedToBeRecovered(accountAddress);
-        assertFalse(isAuthorizedToBeRecovered);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        assertFalse(isActivated);
     }
 }
