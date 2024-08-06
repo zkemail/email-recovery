@@ -39,7 +39,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
     error InvalidValidator(address validator);
-    
+
     constructor(
         address verifier,
         address dkimRegistry,
