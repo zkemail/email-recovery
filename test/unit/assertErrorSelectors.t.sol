@@ -51,6 +51,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryRequestExpired.selector, bytes4(0x566ad75e));
         assertEq(IEmailRecoveryManager.InvalidCalldataHash.selector, bytes4(0x54d53855));
         assertEq(IEmailRecoveryManager.NoRecoveryInProcess.selector, bytes4(0x87434f51));
+        assertEq(IEmailRecoveryManager.RecoveryIsNotActivated.selector, bytes4(0xc737140f));
     }
 
     function test_EmailRecoveryUniversalFactory_AssertSelectors() public {

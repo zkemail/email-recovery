@@ -171,7 +171,7 @@ contract EmailRecoveryManager_Integration_Test is
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 
@@ -219,7 +219,7 @@ contract EmailRecoveryManager_Integration_Test is
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
+        vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
     }
 

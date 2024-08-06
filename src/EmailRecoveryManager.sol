@@ -107,7 +107,7 @@ abstract contract EmailRecoveryManager is
      * @notice Checks if the recovery is activated for a given account
      * @param account The address of the account for which the activation status is being checked
      * @return bool True if the recovery request is activated, false otherwise
-     */     
+     */
     function isActivated(address account) public view override returns (bool) {
         return guardianConfigs[account].threshold > 0;
     }
@@ -385,10 +385,6 @@ abstract contract EmailRecoveryManager is
         }
         RecoveryRequest memory recoveryRequest = recoveryRequests[account];
 
-        if (!isActivated(account)) {
-            revert RecoveryIsNotActivated();
-        }
-        
         uint256 threshold = guardianConfigs[account].threshold;
         if (threshold == 0) {
             revert NoRecoveryConfigured();
