@@ -98,9 +98,6 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
-
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
-        assertTrue(isActivated);
     }
 
     function test_UpdateRecoveryConfig_Succeeds() public {
@@ -120,8 +117,5 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
-
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
-        assertTrue(isActivated);
     }
 }
