@@ -17,7 +17,6 @@ import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniver
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModuleHarness } from
     "../../../unit/UniversalEmailRecoveryModuleHarness.sol";
-// test/unit/UniversalEmailRecoveryModuleHarness.sol
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../../IntegrationBase.t.sol";
 
@@ -229,6 +228,19 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function acceptGuardianWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 optionalAccountSalt
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg =
+            getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, optionalAccountSalt);
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+    }
+
     function getAcceptanceEmailAuthMessage(
         address account,
         address guardian
@@ -236,10 +248,28 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         public
         returns (EmailAuthMsg memory)
     {
+        return getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, bytes32(0));
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function getAcceptanceEmailAuthMessageWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 optionalAccountSalt
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory subject = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
@@ -259,10 +289,39 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function handleRecoveryWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 calldataHash,
+        bytes32 optionalAccountSalt
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
+            account, guardian, calldataHash, optionalAccountSalt
+        );
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+    }
+
     function getRecoveryEmailAuthMessage(
         address account,
         address guardian,
         bytes32 calldataHash
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
+        return
+            getRecoveryEmailAuthMessageWithAccountSalt(account, guardian, calldataHash, bytes32(0));
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function getRecoveryEmailAuthMessageWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 calldataHash,
+        bytes32 optionalAccountSalt
     )
         public
         returns (EmailAuthMsg memory)
@@ -277,7 +336,13 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(account, guardian);
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 

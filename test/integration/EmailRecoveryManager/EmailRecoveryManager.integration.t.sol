@@ -144,21 +144,27 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
-    // function test_RevertWhen_HandleRecoveryCalled_AfterCompleteRecovery() public {
-    //     acceptGuardian(accountAddress1, guardian1);
-    //     acceptGuardian(accountAddress1, guardian2);
-    //     vm.warp(12 seconds);
-    //     handleRecovery(accountAddress1, guardian1, calldataHash1);
-    //     handleRecovery(accountAddress1, guardian2, calldataHash1);
-    //     vm.warp(block.timestamp + delay);
-    //     emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
+    function test_HandleRecoveryCalled_AfterCompleteRecoveryStartsNewRecoveryRequest() public {
+        acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[1]);
+        acceptGuardian(accountAddress1, guardians1[2]);
+        vm.warp(12 seconds);
+        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[1], calldataHash1);
+        vm.warp(block.timestamp + delay);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
 
-    //     EmailAuthMsg memory emailAuthMsg =
-    //         getRecoveryEmailAuthMessage(accountAddress1, guardian1, calldataHash1);
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(recoveryRequest.currentWeight, 0);
 
-    //     // vm.expectRevert("email nullifier already used"); // FIXME:
-    //     emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-    // }
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[2], calldataHash1);
+
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(recoveryRequest.currentWeight, 1);
+    }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
         vm.prank(accountAddress1);
