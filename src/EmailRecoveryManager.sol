@@ -377,10 +377,11 @@ abstract contract EmailRecoveryManager is
      * deletes the recovery request but recovery config state is maintained so future recovery
      * requests can be made without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
-     * @param recoveryData The data that is passed to recover the validator.
-     * recoveryData = abi.encode(validator, recoveryFunctionCalldata). Although, it is possible to
-     * design a recovery module using this manager without encoding the validator, depending on how
-     * the handler.parseRecoveryDataHash() and module.recover() functions are implemented
+     * @param recoveryData The data that is passed to recover the validator or account.
+     * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
+     * possible to design a recovery module using this manager without encoding the validator or
+     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * are implemented
      */
     function completeRecovery(address account, bytes calldata recoveryData) external override {
         if (account == address(0)) {

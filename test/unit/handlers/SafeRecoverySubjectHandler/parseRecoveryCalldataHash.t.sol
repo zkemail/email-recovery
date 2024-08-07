@@ -33,9 +33,9 @@ contract SafeRecoverySubjectHandler_parseRecoveryDataHash_Test is SafeUnitBase {
     function test_ParseRecoveryDataHash_Succeeds() public {
         skipIfNotSafeAccountType();
 
-        bytes32 actualCalldataHash =
+        bytes32 actualRecoveryDataHash =
             safeRecoverySubjectHandler.parseRecoveryDataHash(templateIdx, subjectParams);
 
-        assertEq(actualCalldataHash, recoveryDataHash);
+        assertEq(actualRecoveryDataHash, recoveryDataHash);
     }
 }
