@@ -305,23 +305,18 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         // process recovery for validator 1
         handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
         vm.warp(block.timestamp + 12 seconds);
-        // process recovery for validator 2
-        handleRecovery(accountAddress1, guardians1[0], validator2RecoveryDataHash);
 
-        // process recovery for validator 1
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
-        vm.warp(block.timestamp + 12 seconds);
-        // process recovery for validator 2
-        handleRecovery(accountAddress1, guardians1[1], validator2RecoveryDataHash);
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], validator2RecoveryDataHash);
 
-        vm.warp(block.timestamp + delay);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
-                recoveryDataHash1,
-                validator2RecoveryDataHash
+                validator2RecoveryDataHash,
+                recoveryDataHash1
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+        // process recovery for validator 2
+        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

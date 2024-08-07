@@ -345,19 +345,24 @@ abstract contract EmailRecoveryManager is
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
+        bytes32 recoveryDataHash = IEmailRecoverySubjectHandler(subjectHandler)
+            .parseRecoveryDataHash(templateIdx, subjectParams);
+
+        if (recoveryRequest.recoveryDataHash == bytes32(0)) {
+            recoveryRequest.recoveryDataHash = recoveryDataHash;
+        }
+
+        if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
+            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
+        }
 
         recoveryRequest.currentWeight += guardianStorage.weight;
 
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
-            bytes32 recoveryDataHash = IEmailRecoverySubjectHandler(subjectHandler)
-                .parseRecoveryDataHash(templateIdx, subjectParams);
-
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
-
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.recoveryDataHash = recoveryDataHash;
 
             emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, recoveryDataHash);
         }

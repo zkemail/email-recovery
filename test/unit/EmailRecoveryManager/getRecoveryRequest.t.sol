@@ -22,6 +22,6 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
     }
 }

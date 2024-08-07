@@ -113,6 +113,31 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         );
     }
 
+    function test_ProcessRecovery_RevertWhen_InvalidRecoveryDataHash() public {
+        bytes32 invalidRecoveryDataHash = keccak256(abi.encode("invalid hash"));
+        string memory invalidRecoveryDataHashString = uint256(invalidRecoveryDataHash).toHexString(32);
+
+        acceptGuardian(accountSalt1);
+        acceptGuardian(accountSalt2);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardian1, templateIdx, subjectParams, nullifier
+        );
+
+        subjectParams[2] = abi.encode(invalidRecoveryDataHashString);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
+                invalidRecoveryDataHash,
+                recoveryDataHash
+            )
+        );
+        emailRecoveryModule.exposed_processRecovery(
+            guardian1, templateIdx, subjectParams, nullifier
+        );
+    }
+
     function test_ProcessRecovery_IncreasesTotalWeight() public {
         uint256 guardian1Weight = guardianWeights[0];
 
@@ -128,7 +153,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, guardian1Weight);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
     }
 
     function test_ProcessRecovery_InitiatesRecovery() public {
