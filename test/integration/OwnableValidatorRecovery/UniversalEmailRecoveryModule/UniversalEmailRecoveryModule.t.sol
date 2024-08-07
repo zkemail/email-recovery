@@ -8,6 +8,7 @@ import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
@@ -258,7 +259,28 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         assertEq(updatedOwner3, newOwner3);
     }
 
-    function test_Recover_RecoversMultipleValidatorsOneAfterTheOther() public {
+    function test_Recover_RecoversSameValidatorAgain() public {
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        address updatedOwner1 = validator.owners(accountAddress1);
+        assertEq(updatedOwner1, newOwner1);
+
+        bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
+        bytes memory newValidatorRecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
+        bytes32 newValidatorRecoveryDataHash = keccak256(newValidatorRecoveryData);
+
+        handleRecovery(accountAddress1, guardians1[0], newValidatorRecoveryDataHash);
+        handleRecovery(accountAddress1, guardians1[1], newValidatorRecoveryDataHash);
+        vm.warp(block.timestamp + delay);
+        emailRecoveryModule.completeRecovery(accountAddress1, newValidatorRecoveryData);
+
+        address updatedOwner2 = validator.owners(accountAddress1);
+        assertEq(updatedOwner2, newOwner2);
+    }
+
+    function test_Recover_RevertWhen_RecoversMultipleValidatorsOneAfterTheOtherWithoutAllowingValidator(
+    )
+        public
+    {
         OwnableValidator validator2 = new OwnableValidator();
         address validator2Address = address(validator2);
         instance1.installModule({
@@ -268,7 +290,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         });
 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
-        bytes memory validator2RecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
+        bytes memory validator2RecoveryData = abi.encode(validator2Address, newChangeOwnerCalldata);
         bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
 
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
@@ -278,9 +300,41 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         handleRecovery(accountAddress1, guardians1[0], validator2RecoveryDataHash);
         handleRecovery(accountAddress1, guardians1[1], validator2RecoveryDataHash);
         vm.warp(block.timestamp + delay);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, functionSelector
+            )
+        );
+        emailRecoveryModule.completeRecovery(accountAddress1, validator2RecoveryData);
+    }
+
+    function test_Recover_RecoversMultipleValidatorsOneAfterTheOther() public {
+        OwnableValidator validator2 = new OwnableValidator();
+        address validator2Address = address(validator2);
+        instance1.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: validator2Address,
+            data: abi.encode(owner2)
+        });
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.allowValidatorRecovery(validator2Address, "", functionSelector);
+        vm.stopPrank();
+
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        address updatedOwner1 = validator.owners(accountAddress1);
+        assertEq(updatedOwner1, newOwner1);
+
+        bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
+        bytes memory validator2RecoveryData = abi.encode(validator2Address, newChangeOwnerCalldata);
+        bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
+
+        handleRecovery(accountAddress1, guardians1[0], validator2RecoveryDataHash);
+        handleRecovery(accountAddress1, guardians1[1], validator2RecoveryDataHash);
+        vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(accountAddress1, validator2RecoveryData);
 
-        address updatedOwner2 = validator.owners(accountAddress1);
+        address updatedOwner2 = validator2.owners(accountAddress1);
         assertEq(updatedOwner2, newOwner2);
     }
 

@@ -115,7 +115,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
     function test_ProcessRecovery_RevertWhen_InvalidRecoveryDataHash() public {
         bytes32 invalidRecoveryDataHash = keccak256(abi.encode("invalid hash"));
-        string memory invalidRecoveryDataHashString = uint256(invalidRecoveryDataHash).toHexString(32);
+        string memory invalidRecoveryDataHashString =
+            uint256(invalidRecoveryDataHash).toHexString(32);
 
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
