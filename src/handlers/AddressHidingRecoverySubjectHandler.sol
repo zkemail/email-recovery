@@ -85,7 +85,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         uint256 /* templateIdx */
     )
         public
-        pure
+        view
         returns (address)
     {
         bytes32 accountHash = StringUtils.hexToBytes32(abi.decode(subjectParams[0], (string)));
@@ -103,7 +103,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         external
-        pure
+        view
         returns (address)
     {
         if (templateIdx != 0) {
