@@ -13,6 +13,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
 
     event RecoveryExecuted(address indexed account);
 
+    error InvalidAccount(address account);
     error InvalidSelector(bytes4 selector);
     error RecoveryFailed(address account);
 
@@ -37,20 +38,23 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     }
 
     /**
-     * @notice Executes recovery on a Safe account. Must be called by the trusted recovery manager
+     * @notice Executes recovery on a Safe account. Called from the recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryData The recovery calldata that should be executed on the Safe
-     * being recovered
+     * @param recoveryData The recovery data that should be executed on the Safe
+     * being recovered. recoveryData = abi.encode(safeAccount, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
-        // FIXME: What if you use this module with a different subject handler? It could chose
-        // not to encode the account/validator along with the calldata
+        (address encodedAccount, bytes memory recoveryCalldata) =
+            abi.decode(recoveryData, (address, bytes));
+
+        if (encodedAccount == address(0) || encodedAccount != account) {
+            revert InvalidAccount(encodedAccount);
+        }
+
         bytes4 calldataSelector;
         assembly {
             calldataSelector := mload(add(recoveryCalldata, 32))
         }
-
         if (calldataSelector != selector) {
             revert InvalidSelector(calldataSelector);
         }
