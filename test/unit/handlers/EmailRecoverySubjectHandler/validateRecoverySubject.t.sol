@@ -9,18 +9,18 @@ import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHa
 contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     using Strings for uint256;
 
-    string calldataHashString;
+    string recoveryDataHashString;
     bytes[] subjectParams;
 
     function setUp() public override {
         super.setUp();
 
-        calldataHashString = uint256(calldataHash).toHexString(32);
+        recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(recoveryModuleAddress);
-        subjectParams[2] = abi.encode(calldataHashString);
+        subjectParams[2] = abi.encode(recoveryDataHashString);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
@@ -55,7 +55,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         bytes[] memory longSubjectParams = new bytes[](4);
         longSubjectParams[0] = abi.encode(accountAddress);
         longSubjectParams[1] = abi.encode(recoveryModuleAddress);
-        longSubjectParams[2] = abi.encode(calldataHashString);
+        longSubjectParams[2] = abi.encode(recoveryDataHashString);
         longSubjectParams[3] = abi.encode("extra param");
 
         vm.expectRevert(
@@ -107,7 +107,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
         );
     }
 
-    function test_ValidateRecoverySubject_RevertWhen_ZeroCalldataHash() public {
+    function test_ValidateRecoverySubject_RevertWhen_ZeroRecoveryDataHash() public {
         subjectParams[2] = abi.encode(bytes32(0));
 
         vm.expectRevert("invalid hex prefix");
@@ -117,7 +117,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidHashLength() public {
-        subjectParams[2] = abi.encode(uint256(calldataHash).toHexString(33));
+        subjectParams[2] = abi.encode(uint256(recoveryDataHash).toHexString(33));
 
         vm.expectRevert("invalid hex string length");
         emailRecoveryHandler.validateRecoverySubject(

@@ -20,7 +20,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
 
         vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
         vm.startPrank(accountAddress);

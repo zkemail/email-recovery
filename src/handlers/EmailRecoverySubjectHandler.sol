@@ -139,9 +139,9 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
         address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
-        string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
-        // hexToBytes32 validates the calldataHash is not zero bytes and has the correct length
-        StringUtils.hexToBytes32(calldataHashInEmail);
+        string memory recoveryDataHashInEmail = abi.decode(subjectParams[2], (string));
+        // hexToBytes32 validates the recoveryDataHash is not zero bytes and has the correct length
+        StringUtils.hexToBytes32(recoveryDataHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
@@ -160,13 +160,14 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     /**
-     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * @notice parses the recovery data hash from the subject params. The data hash is
      * verified against later when recovery is executed
+     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return calldataHash The keccak256 hash of the recovery calldata
+     * @return recoveryDataHash The keccak256 hash of the recovery data
      */
-    function parseRecoveryCalldataHash(
+    function parseRecoveryDataHash(
         uint256 templateIdx,
         bytes[] calldata subjectParams
     )
@@ -178,7 +179,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
 
-        string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
-        return StringUtils.hexToBytes32(calldataHashInEmail);
+        string memory recoveryDataHashInEmail = abi.decode(subjectParams[2], (string));
+        return StringUtils.hexToBytes32(recoveryDataHashInEmail);
     }
 }

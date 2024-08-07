@@ -52,8 +52,8 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         processRecovery(guardian, templateIdx, subjectParams, nullifier);
     }
 
-    function exposed_recover(address account, bytes calldata recoveryCalldata) external {
-        recover(account, recoveryCalldata);
+    function exposed_recover(address account, bytes calldata recoveryData) external {
+        recover(account, recoveryData);
     }
 
     function exposed_deInitRecoveryModule() external {

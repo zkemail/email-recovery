@@ -135,11 +135,21 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     /**
      * @notice Executes recovery on a validator. Called from the recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryCalldata The recovery calldata that should be executed on the validator
-     * being recovered
+     * @param recoveryData The recovery data that should be executed on the validator
+     * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
-    function recover(address account, bytes calldata recoveryCalldata) internal override {
-        bytes4 calldataSelector = bytes4(recoveryCalldata[:4]);
+    function recover(address account, bytes calldata recoveryData) internal override {
+        (address validator, bytes memory recoveryCalldata) =
+            abi.decode(recoveryData, (address, bytes));
+
+        if (validator == address(0)) {
+            revert InvalidValidator(validator);
+        }
+
+        bytes4 calldataSelector;
+        assembly {
+            calldataSelector := mload(add(recoveryCalldata, 32))
+        }
         if (calldataSelector != selector) {
             revert InvalidSelector(calldataSelector);
         }

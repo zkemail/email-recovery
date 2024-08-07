@@ -30,8 +30,8 @@ interface IEmailRecoveryManager {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
-        bytes32 calldataHash; // the keccak256 hash of the calldata used to execute the
-            // recovery attempt
+        bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
+            // recovery attempt.
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ interface IEmailRecoveryManager {
         address indexed guardian,
         uint256 executeAfter,
         uint256 executeBefore,
-        bytes32 calldataHash
+        bytes32 recoveryDataHash
     );
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
@@ -75,7 +75,7 @@ interface IEmailRecoveryManager {
     error NotEnoughApprovals(uint256 currentWeight, uint256 threshold);
     error DelayNotPassed(uint256 blockTimestamp, uint256 executeAfter);
     error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
-    error InvalidCalldataHash(bytes32 calldataHash, bytes32 expectedCalldataHash);
+    error InvalidRecoveryDataHash(bytes32 recoveryDataHash, bytes32 expectedRecoveryDataHash);
     error NoRecoveryInProcess();
     error RecoveryIsNotActivated();
 

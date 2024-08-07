@@ -170,13 +170,16 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     /**
-     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * @notice parses the recovery data hash from the subject params. The data hash is
      * verified against later when recovery is executed
+     * @dev recoveryDataHash = keccak256(abi.encode(safeAccount, recoveryFunctionCalldata)). In the
+     * context of recovery for a Safe, the first encoded value is the Safe account address. Normally,
+     * this would be the validator address
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return calldataHash The keccak256 hash of the recovery calldata
+     * @return recoveryDataHash The keccak256 hash of the recovery data
      */
-    function parseRecoveryCalldataHash(
+    function parseRecoveryDataHash(
         uint256 templateIdx,
         bytes[] calldata subjectParams
     )
@@ -195,10 +198,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address previousOwnerInLinkedList =
             getPreviousOwnerInLinkedList(accountInEmail, oldOwnerInEmail);
         string memory functionSignature = "swapOwner(address,address,address)";
-        bytes memory recoveryCallData = abi.encodeWithSignature(
+        bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        bytes memory recoveryData = abi.encode(accountInEmail, recoveryCallData);
+        bytes memory recoveryData = abi.encode(accountInEmail, swapOwnerCalldata);
         return keccak256(recoveryData);
     }
 

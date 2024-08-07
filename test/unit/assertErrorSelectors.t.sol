@@ -49,7 +49,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.NotEnoughApprovals.selector, bytes4(0x443282f5));
         assertEq(IEmailRecoveryManager.DelayNotPassed.selector, bytes4(0x2f37ae39));
         assertEq(IEmailRecoveryManager.RecoveryRequestExpired.selector, bytes4(0x566ad75e));
-        assertEq(IEmailRecoveryManager.InvalidCalldataHash.selector, bytes4(0x54d53855));
+        assertEq(IEmailRecoveryManager.InvalidRecoveryDataHash.selector, bytes4(0x9e1a616f));
         assertEq(IEmailRecoveryManager.NoRecoveryInProcess.selector, bytes4(0x87434f51));
         assertEq(IEmailRecoveryManager.RecoveryIsNotActivated.selector, bytes4(0xc737140f));
     }

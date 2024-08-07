@@ -15,13 +15,13 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.calldataHash, "");
+        assertEq(recoveryRequest.recoveryDataHash, "");
     }
 }
