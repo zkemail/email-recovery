@@ -5,10 +5,14 @@ import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjec
 import { ISafe } from "../interfaces/ISafe.sol";
 
 /**
- * Handler contract that defines subject templates and how to validate them
+ * @title SafeRecoverySubjectHandler
+ * @notice Handler contract that defines subject templates and how to validate them
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
+    /*
+     * The function selector for rotating an owner on a Safe
+     */
     bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
     error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
@@ -60,6 +64,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the account address to be recovered from the subject parameters of an
      * acceptance email.
      * @param subjectParams The subject parameters of the acceptance email.
+     * @param {templateIdx} Unused parameter. The index of the template used for acceptance
      */
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] calldata subjectParams,
@@ -76,6 +81,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the account address to be recovered from the subject parameters of a
      * recovery email.
      * @param subjectParams The subject parameters of the recovery email.
+     * @param {templateIdx} Unused parameter. The index of the template used for the recovery
      */
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] calldata subjectParams,
@@ -91,7 +97,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     /**
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams The subject parameters of the recovery email
+     * @param subjectParams The subject parameters of the acceptance email
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
@@ -120,7 +126,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return accountInEmail The account address in the acceptance email
+     * @return accountInEmail The account address in the recovery email
      */
     function validateRecoverySubject(
         uint256 templateIdx,

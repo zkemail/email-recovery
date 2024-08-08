@@ -6,9 +6,16 @@ import { Enum } from "@safe-global/safe-contracts/contracts/common/Enum.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /**
- * A safe module that recovers a safe owner via ZK Email
+ * @title SafeEmailRecoveryModule
+ * @notice A Safe module that recovers a Safe owner via ZK Email. This contract provides a simple
+ * mechanism for recovering Safe smart accounts. It facilitates recovery by integration with the
+ * email recovery manager contract. The module defines how a recovery request is executed on a
+ * Safe, while the recovery manager defines what a valid recovery request is.
  */
 contract SafeEmailRecoveryModule is EmailRecoveryManager {
+    /*
+     * The function selector for rotating an owner on a Safe
+     */
     bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
     event RecoveryExecuted(address indexed account);
@@ -38,7 +45,8 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     }
 
     /**
-     * @notice Executes recovery on a Safe account. Called from the recovery manager
+     * @notice Executes recovery on a Safe account. Called from the recovery manager once a recovery
+     * attempt has been processed
      * @param account The account to execute recovery for
      * @param recoveryData The recovery data that should be executed on the Safe
      * being recovered. recoveryData = abi.encode(safeAccount, recoveryFunctionCalldata)

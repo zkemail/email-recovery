@@ -4,9 +4,9 @@ pragma solidity ^0.8.25;
 import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
-    /*//////////////////////////////////////////////////////////////////////////
-                                TYPE DELARATIONS
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     TYPE DELARATIONS                       */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
      * A struct representing the values required for recovery configuration
@@ -34,9 +34,9 @@ interface IEmailRecoveryManager {
             // recovery attempt.
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                    EVENTS
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                           EVENTS                           */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     event RecoveryConfigured(
         address indexed account, uint256 guardianCount, uint256 totalWeight, uint256 threshold
@@ -54,9 +54,9 @@ interface IEmailRecoveryManager {
     event RecoveryCancelled(address indexed account);
     event RecoveryDeInitialized(address indexed account);
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                    ERRORS
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                           ERRORS                           */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     error InvalidVerifier();
     error InvalidDkimRegistry();
@@ -79,9 +79,9 @@ interface IEmailRecoveryManager {
     error NoRecoveryInProcess();
     error RecoveryIsNotActivated();
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                    FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                          FUNCTIONS                         */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 
