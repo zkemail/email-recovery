@@ -11,6 +11,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { AccountHidingRecoverySubjectHandler } from "src/handlers/AccountHidingRecoverySubjectHandler.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeNativeIntegrationBase } from "./SafeNativeIntegrationBase.t.sol";
 
@@ -34,10 +35,9 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         bytes memory recoveryData = abi.encode(safeAddress, recoveryCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(safeAddress);
-        subjectParamsForRecovery[1] = abi.encode(owner);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
+        bytes32 accountHash = keccak256(abi.encodePacked(safeAddress));
+
+        AccountHidingRecoverySubjectHandler(subjectHandler).storeAccountHash(safeAddress);
 
         // Accept guardian
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[0]);
@@ -59,7 +59,7 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         vm.warp(12 seconds);
 
         // handle recovery request for guardian 1
-        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, owner, newOwner, guardians1[0]);
+        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[0]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(safeAddress);
@@ -71,7 +71,7 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
-        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, owner, newOwner, guardians1[1]);
+        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[1]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(safeAddress);
         assertEq(recoveryRequest.executeAfter, executeAfter);

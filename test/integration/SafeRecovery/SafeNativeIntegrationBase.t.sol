@@ -12,7 +12,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { AccountHidingRecoverySubjectHandler } from "src/handlers/AccountHidingRecoverySubjectHandler.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeNativeIntegrationBase is IntegrationBase {
@@ -57,7 +57,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         }
         super.setUp();
 
-        subjectHandler = address(new SafeRecoverySubjectHandler());
+        subjectHandler = address(new AccountHidingRecoverySubjectHandler());
         emailRecoveryModule = new SafeEmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
@@ -149,15 +149,16 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory subject = string.concat("Accept guardian request for ", accountString);
+        bytes32 accountHash = keccak256(abi.encodePacked(account));
+        string memory accountHashString = uint256(accountHash).toHexString(32);
+        string memory subject = string.concat("Accept guardian request for ", accountHashString);
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
         bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
+        subjectParamsForAcceptance[0] = abi.encode(accountHashString);
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             subjectParams: subjectParamsForAcceptance,
@@ -168,48 +169,39 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
 
     function handleRecovery(
         address account,
-        address oldOwner,
-        address newOwner,
+        bytes32 recoveryDataHash,
         address guardian
     )
         public
     {
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(account, oldOwner, newOwner, guardian);
+            getRecoveryEmailAuthMessage(account, recoveryDataHash, guardian);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function getRecoveryEmailAuthMessage(
         address account,
-        address oldOwner,
-        address newOwner,
+        bytes32 recoveryDataHash,
         address guardian
     )
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory oldOwnerString = SubjectUtils.addressToChecksumHexString(oldOwner);
-        string memory newOwnerString = SubjectUtils.addressToChecksumHexString(newOwner);
+        bytes32 accountHash = keccak256(abi.encodePacked(account));
+        string memory accountHashString = uint256(accountHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+        string memory subjectPart1 = string.concat("Recover account ", accountHashString);
+        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory subject = string.concat(subjectPart1, subjectPart2);
 
-        string memory subject = string.concat(
-            "Recover account ",
-            accountString,
-            " from old owner ",
-            oldOwnerString,
-            " to new owner ",
-            newOwnerString
-        );
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(account);
-        subjectParamsForRecovery[1] = abi.encode(oldOwner);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
-
+        bytes[] memory subjectParamsForRecovery = new bytes[](2);
+        subjectParamsForRecovery[0] = abi.encode(accountHashString);
+        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             subjectParams: subjectParamsForRecovery,
