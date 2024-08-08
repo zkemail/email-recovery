@@ -67,6 +67,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
@@ -76,6 +77,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 3);
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash1);
 
         // Time travel so that the recovery delay has passed
         vm.warp(block.timestamp + delay);
@@ -89,6 +91,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
         assertEq(updatedOwner, newOwner1);
     }
 
