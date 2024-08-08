@@ -172,7 +172,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @param subjectParams The subject parameters of the recovery email
      * @return calldataHash The keccak256 hash of the recovery calldata
      */
-    function parseRecoveryCalldataHash(
+    function parseRecoveryDataHash(
         uint256 templateIdx,
         bytes[] calldata subjectParams
     )
