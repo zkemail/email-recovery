@@ -256,12 +256,17 @@ contract UniversalEmailRecoveryModule is
     /**
      * @notice Executes recovery on a validator. Called from the recovery manager
      * @param account The account to execute recovery for
-     * @param recoveryData The recovery calldata that should be executed on the validator being
-     * recovered, along with the target validator
+     * @param recoveryData The recovery data that should be executed on the validator being
+     * recovered, along with the target validator.
+     * recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
         (address validator, bytes memory recoveryCalldata) =
             abi.decode(recoveryData, (address, bytes));
+
+        if (validator == address(0)) {
+            revert InvalidValidator(validator);
+        }
 
         bytes4 selector;
         assembly {

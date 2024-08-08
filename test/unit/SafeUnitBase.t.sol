@@ -24,8 +24,8 @@ abstract contract SafeUnitBase is IntegrationBase {
     address recoveryModuleAddress;
 
     bytes4 functionSelector;
-    bytes recoveryCalldata;
-    bytes32 calldataHash;
+    bytes recoveryData;
+    bytes32 recoveryDataHash;
     bytes isInstalledContext;
 
     /**
@@ -73,8 +73,8 @@ abstract contract SafeUnitBase is IntegrationBase {
         bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
         );
-        bytes memory recoveryCalldata = abi.encode(accountAddress1, swapOwnerCalldata);
-        calldataHash = keccak256(recoveryCalldata);
+        bytes memory recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
+        recoveryDataHash = keccak256(recoveryData);
         isInstalledContext = bytes("0");
 
         // Compute guardian addresses
@@ -147,13 +147,13 @@ abstract contract SafeUnitBase is IntegrationBase {
 
     function handleRecovery(address account, bytes32 accountSalt) public {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
         string memory recoveryModuleString =
             SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
         string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", calldataHashString);
+        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         uint256 templateIdx = 0;
@@ -163,7 +163,7 @@ abstract contract SafeUnitBase is IntegrationBase {
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(account);
         subjectParamsForRecovery[1] = abi.encode(recoveryModuleAddress);
-        subjectParamsForRecovery[2] = abi.encode(calldataHashString);
+        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

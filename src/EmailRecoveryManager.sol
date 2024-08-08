@@ -349,17 +349,17 @@ abstract contract EmailRecoveryManager is
         recoveryRequest.currentWeight += guardianStorage.weight;
 
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
-            bytes32 calldataHash = IEmailRecoverySubjectHandler(subjectHandler)
-                .parseRecoveryCalldataHash(templateIdx, subjectParams);
+            bytes32 recoveryDataHash = IEmailRecoverySubjectHandler(subjectHandler)
+                .parseRecoveryDataHash(templateIdx, subjectParams);
 
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
 
             recoveryRequest.executeAfter = executeAfter;
             recoveryRequest.executeBefore = executeBefore;
-            recoveryRequest.calldataHash = calldataHash;
+            recoveryRequest.recoveryDataHash = recoveryDataHash;
 
-            emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, calldataHash);
+            emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, recoveryDataHash);
         }
     }
 
@@ -377,9 +377,13 @@ abstract contract EmailRecoveryManager is
      * deletes the recovery request but recovery config state is maintained so future recovery
      * requests can be made without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
-     * @param recoveryCalldata The calldata that is passed to recover the validator
+     * @param recoveryData The data that is passed to recover the validator or account.
+     * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
+     * possible to design a recovery module using this manager without encoding the validator or
+     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * are implemented
      */
-    function completeRecovery(address account, bytes calldata recoveryCalldata) external override {
+    function completeRecovery(address account, bytes calldata recoveryData) external override {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -402,19 +406,19 @@ abstract contract EmailRecoveryManager is
             revert RecoveryRequestExpired(block.timestamp, recoveryRequest.executeBefore);
         }
 
-        bytes32 calldataHash = keccak256(recoveryCalldata);
-        if (calldataHash != recoveryRequest.calldataHash) {
-            revert InvalidCalldataHash(calldataHash, recoveryRequest.calldataHash);
+        bytes32 recoveryDataHash = keccak256(recoveryData);
+        if (recoveryDataHash != recoveryRequest.recoveryDataHash) {
+            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
         }
 
         delete recoveryRequests[account];
 
-        recover(account, recoveryCalldata);
+        recover(account, recoveryData);
 
         emit RecoveryCompleted(account);
     }
 
-    function recover(address account, bytes calldata recoveryCalldata) internal virtual;
+    function recover(address account, bytes calldata recoveryData) internal virtual;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CANCEL/DE-INIT LOGIC                    */

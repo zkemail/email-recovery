@@ -6,39 +6,39 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 
-contract EmailRecoverySubjectHandler_parseRecoveryCalldataHash_Test is UnitBase {
+contract EmailRecoverySubjectHandler_parseRecoveryDataHash_Test is UnitBase {
     using Strings for uint256;
 
-    string calldataHashString;
+    string recoveryDataHashString;
     bytes[] subjectParams;
 
     function setUp() public override {
         super.setUp();
 
-        calldataHashString = uint256(calldataHash).toHexString(32);
+        recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(recoveryModuleAddress);
-        subjectParams[2] = abi.encode(calldataHashString);
+        subjectParams[2] = abi.encode(recoveryDataHashString);
     }
 
-    function test_ParseRecoveryCalldataHash_RevertWhen_InvalidTemplateIndex() public {
+    function test_ParseRecoveryDataHash_RevertWhen_InvalidTemplateIndex() public {
         uint256 invalidTemplateIdx = 1;
         vm.expectRevert(
             abi.encodeWithSelector(
                 EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        emailRecoveryHandler.parseRecoveryCalldataHash(invalidTemplateIdx, subjectParams);
+        emailRecoveryHandler.parseRecoveryDataHash(invalidTemplateIdx, subjectParams);
     }
 
-    function test_ParseRecoveryCalldataHash_Succeeds() public {
-        bytes32 expectedCalldataHash = keccak256(recoveryCalldata);
+    function test_ParseRecoveryDataHash_Succeeds() public {
+        bytes32 expectedRecoveryDataHash = keccak256(recoveryData);
 
-        bytes32 calldataHash =
-            emailRecoveryHandler.parseRecoveryCalldataHash(templateIdx, subjectParams);
+        bytes32 recoveryDataHash =
+            emailRecoveryHandler.parseRecoveryDataHash(templateIdx, subjectParams);
 
-        assertEq(calldataHash, expectedCalldataHash);
+        assertEq(recoveryDataHash, expectedRecoveryDataHash);
     }
 }

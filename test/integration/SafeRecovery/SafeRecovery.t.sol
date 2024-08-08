@@ -28,8 +28,8 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", address(1), owner1, newOwner1
         );
-        bytes memory recoveryCalldata = abi.encode(accountAddress1, swapOwnerCalldata);
-        bytes32 calldataHash = keccak256(recoveryCalldata);
+        bytes memory recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
+        bytes32 recoveryDataHash = keccak256(recoveryData);
 
         bytes[] memory subjectParamsForRecovery = new bytes[](4);
         subjectParamsForRecovery[0] = abi.encode(accountAddress1);
@@ -74,7 +74,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);

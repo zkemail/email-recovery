@@ -51,8 +51,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
     OwnableValidator validator;
     bytes isInstalledContext;
     bytes4 functionSelector;
-    bytes recoveryCalldata;
-    bytes32 calldataHash;
+    bytes recoveryData;
+    bytes32 recoveryDataHash;
 
     // account and owners
     AccountInstance instance;
@@ -155,8 +155,8 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
         bytes memory changeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner);
-        recoveryCalldata = abi.encode(validatorAddress, changeOwnerCalldata);
-        calldataHash = keccak256(recoveryCalldata);
+        recoveryData = abi.encode(validatorAddress, changeOwnerCalldata);
+        recoveryDataHash = keccak256(recoveryData);
 
         // Install modules
         instance.installModule({
@@ -258,18 +258,18 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     function handleRecovery(
         address recoveryModule,
-        bytes32 recoveryCalldataHash,
+        bytes32 recoveryDataHash,
         bytes32 accountSalt
     )
         public
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
-        string memory calldataHashString = uint256(recoveryCalldataHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
         string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
         string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", calldataHashString);
+        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
@@ -278,7 +278,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
         subjectParamsForRecovery[1] = abi.encode(recoveryModule);
-        subjectParamsForRecovery[2] = abi.encode(calldataHashString);
+        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

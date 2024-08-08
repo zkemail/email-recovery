@@ -13,12 +13,12 @@ contract EmailRecoverySubjectHandler_extractRecoveredAccountFromRecoverySubject_
     }
 
     function test_ExtractRecoveredAccountFromRecoverySubject_Succeeds() public view {
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         bytes[] memory subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress);
         subjectParams[1] = abi.encode(recoveryModuleAddress);
-        subjectParams[2] = abi.encode(calldataHashString);
+        subjectParams[2] = abi.encode(recoveryDataHashString);
 
         address extractedAccount = emailRecoveryHandler.extractRecoveredAccountFromRecoverySubject(
             subjectParams, templateIdx

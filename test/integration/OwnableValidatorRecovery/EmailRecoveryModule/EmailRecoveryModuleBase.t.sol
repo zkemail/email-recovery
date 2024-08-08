@@ -34,12 +34,12 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
     OwnableValidator validator;
     bytes isInstalledContext;
     bytes4 functionSelector;
-    bytes recoveryCalldata1;
-    bytes recoveryCalldata2;
-    bytes recoveryCalldata3;
-    bytes32 calldataHash1;
-    bytes32 calldataHash2;
-    bytes32 calldataHash3;
+    bytes recoveryData1;
+    bytes recoveryData2;
+    bytes recoveryData3;
+    bytes32 recoveryDataHash1;
+    bytes32 recoveryDataHash2;
+    bytes32 recoveryDataHash3;
 
     uint256 nullifierCount;
 
@@ -69,12 +69,15 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         );
         emailRecoveryModule = EmailRecoveryModule(recoveryModuleAddress);
 
-        recoveryCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
-        recoveryCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
-        recoveryCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
-        calldataHash1 = keccak256(recoveryCalldata1);
-        calldataHash2 = keccak256(recoveryCalldata2);
-        calldataHash3 = keccak256(recoveryCalldata3);
+        bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
+        bytes memory changeOwnerCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
+        bytes memory changeOwnerCalldata3 = abi.encodeWithSelector(functionSelector, newOwner3);
+        recoveryData1 = abi.encode(validatorAddress, changeOwnerCalldata1);
+        recoveryData2 = abi.encode(validatorAddress, changeOwnerCalldata2);
+        recoveryData3 = abi.encode(validatorAddress, changeOwnerCalldata3);
+        recoveryDataHash1 = keccak256(recoveryData1);
+        recoveryDataHash2 = keccak256(recoveryData2);
+        recoveryDataHash3 = keccak256(recoveryData3);
 
         // Compute guardian addresses
         guardians1 = new address[](3);
@@ -256,9 +259,9 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         });
     }
 
-    function handleRecovery(address account, address guardian, bytes32 calldataHash) public {
+    function handleRecovery(address account, address guardian, bytes32 recoveryDataHash) public {
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(account, guardian, calldataHash);
+            getRecoveryEmailAuthMessage(account, guardian, recoveryDataHash);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
@@ -266,13 +269,13 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
     function handleRecoveryWithAccountSalt(
         address account,
         address guardian,
-        bytes32 calldataHash,
+        bytes32 recoveryDataHash,
         bytes32 optionalAccountSalt
     )
         public
     {
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
-            account, guardian, calldataHash, optionalAccountSalt
+            account, guardian, recoveryDataHash, optionalAccountSalt
         );
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
@@ -280,32 +283,33 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
     function getRecoveryEmailAuthMessage(
         address account,
         address guardian,
-        bytes32 calldataHash
+        bytes32 recoveryDataHash
     )
         public
         returns (EmailAuthMsg memory)
     {
-        return
-            getRecoveryEmailAuthMessageWithAccountSalt(account, guardian, calldataHash, bytes32(0));
+        return getRecoveryEmailAuthMessageWithAccountSalt(
+            account, guardian, recoveryDataHash, bytes32(0)
+        );
     }
 
     // WithAccountSalt variation - used for creating incorrect recovery setups
     function getRecoveryEmailAuthMessageWithAccountSalt(
         address account,
         address guardian,
-        bytes32 calldataHash,
+        bytes32 recoveryDataHash,
         bytes32 optionalAccountSalt
     )
         public
         returns (EmailAuthMsg memory)
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory calldataHashString = uint256(calldataHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
         string memory recoveryModuleString =
             SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
         string memory subjectPart1 = string.concat("Recover account ", accountString);
         string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", calldataHashString);
+        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
 
         string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
         bytes32 nullifier = generateNewNullifier();
@@ -322,7 +326,7 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(account);
         subjectParamsForRecovery[1] = abi.encode(recoveryModuleAddress);
-        subjectParamsForRecovery[2] = abi.encode(calldataHashString);
+        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

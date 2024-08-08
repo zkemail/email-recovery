@@ -19,7 +19,7 @@ contract GuardianManager_addGuardian_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, calldataHash, accountSalt1);
+        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);

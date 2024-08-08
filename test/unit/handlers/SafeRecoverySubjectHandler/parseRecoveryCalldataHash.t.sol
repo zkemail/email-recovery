@@ -5,7 +5,7 @@ import { console2 } from "forge-std/console2.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 
-contract SafeRecoverySubjectHandler_parseRecoveryCalldataHash_Test is SafeUnitBase {
+contract SafeRecoverySubjectHandler_parseRecoveryDataHash_Test is SafeUnitBase {
     bytes[] subjectParams;
 
     function setUp() public override {
@@ -18,7 +18,7 @@ contract SafeRecoverySubjectHandler_parseRecoveryCalldataHash_Test is SafeUnitBa
         subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
-    function test_ParseRecoveryCalldataHash_RevertWhen_InvalidTemplateIndex() public {
+    function test_ParseRecoveryDataHash_RevertWhen_InvalidTemplateIndex() public {
         skipIfNotSafeAccountType();
 
         uint256 invalidTemplateIdx = 1;
@@ -27,15 +27,15 @@ contract SafeRecoverySubjectHandler_parseRecoveryCalldataHash_Test is SafeUnitBa
                 SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        safeRecoverySubjectHandler.parseRecoveryCalldataHash(invalidTemplateIdx, subjectParams);
+        safeRecoverySubjectHandler.parseRecoveryDataHash(invalidTemplateIdx, subjectParams);
     }
 
-    function test_ParseRecoveryCalldataHash_Succeeds() public {
+    function test_ParseRecoveryDataHash_Succeeds() public {
         skipIfNotSafeAccountType();
 
-        bytes32 actualCalldataHash =
-            safeRecoverySubjectHandler.parseRecoveryCalldataHash(templateIdx, subjectParams);
+        bytes32 actualRecoveryDataHash =
+            safeRecoverySubjectHandler.parseRecoveryDataHash(templateIdx, subjectParams);
 
-        assertEq(actualCalldataHash, calldataHash);
+        assertEq(actualRecoveryDataHash, recoveryDataHash);
     }
 }

@@ -23,18 +23,18 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     function executeRecoveryFlowForAccount(
         address account,
         address[] memory guardians,
-        bytes32 calldataHash,
-        bytes memory recoveryCalldata
+        bytes32 recoveryDataHash,
+        bytes memory recoveryData
     )
         internal
     {
         acceptGuardian(account, guardians[0]);
         acceptGuardian(account, guardians[1]);
         vm.warp(block.timestamp + 12 seconds);
-        handleRecovery(account, guardians[0], calldataHash);
-        handleRecovery(account, guardians[1], calldataHash);
+        handleRecovery(account, guardians[0], recoveryDataHash);
+        handleRecovery(account, guardians[1], recoveryDataHash);
         vm.warp(block.timestamp + delay);
-        emailRecoveryModule.completeRecovery(account, recoveryCalldata);
+        emailRecoveryModule.completeRecovery(account, recoveryData);
     }
 
     function setUp() public override {
@@ -59,7 +59,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
         // handle recovery request for guardian 1
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
@@ -69,7 +69,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
-        handleRecovery(accountAddress1, guardians1[1], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
@@ -79,7 +79,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         address updatedOwner = validator.owners(accountAddress1);
@@ -96,12 +96,13 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(12 seconds);
 
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], calldataHash1);
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], recoveryDataHash1);
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
 
-        emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], calldataHash1);
+        emailAuthMsg =
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -117,10 +118,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         acceptGuardian(accountAddress1, guardians1[0]);
         acceptGuardian(accountAddress1, guardians1[1]);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
-            accountAddress2, guardians1[1], calldataHash2, accountSalt2
+            accountAddress2, guardians1[1], recoveryDataHash2, accountSalt2
         );
 
         vm.expectRevert(
@@ -164,7 +165,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(12 seconds);
 
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], calldataHash1);
+            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
 
@@ -176,7 +177,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         acceptGuardian(accountAddress1, guardians1[0]);
         acceptGuardian(accountAddress1, guardians1[1]);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
 
         vm.startPrank(accountAddress1);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
@@ -189,8 +190,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         acceptGuardian(accountAddress1, guardians1[0]);
         acceptGuardian(accountAddress1, guardians1[1]);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
-        handleRecovery(accountAddress1, guardians1[1], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
         vm.warp(block.timestamp + delay);
 
         vm.startPrank(accountAddress1);
@@ -199,7 +200,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_UninstallModuleAndTryRecoveryAgain() public {
-        executeRecoveryFlowForAccount(accountAddress1, guardians1, calldataHash1, recoveryCalldata1);
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
 
@@ -213,7 +214,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_UninstallModuleAndRecoverAgain() public {
-        executeRecoveryFlowForAccount(accountAddress1, guardians1, calldataHash1, recoveryCalldata1);
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner = validator.owners(accountAddress1);
         assertEq(updatedOwner, newOwner1);
 
@@ -234,10 +235,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         });
 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
-        bytes memory newRecoveryCalldata = abi.encode(validatorAddress, newChangeOwnerCalldata);
-        bytes32 newCalldataHash = keccak256(newRecoveryCalldata);
+        bytes memory newRecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
+        bytes32 newRecoveryDataHash = keccak256(newRecoveryData);
         executeRecoveryFlowForAccount(
-            accountAddress1, guardians1, newCalldataHash, newRecoveryCalldata
+            accountAddress1, guardians1, newRecoveryDataHash, newRecoveryData
         );
 
         updatedOwner = validator.owners(accountAddress1);
@@ -245,9 +246,9 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RotatesMultipleOwnersSuccessfully() public {
-        executeRecoveryFlowForAccount(accountAddress1, guardians1, calldataHash1, recoveryCalldata1);
-        executeRecoveryFlowForAccount(accountAddress2, guardians2, calldataHash2, recoveryCalldata2);
-        executeRecoveryFlowForAccount(accountAddress3, guardians3, calldataHash3, recoveryCalldata3);
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        executeRecoveryFlowForAccount(accountAddress2, guardians2, recoveryDataHash2, recoveryData2);
+        executeRecoveryFlowForAccount(accountAddress3, guardians3, recoveryDataHash3, recoveryData3);
 
         address updatedOwner1 = validator.owners(accountAddress1);
         address updatedOwner2 = validator.owners(accountAddress2);
@@ -267,18 +268,17 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         });
 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
-        bytes memory validator2RecoveryCalldata =
-            abi.encode(validatorAddress, newChangeOwnerCalldata);
-        bytes32 validator2CalldataHash = keccak256(validator2RecoveryCalldata);
+        bytes memory validator2RecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
+        bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
 
-        executeRecoveryFlowForAccount(accountAddress1, guardians1, calldataHash1, recoveryCalldata1);
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
 
-        handleRecovery(accountAddress1, guardians1[0], validator2CalldataHash);
-        handleRecovery(accountAddress1, guardians1[1], validator2CalldataHash);
+        handleRecovery(accountAddress1, guardians1[0], validator2RecoveryDataHash);
+        handleRecovery(accountAddress1, guardians1[1], validator2RecoveryDataHash);
         vm.warp(block.timestamp + delay);
-        emailRecoveryModule.completeRecovery(accountAddress1, validator2RecoveryCalldata);
+        emailRecoveryModule.completeRecovery(accountAddress1, validator2RecoveryData);
 
         address updatedOwner2 = validator.owners(accountAddress1);
         assertEq(updatedOwner2, newOwner2);
@@ -294,9 +294,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         });
 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
-        bytes memory validator2RecoveryCalldata =
-            abi.encode(validatorAddress, newChangeOwnerCalldata);
-        bytes32 validator2CalldataHash = keccak256(validator2RecoveryCalldata);
+        bytes memory validator2RecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
+        bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
 
         // Accept guardians
         acceptGuardian(accountAddress1, guardians1[0]);
@@ -304,25 +303,25 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(block.timestamp + 12 seconds);
 
         // process recovery for validator 1
-        handleRecovery(accountAddress1, guardians1[0], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
         vm.warp(block.timestamp + 12 seconds);
         // process recovery for validator 2
-        handleRecovery(accountAddress1, guardians1[0], validator2CalldataHash);
+        handleRecovery(accountAddress1, guardians1[0], validator2RecoveryDataHash);
 
         // process recovery for validator 1
-        handleRecovery(accountAddress1, guardians1[1], calldataHash1);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
         vm.warp(block.timestamp + 12 seconds);
         // process recovery for validator 2
-        handleRecovery(accountAddress1, guardians1[1], validator2CalldataHash);
+        handleRecovery(accountAddress1, guardians1[1], validator2RecoveryDataHash);
 
         vm.warp(block.timestamp + delay);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidCalldataHash.selector,
-                calldataHash1,
-                validator2CalldataHash
+                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
+                recoveryDataHash1,
+                validator2RecoveryDataHash
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress1, recoveryCalldata1);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
     }
 }
