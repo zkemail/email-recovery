@@ -32,7 +32,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         vm.startPrank(otherAddress);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
@@ -50,7 +50,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         vm.startPrank(accountAddress);
         emailRecoveryModule.cancelRecovery();
