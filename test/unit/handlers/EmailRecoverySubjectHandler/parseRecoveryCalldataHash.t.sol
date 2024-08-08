@@ -17,10 +17,9 @@ contract EmailRecoverySubjectHandler_parseRecoveryDataHash_Test is UnitBase {
 
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
-        subjectParams = new bytes[](3);
+        subjectParams = new bytes[](2);
         subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(recoveryModuleAddress);
-        subjectParams[2] = abi.encode(recoveryDataHashString);
+        subjectParams[1] = abi.encode(recoveryDataHashString);
     }
 
     function test_ParseRecoveryDataHash_RevertWhen_InvalidTemplateIndex() public {

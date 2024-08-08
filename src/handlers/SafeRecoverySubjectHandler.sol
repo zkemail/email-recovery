@@ -13,7 +13,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
     error InvalidOldOwner(address oldOwner);
     error InvalidNewOwner(address newOwner);
-    error InvalidRecoveryModule(address recoveryModule);
 
     /**
      * @notice Returns a hard-coded two-dimensional array of strings representing the subject
@@ -40,7 +39,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      */
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](15);
+        templates[0] = new string[](11);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
         templates[0][2] = "{ethAddr}";
@@ -52,10 +51,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         templates[0][8] = "new";
         templates[0][9] = "owner";
         templates[0][10] = "{ethAddr}";
-        templates[0][11] = "using";
-        templates[0][12] = "recovery";
-        templates[0][13] = "module";
-        templates[0][14] = "{ethAddr}";
         return templates;
     }
 
@@ -123,13 +118,11 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @param expectedRecoveryModule The recovery module address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
      */
     function validateRecoverySubject(
         uint256 templateIdx,
-        bytes[] calldata subjectParams,
-        address expectedRecoveryModule
+        bytes[] calldata subjectParams
     )
         public
         view
@@ -138,14 +131,13 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-        if (subjectParams.length != 4) {
-            revert InvalidSubjectParams(subjectParams.length, 4);
+        if (subjectParams.length != 3) {
+            revert InvalidSubjectParams(subjectParams.length, 3);
         }
 
         address accountInEmail = abi.decode(subjectParams[0], (address));
         address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
         address newOwnerInEmail = abi.decode(subjectParams[2], (address));
-        address recoveryModuleInEmail = abi.decode(subjectParams[3], (address));
 
         bool isOldAddressOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
         if (!isOldAddressOwner) {
@@ -155,15 +147,6 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
         if (newOwnerInEmail == address(0) || isNewAddressOwner) {
             revert InvalidNewOwner(newOwnerInEmail);
-        }
-
-        // Even though someone could use a malicious contract as the expectedRecoveryModule
-        // argument, it does not matter in this case as this is only used as part of the recovery
-        // flow in the recovery module. Passing the recovery module in the constructor here would
-        // result in a circular dependency
-        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
-        {
-            revert InvalidRecoveryModule(recoveryModuleInEmail);
         }
 
         return accountInEmail;

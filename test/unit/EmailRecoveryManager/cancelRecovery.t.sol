@@ -25,7 +25,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
+        handleRecovery(recoveryDataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress);
@@ -43,7 +43,7 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
+        handleRecovery(recoveryDataHash, accountSalt1);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress);
@@ -66,8 +66,8 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt2);
+        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(recoveryDataHash, accountSalt2);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress);

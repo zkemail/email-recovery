@@ -12,11 +12,10 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
     error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
     error InvalidAccount();
-    error InvalidRecoveryModule(address recoveryModule);
     error ExistingStoredAccountHash(address account);
 
     // Mapping of account hashes to their addresses
-    mapping(bytes32=>address) public accountHashes;
+    mapping(bytes32 accountHash => address account) public accountHashes;
 
     /**
      * @notice Returns a hard-coded two-dimensional array of strings representing the subject
@@ -43,24 +42,20 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      */
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
+        templates[0] = new string[](7);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
         templates[0][2] = "{string}";
-        templates[0][3] = "via";
+        templates[0][3] = "using";
         templates[0][4] = "recovery";
-        templates[0][5] = "module";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "hash";
-        templates[0][10] = "{string}";
+        templates[0][5] = "hash";
+        templates[0][6] = "{string}";
         return templates;
     }
 
     /**
-     * @notice Extracts the hash of the account address to be recovered from the subject parameters of
-     * acceptance email and returns the corresponding address stored in the accountHashes.
+     * @notice Extracts the hash of the account address to be recovered from the subject parameters
+     * of acceptance email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the acceptance email.
      */
     function extractRecoveredAccountFromAcceptanceSubject(
@@ -76,8 +71,8 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     }
 
     /**
-     * @notice Extracts the hash of the account address to be recovered from the subject parameters of
-     * recovery email and returns the corresponding address stored in the accountHashes.
+     * @notice Extracts the hash of the account address to be recovered from the subject parameters
+     * of recovery email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the recovery email.
      */
     function extractRecoveredAccountFromRecoverySubject(
@@ -115,7 +110,8 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
         // The GuardianStatus check in acceptGuardian implicitly
         // validates the account, so no need to re-validate here
-        address accountInEmail = extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
+        address accountInEmail =
+            extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
 
         return accountInEmail;
     }
@@ -124,13 +120,11 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @param expectedRecoveryModule The recovery module address. Used to help with validation
      * @return accountInEmail The account address in the acceptance email
      */
     function validateRecoverySubject(
         uint256 templateIdx,
-        bytes[] calldata subjectParams,
-        address expectedRecoveryModule
+        bytes[] calldata subjectParams
     )
         public
         view
@@ -139,38 +133,30 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-        if (subjectParams.length != 3) {
-            revert InvalidSubjectParams(subjectParams.length, 3);
+        if (subjectParams.length != 2) {
+            revert InvalidSubjectParams(subjectParams.length, 2);
         }
 
-        address accountInEmail = extractRecoveredAccountFromRecoverySubject(subjectParams, templateIdx);
-        address recoveryModuleInEmail = abi.decode(subjectParams[1], (address));
-        string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
-        // hexToBytes32 validates the calldataHash is not zero bytes and has the correct length
-        StringUtils.hexToBytes32(calldataHashInEmail);
+        address accountInEmail =
+            extractRecoveredAccountFromRecoverySubject(subjectParams, templateIdx);
+        string memory recoveryDataHashInEmail = abi.decode(subjectParams[1], (string));
+        // hexToBytes32 validates the recoveryDataHash is not zero bytes and has the correct length
+        StringUtils.hexToBytes32(recoveryDataHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
-        }
-
-        // Even though someone could use a malicious contract as the expectedRecoveryModule
-        // argument, it does not matter in this case as this is only used as part of the recovery
-        // flow in the recovery module. Passing the recovery module in the constructor here would
-        // result in a circular dependency
-        if (recoveryModuleInEmail == address(0) || recoveryModuleInEmail != expectedRecoveryModule)
-        {
-            revert InvalidRecoveryModule(recoveryModuleInEmail);
         }
 
         return accountInEmail;
     }
 
     /**
-     * @notice parses the recovery calldata hash from the subject params. The calldata hash is
+     * @notice parses the recovery data hash from the subject params. The data hash is
      * verified against later when recovery is executed
+     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return calldataHash The keccak256 hash of the recovery calldata
+     * @return recoveryDataHash The keccak256 hash of the recovery data
      */
     function parseRecoveryDataHash(
         uint256 templateIdx,
@@ -184,8 +170,8 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
 
-        string memory calldataHashInEmail = abi.decode(subjectParams[2], (string));
-        return StringUtils.hexToBytes32(calldataHashInEmail);
+        string memory recoveryDataHashInEmail = abi.decode(subjectParams[1], (string));
+        return StringUtils.hexToBytes32(recoveryDataHashInEmail);
     }
 
     /**
@@ -194,7 +180,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      */
     function storeAccountHash(address account) public {
         bytes32 accountHash = keccak256(abi.encodePacked(account));
-        if(accountHashes[accountHash] != address(0)) {
+        if (accountHashes[accountHash] != address(0)) {
             revert ExistingStoredAccountHash(account);
         }
         accountHashes[accountHash] = account;

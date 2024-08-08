@@ -34,11 +34,10 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         bytes memory recoveryData = abi.encode(safeAddress, recoveryCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(safeAddress);
         subjectParamsForRecovery[1] = abi.encode(owner);
         subjectParamsForRecovery[2] = abi.encode(newOwner);
-        subjectParamsForRecovery[3] = abi.encode(emailRecoveryModuleAddress);
 
         // Accept guardian
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[0]);

@@ -305,13 +305,10 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory recoveryModuleString =
-            SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
         string memory subjectPart1 = string.concat("Recover account ", accountString);
-        string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
 
-        string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
+        string memory subject = string.concat(subjectPart1, subjectPart2);
         bytes32 nullifier = generateNewNullifier();
 
         bytes32 accountSalt;
@@ -323,10 +320,9 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
+        bytes[] memory subjectParamsForRecovery = new bytes[](2);
         subjectParamsForRecovery[0] = abi.encode(account);
-        subjectParamsForRecovery[1] = abi.encode(recoveryModuleAddress);
-        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
+        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

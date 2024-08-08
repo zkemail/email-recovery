@@ -22,7 +22,6 @@ contract LogErrorSelectors_Test is Test {
         assertEq(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
         assertEq(EmailRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025));
         assertEq(EmailRecoverySubjectHandler.InvalidAccount.selector, bytes4(0x6d187b28));
-        assertEq(EmailRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0xa01f773d));
     }
 
     function test_SafeRecoverySubjectHandler_AssertSelectors() public {
@@ -30,7 +29,6 @@ contract LogErrorSelectors_Test is Test {
         assertEq(SafeRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025));
         assertEq(SafeRecoverySubjectHandler.InvalidOldOwner.selector, bytes4(0x377abe51));
         assertEq(SafeRecoverySubjectHandler.InvalidNewOwner.selector, bytes4(0x896d9ad0));
-        assertEq(SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, bytes4(0xa01f773d));
     }
 
     function test_IEmailRecoveryManager_AssertSelectors() public {

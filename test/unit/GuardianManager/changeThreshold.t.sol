@@ -14,7 +14,7 @@ contract GuardianManager_changeThreshold_Test is UnitBase {
         acceptGuardian(accountSalt1);
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
+        handleRecovery(recoveryDataHash, accountSalt1);
 
         vm.startPrank(accountAddress);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
