@@ -29,9 +29,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
                 SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            invalidTemplateIdx, subjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(invalidTemplateIdx, subjectParams);
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
@@ -45,9 +43,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
                 3
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, emptySubjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, emptySubjectParams);
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_TooManySubjectParams() public {
@@ -65,9 +61,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
                 3
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, longSubjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, longSubjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidOldOwner() public {
@@ -77,9 +71,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidOldOwner.selector, address(0))
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_ZeroNewOwner() public {
@@ -89,9 +81,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, address(0))
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
@@ -101,16 +91,13 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, owner1)
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_Succeeds() public {
         skipIfNotSafeAccountType();
-        address accountFromEmail = safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        address accountFromEmail =
+            safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
         assertEq(accountFromEmail, accountAddress1);
     }
 }

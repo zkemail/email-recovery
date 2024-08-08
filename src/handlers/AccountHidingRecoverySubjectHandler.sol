@@ -140,12 +140,12 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         address accountInEmail =
             extractRecoveredAccountFromRecoverySubject(subjectParams, templateIdx);
         string memory recoveryDataHashInEmail = abi.decode(subjectParams[1], (string));
-        // hexToBytes32 validates the recoveryDataHash is not zero bytes and has the correct length
-        StringUtils.hexToBytes32(recoveryDataHashInEmail);
 
         if (accountInEmail == address(0)) {
             revert InvalidAccount();
         }
+        // hexToBytes32 validates the recoveryDataHash is not zero bytes and has the correct length
+        StringUtils.hexToBytes32(recoveryDataHashInEmail);
 
         return accountInEmail;
     }
@@ -169,9 +169,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-
-        string memory recoveryDataHashInEmail = abi.decode(subjectParams[1], (string));
-        return StringUtils.hexToBytes32(recoveryDataHashInEmail);
+        return StringUtils.hexToBytes32(abi.decode(subjectParams[1], (string)));
     }
 
     /**

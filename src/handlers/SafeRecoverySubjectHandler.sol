@@ -9,6 +9,8 @@ import { ISafe } from "../interfaces/ISafe.sol";
  * This is a custom subject handler that will work with Safes and defines custom validation.
  */
 contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
+    bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+
     error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
     error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
     error InvalidOldOwner(address oldOwner);
@@ -180,12 +182,10 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
         address previousOwnerInLinkedList =
             getPreviousOwnerInLinkedList(accountInEmail, oldOwnerInEmail);
-        string memory functionSignature = "swapOwner(address,address,address)";
-        bytes memory swapOwnerCalldata = abi.encodeWithSignature(
-            functionSignature, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
+        bytes memory swapOwnerCalldata = abi.encodeWithSelector(
+            selector, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        bytes memory recoveryData = abi.encode(accountInEmail, swapOwnerCalldata);
-        return keccak256(recoveryData);
+        return keccak256(abi.encode(accountInEmail, swapOwnerCalldata));
     }
 
     /**

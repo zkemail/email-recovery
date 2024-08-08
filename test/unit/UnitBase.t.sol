@@ -252,12 +252,7 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        bytes32 recoveryDataHash,
-        bytes32 accountSalt
-    )
-        public
-    {
+    function handleRecovery(bytes32 recoveryDataHash, bytes32 accountSalt) public {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 

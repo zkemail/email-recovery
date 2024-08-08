@@ -12,7 +12,8 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
-import { AccountHidingRecoverySubjectHandler } from "src/handlers/AccountHidingRecoverySubjectHandler.sol";
+import { AccountHidingRecoverySubjectHandler } from
+    "src/handlers/AccountHidingRecoverySubjectHandler.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeNativeIntegrationBase is IntegrationBase {
@@ -167,13 +168,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         });
     }
 
-    function handleRecovery(
-        address account,
-        bytes32 recoveryDataHash,
-        address guardian
-    )
-        public
-    {
+    function handleRecovery(address account, bytes32 recoveryDataHash, address guardian) public {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, recoveryDataHash, guardian);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);

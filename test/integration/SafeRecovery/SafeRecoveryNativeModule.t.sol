@@ -11,7 +11,8 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { AccountHidingRecoverySubjectHandler } from "src/handlers/AccountHidingRecoverySubjectHandler.sol";
+import { AccountHidingRecoverySubjectHandler } from
+    "src/handlers/AccountHidingRecoverySubjectHandler.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeNativeIntegrationBase } from "./SafeNativeIntegrationBase.t.sol";
 

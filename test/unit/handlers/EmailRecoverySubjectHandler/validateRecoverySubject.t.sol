@@ -30,9 +30,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
                 EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        emailRecoveryHandler.validateRecoverySubject(
-            invalidTemplateIdx, subjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(invalidTemplateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_NoSubjectParams() public {
@@ -45,9 +43,7 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
                 2
             )
         );
-        emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, emptySubjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(templateIdx, emptySubjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_TooManySubjectParams() public {
@@ -63,42 +59,33 @@ contract EmailRecoverySubjectHandler_validateRecoverySubject_Test is UnitBase {
                 2
             )
         );
-        emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, longSubjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(templateIdx, longSubjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidAccount() public {
         subjectParams[0] = abi.encode(address(0));
 
         vm.expectRevert(EmailRecoverySubjectHandler.InvalidAccount.selector);
-        emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_ZeroRecoveryDataHash() public {
         subjectParams[1] = abi.encode(bytes32(0));
 
         vm.expectRevert("invalid hex prefix");
-        emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidHashLength() public {
         subjectParams[1] = abi.encode(uint256(recoveryDataHash).toHexString(33));
 
         vm.expectRevert("invalid hex string length");
-        emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        emailRecoveryHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_Succeeds() public view {
-        address accountFromEmail = emailRecoveryHandler.validateRecoverySubject(
-            templateIdx, subjectParams
-        );
+        address accountFromEmail =
+            emailRecoveryHandler.validateRecoverySubject(templateIdx, subjectParams);
         assertEq(accountFromEmail, accountAddress);
     }
 }
