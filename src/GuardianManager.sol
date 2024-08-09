@@ -10,7 +10,8 @@ import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "./interfaces/IGuardianManager.sol";
 
 /**
- * A contract to manage guardians
+ * @title GuardianManager
+ * @notice A contract to manage guardians
  */
 abstract contract GuardianManager is IGuardianManager {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;

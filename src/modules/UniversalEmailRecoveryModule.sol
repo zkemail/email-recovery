@@ -11,13 +11,13 @@ import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /**
  * @title UniversalEmailRecoveryModule
- * @notice This contract provides a simple mechanism for recovering account validators by
+ * @notice This contract provides a simple mechanism for recovering modular smart accounts by
  * permissioning certain functions to be called on validators. It facilitates recovery by
  * integration with the email recovery manager contract. The module defines how a recovery request
  * is executed on a validator, while the recovery manager defines what a valid recovery request is.
  *
  * This recovery module is generic and does not target a specific validator. An account may add
- * multiple validators to this recovery module
+ * multiple validators to this recovery module, it may only recovery a single validator at a time
  */
 contract UniversalEmailRecoveryModule is
     EmailRecoveryManager,
@@ -205,7 +205,7 @@ contract UniversalEmailRecoveryModule is
 
     /**
      * Handles the uninstallation of the module and clears the recovery configuration
-     * @dev the data parameter is not used
+     * @param {data} Unused parameter.
      */
     function onUninstall(bytes calldata /* data */ ) external {
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
@@ -254,7 +254,8 @@ contract UniversalEmailRecoveryModule is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * @notice Executes recovery on a validator. Called from the recovery manager
+     * @notice Executes recovery on a validator. Called from the recovery manager once a recovery
+     * attempt has been processed
      * @param account The account to execute recovery for
      * @param recoveryData The recovery data that should be executed on the validator being
      * recovered, along with the target validator.
@@ -329,7 +330,7 @@ contract UniversalEmailRecoveryModule is
      * @return version of the module
      */
     function version() external pure returns (string memory) {
-        return "0.0.1";
+        return "1.0.0";
     }
 
     /**

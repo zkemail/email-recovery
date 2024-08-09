@@ -5,7 +5,8 @@ import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjec
 import { StringUtils } from "../libraries/StringUtils.sol";
 
 /**
- * Handler contract that defines subject templates and how to validate them
+ * @title AccountHidingRecoverySubjectHandler
+ * @notice Handler contract that defines subject templates and how to validate them
  * This is the subject handler that does not expose the account address in the email subject
  */
 contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
@@ -57,6 +58,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the hash of the account address to be recovered from the subject parameters
      * of acceptance email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the acceptance email.
+     * @param {templateIdx} Unused parameter. The index of the template used for acceptance
      */
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] calldata subjectParams,
@@ -74,6 +76,8 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the hash of the account address to be recovered from the subject parameters
      * of recovery email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the recovery email.
+     * @param {templateIdx} Unused parameter. The index of the template used for the recovery
+     * request
      */
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] calldata subjectParams,
@@ -90,7 +94,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     /**
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams The subject parameters of the recovery email.
+     * @param subjectParams The subject parameters of the acceptance email.
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
@@ -120,7 +124,7 @@ contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return accountInEmail The account address in the acceptance email
+     * @return accountInEmail The account address in the recovery email
      */
     function validateRecoverySubject(
         uint256 templateIdx,

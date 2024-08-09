@@ -24,7 +24,8 @@ enum GuardianStatus {
 }
 
 /**
- * Enumerable Map library based on Open Zeppelin's EnumerableMap library.
+ * @title EnumerableGuardianMap
+ * @notice Enumerable Map library based on Open Zeppelin's EnumerableMap library.
  * Modified to map from an address to a custom struct: GuardianStorage
  *
  * All functions have been modified to support mapping to the GuardianStorage

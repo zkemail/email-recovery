@@ -14,9 +14,9 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
  * @dev The underlying EmailAccountRecovery contract provides some base logic for deploying
  * guardian contracts and handling email verification.
  *
- * This contract defines a default implementation for email-based recovery. It is designed to
- * provide the core logic for email based account recovery that can be used across different account
- * implementations.
+ * This contract defines an implementation for email-based recovery. It is designed to
+ * provide the core logic for email based account recovery that can be used across different modular
+ * account implementations.
  *
  * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
  * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
@@ -377,10 +377,9 @@ abstract contract EmailRecoveryManager is
      * core function that must be called during the end-to-end recovery flow. Can be called by
      * anyone.
      * @dev Validates the recovery request by checking the total weight, that the delay has passed,
-     * and the request has not expired. Triggers the recovery module to perform the recovery. The
-     * recovery module trusts that this contract has validated the recovery attempt. This function
-     * deletes the recovery request but recovery config state is maintained so future recovery
-     * requests can be made without having to reconfigure everything
+     * and the request has not expired. Triggers the recovery module to perform the recovery. This
+     * function deletes the recovery request but recovery config state is maintained so future
+     * recovery requests can be made without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
      * @param recoveryData The data that is passed to recover the validator or account.
      * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
@@ -442,8 +441,7 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Removes all state related to an account. Must be called from a configured recovery
-     * module
+     * @notice Removes all state related to an account.
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
      * should be deinitialized. This should include remove state accociated with an account.
      */

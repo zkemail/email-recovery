@@ -5,7 +5,8 @@ import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjec
 import { StringUtils } from "../libraries/StringUtils.sol";
 
 /**
- * Handler contract that defines subject templates and how to validate them
+ * @title EmailRecoverySubjectHandler
+ * @notice Handler contract that defines subject templates and how to validate them
  * This is the default subject handler that will work with any validator.
  */
 contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
@@ -53,6 +54,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the account address to be recovered from the subject parameters of an
      * acceptance email.
      * @param subjectParams The subject parameters of the acceptance email.
+     * @param {templateIdx} Unused parameter. The index of the template used for acceptance
      */
     function extractRecoveredAccountFromAcceptanceSubject(
         bytes[] calldata subjectParams,
@@ -69,6 +71,8 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Extracts the account address to be recovered from the subject parameters of a
      * recovery email.
      * @param subjectParams The subject parameters of the recovery email.
+     * @param {templateIdx} Unused parameter. The index of the template used for the recovery
+     * request
      */
     function extractRecoveredAccountFromRecoverySubject(
         bytes[] calldata subjectParams,
@@ -84,7 +88,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     /**
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams The subject parameters of the recovery email.
+     * @param subjectParams The subject parameters of the acceptance email.
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
@@ -113,7 +117,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
-     * @return accountInEmail The account address in the acceptance email
+     * @return accountInEmail The account address in the recovery email
      */
     function validateRecoverySubject(
         uint256 templateIdx,
