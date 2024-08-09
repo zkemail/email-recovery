@@ -323,7 +323,7 @@ abstract contract EmailRecoveryManager is
         override
     {
         address account = IEmailRecoverySubjectHandler(subjectHandler).validateRecoverySubject(
-            templateIdx, subjectParams, address(this)
+            templateIdx, subjectParams
         );
 
         if (!isActivated(account)) {

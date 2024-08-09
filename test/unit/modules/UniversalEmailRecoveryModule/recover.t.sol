@@ -93,7 +93,6 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         address wrongValidator = accountAddress;
         bytes memory validCalldata = abi.encodeWithSelector(functionSelector, newOwner);
         bytes memory invalidData = abi.encode(accountAddress, validCalldata);
-        console2.logBytes4(functionSelector);
         vm.startPrank(recoveryModuleAddress);
         vm.expectRevert(
             abi.encodeWithSelector(

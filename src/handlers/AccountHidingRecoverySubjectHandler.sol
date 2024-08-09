@@ -2,19 +2,20 @@
 pragma solidity ^0.8.25;
 
 import { IEmailRecoverySubjectHandler } from "../interfaces/IEmailRecoverySubjectHandler.sol";
-import { ISafe } from "../interfaces/ISafe.sol";
+import { StringUtils } from "../libraries/StringUtils.sol";
 
 /**
  * Handler contract that defines subject templates and how to validate them
- * This is a custom subject handler that will work with Safes and defines custom validation.
+ * This is the subject handler that does not expose the account address in the email subject
  */
-contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
-    bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
-
+contract AccountHidingRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
     error InvalidSubjectParams(uint256 paramsLength, uint256 expectedParamsLength);
-    error InvalidOldOwner(address oldOwner);
-    error InvalidNewOwner(address newOwner);
+    error InvalidAccount();
+    error ExistingStoredAccountHash(address account);
+
+    // Mapping of account hashes to their addresses
+    mapping(bytes32 accountHash => address account) public accountHashes;
 
     /**
      * @notice Returns a hard-coded two-dimensional array of strings representing the subject
@@ -29,7 +30,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         templates[0][1] = "guardian";
         templates[0][2] = "request";
         templates[0][3] = "for";
-        templates[0][4] = "{ethAddr}";
+        templates[0][4] = "{string}";
         return templates;
     }
 
@@ -41,24 +42,20 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
      */
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
+        templates[0] = new string[](7);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
-        templates[0][2] = "{ethAddr}";
-        templates[0][3] = "from";
-        templates[0][4] = "old";
-        templates[0][5] = "owner";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "to";
-        templates[0][8] = "new";
-        templates[0][9] = "owner";
-        templates[0][10] = "{ethAddr}";
+        templates[0][2] = "{string}";
+        templates[0][3] = "using";
+        templates[0][4] = "recovery";
+        templates[0][5] = "hash";
+        templates[0][6] = "{string}";
         return templates;
     }
 
     /**
-     * @notice Extracts the account address to be recovered from the subject parameters of an
-     * acceptance email.
+     * @notice Extracts the hash of the account address to be recovered from the subject parameters
+     * of acceptance email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the acceptance email.
      */
     function extractRecoveredAccountFromAcceptanceSubject(
@@ -66,15 +63,16 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         uint256 /* templateIdx */
     )
         public
-        pure
+        view
         returns (address)
     {
-        return abi.decode(subjectParams[0], (address));
+        bytes32 accountHash = StringUtils.hexToBytes32(abi.decode(subjectParams[0], (string)));
+        return accountHashes[accountHash];
     }
 
     /**
-     * @notice Extracts the account address to be recovered from the subject parameters of a
-     * recovery email.
+     * @notice Extracts the hash of the account address to be recovered from the subject parameters
+     * of recovery email and returns the corresponding address stored in the accountHashes.
      * @param subjectParams The subject parameters of the recovery email.
      */
     function extractRecoveredAccountFromRecoverySubject(
@@ -82,16 +80,17 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         uint256 /* templateIdx */
     )
         public
-        pure
+        view
         returns (address)
     {
-        return abi.decode(subjectParams[0], (address));
+        bytes32 accountHash = StringUtils.hexToBytes32(abi.decode(subjectParams[0], (string)));
+        return accountHashes[accountHash];
     }
 
     /**
      * @notice Validates the subject params for an acceptance email
      * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams The subject parameters of the recovery email
+     * @param subjectParams The subject parameters of the recovery email.
      * @return accountInEmail The account address in the acceptance email
      */
     function validateAcceptanceSubject(
@@ -99,7 +98,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         external
-        pure
+        view
         returns (address)
     {
         if (templateIdx != 0) {
@@ -111,7 +110,8 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
 
         // The GuardianStatus check in acceptGuardian implicitly
         // validates the account, so no need to re-validate here
-        address accountInEmail = abi.decode(subjectParams[0], (address));
+        address accountInEmail =
+            extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
 
         return accountInEmail;
     }
@@ -133,23 +133,19 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-        if (subjectParams.length != 3) {
-            revert InvalidSubjectParams(subjectParams.length, 3);
+        if (subjectParams.length != 2) {
+            revert InvalidSubjectParams(subjectParams.length, 2);
         }
 
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-        address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[2], (address));
+        address accountInEmail =
+            extractRecoveredAccountFromRecoverySubject(subjectParams, templateIdx);
+        string memory recoveryDataHashInEmail = abi.decode(subjectParams[1], (string));
 
-        bool isOldAddressOwner = ISafe(accountInEmail).isOwner(oldOwnerInEmail);
-        if (!isOldAddressOwner) {
-            revert InvalidOldOwner(oldOwnerInEmail);
+        if (accountInEmail == address(0)) {
+            revert InvalidAccount();
         }
-
-        bool isNewAddressOwner = ISafe(accountInEmail).isOwner(newOwnerInEmail);
-        if (newOwnerInEmail == address(0) || isNewAddressOwner) {
-            revert InvalidNewOwner(newOwnerInEmail);
-        }
+        // hexToBytes32 validates the recoveryDataHash is not zero bytes and has the correct length
+        StringUtils.hexToBytes32(recoveryDataHashInEmail);
 
         return accountInEmail;
     }
@@ -157,9 +153,7 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
     /**
      * @notice parses the recovery data hash from the subject params. The data hash is
      * verified against later when recovery is executed
-     * @dev recoveryDataHash = keccak256(abi.encode(safeAccount, recoveryFunctionCalldata)). In the
-     * context of recovery for a Safe, the first encoded value is the Safe account address. Normally,
-     * this would be the validator address
+     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
      * @param templateIdx The index of the template used for the recovery request
      * @param subjectParams The subject parameters of the recovery email
      * @return recoveryDataHash The keccak256 hash of the recovery data
@@ -169,52 +163,24 @@ contract SafeRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         external
-        view
+        pure
         returns (bytes32)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-
-        address accountInEmail = abi.decode(subjectParams[0], (address));
-        address oldOwnerInEmail = abi.decode(subjectParams[1], (address));
-        address newOwnerInEmail = abi.decode(subjectParams[2], (address));
-
-        address previousOwnerInLinkedList =
-            getPreviousOwnerInLinkedList(accountInEmail, oldOwnerInEmail);
-        bytes memory swapOwnerCalldata = abi.encodeWithSelector(
-            selector, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
-        );
-        return keccak256(abi.encode(accountInEmail, swapOwnerCalldata));
+        return StringUtils.hexToBytes32(abi.decode(subjectParams[1], (string)));
     }
 
     /**
-     * @notice Gets the previous owner in the Safe owners linked list that points to the
-     * owner passed into the function
-     * @param safe The Safe account to query
-     * @param oldOwner The owner address to get the previous owner for
-     * @return previousOwner The previous owner in the Safe owners linked list pointing to the owner
-     * passed in
+     * @notice Stores the account hash in the accountHashes mapping
+     * @param account The account address to store
      */
-    function getPreviousOwnerInLinkedList(
-        address safe,
-        address oldOwner
-    )
-        internal
-        view
-        returns (address)
-    {
-        address[] memory owners = ISafe(safe).getOwners();
-        uint256 length = owners.length;
-
-        uint256 oldOwnerIndex;
-        for (uint256 i; i < length; i++) {
-            if (owners[i] == oldOwner) {
-                oldOwnerIndex = i;
-                break;
-            }
+    function storeAccountHash(address account) public {
+        bytes32 accountHash = keccak256(abi.encodePacked(account));
+        if (accountHashes[accountHash] != address(0)) {
+            revert ExistingStoredAccountHash(account);
         }
-        address sentinelOwner = address(0x1);
-        return oldOwnerIndex == 0 ? sentinelOwner : owners[oldOwnerIndex - 1];
+        accountHashes[accountHash] = account;
     }
 }

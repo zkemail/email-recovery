@@ -253,20 +253,17 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
-        string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
-        string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
+        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory subject = string.concat(subjectPart1, subjectPart2);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
+        bytes[] memory subjectParamsForRecovery = new bytes[](2);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
-        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
+        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

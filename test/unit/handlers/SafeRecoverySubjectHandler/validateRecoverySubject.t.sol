@@ -14,11 +14,10 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
     function setUp() public override {
         super.setUp();
 
-        subjectParams = new bytes[](4);
+        subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress1);
         subjectParams[1] = abi.encode(owner1);
         subjectParams[2] = abi.encode(newOwner1);
-        subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidTemplateIndex() public {
@@ -30,9 +29,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
                 SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            invalidTemplateIdx, subjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(invalidTemplateIdx, subjectParams);
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_NoSubjectParams() public {
@@ -43,33 +40,28 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
             abi.encodeWithSelector(
                 SafeRecoverySubjectHandler.InvalidSubjectParams.selector,
                 emptySubjectParams.length,
-                4
+                3
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, emptySubjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, emptySubjectParams);
     }
 
     function test_ValidateAcceptanceSubject_RevertWhen_TooManySubjectParams() public {
         skipIfNotSafeAccountType();
-        bytes[] memory longSubjectParams = new bytes[](5);
+        bytes[] memory longSubjectParams = new bytes[](4);
         longSubjectParams[0] = subjectParams[0];
         longSubjectParams[1] = subjectParams[1];
         longSubjectParams[2] = subjectParams[2];
-        longSubjectParams[3] = subjectParams[3];
-        longSubjectParams[4] = abi.encode("extra param");
+        longSubjectParams[3] = abi.encode("extra param");
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeRecoverySubjectHandler.InvalidSubjectParams.selector,
                 longSubjectParams.length,
-                4
+                3
             )
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, longSubjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, longSubjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidOldOwner() public {
@@ -79,9 +71,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidOldOwner.selector, address(0))
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_ZeroNewOwner() public {
@@ -91,9 +81,7 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, address(0))
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_RevertWhen_InvalidNewOwner() public {
@@ -103,46 +91,13 @@ contract SafeRecoverySubjectHandler_validateRecoverySubject_Test is SafeUnitBase
         vm.expectRevert(
             abi.encodeWithSelector(SafeRecoverySubjectHandler.InvalidNewOwner.selector, owner1)
         );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
-    }
-
-    function test_ValidateRecoverySubject_RevertWhen_RecoveryModuleAddressIsZero() public {
-        skipIfNotSafeAccountType();
-        subjectParams[3] = abi.encode(address(0));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, address(0)
-            )
-        );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
-    }
-
-    function test_ValidateRecoverySubject_RevertWhen_RecoveryModuleNotEqualToExpectedAddress()
-        public
-    {
-        skipIfNotSafeAccountType();
-        subjectParams[3] = abi.encode(address(1));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                SafeRecoverySubjectHandler.InvalidRecoveryModule.selector, address(1)
-            )
-        );
-        safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
+        safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
     }
 
     function test_ValidateRecoverySubject_Succeeds() public {
         skipIfNotSafeAccountType();
-        address accountFromEmail = safeRecoverySubjectHandler.validateRecoverySubject(
-            templateIdx, subjectParams, recoveryModuleAddress
-        );
+        address accountFromEmail =
+            safeRecoverySubjectHandler.validateRecoverySubject(templateIdx, subjectParams);
         assertEq(accountFromEmail, accountAddress1);
     }
 }

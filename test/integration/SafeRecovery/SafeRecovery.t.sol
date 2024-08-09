@@ -31,11 +31,10 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         bytes memory recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(accountAddress1);
         subjectParamsForRecovery[1] = abi.encode(owner1);
         subjectParamsForRecovery[2] = abi.encode(newOwner1);
-        subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
         GuardianStorage memory guardianStorage1 =
             emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);

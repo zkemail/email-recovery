@@ -31,8 +31,7 @@ interface IEmailRecoverySubjectHandler {
 
     function validateRecoverySubject(
         uint256 templateIdx,
-        bytes[] memory subjectParams,
-        address expectedRecoveryModule
+        bytes[] memory subjectParams
     )
         external
         view

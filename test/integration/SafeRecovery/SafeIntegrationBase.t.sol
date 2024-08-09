@@ -190,8 +190,6 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         string memory accountString = SubjectUtils.addressToChecksumHexString(account);
         string memory oldOwnerString = SubjectUtils.addressToChecksumHexString(oldOwner);
         string memory newOwnerString = SubjectUtils.addressToChecksumHexString(newOwner);
-        string memory recoveryModuleString =
-            SubjectUtils.addressToChecksumHexString(recoveryModuleAddress);
 
         string memory subject = string.concat(
             "Recover account ",
@@ -199,20 +197,17 @@ abstract contract SafeIntegrationBase is IntegrationBase {
             " from old owner ",
             oldOwnerString,
             " to new owner ",
-            newOwnerString,
-            " using recovery module ",
-            recoveryModuleString
+            newOwnerString
         );
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](4);
+        bytes[] memory subjectParamsForRecovery = new bytes[](3);
         subjectParamsForRecovery[0] = abi.encode(account);
         subjectParamsForRecovery[1] = abi.encode(oldOwner);
         subjectParamsForRecovery[2] = abi.encode(newOwner);
-        subjectParamsForRecovery[3] = abi.encode(recoveryModuleAddress);
 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),

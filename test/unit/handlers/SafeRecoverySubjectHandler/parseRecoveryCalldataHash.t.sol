@@ -11,11 +11,10 @@ contract SafeRecoverySubjectHandler_parseRecoveryDataHash_Test is SafeUnitBase {
     function setUp() public override {
         super.setUp();
 
-        subjectParams = new bytes[](4);
+        subjectParams = new bytes[](3);
         subjectParams[0] = abi.encode(accountAddress1);
         subjectParams[1] = abi.encode(owner1);
         subjectParams[2] = abi.encode(newOwner1);
-        subjectParams[3] = abi.encode(recoveryModuleAddress);
     }
 
     function test_ParseRecoveryDataHash_RevertWhen_InvalidTemplateIndex() public {

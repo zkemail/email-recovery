@@ -22,10 +22,9 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         super.setUp();
 
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        subjectParams = new bytes[](3);
+        subjectParams = new bytes[](2);
         subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(recoveryModuleAddress);
-        subjectParams[2] = abi.encode(recoveryDataHashString);
+        subjectParams[1] = abi.encode(recoveryDataHashString);
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
@@ -125,7 +124,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             guardian1, templateIdx, subjectParams, nullifier
         );
 
-        subjectParams[2] = abi.encode(invalidRecoveryDataHashString);
+        subjectParams[1] = abi.encode(invalidRecoveryDataHashString);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -165,7 +164,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountSalt2);
         vm.warp(12 seconds);
         // Call processRecovery - increases currentWeight to 1 so not >= threshold yet
-        handleRecovery(recoveryModuleAddress, recoveryDataHash, accountSalt1);
+        handleRecovery(recoveryDataHash, accountSalt1);
 
         // Call processRecovery with guardian2 which increases currentWeight to >= threshold
         vm.expectEmit();

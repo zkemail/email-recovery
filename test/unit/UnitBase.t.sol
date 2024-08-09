@@ -195,18 +195,14 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
 
     function recoverySubjectTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
+        templates[0] = new string[](7);
         templates[0][0] = "Recover";
         templates[0][1] = "account";
         templates[0][2] = "{ethAddr}";
-        templates[0][3] = "via";
+        templates[0][3] = "using";
         templates[0][4] = "recovery";
-        templates[0][5] = "module";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "hash";
-        templates[0][10] = "{string}";
+        templates[0][5] = "hash";
+        templates[0][6] = "{string}";
         return templates;
     }
 
@@ -256,29 +252,20 @@ abstract contract UnitBase is RhinestoneModuleKit, Test {
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address recoveryModule,
-        bytes32 recoveryDataHash,
-        bytes32 accountSalt
-    )
-        public
-    {
+    function handleRecovery(bytes32 recoveryDataHash, bytes32 accountSalt) public {
         string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory recoveryModuleString = SubjectUtils.addressToChecksumHexString(recoveryModule);
 
         string memory subjectPart1 = string.concat("Recover account ", accountString);
-        string memory subjectPart2 = string.concat(" via recovery module ", recoveryModuleString);
-        string memory subjectPart3 = string.concat(" using recovery hash ", recoveryDataHashString);
-        string memory subject = string.concat(subjectPart1, subjectPart2, subjectPart3);
+        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory subject = string.concat(subjectPart1, subjectPart2);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
         EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
+        bytes[] memory subjectParamsForRecovery = new bytes[](2);
         subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(recoveryModule);
-        subjectParamsForRecovery[2] = abi.encode(recoveryDataHashString);
+        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
