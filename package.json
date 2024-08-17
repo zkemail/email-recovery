@@ -31,7 +31,7 @@
     "@zk-email/contracts": "v6.0.3",
     "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
-    "ether-email-auth": "github:zkemail/ether-email-auth#711c7892c244b210febe9d6f8cc28eddbce5fbdc",
+    "ether-email-auth": "github:zkemail/ether-email-auth#5a57c5f241db84343fdf3d3073c90307d3a0ac2a",
     "solidity-stringutils": "github:Arachnid/solidity-stringutils"
   },
   "files": [

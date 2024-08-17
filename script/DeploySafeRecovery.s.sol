@@ -14,6 +14,7 @@ import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol
 import { Safe7579 } from "safe7579/Safe7579.sol";
 import { Safe7579Launchpad } from "safe7579/Safe7579Launchpad.sol";
 import { IERC7484 } from "safe7579/interfaces/IERC7484.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 // 1. `source .env`
 // 2. `forge script --chain sepolia script/DeploySafeRecovery.s.sol:DeploySafeRecovery_Script
@@ -29,14 +30,37 @@ contract DeploySafeRecovery_Script is Script {
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
 
+        address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+
         if (verifier == address(0)) {
-            verifier = address(new Verifier());
+           Verifier verifierImpl = new Verifier();
+            console.log(
+                "Verifier implementation deployed at: %s",
+                address(verifierImpl)
+            );
+            ERC1967Proxy verifierProxy = new ERC1967Proxy(
+                address(verifierImpl),
+                abi.encodeCall(verifierImpl.initialize, (initialOwner))
+            );
+            verifier = address(Verifier(address(verifierProxy)));
+            vm.setEnv("VERIFIER", vm.toString(address(verifier)));
             console.log("Deployed Verifier at", verifier);
         }
 
         if (dkimRegistry == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-            dkimRegistry = address(new ECDSAOwnedDKIMRegistry(dkimRegistrySigner));
+
+            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
+            console.log(
+                "ECDSAOwnedDKIMRegistry implementation deployed at: %s",
+                address(dkimImpl)
+            );
+            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+                address(dkimImpl),
+                abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
+            );
+            dkimRegistry = address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
+            vm.setEnv("ECDSA_DKIM", vm.toString(address(dkimRegistry)));
             console.log("Deployed DKIM Registry at", dkimRegistry);
         }
 

@@ -14,4 +14,5 @@ interface ISafe {
     )
         external
         returns (bool success);
+     function isModuleEnabled(address module) external view returns (bool);
 }

@@ -23,6 +23,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     error InvalidAccount(address account);
     error InvalidSelector(bytes4 selector);
     error RecoveryFailed(address account);
+    error ResetFailed(address account);
 
     constructor(
         address verifier,
@@ -78,5 +79,19 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         }
 
         emit RecoveryExecuted(account);
+    }
+
+    /**
+     * @notice Resets the guardian states for the account when the module is disabled
+     * @param account The account to reset the states for
+     */
+    function resetWhenDisabled(address account) external {
+        if (account == address(0) ) {
+            revert InvalidAccount(account);
+        }
+        if (ISafe(account).isModuleEnabled(address(this)) == true) {
+            revert ResetFailed(account);
+        }
+        deInitRecoveryModule();
     }
 }
