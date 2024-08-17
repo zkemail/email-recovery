@@ -24,8 +24,8 @@ dependencies:
     specifier: github:erc7579/erc7579-implementation
     version: github.com/erc7579/erc7579-implementation/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.4.0)(hardhat@2.22.8)(lodash@4.17.21)(typechain@5.2.0)
   ether-email-auth:
-    specifier: github:zkemail/ether-email-auth#5a57c5f241db84343fdf3d3073c90307d3a0ac2a
-    version: github.com/zkemail/ether-email-auth/5a57c5f241db84343fdf3d3073c90307d3a0ac2a
+    specifier: github:zkemail/ether-email-auth#b5694a9e0e49d07a862232f665dc4d0886c5a15f
+    version: github.com/zkemail/ether-email-auth/b5694a9e0e49d07a862232f665dc4d0886c5a15f
   solidity-stringutils:
     specifier: github:Arachnid/solidity-stringutils
     version: github.com/Arachnid/solidity-stringutils/4b2fcc43fa0426e19ce88b1f1ec16f5903a2e461
@@ -4475,8 +4475,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  github.com/zkemail/ether-email-auth/5a57c5f241db84343fdf3d3073c90307d3a0ac2a:
-    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/5a57c5f241db84343fdf3d3073c90307d3a0ac2a}
+  github.com/zkemail/ether-email-auth/b5694a9e0e49d07a862232f665dc4d0886c5a15f:
+    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/b5694a9e0e49d07a862232f665dc4d0886c5a15f}
     name: '@zk-email/ether-email-auth'
     version: 1.0.0
     engines: {node: '18'}
