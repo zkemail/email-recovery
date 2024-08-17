@@ -26,6 +26,7 @@ import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
@@ -83,7 +84,14 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
 
         // Create ZK Email contracts
         vm.startPrank(zkEmailDeployer);
-        dkimRegistry = new ECDSAOwnedDKIMRegistry(zkEmailDeployer);
+        {
+            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
+            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+                address(dkimImpl),
+                abi.encodeCall(dkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer))
+            );
+            dkimRegistry = ECDSAOwnedDKIMRegistry(address(dkimProxy));
+        }
         string memory signedMsg = dkimRegistry.computeSignedMsg(
             dkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
         );
@@ -93,6 +101,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         dkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
 
         verifier = new MockGroth16Verifier();
+
         emailAuthImpl = new EmailAuth();
         vm.stopPrank();
 
