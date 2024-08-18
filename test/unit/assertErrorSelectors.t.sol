@@ -3,21 +3,37 @@ pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
+import { AccountHidingRecoverySubjectHandler } from
+    "src/handlers/AccountHidingRecoverySubjectHandler.sol";
 import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
 import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianManager } from "src/GuardianManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 
 // Helper test to associate custom error bytes with error names. Could just write the selector bytes
 // in the contracts but this method reduces human error from copying values and also when updating
 // errors
 contract LogErrorSelectors_Test is Test {
+    function test_AccountHidingRecoverySubjectHandler_AssertSelectors() public {
+        assertEq(
+            AccountHidingRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855)
+        );
+        assertEq(
+            AccountHidingRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025)
+        );
+        assertEq(AccountHidingRecoverySubjectHandler.InvalidAccount.selector, bytes4(0x6d187b28));
+        assertEq(
+            AccountHidingRecoverySubjectHandler.ExistingStoredAccountHash.selector,
+            bytes4(0xd0c8a06b)
+        );
+    }
+
     function test_EmailRecoverySubjectHandler_AssertSelectors() public {
         assertEq(EmailRecoverySubjectHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
         assertEq(EmailRecoverySubjectHandler.InvalidSubjectParams.selector, bytes4(0x9c6fa025));
@@ -76,6 +92,13 @@ contract LogErrorSelectors_Test is Test {
         assertEq(UniversalEmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
         assertEq(UniversalEmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
         assertEq(UniversalEmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
+    }
+
+    function test_SafeEmailRecoveryModule_AssertSelectors() public {
+        assertEq(SafeEmailRecoveryModule.InvalidAccount.selector, bytes4(0x4b579b22));
+        assertEq(SafeEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
+        assertEq(SafeEmailRecoveryModule.RecoveryFailed.selector, bytes4(0xaa3485bc));
+        assertEq(SafeEmailRecoveryModule.ResetFailed.selector, bytes4(0x8078983d));
     }
 
     function test_EnumerableGuardianMap_AssertSelectors() public {
