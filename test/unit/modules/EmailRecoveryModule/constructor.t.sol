@@ -60,53 +60,53 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
     }
 
-    function test_Constructor_RevertWhen_UnsafeExecuteSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, IERC7579Account.execute.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            IERC7579Account.execute.selector
-        );
-    }
+    // function test_Constructor_RevertWhen_UnsafeExecuteSelector() public {
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             EmailRecoveryModule.InvalidSelector.selector, IERC7579Account.execute.selector
+    //         )
+    //     );
+    //     new EmailRecoveryModule(
+    //         address(verifier),
+    //         address(dkimRegistry),
+    //         address(emailAuthImpl),
+    //         address(emailRecoveryHandler),
+    //         validatorAddress,
+    //         IERC7579Account.execute.selector
+    //     );
+    // }
 
-    function test_Constructor_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, ISafe.setFallbackHandler.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            ISafe.setFallbackHandler.selector
-        );
-    }
+    // function test_Constructor_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             EmailRecoveryModule.InvalidSelector.selector, ISafe.setFallbackHandler.selector
+    //         )
+    //     );
+    //     new EmailRecoveryModule(
+    //         address(verifier),
+    //         address(dkimRegistry),
+    //         address(emailAuthImpl),
+    //         address(emailRecoveryHandler),
+    //         validatorAddress,
+    //         ISafe.setFallbackHandler.selector
+    //     );
+    // }
 
-    function test_Constructor_RevertWhen_UnsafeSetGuardSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            ISafe.setGuard.selector
-        );
-    }
+    // function test_Constructor_RevertWhen_UnsafeSetGuardSelector() public {
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             EmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
+    //         )
+    //     );
+    //     new EmailRecoveryModule(
+    //         address(verifier),
+    //         address(dkimRegistry),
+    //         address(emailAuthImpl),
+    //         address(emailRecoveryHandler),
+    //         validatorAddress,
+    //         ISafe.setGuard.selector
+    //     );
+    // }
 
     function test_Constructor_RevertWhen_InvalidSelector() public {
         vm.expectRevert(

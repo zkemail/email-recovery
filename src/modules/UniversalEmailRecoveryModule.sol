@@ -68,14 +68,23 @@ contract UniversalEmailRecoveryModule is
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
      * "onInstall" or "onUninstall"
      */
-    modifier withoutUnsafeSelector(bytes4 selector) {
-        if (
-            selector == IModule.onUninstall.selector || selector == IModule.onInstall.selector
-                || selector == IERC7579Account.execute.selector
-                || selector == ISafe.setFallbackHandler.selector || selector == ISafe.setGuard.selector
+    modifier withoutUnsafeSelector(address validator, bytes4 selector) {
+         if(validator == msg.sender) {
+            if (
+                selector == ISafe.addOwnerWithThreshold.selector || selector == ISafe.removeOwner.selector 
+                || selector == ISafe.swapOwner.selector 
+                || selector == ISafe.changeThreshold.selector 
                 || selector == bytes4(0)
-        ) {
-            revert InvalidSelector(selector);
+            ) {
+                revert InvalidSelector(selector);
+            }
+        } else {
+            if (
+                selector == IModule.onInstall.selector || selector == IModule.onUninstall.selector
+                || selector == bytes4(0)
+            ) {
+                revert InvalidSelector(selector);
+            }
         }
         _;
     }
@@ -149,7 +158,7 @@ contract UniversalEmailRecoveryModule is
     )
         public
         onlyWhenInitialized
-        withoutUnsafeSelector(recoverySelector)
+        withoutUnsafeSelector(validator, recoverySelector)
     {
         if (
             !IERC7579Account(msg.sender).isModuleInstalled(

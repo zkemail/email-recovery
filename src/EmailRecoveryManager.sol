@@ -441,17 +441,27 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Removes all state related to an account.
+     * @notice Removes all state related to msg.sender.
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
      * should be deinitialized. This should include remove state accociated with an account.
      */
     function deInitRecoveryModule() internal onlyWhenNotRecovering {
-        delete recoveryConfigs[msg.sender];
-        delete recoveryRequests[msg.sender];
+        address account = msg.sender;
+        deInitRecoveryModule(account);
+    }
 
-        removeAllGuardians(msg.sender);
-        delete guardianConfigs[msg.sender];
+    /**
+     * @notice Removes all state related to an account.
+     * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
+     * should be deinitialized. This should include remove state accociated with an account.
+     */
+    function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
+        delete recoveryConfigs[account];
+        delete recoveryRequests[account];
 
-        emit RecoveryDeInitialized(msg.sender);
+        removeAllGuardians(account);
+        delete guardianConfigs[account];
+
+        emit RecoveryDeInitialized(account);
     }
 }

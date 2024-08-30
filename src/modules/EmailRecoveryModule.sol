@@ -53,13 +53,22 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);
         }
-        if (
-            _selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector
-                || _selector == IERC7579Account.execute.selector
-                || _selector == ISafe.setFallbackHandler.selector
-                || _selector == ISafe.setGuard.selector || _selector == bytes4(0)
-        ) {
-            revert InvalidSelector(_selector);
+        if(_validator == msg.sender) {
+            if (
+                _selector == ISafe.addOwnerWithThreshold.selector || _selector == ISafe.removeOwner.selector 
+                || _selector == ISafe.swapOwner.selector 
+                || _selector == ISafe.changeThreshold.selector 
+                || _selector == bytes4(0)
+            ) {
+                revert InvalidSelector(_selector);
+            }
+        } else {
+            if (
+                _selector == IModule.onInstall.selector || _selector == IModule.onUninstall.selector
+                || _selector == bytes4(0)
+            ) {
+                revert InvalidSelector(_selector);
+            }
         }
 
         validator = _validator;

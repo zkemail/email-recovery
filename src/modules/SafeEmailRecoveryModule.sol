@@ -92,6 +92,6 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         if (ISafe(account).isModuleEnabled(address(this)) == true) {
             revert ResetFailed(account);
         }
-        deInitRecoveryModule();
+        deInitRecoveryModule(account);
     }
 }
