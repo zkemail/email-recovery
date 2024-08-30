@@ -55,10 +55,9 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         }
         if(_validator == msg.sender) {
             if (
-                _selector == ISafe.addOwnerWithThreshold.selector || _selector == ISafe.removeOwner.selector 
-                || _selector == ISafe.swapOwner.selector 
-                || _selector == ISafe.changeThreshold.selector 
-                || _selector == bytes4(0)
+                _selector != ISafe.addOwnerWithThreshold.selector && _selector != ISafe.removeOwner.selector 
+                && _selector != ISafe.swapOwner.selector 
+                && _selector != ISafe.changeThreshold.selector 
             ) {
                 revert InvalidSelector(_selector);
             }

@@ -71,10 +71,9 @@ contract UniversalEmailRecoveryModule is
     modifier withoutUnsafeSelector(address validator, bytes4 selector) {
          if(validator == msg.sender) {
             if (
-                selector == ISafe.addOwnerWithThreshold.selector || selector == ISafe.removeOwner.selector 
-                || selector == ISafe.swapOwner.selector 
-                || selector == ISafe.changeThreshold.selector 
-                || selector == bytes4(0)
+                selector != ISafe.addOwnerWithThreshold.selector && selector != ISafe.removeOwner.selector 
+                && selector != ISafe.swapOwner.selector 
+                && selector != ISafe.changeThreshold.selector 
             ) {
                 revert InvalidSelector(selector);
             }
