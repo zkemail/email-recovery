@@ -61,6 +61,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         }
 
         bytes4 calldataSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             calldataSelector := mload(add(recoveryCalldata, 32))
         }

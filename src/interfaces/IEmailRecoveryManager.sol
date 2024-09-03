@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
+import { GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

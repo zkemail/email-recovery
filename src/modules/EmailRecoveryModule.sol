@@ -7,7 +7,6 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
-import { GuardianManager } from "../GuardianManager.sol";
 
 /**
  * @title EmailRecoveryModule
@@ -151,9 +150,8 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         (, bytes memory recoveryCalldata) =
             abi.decode(recoveryData, (address, bytes));
 
-        }
-
         bytes4 calldataSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             calldataSelector := mload(add(recoveryCalldata, 32))
         }
