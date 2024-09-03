@@ -148,11 +148,9 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (address validator, bytes memory recoveryCalldata) =
+        (, bytes memory recoveryCalldata) =
             abi.decode(recoveryData, (address, bytes));
 
-        if (validator == address(0)) {
-            revert InvalidValidator(validator);
         }
 
         bytes4 calldataSelector;
