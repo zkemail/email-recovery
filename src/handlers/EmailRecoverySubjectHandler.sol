@@ -124,7 +124,7 @@ contract EmailRecoverySubjectHandler is IEmailRecoverySubjectHandler {
         bytes[] calldata subjectParams
     )
         public
-        view
+        pure
         returns (address)
     {
         if (templateIdx != 0) {

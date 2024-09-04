@@ -5,7 +5,7 @@ import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
-import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
+import { SentinelListLib, SENTINEL } from "sentinellist/SentinelList.sol";
 import { IUniversalEmailRecoveryModule } from "../interfaces/IUniversalEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
@@ -278,6 +278,7 @@ contract UniversalEmailRecoveryModule is
         }
 
         bytes4 selector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             selector := mload(add(recoveryCalldata, 32))
         }

@@ -7,7 +7,6 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
-import { GuardianManager } from "../GuardianManager.sol";
 
 /**
  * @title EmailRecoveryModule
@@ -148,14 +147,11 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (address validator, bytes memory recoveryCalldata) =
+        (, bytes memory recoveryCalldata) =
             abi.decode(recoveryData, (address, bytes));
 
-        if (validator == address(0)) {
-            revert InvalidValidator(validator);
-        }
-
         bytes4 calldataSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             calldataSelector := mload(add(recoveryCalldata, 32))
         }
