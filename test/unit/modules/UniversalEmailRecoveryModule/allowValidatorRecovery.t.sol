@@ -11,6 +11,7 @@ import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
@@ -29,9 +30,47 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     }
 
     function test_AllowValidatorRecovery_When_SafeAddOwnerSelector() public {
+        _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            accountAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
+            validatorAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_When_SafeRemoveOwnerSelector() public {
+        _skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), ISafe.removeOwner.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_When_SafeSwapOwnerSelector() public {
+        _skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), ISafe.swapOwner.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_When_SafeChangeThresholdSelector() public {
+        _skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), ISafe.changeThreshold.selector
+        );
+    }
+
+    function test_AllowValidatorRecovery_RevertWhen_SafeNotAllowedSelector() public {
+        _skipIfNotSafeAccountType();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
+            )
+        );
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            validatorAddress, bytes("0"), IModule.onInstall.selector
         );
     }
 
@@ -178,5 +217,14 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         assertEq(allowedValidators[0], validatorAddress);
         assertEq(allowedSelectors.length, 1);
         assertEq(allowedSelectors[0], functionSelector);
+    }
+
+    function _skipIfNotSafeAccountType() private {
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (Strings.equal(currentAccountType, "SAFE")) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
     }
 }
