@@ -28,6 +28,13 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         emailRecoveryModule.allowValidatorRecovery(validatorAddress, bytes("0"), functionSelector);
     }
 
+    function test_AllowValidatorRecovery_When_SafeAddOwnerSelector() public {
+        vm.startPrank(accountAddress);
+        emailRecoveryModule.allowValidatorRecovery(
+            accountAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
+        );
+    }
+
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -51,44 +58,6 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
             validatorAddress, bytes("0"), IModule.onUninstall.selector
         );
     }
-
-    // function test_AllowValidatorRecovery_RevertWhen_UnsafeExecuteSelector() public {
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             UniversalEmailRecoveryModule.InvalidSelector.selector,
-    //             IERC7579Account.execute.selector
-    //         )
-    //     );
-    //     vm.startPrank(accountAddress);
-    //     emailRecoveryModule.allowValidatorRecovery(
-    //         validatorAddress, bytes("0"), IERC7579Account.execute.selector
-    //     );
-    // }
-
-    // function test_AllowValidatorRecovery_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             UniversalEmailRecoveryModule.InvalidSelector.selector,
-    //             ISafe.setFallbackHandler.selector
-    //         )
-    //     );
-    //     vm.startPrank(accountAddress);
-    //     emailRecoveryModule.allowValidatorRecovery(
-    //         validatorAddress, bytes("0"), ISafe.setFallbackHandler.selector
-    //     );
-    // }
-
-    // function test_AllowValidatorRecovery_RevertWhen_UnsafeSetGuardSelector() public {
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             UniversalEmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
-    //         )
-    //     );
-    //     vm.startPrank(accountAddress);
-    //     emailRecoveryModule.allowValidatorRecovery(
-    //         validatorAddress, bytes("0"), ISafe.setGuard.selector
-    //     );
-    // }
 
     function test_AllowValidatorRecovery_RevertWhen_InvalidSelector() public {
         vm.expectRevert(
