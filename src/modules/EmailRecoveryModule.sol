@@ -52,18 +52,18 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);
         }
-        if(_validator == msg.sender) {
+        if (_validator == msg.sender) {
             if (
-                _selector != ISafe.addOwnerWithThreshold.selector && _selector != ISafe.removeOwner.selector 
-                && _selector != ISafe.swapOwner.selector 
-                && _selector != ISafe.changeThreshold.selector 
+                _selector != ISafe.addOwnerWithThreshold.selector
+                    && _selector != ISafe.removeOwner.selector && _selector != ISafe.swapOwner.selector
+                    && _selector != ISafe.changeThreshold.selector
             ) {
                 revert InvalidSelector(_selector);
             }
         } else {
             if (
                 _selector == IModule.onInstall.selector || _selector == IModule.onUninstall.selector
-                || _selector == bytes4(0)
+                    || _selector == bytes4(0)
             ) {
                 revert InvalidSelector(_selector);
             }
@@ -147,8 +147,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (, bytes memory recoveryCalldata) =
-            abi.decode(recoveryData, (address, bytes));
+        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
 
         bytes4 calldataSelector;
         // solhint-disable-next-line no-inline-assembly

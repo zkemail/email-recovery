@@ -226,7 +226,9 @@ abstract contract EmailRecoveryManager is
      * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
-    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
+    function updateRecoveryConfig(
+        RecoveryConfig memory recoveryConfig
+    )
         public
         onlyWhenNotRecovering
     {
@@ -443,7 +445,7 @@ abstract contract EmailRecoveryManager is
     /**
      * @notice Removes all state related to msg.sender.
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include remove state accociated with an account.
+     * should be deinitialized. This should include removing state accociated with an account.
      */
     function deInitRecoveryModule() internal onlyWhenNotRecovering {
         address account = msg.sender;
@@ -453,7 +455,7 @@ abstract contract EmailRecoveryManager is
     /**
      * @notice Removes all state related to an account.
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include remove state accociated with an account.
+     * should be deinitialized. This should include removing state accociated with an account.
      */
     function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
         delete recoveryConfigs[account];
