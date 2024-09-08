@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
@@ -51,7 +51,7 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
-        EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
+        EmailRecoveryCommandHandler emailRecoveryHandler = new EmailRecoveryCommandHandler();
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
@@ -60,15 +60,15 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         }
         {
             EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
-            (address module, address subjectHandler) = factory.deployUniversalEmailRecoveryModule(
+            (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
-                type(EmailRecoverySubjectHandler).creationCode,
+                type(EmailRecoveryCommandHandler).creationCode,
                 dkimRegistry
             );
 
             console.log("Deployed Email Recovery Module at", vm.toString(module));
-            console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
+            console.log("Deployed Email Recovery Handler at", vm.toString(commandHandler));
             vm.stopBroadcast();
         }
     }

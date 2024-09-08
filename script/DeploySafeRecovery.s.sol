@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
@@ -64,10 +64,10 @@ contract DeploySafeRecovery_Script is Script {
 
         EmailRecoveryUniversalFactory factory =
             new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
-        (address module, address subjectHandler) = factory.deployUniversalEmailRecoveryModule(
+        (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
-            type(SafeRecoverySubjectHandler).creationCode,
+            type(SafeRecoveryCommandHandler).creationCode,
             dkimRegistry
         );
 
@@ -76,7 +76,7 @@ contract DeploySafeRecovery_Script is Script {
             address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
-        console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
+        console.log("Deployed Email Recovery Handler at ", vm.toString(commandHandler));
         console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));
 

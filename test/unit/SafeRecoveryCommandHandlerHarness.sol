@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
-contract SafeRecoverySubjectHandlerHarness is SafeRecoverySubjectHandler {
-    constructor() SafeRecoverySubjectHandler() { }
+contract SafeRecoveryCommandHandlerHarness is SafeRecoveryCommandHandler {
+    constructor() SafeRecoveryCommandHandler() { }
 
     function exposed_getPreviousOwnerInLinkedList(
         address safe,
