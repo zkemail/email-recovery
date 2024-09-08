@@ -4,13 +4,13 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
-contract EmailRecoveryManager_recoverySubjectTemplates_Test is UnitBase {
+contract EmailRecoveryManager_recoveryCommandTemplates_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_RecoverySubjectTemplates_Succeeds() public view {
-        string[][] memory templates = emailRecoveryModule.recoverySubjectTemplates();
+    function test_RecoveryCommandTemplates_Succeeds() public view {
+        string[][] memory templates = emailRecoveryModule.recoveryCommandTemplates();
 
         assertEq(templates.length, 1);
         assertEq(templates[0].length, 7);

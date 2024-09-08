@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { EmailAccountRecovery } from
     "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
-import { IEmailRecoverySubjectHandler } from "./interfaces/IEmailRecoverySubjectHandler.sol";
+import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
 
@@ -20,10 +20,10 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
  *
  * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
  * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
- * the recovery module defines “how that recovery attempt is executed on the account”. A
- * specific email subject handler is also accociated with a recovery manager. A subject handler
- * defines and validates the recovery email subjects. Developers can write their own subject
- * handlers to make specifc subjects for recovering modules
+ * the recovery module defines "how that recovery attempt is executed on the account". A
+ * specific email command handler is also accociated with a recovery manager. A command handler
+ * defines and validates the recovery email commands. Developers can write their own command
+ * handlers to make specifc commands for recovering modules
  */
 abstract contract EmailRecoveryManager is
     EmailAccountRecovery,
@@ -41,9 +41,9 @@ abstract contract EmailRecoveryManager is
     uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
 
     /**
-     * The subject handler that returns and validates the subject templates
+     * The command handler that returns and validates the command templates
      */
-    address public immutable subjectHandler;
+    address public immutable commandHandler;
 
     /**
      * Account address to recovery config
@@ -59,7 +59,7 @@ abstract contract EmailRecoveryManager is
         address _verifier,
         address _dkimRegistry,
         address _emailAuthImpl,
-        address _subjectHandler
+        address _commandHandler
     ) {
         if (_verifier == address(0)) {
             revert InvalidVerifier();
@@ -70,13 +70,13 @@ abstract contract EmailRecoveryManager is
         if (_emailAuthImpl == address(0)) {
             revert InvalidEmailAuthImpl();
         }
-        if (_subjectHandler == address(0)) {
-            revert InvalidSubjectHandler();
+        if (_commandHandler == address(0)) {
+            revert InvalidCommandHandler();
         }
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
-        subjectHandler = _subjectHandler;
+        commandHandler = _commandHandler;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -113,40 +113,40 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for an
+     * @notice Returns a two-dimensional array of strings representing the command templates for an
      * acceptance by a new guardian.
-     * @dev This is retrieved from the associated subject handler. Developers can write their own
-     * subject handlers, this is useful for account implementations which require different data in
-     * the subject or if the email should be in a language that is not English.
+     * @dev This is retrieved from the associated command handler. Developers can write their own
+     * command handlers, this is useful for account implementations which require different data in
+     * the command or if the email should be in a language that is not English.
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
+     * set of fixed strings and matchers for a command template.
      */
-    function acceptanceSubjectTemplates() public view override returns (string[][] memory) {
-        return IEmailRecoverySubjectHandler(subjectHandler).acceptanceSubjectTemplates();
+    function acceptanceCommandTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoveryCommandHandler(commandHandler).acceptanceCommandTemplates();
     }
 
     /**
-     * @notice Returns a two-dimensional array of strings representing the subject templates for
+     * @notice Returns a two-dimensional array of strings representing the command templates for
      * email recovery.
-     * @dev This is retrieved from the associated subject handler. Developers can write their own
-     * subject handlers, this is useful for account implementations which require different data in
-     * the subject or if the email should be in a language that is not English.
+     * @dev This is retrieved from the associated command handler. Developers can write their own
+     * command handlers, this is useful for account implementations which require different data in
+     * the command or if the email should be in a language that is not English.
      * @return string[][] A two-dimensional array of strings, where each inner array represents a
-     * set of fixed strings and matchers for a subject template.
+     * set of fixed strings and matchers for a command template.
      */
-    function recoverySubjectTemplates() public view override returns (string[][] memory) {
-        return IEmailRecoverySubjectHandler(subjectHandler).recoverySubjectTemplates();
+    function recoveryCommandTemplates() public view override returns (string[][] memory) {
+        return IEmailRecoveryCommandHandler(commandHandler).recoveryCommandTemplates();
     }
 
     /**
-     * @notice Extracts the account address to be recovered from the subject parameters of an
+     * @notice Extracts the account address to be recovered from the command parameters of an
      * acceptance email.
-     * @dev This is retrieved from the associated subject handler.
-     * @param subjectParams The subject parameters of the acceptance email.
-     * @param templateIdx The index of the acceptance subject template.
+     * @dev This is retrieved from the associated command handler.
+     * @param commandParams The command parameters of the acceptance email.
+     * @param templateIdx The index of the acceptance command template.
      */
-    function extractRecoveredAccountFromAcceptanceSubject(
-        bytes[] memory subjectParams,
+    function extractRecoveredAccountFromAcceptanceCommand(
+        bytes[] memory commandParams,
         uint256 templateIdx
     )
         public
@@ -154,19 +154,19 @@ abstract contract EmailRecoveryManager is
         override
         returns (address)
     {
-        return IEmailRecoverySubjectHandler(subjectHandler)
-            .extractRecoveredAccountFromAcceptanceSubject(subjectParams, templateIdx);
+        return IEmailRecoveryCommandHandler(commandHandler)
+            .extractRecoveredAccountFromAcceptanceCommand(commandParams, templateIdx);
     }
 
     /**
-     * @notice Extracts the account address to be recovered from the subject parameters of a
+     * @notice Extracts the account address to be recovered from the command parameters of a
      * recovery email.
-     * @dev This is retrieved from the associated subject handler.
-     * @param subjectParams The subject parameters of the recovery email.
-     * @param templateIdx The index of the recovery subject template.
+     * @dev This is retrieved from the associated command handler.
+     * @param commandParams The command parameters of the recovery email.
+     * @param templateIdx The index of the recovery command template.
      */
-    function extractRecoveredAccountFromRecoverySubject(
-        bytes[] memory subjectParams,
+    function extractRecoveredAccountFromRecoveryCommand(
+        bytes[] memory commandParams,
         uint256 templateIdx
     )
         public
@@ -174,8 +174,8 @@ abstract contract EmailRecoveryManager is
         override
         returns (address)
     {
-        return IEmailRecoverySubjectHandler(subjectHandler)
-            .extractRecoveredAccountFromRecoverySubject(subjectParams, templateIdx);
+        return IEmailRecoveryCommandHandler(commandHandler)
+            .extractRecoveredAccountFromRecoveryCommand(commandParams, templateIdx);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -261,21 +261,21 @@ abstract contract EmailRecoveryManager is
      * part of handleAcceptance in EmailAccountRecovery
      * @param guardian The address of the guardian to be accepted
      * @param templateIdx The index of the template used for acceptance
-     * @param subjectParams An array of bytes containing the subject parameters
+     * @param commandParams An array of bytes containing the command parameters
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
      * but it is not required in this implementation
      */
     function acceptGuardian(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 /* nullifier */
     )
         internal
         override
     {
-        address account = IEmailRecoverySubjectHandler(subjectHandler).validateAcceptanceSubject(
-            templateIdx, subjectParams
+        address account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
+            templateIdx, commandParams
         );
 
         if (recoveryRequests[account].currentWeight > 0) {
@@ -309,21 +309,21 @@ abstract contract EmailRecoveryManager is
      * @dev Called once per guardian until the threshold is reached
      * @param guardian The address of the guardian initiating the recovery
      * @param templateIdx The index of the template used for the recovery request
-     * @param subjectParams An array of bytes containing the subject parameters
+     * @param commandParams An array of bytes containing the command parameters
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
      * but it is not required in this implementation
      */
     function processRecovery(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 /* nullifier */
     )
         internal
         override
     {
-        address account = IEmailRecoverySubjectHandler(subjectHandler).validateRecoverySubject(
-            templateIdx, subjectParams
+        address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
+            templateIdx, commandParams
         );
 
         if (!isActivated(account)) {
@@ -345,8 +345,8 @@ abstract contract EmailRecoveryManager is
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
-        bytes32 recoveryDataHash = IEmailRecoverySubjectHandler(subjectHandler)
-            .parseRecoveryDataHash(templateIdx, subjectParams);
+        bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
+            .parseRecoveryDataHash(templateIdx, commandParams);
 
         if (recoveryRequest.recoveryDataHash == bytes32(0)) {
             recoveryRequest.recoveryDataHash = recoveryDataHash;

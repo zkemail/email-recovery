@@ -6,12 +6,12 @@ import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
+import { CommandUtils } from "ether-email-auth/packages/contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
 
 abstract contract SafeIntegrationBase is IntegrationBase {
@@ -19,7 +19,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     using Strings for uint256;
     using Strings for address;
 
-    SafeRecoverySubjectHandler safeRecoverySubjectHandler;
+    SafeRecoveryCommandHandler safeRecoveryCommandHandler;
     UniversalEmailRecoveryModule emailRecoveryModule;
     address recoveryModuleAddress;
 
@@ -47,13 +47,13 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         super.setUp();
 
         // Deploy handler, manager and module
-        safeRecoverySubjectHandler = new SafeRecoverySubjectHandler();
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
 
         emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(safeRecoverySubjectHandler)
+            address(safeRecoveryCommandHandler)
         );
         recoveryModuleAddress = address(emailRecoveryModule);
 
@@ -93,7 +93,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     }
 
     function generateMockEmailProof(
-        string memory subject,
+        string memory command,
         bytes32 nullifier,
         bytes32 accountSalt
     )
@@ -109,7 +109,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
             )
         );
         emailProof.timestamp = block.timestamp;
-        emailProof.maskedSubject = subject;
+        emailProof.maskedCommand = command;
         emailProof.emailNullifier = nullifier;
         emailProof.accountSalt = accountSalt;
         emailProof.isCodeExist = true;
@@ -148,19 +148,18 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory subject = string.concat("Accept guardian request for ", accountString);
+        string memory accountString = CommandUtils.addressToChecksumHexString(account);
+        string memory command = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        commandParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
-            subjectParams: subjectParamsForAcceptance,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForAcceptance,
             proof: emailProof
         });
     }
@@ -187,11 +186,11 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory oldOwnerString = SubjectUtils.addressToChecksumHexString(oldOwner);
-        string memory newOwnerString = SubjectUtils.addressToChecksumHexString(newOwner);
+        string memory accountString = CommandUtils.addressToChecksumHexString(account);
+        string memory oldOwnerString = CommandUtils.addressToChecksumHexString(oldOwner);
+        string memory newOwnerString = CommandUtils.addressToChecksumHexString(newOwner);
 
-        string memory subject = string.concat(
+        string memory command = string.concat(
             "Recover account ",
             accountString,
             " from old owner ",
@@ -202,17 +201,16 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(account);
-        subjectParamsForRecovery[1] = abi.encode(oldOwner);
-        subjectParamsForRecovery[2] = abi.encode(newOwner);
+        bytes[] memory commandParamsForRecovery = new bytes[](3);
+        commandParamsForRecovery[0] = abi.encode(account);
+        commandParamsForRecovery[1] = abi.encode(oldOwner);
+        commandParamsForRecovery[2] = abi.encode(newOwner);
 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            subjectParams: subjectParamsForRecovery,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForRecovery,
             proof: emailProof
         });
     }

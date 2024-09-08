@@ -12,7 +12,7 @@ import {
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
+import { CommandUtils } from "ether-email-auth/packages/contracts/src/libraries/CommandUtils.sol";
 import {
     EmailAuth,
     EmailAuthMsg,
@@ -21,12 +21,12 @@ import {
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
@@ -40,7 +40,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     EmailAuth emailAuthImpl;
 
     EmailRecoveryFactory emailRecoveryFactory;
-    EmailRecoverySubjectHandler emailRecoveryHandler;
+    EmailRecoveryCommandHandler emailRecoveryHandler;
     EmailRecoveryModuleHarness emailRecoveryModule;
 
     address recoveryModuleAddress;
@@ -121,7 +121,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         recoveryDataHash = keccak256(recoveryData);
 
         // Deploy handler and module
-        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+        emailRecoveryHandler = new EmailRecoveryCommandHandler();
         emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
 
         emailRecoveryModule = new EmailRecoveryModuleHarness(
@@ -179,7 +179,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
 
     // Helper functions
 
-    function acceptanceSubjectTemplates() public pure returns (string[][] memory) {
+    function acceptanceCommandTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](5);
         templates[0][0] = "Accept";
@@ -190,7 +190,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         return templates;
     }
 
-    function recoverySubjectTemplates() public pure returns (string[][] memory) {
+    function recoveryCommandTemplates() public pure returns (string[][] memory) {
         string[][] memory templates = new string[][](1);
         templates[0] = new string[](11);
         templates[0][0] = "Recover";
@@ -208,7 +208,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     }
 
     function generateMockEmailProof(
-        string memory subject,
+        string memory command,
         bytes32 nullifier,
         bytes32 accountSalt
     )
@@ -224,7 +224,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
             )
         );
         emailProof.timestamp = block.timestamp;
-        emailProof.maskedSubject = subject;
+        emailProof.maskedCommand = command;
         emailProof.emailNullifier = nullifier;
         emailProof.accountSalt = accountSalt;
         emailProof.isCodeExist = true;
@@ -234,19 +234,18 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     }
 
     function acceptGuardian(bytes32 accountSalt) public {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
-        string memory subject = string.concat("Accept guardian request for ", accountString);
+        string memory accountString = CommandUtils.addressToChecksumHexString(accountAddress);
+        string memory command = string.concat("Accept guardian request for ", accountString);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 1"));
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(accountAddress);
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        commandParamsForAcceptance[0] = abi.encode(accountAddress);
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
-            subjectParams: subjectParamsForAcceptance,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForAcceptance,
             proof: emailProof
         });
 
@@ -260,24 +259,23 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     )
         public
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(accountAddress);
+        string memory accountString = CommandUtils.addressToChecksumHexString(accountAddress);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
-        string memory subjectPart1 = string.concat("Recover account ", accountString);
-        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
-        string memory subject = string.concat(subjectPart1, subjectPart2);
+        string memory commandPart1 = string.concat("Recover account ", accountString);
+        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory command = string.concat(commandPart1, commandPart2);
 
         bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](2);
-        subjectParamsForRecovery[0] = abi.encode(accountAddress);
-        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
+        commandParamsForRecovery[0] = abi.encode(accountAddress);
+        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
 
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            subjectParams: subjectParamsForRecovery,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForRecovery,
             proof: emailProof
         });
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);

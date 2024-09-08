@@ -3,18 +3,18 @@ pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
-contract SafeRecoverySubjectHandler_parseRecoveryDataHash_Test is SafeUnitBase {
-    bytes[] subjectParams;
+contract SafeRecoveryCommandHandler_parseRecoveryDataHash_Test is SafeUnitBase {
+    bytes[] commandParams;
 
     function setUp() public override {
         super.setUp();
 
-        subjectParams = new bytes[](3);
-        subjectParams[0] = abi.encode(accountAddress1);
-        subjectParams[1] = abi.encode(owner1);
-        subjectParams[2] = abi.encode(newOwner1);
+        commandParams = new bytes[](3);
+        commandParams[0] = abi.encode(accountAddress1);
+        commandParams[1] = abi.encode(owner1);
+        commandParams[2] = abi.encode(newOwner1);
     }
 
     function test_ParseRecoveryDataHash_RevertWhen_InvalidTemplateIndex() public {
@@ -23,17 +23,17 @@ contract SafeRecoverySubjectHandler_parseRecoveryDataHash_Test is SafeUnitBase {
         uint256 invalidTemplateIdx = 1;
         vm.expectRevert(
             abi.encodeWithSelector(
-                SafeRecoverySubjectHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
+                SafeRecoveryCommandHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        safeRecoverySubjectHandler.parseRecoveryDataHash(invalidTemplateIdx, subjectParams);
+        safeRecoveryCommandHandler.parseRecoveryDataHash(invalidTemplateIdx, commandParams);
     }
 
     function test_ParseRecoveryDataHash_Succeeds() public {
         skipIfNotSafeAccountType();
 
         bytes32 actualRecoveryDataHash =
-            safeRecoverySubjectHandler.parseRecoveryDataHash(templateIdx, subjectParams);
+            safeRecoveryCommandHandler.parseRecoveryDataHash(templateIdx, commandParams);
 
         assertEq(actualRecoveryDataHash, recoveryDataHash);
     }

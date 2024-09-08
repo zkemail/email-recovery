@@ -13,11 +13,11 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler,
+        address commandHandler,
         address validator,
         bytes4 selector
     )
-        EmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler, validator, selector)
+        EmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler, validator, selector)
     { }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {

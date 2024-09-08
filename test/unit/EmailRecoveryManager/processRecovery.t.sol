@@ -15,16 +15,16 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using Strings for uint256;
 
     string recoveryDataHashString;
-    bytes[] subjectParams;
+    bytes[] commandParams;
     bytes32 nullifier;
 
     function setUp() public override {
         super.setUp();
 
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        subjectParams = new bytes[](2);
-        subjectParams[0] = abi.encode(accountAddress);
-        subjectParams[1] = abi.encode(recoveryDataHashString);
+        commandParams = new bytes[](2);
+        commandParams[0] = abi.encode(accountAddress);
+        commandParams[1] = abi.encode(recoveryDataHashString);
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
@@ -43,7 +43,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            invalidGuardian, templateIdx, subjectParams, nullifier
+            invalidGuardian, templateIdx, commandParams, nullifier
         );
     }
 
@@ -61,7 +61,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardian1, templateIdx, subjectParams, nullifier
+            guardian1, templateIdx, commandParams, nullifier
         );
     }
 
@@ -72,7 +72,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.exposed_processRecovery(
-            guardian1, templateIdx, subjectParams, nullifier
+            guardian1, templateIdx, commandParams, nullifier
         );
     }
 
@@ -108,7 +108,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardian2, templateIdx, subjectParams, nullifier
+            guardian2, templateIdx, commandParams, nullifier
         );
     }
 
@@ -121,10 +121,10 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountSalt2);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardian1, templateIdx, subjectParams, nullifier
+            guardian1, templateIdx, commandParams, nullifier
         );
 
-        subjectParams[1] = abi.encode(invalidRecoveryDataHashString);
+        commandParams[1] = abi.encode(invalidRecoveryDataHashString);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -134,7 +134,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardian1, templateIdx, subjectParams, nullifier
+            guardian1, templateIdx, commandParams, nullifier
         );
     }
 
@@ -145,7 +145,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountSalt2);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardian1, templateIdx, subjectParams, nullifier
+            guardian1, templateIdx, commandParams, nullifier
         );
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
@@ -176,7 +176,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             recoveryDataHash
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardian2, templateIdx, subjectParams, nullifier
+            guardian2, templateIdx, commandParams, nullifier
         );
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =

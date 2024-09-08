@@ -44,11 +44,11 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler,
+        address commandHandler,
         address _validator,
         bytes4 _selector
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler)
     {
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);

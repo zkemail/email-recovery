@@ -10,8 +10,8 @@ import {
     EmailAuthMsg,
     EmailProof
 } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { CommandUtils } from "ether-email-auth/packages/contracts/src/libraries/CommandUtils.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
@@ -27,7 +27,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     using Strings for address;
 
     EmailRecoveryUniversalFactory emailRecoveryFactory;
-    EmailRecoverySubjectHandler emailRecoveryHandler;
+    EmailRecoveryCommandHandler emailRecoveryHandler;
     UniversalEmailRecoveryModuleHarness emailRecoveryModule;
 
     address recoveryModuleAddress;
@@ -50,12 +50,12 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
         emailRecoveryFactory =
             new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
-        emailRecoveryHandler = new EmailRecoverySubjectHandler();
+        emailRecoveryHandler = new EmailRecoveryCommandHandler();
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
-        bytes32 subjectHandlerSalt = bytes32(uint256(0));
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
-        bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
+        bytes memory commandHandlerBytecode = type(EmailRecoveryCommandHandler).creationCode;
         emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
             address(verifier),
             address(dkimRegistry),
@@ -164,7 +164,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     // Helper functions
 
     function generateMockEmailProof(
-        string memory subject,
+        string memory command,
         bytes32 nullifier,
         bytes32 accountSalt
     )
@@ -180,7 +180,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
             )
         );
         emailProof.timestamp = block.timestamp;
-        emailProof.maskedSubject = subject;
+        emailProof.maskedCommand = command;
         emailProof.emailNullifier = nullifier;
         emailProof.accountSalt = accountSalt;
         emailProof.isCodeExist = true;
@@ -260,8 +260,8 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
-        string memory subject = string.concat("Accept guardian request for ", accountString);
+        string memory accountString = CommandUtils.addressToChecksumHexString(account);
+        string memory command = string.concat("Accept guardian request for ", accountString);
         bytes32 nullifier = generateNewNullifier();
 
         bytes32 accountSalt;
@@ -271,14 +271,13 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
             accountSalt = optionalAccountSalt;
         }
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(account);
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        commandParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
-            subjectParams: subjectParamsForAcceptance,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForAcceptance,
             proof: emailProof
         });
     }
@@ -327,12 +326,12 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = SubjectUtils.addressToChecksumHexString(account);
+        string memory accountString = CommandUtils.addressToChecksumHexString(account);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory subjectPart1 = string.concat("Recover account ", accountString);
-        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory commandPart1 = string.concat("Recover account ", accountString);
+        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
 
-        string memory subject = string.concat(subjectPart1, subjectPart2);
+        string memory command = string.concat(commandPart1, commandPart2);
         bytes32 nullifier = generateNewNullifier();
 
         bytes32 accountSalt;
@@ -342,16 +341,15 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
             accountSalt = optionalAccountSalt;
         }
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](2);
-        subjectParamsForRecovery[0] = abi.encode(account);
-        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
+        commandParamsForRecovery[0] = abi.encode(account);
+        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            subjectParams: subjectParamsForRecovery,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForRecovery,
             proof: emailProof
         });
     }

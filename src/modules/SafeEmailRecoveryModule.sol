@@ -29,9 +29,9 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler
+        address commandHandler
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler)
     { }
 
     /**
@@ -86,7 +86,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
      * @param account The account to reset the states for
      */
     function resetWhenDisabled(address account) external {
-        if (account == address(0) ) {
+        if (account == address(0)) {
             revert InvalidAccount(account);
         }
         if (ISafe(account).isModuleEnabled(address(this)) == true) {

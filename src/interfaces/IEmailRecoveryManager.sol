@@ -61,7 +61,7 @@ interface IEmailRecoveryManager {
     error InvalidVerifier();
     error InvalidDkimRegistry();
     error InvalidEmailAuthImpl();
-    error InvalidSubjectHandler();
+    error InvalidCommandHandler();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
     error DelayMoreThanExpiry(uint256 delay, uint256 expiry);

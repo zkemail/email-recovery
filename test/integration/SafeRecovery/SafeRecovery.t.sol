@@ -31,10 +31,10 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         bytes memory recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](3);
-        subjectParamsForRecovery[0] = abi.encode(accountAddress1);
-        subjectParamsForRecovery[1] = abi.encode(owner1);
-        subjectParamsForRecovery[2] = abi.encode(newOwner1);
+        bytes[] memory commandParamsForRecovery = new bytes[](3);
+        commandParamsForRecovery[0] = abi.encode(accountAddress1);
+        commandParamsForRecovery[1] = abi.encode(owner1);
+        commandParamsForRecovery[2] = abi.encode(newOwner1);
 
         GuardianStorage memory guardianStorage1 =
             emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
@@ -121,7 +121,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     assertEq(recoveryRequest.executeAfter, 0);
     //     assertEq(recoveryRequest.executeBefore, 0);
     //     assertEq(recoveryRequest.currentWeight, 0);
-    //     assertEq(recoveryRequest.subjectParams.length, 0);
+    //     assertEq(recoveryRequest.commandParams.length, 0);
 
     //     // assert that guardian storage has been cleared successfully for guardian 1
     //     GuardianStorage memory guardianStorage1 =

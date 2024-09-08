@@ -26,9 +26,10 @@
   },
   "dependencies": {
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
-    "@openzeppelin/contracts-upgradeable": "v5.0.1",
+    "@openzeppelin/contracts-upgradeable": "5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
-    "@zk-email/contracts": "v6.0.3",
+    "@zk-email/contracts": "6.0.3",
+    "@zk-email/ether-email-auth": "github:zkemail/ether-email-auth#feat/body-parsing-circuit",
     "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "ether-email-auth": "github:zkemail/ether-email-auth#feat/body-parsing-circuit",

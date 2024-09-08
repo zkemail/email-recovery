@@ -43,7 +43,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
 
     function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
         address invalidHandler = address(0);
-        vm.expectRevert(IEmailRecoveryManager.InvalidSubjectHandler.selector);
+        vm.expectRevert(IEmailRecoveryManager.InvalidCommandHandler.selector);
         new UniversalEmailRecoveryModule(
             address(verifier), address(dkimRegistry), address(emailAuthImpl), invalidHandler
         );
@@ -60,6 +60,6 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         assertEq(address(verifier), emailRecoveryModule.verifier());
         assertEq(address(dkimRegistry), emailRecoveryModule.dkim());
         assertEq(address(emailAuthImpl), emailRecoveryModule.emailAuthImplementation());
-        assertEq(address(emailRecoveryHandler), emailRecoveryModule.subjectHandler());
+        assertEq(address(emailRecoveryHandler), emailRecoveryModule.commandHandler());
     }
 }
