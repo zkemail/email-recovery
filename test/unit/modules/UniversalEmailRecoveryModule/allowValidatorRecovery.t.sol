@@ -16,8 +16,13 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
 
+    address validator2Address;
+
     function setUp() public override {
         super.setUp();
+        // Deploy new validator, it's not installed via installModule function. 
+        OwnableValidator validator2 = new OwnableValidator();
+        validator2Address = address(validator2);
     }
 
     function test_AllowValidatorRecovery_RevertWhen_RecoveryModuleNotInitialized() public {
@@ -32,32 +37,52 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_When_SafeAddOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
+        vm.mockCall(
+            address(accountAddress),
+            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
+            abi.encode(true)
+        );
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
+            validator2Address, bytes("0"), ISafe.addOwnerWithThreshold.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeRemoveOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
+        vm.mockCall(
+            address(accountAddress),
+            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
+            abi.encode(true)
+        );
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.removeOwner.selector
+            validator2Address, bytes("0"), ISafe.removeOwner.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeSwapOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
+        vm.mockCall(
+            address(accountAddress),
+            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
+            abi.encode(true)
+        );
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.swapOwner.selector
+            validator2Address, bytes("0"), ISafe.swapOwner.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeChangeThresholdSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
+        vm.mockCall(
+            address(accountAddress),
+            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
+            abi.encode(true)
+        );
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.changeThreshold.selector
+            validator2Address, bytes("0"), ISafe.changeThreshold.selector
         );
     }
 
