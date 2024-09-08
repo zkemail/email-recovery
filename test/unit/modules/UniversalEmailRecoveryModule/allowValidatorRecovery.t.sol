@@ -33,7 +33,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
+            accountAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
         );
     }
 
@@ -41,7 +41,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.removeOwner.selector
+            accountAddress, bytes("0"), ISafe.removeOwner.selector
         );
     }
 
@@ -49,7 +49,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.swapOwner.selector
+            accountAddress, bytes("0"), ISafe.swapOwner.selector
         );
     }
 
@@ -57,7 +57,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
         emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), ISafe.changeThreshold.selector
+            accountAddress, bytes("0"), ISafe.changeThreshold.selector
         );
     }
 
