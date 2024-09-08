@@ -77,23 +77,6 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
     }
 
-    function test_Constructor_RevertWhen_SafeNotAllowedSelector() public {
-        _skipIfNotSafeAccountType();
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            IModule.onInstall.selector
-        );
-    }
-
     function test_Constructor_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
