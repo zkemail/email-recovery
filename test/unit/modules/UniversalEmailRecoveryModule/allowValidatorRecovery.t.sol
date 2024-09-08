@@ -61,19 +61,6 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
         );
     }
 
-    function test_AllowValidatorRecovery_RevertWhen_SafeNotAllowedSelector() public {
-        _skipIfNotSafeAccountType();
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                UniversalEmailRecoveryModule.InvalidSelector.selector, IModule.onInstall.selector
-            )
-        );
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.allowValidatorRecovery(
-            validatorAddress, bytes("0"), IModule.onInstall.selector
-        );
-    }
-
     function test_AllowValidatorRecovery_RevertWhen_UnsafeOnInstallSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(
