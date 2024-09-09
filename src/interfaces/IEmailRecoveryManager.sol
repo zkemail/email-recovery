@@ -77,6 +77,7 @@ interface IEmailRecoveryManager {
     error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
     error InvalidRecoveryDataHash(bytes32 recoveryDataHash, bytes32 expectedRecoveryDataHash);
     error NoRecoveryInProcess();
+    error NotCancelUnexpiredRequest(address account, uint256 blockTimestamp, uint256 executeBefore);
     error RecoveryIsNotActivated();
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

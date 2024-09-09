@@ -226,9 +226,7 @@ abstract contract EmailRecoveryManager is
      * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
-    function updateRecoveryConfig(
-        RecoveryConfig memory recoveryConfig
-    )
+    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
         public
         onlyWhenNotRecovering
     {
@@ -440,6 +438,25 @@ abstract contract EmailRecoveryManager is
         }
         delete recoveryRequests[msg.sender];
         emit RecoveryCancelled(msg.sender);
+    }
+
+    /**
+     * @notice Cancels the recovery request for a given account if it is expired.
+     * @dev Deletes the current recovery request associated with the given account if the recovery
+     * request has expired.
+     * @param account The address of the account for which the recovery is being cancelled
+     */
+    function cancelExpiredRecovery(address account) external {
+        if (recoveryRequests[account].currentWeight == 0) {
+            revert NoRecoveryInProcess();
+        }
+        if (recoveryRequests[account].executeBefore > block.timestamp) {
+            revert NotCancelUnexpiredRequest(
+                account, block.timestamp, recoveryRequests[account].executeBefore
+            );
+        }
+        delete recoveryRequests[account];
+        emit RecoveryCancelled(account);
     }
 
     /**
