@@ -65,6 +65,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryRequestExpired.selector, bytes4(0x566ad75e));
         assertEq(IEmailRecoveryManager.InvalidRecoveryDataHash.selector, bytes4(0x9e1a616f));
         assertEq(IEmailRecoveryManager.NoRecoveryInProcess.selector, bytes4(0x87434f51));
+        assertEq(IEmailRecoveryManager.RecoveryHasNotExpired.selector, bytes4(0x93ae1fc6));
         assertEq(IEmailRecoveryManager.RecoveryIsNotActivated.selector, bytes4(0xc737140f));
     }
 
@@ -95,9 +96,10 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_SafeEmailRecoveryModule_AssertSelectors() public {
+        assertEq(SafeEmailRecoveryModule.ModuleNotInstalled.selector, bytes4(0x026d9639));
         assertEq(SafeEmailRecoveryModule.InvalidAccount.selector, bytes4(0x4b579b22));
         assertEq(SafeEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
-        assertEq(SafeEmailRecoveryModule.RecoveryFailed.selector, bytes4(0xaa3485bc));
+        assertEq(SafeEmailRecoveryModule.RecoveryFailed.selector, bytes4(0xc9dcc2a0));
         assertEq(SafeEmailRecoveryModule.ResetFailed.selector, bytes4(0x8078983d));
     }
 

@@ -23,7 +23,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     error ModuleNotInstalled(address account);
     error InvalidAccount(address account);
     error InvalidSelector(bytes4 selector);
-    error RecoveryFailed(address account);
+    error RecoveryFailed(address account, bytes returnData);
     error ResetFailed(address account);
 
     constructor(
@@ -79,12 +79,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
      * being recovered. recoveryData = abi.encode(safeAccount, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (address encodedAccount, bytes memory recoveryCalldata) =
-            abi.decode(recoveryData, (address, bytes));
-
-        if (encodedAccount == address(0) || encodedAccount != account) {
-            revert InvalidAccount(encodedAccount);
-        }
+        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
 
         bytes4 calldataSelector;
         // solhint-disable-next-line no-inline-assembly
@@ -95,14 +90,14 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
             revert InvalidSelector(calldataSelector);
         }
 
-        bool success = ISafe(account).execTransactionFromModule({
+        (bool success, bytes memory returnData) = ISafe(account).execTransactionFromModuleReturnData({
             to: account,
             value: 0,
             data: recoveryCalldata,
             operation: uint8(Enum.Operation.Call)
         });
         if (!success) {
-            revert RecoveryFailed(account);
+            revert RecoveryFailed(account, returnData);
         }
 
         emit RecoveryExecuted(account);
