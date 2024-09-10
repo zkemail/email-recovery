@@ -246,6 +246,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             commandParams: commandParamsForAcceptance,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
 
@@ -276,6 +277,7 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             commandParams: commandParamsForRecovery,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
