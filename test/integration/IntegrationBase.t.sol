@@ -11,8 +11,7 @@ import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 abstract contract IntegrationBase is RhinestoneModuleKit, Test {
     // ZK Email contracts and variables
@@ -77,7 +76,7 @@ abstract contract IntegrationBase is RhinestoneModuleKit, Test {
         bytes memory signature = abi.encodePacked(r, s, v);
         dkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
 
-        verifier  = new MockGroth16Verifier();
+        verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();
         vm.stopPrank();
 

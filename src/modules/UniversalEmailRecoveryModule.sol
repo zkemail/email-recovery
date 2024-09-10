@@ -5,7 +5,7 @@ import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
-import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
+import { SentinelListLib, SENTINEL } from "sentinellist/SentinelList.sol";
 import { IUniversalEmailRecoveryModule } from "../interfaces/IUniversalEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
@@ -68,14 +68,22 @@ contract UniversalEmailRecoveryModule is
      * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
      * "onInstall" or "onUninstall"
      */
-    modifier withoutUnsafeSelector(bytes4 selector) {
-        if (
-            selector == IModule.onUninstall.selector || selector == IModule.onInstall.selector
-                || selector == IERC7579Account.execute.selector
-                || selector == ISafe.setFallbackHandler.selector || selector == ISafe.setGuard.selector
-                || selector == bytes4(0)
-        ) {
-            revert InvalidSelector(selector);
+    modifier withoutUnsafeSelector(address validator, bytes4 selector) {
+        if (validator == msg.sender) {
+            if (
+                selector != ISafe.addOwnerWithThreshold.selector
+                    && selector != ISafe.removeOwner.selector && selector != ISafe.swapOwner.selector
+                    && selector != ISafe.changeThreshold.selector
+            ) {
+                revert InvalidSelector(selector);
+            }
+        } else {
+            if (
+                selector == IModule.onInstall.selector || selector == IModule.onUninstall.selector
+                    || selector == bytes4(0)
+            ) {
+                revert InvalidSelector(selector);
+            }
         }
         _;
     }
@@ -149,7 +157,7 @@ contract UniversalEmailRecoveryModule is
     )
         public
         onlyWhenInitialized
-        withoutUnsafeSelector(recoverySelector)
+        withoutUnsafeSelector(validator, recoverySelector)
     {
         if (
             !IERC7579Account(msg.sender).isModuleInstalled(
@@ -270,6 +278,7 @@ contract UniversalEmailRecoveryModule is
         }
 
         bytes4 selector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             selector := mload(add(recoveryCalldata, 32))
         }

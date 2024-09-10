@@ -124,7 +124,7 @@ contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
         bytes[] calldata commandParams
     )
         public
-        view
+        pure
         returns (address)
     {
         if (templateIdx != 0) {

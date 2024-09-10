@@ -7,6 +7,7 @@ import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
     function setUp() public override {
@@ -25,6 +26,54 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailRecoveryHandler),
             invalidValidator,
             functionSelector
+        );
+    }
+
+    function test_Constructor_When_SafeAddOwnerSelector() public {
+        _skipIfNotSafeAccountType();
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.addOwnerWithThreshold.selector
+        );
+    }
+
+    function test_Constructor_When_SafeRemoveOwnerSelector() public {
+        _skipIfNotSafeAccountType();
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.removeOwner.selector
+        );
+    }
+
+    function test_Constructor_When_SafeSwapOwnerSelector() public {
+        _skipIfNotSafeAccountType();
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.swapOwner.selector
+        );
+    }
+
+    function test_Constructor_When_SafeChangeThresholdSelector() public {
+        _skipIfNotSafeAccountType();
+        new EmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler),
+            validatorAddress,
+            ISafe.changeThreshold.selector
         );
     }
 
@@ -60,54 +109,6 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
     }
 
-    function test_Constructor_RevertWhen_UnsafeExecuteSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, IERC7579Account.execute.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            IERC7579Account.execute.selector
-        );
-    }
-
-    function test_Constructor_RevertWhen_UnsafeSetFallbackHandlerSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, ISafe.setFallbackHandler.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            ISafe.setFallbackHandler.selector
-        );
-    }
-
-    function test_Constructor_RevertWhen_UnsafeSetGuardSelector() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                EmailRecoveryModule.InvalidSelector.selector, ISafe.setGuard.selector
-            )
-        );
-        new EmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler),
-            validatorAddress,
-            ISafe.setGuard.selector
-        );
-    }
-
     function test_Constructor_RevertWhen_InvalidSelector() public {
         vm.expectRevert(
             abi.encodeWithSelector(EmailRecoveryModule.InvalidSelector.selector, bytes4(0))
@@ -134,5 +135,14 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
 
         assertEq(validatorAddress, emailRecoveryModule.validator());
         assertEq(functionSelector, emailRecoveryModule.selector());
+    }
+
+    function _skipIfNotSafeAccountType() private {
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (Strings.equal(currentAccountType, "SAFE")) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
     }
 }

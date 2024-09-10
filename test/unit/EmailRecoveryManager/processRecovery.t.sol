@@ -151,7 +151,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress);
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
         assertEq(recoveryRequest.currentWeight, guardian1Weight);
         assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
     }

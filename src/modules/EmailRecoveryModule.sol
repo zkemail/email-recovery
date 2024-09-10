@@ -7,7 +7,6 @@ import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
-import { GuardianManager } from "../GuardianManager.sol";
 
 /**
  * @title EmailRecoveryModule
@@ -53,13 +52,21 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);
         }
-        if (
-            _selector == IModule.onUninstall.selector || _selector == IModule.onInstall.selector
-                || _selector == IERC7579Account.execute.selector
-                || _selector == ISafe.setFallbackHandler.selector
-                || _selector == ISafe.setGuard.selector || _selector == bytes4(0)
-        ) {
-            revert InvalidSelector(_selector);
+        if (_validator == msg.sender) {
+            if (
+                _selector != ISafe.addOwnerWithThreshold.selector
+                    && _selector != ISafe.removeOwner.selector && _selector != ISafe.swapOwner.selector
+                    && _selector != ISafe.changeThreshold.selector
+            ) {
+                revert InvalidSelector(_selector);
+            }
+        } else {
+            if (
+                _selector == IModule.onInstall.selector || _selector == IModule.onUninstall.selector
+                    || _selector == bytes4(0)
+            ) {
+                revert InvalidSelector(_selector);
+            }
         }
 
         validator = _validator;
@@ -140,14 +147,10 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
     function recover(address account, bytes calldata recoveryData) internal override {
-        (address validator, bytes memory recoveryCalldata) =
-            abi.decode(recoveryData, (address, bytes));
-
-        if (validator == address(0)) {
-            revert InvalidValidator(validator);
-        }
+        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
 
         bytes4 calldataSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             calldataSelector := mload(add(recoveryCalldata, 32))
         }
