@@ -186,8 +186,8 @@ abstract contract EmailRecoveryManager is
      * @notice Configures recovery for the caller's account. This is the first core function
      * that must be called during the end-to-end recovery flow
      * @dev Can only be called once for configuration. Sets up the guardians, and validates config
-     * parameters, ensuring that no recovery is in process. It is possible to configure guardians at
-     * a later stage if neccessary
+     * parameters, ensuring that no recovery is in process. It is possible to update configuration
+     * at a later stage if neccessary
      * @param guardians An array of guardian addresses
      * @param weights An array of weights corresponding to each guardian
      * @param threshold The threshold weight required for recovery
@@ -201,7 +201,7 @@ abstract contract EmailRecoveryManager is
         uint256 delay,
         uint256 expiry
     )
-        public
+        internal
     {
         address account = msg.sender;
 

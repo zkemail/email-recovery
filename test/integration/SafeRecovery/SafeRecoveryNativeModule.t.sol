@@ -27,7 +27,9 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         address newOwner = owner2;
         // Configure recovery
         vm.startPrank(safeAddress);
-        emailRecoveryModule.configureRecovery(guardians1, guardianWeights, threshold, delay, expiry);
+        emailRecoveryModule.configureSafeRecovery(
+            guardians1, guardianWeights, threshold, delay, expiry
+        );
         vm.stopPrank();
 
         bytes memory recoveryCalldata = abi.encodeWithSignature(

@@ -20,6 +20,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
 
     event RecoveryExecuted(address indexed account);
 
+    error ModuleNotInstalled(address account);
     error InvalidAccount(address account);
     error InvalidSelector(bytes4 selector);
     error RecoveryFailed(address account);
@@ -33,6 +34,31 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     )
         EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
     { }
+
+    /**
+     * @notice Configures recovery for the caller's account
+     * @dev This function ensures that the module is installed before configuring recovery. Calls
+     * internal configureRecovery function
+     * @param guardians An array of guardian addresses
+     * @param weights An array of weights corresponding to each guardian
+     * @param threshold The threshold weight required for recovery
+     * @param delay The delay period before recovery can be executed
+     * @param expiry The expiry time after which the recovery attempt is invalid
+     */
+    function configureSafeRecovery(
+        address[] memory guardians,
+        uint256[] memory weights,
+        uint256 threshold,
+        uint256 delay,
+        uint256 expiry
+    )
+        public
+    {
+        if (!ISafe(msg.sender).isModuleEnabled(address(this))) {
+            revert ModuleNotInstalled(msg.sender);
+        }
+        configureRecovery(guardians, weights, threshold, delay, expiry);
+    }
 
     /**
      * Check if a recovery request can be initiated based on guardian acceptance
@@ -90,7 +116,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         if (account == address(0)) {
             revert InvalidAccount(account);
         }
-        if (ISafe(account).isModuleEnabled(address(this)) == true) {
+        if (ISafe(account).isModuleEnabled(address(this))) {
             revert ResetFailed(account);
         }
         deInitRecoveryModule(account);
