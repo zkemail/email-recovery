@@ -60,17 +60,17 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
         // handle recovery request for guardian 1
+        uint256 executeBefore = block.timestamp + expiry;
         handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 1);
         assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash1);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
-        uint256 executeBefore = block.timestamp + expiry;
         handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);

@@ -13,12 +13,13 @@ interface IEmailRecoveryManager {
      * Config should be maintained over subsequent recovery attempts unless explicitly modified
      */
     struct RecoveryConfig {
-        uint256 delay; // the time from when recovery is started until the recovery request can be
-        // executed
+        uint256 delay; // the time from when the threshold for a recovery request has passed (when
+            // the attempt is successful), until the recovery request can be executed
         uint256 expiry; // the time from when recovery is started until the recovery request becomes
             // invalid. The recovery expiry encourages the timely execution of successful recovery
             // attempts, and reduces the risk of unauthorized access through stale or outdated
-            // requests.
+            // requests. After the recovery expiry has passed, anyone can cancel the recovery
+            // request
     }
 
     /**
@@ -77,7 +78,7 @@ interface IEmailRecoveryManager {
     error RecoveryRequestExpired(uint256 blockTimestamp, uint256 executeBefore);
     error InvalidRecoveryDataHash(bytes32 recoveryDataHash, bytes32 expectedRecoveryDataHash);
     error NoRecoveryInProcess();
-    error NotCancelUnexpiredRequest(address account, uint256 blockTimestamp, uint256 executeBefore);
+    error RecoveryHasNotExpired(address account, uint256 blockTimestamp, uint256 executeBefore);
     error RecoveryIsNotActivated();
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

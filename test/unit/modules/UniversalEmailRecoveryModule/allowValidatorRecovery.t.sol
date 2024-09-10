@@ -20,7 +20,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
 
     function setUp() public override {
         super.setUp();
-        // Deploy new validator, it's not installed via installModule function. 
+        // Deploy new validator, it's not installed via installModule function.
         OwnableValidator validator2 = new OwnableValidator();
         validator2Address = address(validator2);
     }

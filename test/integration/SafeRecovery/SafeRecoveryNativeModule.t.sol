@@ -60,18 +60,18 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         vm.warp(12 seconds);
 
         // handle recovery request for guardian 1
+        uint256 executeBefore = block.timestamp + expiry;
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[0]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(safeAddress);
         assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.executeBefore, executeBefore);
         assertEq(recoveryRequest.currentWeight, 1);
         assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
-        uint256 executeBefore = block.timestamp + expiry;
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[1]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(safeAddress);
@@ -97,5 +97,26 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         bool oldOwnerIsOwner = Safe(payable(safeAddress)).isOwner(owner);
         assertFalse(oldOwnerIsOwner);
+    }
+
+    function testIntegration_AccountRecovery_UninstallsModule() public {
+        testIntegration_AccountRecovery();
+
+        bool isModuleEnabled =
+            Safe(payable(safeAddress)).isModuleEnabled(emailRecoveryModuleAddress);
+        assertTrue(isModuleEnabled);
+
+        // Uninstall module
+        // instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(safeAddress);
+        Safe(payable(safeAddress)).disableModule(address(1), emailRecoveryModuleAddress);
+        vm.stopPrank();
+
+        isModuleEnabled = Safe(payable(safeAddress)).isModuleEnabled(emailRecoveryModuleAddress);
+        assertFalse(isModuleEnabled);
+
+        vm.prank(safeAddress);
+        emailRecoveryModule.resetWhenDisabled(safeAddress);
+        vm.stopPrank();
     }
 }

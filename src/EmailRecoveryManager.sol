@@ -226,7 +226,9 @@ abstract contract EmailRecoveryManager is
      * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
-    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
+    function updateRecoveryConfig(
+        RecoveryConfig memory recoveryConfig
+    )
         public
         onlyWhenNotRecovering
     {
@@ -350,6 +352,8 @@ abstract contract EmailRecoveryManager is
 
         if (recoveryRequest.recoveryDataHash == bytes32(0)) {
             recoveryRequest.recoveryDataHash = recoveryDataHash;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
+            recoveryRequest.executeBefore = executeBefore;
         }
 
         if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
@@ -360,11 +364,11 @@ abstract contract EmailRecoveryManager is
 
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
-            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
             recoveryRequest.executeAfter = executeAfter;
-            recoveryRequest.executeBefore = executeBefore;
 
-            emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, recoveryDataHash);
+            emit RecoveryProcessed(
+                account, guardian, executeAfter, recoveryRequest.executeBefore, recoveryDataHash
+            );
         }
     }
 
@@ -451,7 +455,7 @@ abstract contract EmailRecoveryManager is
             revert NoRecoveryInProcess();
         }
         if (recoveryRequests[account].executeBefore > block.timestamp) {
-            revert NotCancelUnexpiredRequest(
+            revert RecoveryHasNotExpired(
                 account, block.timestamp, recoveryRequests[account].executeBefore
             );
         }
