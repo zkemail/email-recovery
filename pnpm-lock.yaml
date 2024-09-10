@@ -22,7 +22,7 @@ importers:
         version: 6.0.3
       '@zk-email/ether-email-auth':
         specifier: github:zkemail/ether-email-auth#feat/body-parsing-with-audit-fix
-        version: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/8532cea8af408a7d3f5c888c4379949439e5b203
+        version: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88
       email-wallet-sdk:
         specifier: github:zkemail/email-wallet-sdk
         version: https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
@@ -499,8 +499,8 @@ packages:
   '@zk-email/contracts@6.0.3':
     resolution: {integrity: sha512-nPSG27431Cz5bzPlR/ltn7qa9k+Joc/6LDHUz+JeFWEP/ff9VnzK11P0ay5qdX14qpQ647varPdxGtulosUtxw==}
 
-  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/8532cea8af408a7d3f5c888c4379949439e5b203':
-    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/8532cea8af408a7d3f5c888c4379949439e5b203}
+  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88':
+    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88}
     version: 1.0.0
     engines: {node: '18'}
 
@@ -2828,7 +2828,7 @@ snapshots:
       '@openzeppelin/contracts': 5.0.2
       dotenv: 16.4.5
 
-  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/8532cea8af408a7d3f5c888c4379949439e5b203': {}
+  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88': {}
 
   abbrev@1.0.9: {}
 
