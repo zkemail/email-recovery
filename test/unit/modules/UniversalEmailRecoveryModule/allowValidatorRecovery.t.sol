@@ -16,13 +16,18 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
 
-    address validator2Address;
+    address newValidatorAddress;
 
     function setUp() public override {
         super.setUp();
-        // Deploy new validator, it's not installed via installModule function.
-        OwnableValidator validator2 = new OwnableValidator();
-        validator2Address = address(validator2);
+        // Deploy & install new validator to avoid `LinkedList_EntryAlreadyInList` errors
+        OwnableValidator newValidator = new OwnableValidator();
+        newValidatorAddress = address(newValidator);
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
+            module: newValidatorAddress,
+            data: abi.encode(owner)
+        });
     }
 
     function test_AllowValidatorRecovery_RevertWhen_RecoveryModuleNotInitialized() public {
@@ -37,52 +42,32 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_When_SafeAddOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
-        vm.mockCall(
-            address(accountAddress),
-            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
-            abi.encode(true)
-        );
         emailRecoveryModule.allowValidatorRecovery(
-            validator2Address, bytes("0"), ISafe.addOwnerWithThreshold.selector
+            newValidatorAddress, bytes("0"), ISafe.addOwnerWithThreshold.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeRemoveOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
-        vm.mockCall(
-            address(accountAddress),
-            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
-            abi.encode(true)
-        );
         emailRecoveryModule.allowValidatorRecovery(
-            validator2Address, bytes("0"), ISafe.removeOwner.selector
+            newValidatorAddress, bytes("0"), ISafe.removeOwner.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeSwapOwnerSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
-        vm.mockCall(
-            address(accountAddress),
-            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
-            abi.encode(true)
-        );
         emailRecoveryModule.allowValidatorRecovery(
-            validator2Address, bytes("0"), ISafe.swapOwner.selector
+            newValidatorAddress, bytes("0"), ISafe.swapOwner.selector
         );
     }
 
     function test_AllowValidatorRecovery_When_SafeChangeThresholdSelector() public {
         _skipIfNotSafeAccountType();
         vm.startPrank(accountAddress);
-        vm.mockCall(
-            address(accountAddress),
-            abi.encodeWithSelector(IERC7579Account.isModuleInstalled.selector),
-            abi.encode(true)
-        );
         emailRecoveryModule.allowValidatorRecovery(
-            validator2Address, bytes("0"), ISafe.changeThreshold.selector
+            newValidatorAddress, bytes("0"), ISafe.changeThreshold.selector
         );
     }
 
@@ -119,9 +104,7 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     }
 
     function test_AllowValidatorRecovery_RevertWhen_InvalidValidator() public {
-        OwnableValidator newValidator = new OwnableValidator();
-        address newValidatorAddress = address(newValidator);
-
+        instance.uninstallModule(MODULE_TYPE_VALIDATOR, newValidatorAddress, "");
         vm.expectRevert(
             abi.encodeWithSelector(
                 UniversalEmailRecoveryModule.InvalidValidator.selector, newValidatorAddress
@@ -172,15 +155,6 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     }
 
     function test_AllowValidatorRecovery_SucceedsWhenAlreadyInitialized() public {
-        // Deplopy and install new validator
-        OwnableValidator newValidator = new OwnableValidator();
-        address newValidatorAddress = address(newValidator);
-        instance.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: newValidatorAddress,
-            data: abi.encode(owner)
-        });
-
         vm.startPrank(accountAddress);
         vm.expectEmit();
         emit UniversalEmailRecoveryModule.NewValidatorRecovery({

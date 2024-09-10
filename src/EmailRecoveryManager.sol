@@ -426,6 +426,19 @@ abstract contract EmailRecoveryManager is
         emit RecoveryCompleted(account);
     }
 
+    /**
+     * @notice Called during completeRecovery to finalize recovery. Contains recovery module
+     * implementation-specific logic to recover an account/module
+     * @dev this is the only function that must be implemented by consuming contracts to use the
+     * email recovery manager. This does not encompass other important logic such as module
+     * installation, that logic is specific to each module and must be implemeted separately
+     * @param account The address of the account for which the recovery is being completed
+     * @param recoveryData The data that is passed to recover the validator or account.
+     * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
+     * possible to design a recovery module using this manager without encoding the validator or
+     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * are implemented
+     */
     function recover(address account, bytes calldata recoveryData) internal virtual;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -475,8 +488,11 @@ abstract contract EmailRecoveryManager is
 
     /**
      * @notice Removes all state related to an account.
-     * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include removing state accociated with an account.
+     * @dev Although this function is internal, it should be used carefully as it can be called by
+     * anyone. In order to prevent unexpected behaviour when reinstalling account modules, the
+     * module should be deinitialized. This should include removing state accociated with an
+     * account
+     * @param account The address of the account for which recovery is being deinitialized
      */
     function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
         delete recoveryConfigs[account];
