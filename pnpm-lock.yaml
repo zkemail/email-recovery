@@ -22,7 +22,7 @@ importers:
         version: 6.0.3
       '@zk-email/ether-email-auth':
         specifier: github:zkemail/ether-email-auth#feat/body-parsing-with-audit-fix
-        version: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88
+        version: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/3fb09045688c9b5d291efb03bf1e785ec424aeff
       email-wallet-sdk:
         specifier: github:zkemail/email-wallet-sdk
         version: https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
@@ -499,8 +499,8 @@ packages:
   '@zk-email/contracts@6.0.3':
     resolution: {integrity: sha512-nPSG27431Cz5bzPlR/ltn7qa9k+Joc/6LDHUz+JeFWEP/ff9VnzK11P0ay5qdX14qpQ647varPdxGtulosUtxw==}
 
-  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88':
-    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88}
+  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/3fb09045688c9b5d291efb03bf1e785ec424aeff':
+    resolution: {tarball: https://codeload.github.com/zkemail/ether-email-auth/tar.gz/3fb09045688c9b5d291efb03bf1e785ec424aeff}
     version: 1.0.0
     engines: {node: '18'}
 
@@ -1780,13 +1780,13 @@ packages:
   solady@0.0.123:
     resolution: {integrity: sha512-F/B8OMCplGsS4FrdPrnEG0xdg8HKede5PwC+Rum8soj/LWxfKckA0p+Uwnlbgey2iI82IHvmSOCNhsdbA+lUrw==}
 
+  solady@https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6:
+    resolution: {tarball: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6}
+    version: 0.0.238
+
   solady@https://codeload.github.com/vectorized/solady/tar.gz/9deb9ed36a27261a8745db5b7cd7f4cdc3b1cd4e:
     resolution: {tarball: https://codeload.github.com/vectorized/solady/tar.gz/9deb9ed36a27261a8745db5b7cd7f4cdc3b1cd4e}
     version: 0.0.168
-
-  solady@https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847:
-    resolution: {tarball: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847}
-    version: 0.0.237
 
   solarray@https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684:
     resolution: {tarball: https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684}
@@ -2534,7 +2534,7 @@ snapshots:
   '@rhinestone/checknsignatures@https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/7ff44ef46da1266374e6a98e6cf69d727d7c357d':
     dependencies:
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
 
   '@rhinestone/erc4337-validation@0.0.1-alpha.2(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))(typescript@5.5.4)':
     dependencies:
@@ -2544,7 +2544,7 @@ snapshots:
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
       prettier: 2.8.8
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
       solhint: 4.5.4(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
@@ -2565,7 +2565,7 @@ snapshots:
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
       prettier: 2.8.8
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -2607,7 +2607,7 @@ snapshots:
       erc7579: erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
       excessively-safe-call: '@nomad-xyz/excessively-safe-call@https://codeload.github.com/nomad-xyz/ExcessivelySafeCall/tar.gz/81cd99ce3e69117d665d7601c330ea03b97acce0'
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
       solarray: https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684
     transitivePeerDependencies:
       - bufferutil
@@ -2638,7 +2638,7 @@ snapshots:
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
       erc7579: erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
       solarray: https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684
     transitivePeerDependencies:
       - bufferutil
@@ -2828,7 +2828,7 @@ snapshots:
       '@openzeppelin/contracts': 5.0.2
       dotenv: 16.4.5
 
-  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/4727741e9a0a82527e2d27bbe2312c8d9c4f0e88': {}
+  '@zk-email/ether-email-auth@https://codeload.github.com/zkemail/ether-email-auth/tar.gz/3fb09045688c9b5d291efb03bf1e785ec424aeff': {}
 
   abbrev@1.0.9: {}
 
@@ -3315,7 +3315,7 @@ snapshots:
       account-abstraction: accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/6f02f5a28a20e804d0410b4b5b570dd4b076dcf9(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
       forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/1ce7535a517406b9aec7ea1ea27c1b41376f712c
-      solady: https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -4356,9 +4356,9 @@ snapshots:
 
   solady@0.0.123: {}
 
-  solady@https://codeload.github.com/vectorized/solady/tar.gz/9deb9ed36a27261a8745db5b7cd7f4cdc3b1cd4e: {}
+  solady@https://codeload.github.com/vectorized/solady/tar.gz/4f50982008973b1431768a75fb88ac8eca21b9f6: {}
 
-  solady@https://codeload.github.com/vectorized/solady/tar.gz/f833eadd4591da7e8e455eab779bf1d918486847: {}
+  solady@https://codeload.github.com/vectorized/solady/tar.gz/9deb9ed36a27261a8745db5b7cd7f4cdc3b1cd4e: {}
 
   solarray@https://codeload.github.com/sablier-labs/solarray/tar.gz/6bf10cb34cdace52a3ba5fe437e78cc82df92684: {}
 
