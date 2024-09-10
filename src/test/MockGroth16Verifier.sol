@@ -16,6 +16,11 @@ struct EmailProof {
  * @notice Mock snarkjs Groth16 Solidity verifier
  */
 contract MockGroth16Verifier {
+    uint256 public constant DOMAIN_FIELDS = 9;
+    uint256 public constant DOMAIN_BYTES = 255;
+    uint256 public constant COMMAND_FIELDS = 20;
+    uint256 public constant COMMAND_BYTES = 605;
+
     function verifyEmailProof(EmailProof memory proof) public pure returns (bool) {
         proof;
 

@@ -278,6 +278,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
             commandParams: commandParamsForAcceptance,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
     }
@@ -350,6 +351,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
             commandParams: commandParamsForRecovery,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
     }

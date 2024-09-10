@@ -7,6 +7,7 @@ import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHand
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
+import { Groth16Verifier } from "ether-email-auth/packages/contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
@@ -35,8 +36,10 @@ contract DeploySafeRecovery_Script is Script {
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
+            Groth16Verifier groth16Verifier = new Groth16Verifier();
             ERC1967Proxy verifierProxy = new ERC1967Proxy(
-                address(verifierImpl), abi.encodeCall(verifierImpl.initialize, (initialOwner))
+                address(verifierImpl),
+                abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
             verifier = address(Verifier(address(verifierProxy)));
             vm.setEnv("VERIFIER", vm.toString(address(verifier)));
