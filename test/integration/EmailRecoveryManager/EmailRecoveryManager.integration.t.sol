@@ -252,5 +252,66 @@ contract EmailRecoveryManager_Integration_Test is
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+    }
+
+    function test_CancelExpiredRecoveryRequest() public {
+        acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[1]);
+        vm.warp(12 seconds);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        uint256 executeAfter = block.timestamp + expiry;
+
+        vm.warp(executeAfter);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
+            )
+        );
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+
+        // Can cancel recovery even when stale
+        vm.startPrank(vm.addr(1));
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+        vm.stopPrank();
+
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+    }
+
+    function test_CannotComplete_CancelledExpiredRecoveryRequest() public {
+        acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[1]);
+        vm.warp(12 seconds);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        uint256 executeAfter = block.timestamp + expiry;
+
+        vm.warp(executeAfter);
+        // Can cancel recovery even when stale
+        vm.startPrank(vm.addr(1));
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+        vm.stopPrank();
+
+        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(recoveryRequest.executeAfter, 0);
+        assertEq(recoveryRequest.executeBefore, 0);
+        assertEq(recoveryRequest.currentWeight, 0);
+        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.NotEnoughApprovals.selector,
+                recoveryRequest.currentWeight,
+                threshold
+            )
+        );
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
     }
 }

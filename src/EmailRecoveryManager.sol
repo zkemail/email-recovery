@@ -186,8 +186,8 @@ abstract contract EmailRecoveryManager is
      * @notice Configures recovery for the caller's account. This is the first core function
      * that must be called during the end-to-end recovery flow
      * @dev Can only be called once for configuration. Sets up the guardians, and validates config
-     * parameters, ensuring that no recovery is in process. It is possible to configure guardians at
-     * a later stage if neccessary
+     * parameters, ensuring that no recovery is in process. It is possible to update configuration
+     * at a later stage if neccessary
      * @param guardians An array of guardian addresses
      * @param weights An array of weights corresponding to each guardian
      * @param threshold The threshold weight required for recovery
@@ -201,7 +201,7 @@ abstract contract EmailRecoveryManager is
         uint256 delay,
         uint256 expiry
     )
-        public
+        internal
     {
         address account = msg.sender;
 
@@ -226,7 +226,9 @@ abstract contract EmailRecoveryManager is
      * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
-    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
+    function updateRecoveryConfig(
+        RecoveryConfig memory recoveryConfig
+    )
         public
         onlyWhenNotRecovering
     {
@@ -350,6 +352,8 @@ abstract contract EmailRecoveryManager is
 
         if (recoveryRequest.recoveryDataHash == bytes32(0)) {
             recoveryRequest.recoveryDataHash = recoveryDataHash;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
+            recoveryRequest.executeBefore = executeBefore;
         }
 
         if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
@@ -360,11 +364,11 @@ abstract contract EmailRecoveryManager is
 
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
-            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
             recoveryRequest.executeAfter = executeAfter;
-            recoveryRequest.executeBefore = executeBefore;
 
-            emit RecoveryProcessed(account, guardian, executeAfter, executeBefore, recoveryDataHash);
+            emit RecoveryProcessed(
+                account, guardian, executeAfter, recoveryRequest.executeBefore, recoveryDataHash
+            );
         }
     }
 
@@ -422,6 +426,19 @@ abstract contract EmailRecoveryManager is
         emit RecoveryCompleted(account);
     }
 
+    /**
+     * @notice Called during completeRecovery to finalize recovery. Contains recovery module
+     * implementation-specific logic to recover an account/module
+     * @dev this is the only function that must be implemented by consuming contracts to use the
+     * email recovery manager. This does not encompass other important logic such as module
+     * installation, that logic is specific to each module and must be implemeted separately
+     * @param account The address of the account for which the recovery is being completed
+     * @param recoveryData The data that is passed to recover the validator or account.
+     * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
+     * possible to design a recovery module using this manager without encoding the validator or
+     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * are implemented
+     */
     function recover(address account, bytes calldata recoveryData) internal virtual;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -441,17 +458,49 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Removes all state related to an account.
+     * @notice Cancels the recovery request for a given account if it is expired.
+     * @dev Deletes the current recovery request associated with the given account if the recovery
+     * request has expired.
+     * @param account The address of the account for which the recovery is being cancelled
+     */
+    function cancelExpiredRecovery(address account) external {
+        if (recoveryRequests[account].currentWeight == 0) {
+            revert NoRecoveryInProcess();
+        }
+        if (recoveryRequests[account].executeBefore > block.timestamp) {
+            revert RecoveryHasNotExpired(
+                account, block.timestamp, recoveryRequests[account].executeBefore
+            );
+        }
+        delete recoveryRequests[account];
+        emit RecoveryCancelled(account);
+    }
+
+    /**
+     * @notice Removes all state related to msg.sender.
      * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include remove state accociated with an account.
+     * should be deinitialized. This should include removing state accociated with an account.
      */
     function deInitRecoveryModule() internal onlyWhenNotRecovering {
-        delete recoveryConfigs[msg.sender];
-        delete recoveryRequests[msg.sender];
+        address account = msg.sender;
+        deInitRecoveryModule(account);
+    }
 
-        removeAllGuardians(msg.sender);
-        delete guardianConfigs[msg.sender];
+    /**
+     * @notice Removes all state related to an account.
+     * @dev Although this function is internal, it should be used carefully as it can be called by
+     * anyone. In order to prevent unexpected behaviour when reinstalling account modules, the
+     * module should be deinitialized. This should include removing state accociated with an
+     * account
+     * @param account The address of the account for which recovery is being deinitialized
+     */
+    function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
+        delete recoveryConfigs[account];
+        delete recoveryRequests[account];
 
-        emit RecoveryDeInitialized(msg.sender);
+        removeAllGuardians(account);
+        delete guardianConfigs[account];
+
+        emit RecoveryDeInitialized(account);
     }
 }

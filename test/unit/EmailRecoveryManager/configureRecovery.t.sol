@@ -24,13 +24,17 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
 
         vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
         vm.startPrank(accountAddress);
-        emailRecoveryModule.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
+        emailRecoveryModule.exposed_configureRecovery(
+            guardians, guardianWeights, threshold, delay, expiry
+        );
     }
 
     function test_ConfigureRecovery_RevertWhen_ConfigureRecoveryCalledTwice() public {
         vm.startPrank(accountAddress);
         vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
-        emailRecoveryModule.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
+        emailRecoveryModule.exposed_configureRecovery(
+            guardians, guardianWeights, threshold, delay, expiry
+        );
     }
 
     function test_ConfigureRecovery_Succeeds() public {
@@ -45,7 +49,9 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryConfigured(
             instance.account, guardians.length, totalWeight, threshold
         );
-        emailRecoveryModule.configureRecovery(guardians, guardianWeights, threshold, delay, expiry);
+        emailRecoveryModule.exposed_configureRecovery(
+            guardians, guardianWeights, threshold, delay, expiry
+        );
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             emailRecoveryModule.getRecoveryConfig(accountAddress);
@@ -81,7 +87,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
                 guardianWeights.length
             )
         );
-        emailRecoveryModule.configureRecovery(
+        emailRecoveryModule.exposed_configureRecovery(
             zeroGuardians, guardianWeights, threshold, delay, expiry
         );
     }
@@ -99,7 +105,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
                 zeroGuardianWeights.length
             )
         );
-        emailRecoveryModule.configureRecovery(
+        emailRecoveryModule.exposed_configureRecovery(
             guardians, zeroGuardianWeights, threshold, delay, expiry
         );
     }
@@ -111,7 +117,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         uint256 zeroThreshold = 0;
 
         vm.expectRevert(IGuardianManager.ThresholdCannotBeZero.selector);
-        emailRecoveryModule.configureRecovery(
+        emailRecoveryModule.exposed_configureRecovery(
             guardians, guardianWeights, zeroThreshold, delay, expiry
         );
     }
@@ -129,7 +135,7 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
                 IGuardianManager.ThresholdExceedsTotalWeight.selector, threshold, 0
             )
         );
-        emailRecoveryModule.configureRecovery(
+        emailRecoveryModule.exposed_configureRecovery(
             zeroGuardians, zeroGuardianWeights, threshold, delay, expiry
         );
     }

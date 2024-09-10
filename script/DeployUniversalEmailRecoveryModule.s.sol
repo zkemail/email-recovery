@@ -9,7 +9,7 @@ import { ECDSAOwnedDKIMRegistry } from
     "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract DeployUniversalEmailRecoveryModuleScript is Script {
     function run() public {
@@ -22,14 +22,10 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
         if (verifier == address(0)) {
-           Verifier verifierImpl = new Verifier();
-            console.log(
-                "Verifier implementation deployed at: %s",
-                address(verifierImpl)
-            );
+            Verifier verifierImpl = new Verifier();
+            console.log("Verifier implementation deployed at: %s", address(verifierImpl));
             ERC1967Proxy verifierProxy = new ERC1967Proxy(
-                address(verifierImpl),
-                abi.encodeCall(verifierImpl.initialize, (initialOwner))
+                address(verifierImpl), abi.encodeCall(verifierImpl.initialize, (initialOwner))
             );
             verifier = address(Verifier(address(verifierProxy)));
             vm.setEnv("VERIFIER", vm.toString(address(verifier)));
@@ -40,10 +36,7 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
 
             ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            console.log(
-                "ECDSAOwnedDKIMRegistry implementation deployed at: %s",
-                address(dkimImpl)
-            );
+            console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
             ERC1967Proxy dkimProxy = new ERC1967Proxy(
                 address(dkimImpl),
                 abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))

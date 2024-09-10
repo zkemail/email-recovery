@@ -26,7 +26,7 @@ import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
