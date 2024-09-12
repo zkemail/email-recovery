@@ -4,8 +4,8 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { CommandUtils } from "ether-email-auth/packages/contracts/src/libraries/CommandUtils.sol";
+import { EmailAuthMsg, EmailProof } from "ether-email-auth/src/EmailAuth.sol";
+import { CommandUtils } from "ether-email-auth/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";

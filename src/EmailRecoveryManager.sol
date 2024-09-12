@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailAccountRecovery } from
-    "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from "ether-email-auth/src/EmailAccountRecovery.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
@@ -226,9 +225,7 @@ abstract contract EmailRecoveryManager is
      * that no recovery is in process.
      * @param recoveryConfig The new recovery configuration to be set for the caller's account
      */
-    function updateRecoveryConfig(
-        RecoveryConfig memory recoveryConfig
-    )
+    function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
         public
         onlyWhenNotRecovering
     {
