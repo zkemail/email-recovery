@@ -6,11 +6,10 @@ import { console } from "forge-std/console.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
-import { Groth16Verifier } from "ether-email-auth/packages/contracts/src/utils/Groth16Verifier.sol";
-import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { Verifier } from "ether-email-auth/src/utils/Verifier.sol";
+import { Groth16Verifier } from "ether-email-auth/src/utils/Groth16Verifier.sol";
+import { ECDSAOwnedDKIMRegistry } from "ether-email-auth/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "ether-email-auth/src/EmailAuth.sol";
 
 import { Safe7579 } from "safe7579/Safe7579.sol";
 import { Safe7579Launchpad } from "safe7579/Safe7579Launchpad.sol";

@@ -8,7 +8,7 @@ import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { EmailAuthMsg } from "ether-email-auth/src/EmailAuth.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { AccountHidingRecoveryCommandHandler } from
