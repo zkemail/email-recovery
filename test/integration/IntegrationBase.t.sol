@@ -6,8 +6,8 @@ import { console2 } from "forge-std/console2.sol";
 
 import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
 import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth-contracts/src/EmailAuth.sol";
+    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";

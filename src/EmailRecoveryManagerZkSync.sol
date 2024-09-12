@@ -2,9 +2,10 @@
 pragma solidity ^0.8.25;
 
 import { EmailRecoveryManager } from "./EmailRecoveryManager.sol";
-import { EmailAccountRecovery } from "ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from
+    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { EmailAccountRecoveryZKSync } from
-    "ether-email-auth-contracts/src/EmailAccountRecoveryZKSync.sol";
+    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecoveryZKSync.sol";
 
 /**
  * @title EmailRecoveryManagerZkSync
