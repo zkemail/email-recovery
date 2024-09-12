@@ -1,6 +1,6 @@
 {
   "name": "@zk-email/email-recovery",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Smart account module and related contracts to enable email recovery for validators",
   "license": "MIT",
   "author": {
