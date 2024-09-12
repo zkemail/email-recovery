@@ -21,8 +21,8 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
       '@zk-email/ether-email-auth-contracts':
-        specifier: 0.0.1-preview
-        version: 0.0.1-preview
+        specifier: 0.0.2-preview
+        version: 0.0.2-preview
       email-wallet-sdk:
         specifier: github:zkemail/email-wallet-sdk
         version: https://codeload.github.com/zkemail/email-wallet-sdk/tar.gz/a8c200e4855a81adc7b9493afa92a898ffcb8c56(ethers@5.7.2)(hardhat@2.22.8(typescript@5.5.4))(lodash@4.17.21)(typechain@5.2.0(typescript@5.5.4))
@@ -508,8 +508,8 @@ packages:
   '@zk-email/contracts@6.1.5':
     resolution: {integrity: sha512-1RW3dpYGBQXjmIlcTGMtYsux7FQoR1MezA0D0pssrNEaCO2CuQd6oAxJLpbCxFQWPbujLKn8PiEVcjP+eiGvVw==}
 
-  '@zk-email/ether-email-auth-contracts@0.0.1-preview':
-    resolution: {integrity: sha512-lyXq6ELoNVDv5oAuxg98NxLZgvf8K0qRFdLca/ttJQNeGs3fxDvrAZL47SZH6qR5OEl1M5L0ORu9afJpfP8JVg==}
+  '@zk-email/ether-email-auth-contracts@0.0.2-preview':
+    resolution: {integrity: sha512-ZITqmhdcxuICd/4sU1z8a2w04p2LWIOMl0FOX4j04gBz17k0hYsGcbNQl41FIqLQRTBVc+AZ8DMuegFO6/T2jQ==}
 
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
@@ -2845,7 +2845,7 @@ snapshots:
       '@openzeppelin/contracts': 5.0.2
       dotenv: 16.4.5
 
-  '@zk-email/ether-email-auth-contracts@0.0.1-preview':
+  '@zk-email/ether-email-auth-contracts@0.0.2-preview':
     dependencies:
       '@matterlabs/zksync-contracts': 0.6.1(@openzeppelin/contracts-upgradeable@5.0.1(@openzeppelin/contracts@5.0.2))(@openzeppelin/contracts@5.0.2)
       '@openzeppelin/contracts': 5.0.2
