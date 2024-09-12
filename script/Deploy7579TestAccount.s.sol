@@ -3,7 +3,8 @@ pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { EmailAccountRecovery } from "ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from
+    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { RhinestoneModuleKit } from "modulekit/ModuleKit.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";

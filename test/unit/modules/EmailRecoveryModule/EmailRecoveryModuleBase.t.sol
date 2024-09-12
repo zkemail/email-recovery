@@ -11,9 +11,13 @@ import {
 } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { CommandUtils } from "ether-email-auth-contracts/src/libraries/CommandUtils.sol";
-import { EmailAuth, EmailAuthMsg, EmailProof } from "ether-email-auth-contracts/src/EmailAuth.sol";
+    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
+import {
+    EmailAuth,
+    EmailAuthMsg,
+    EmailProof
+} from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
