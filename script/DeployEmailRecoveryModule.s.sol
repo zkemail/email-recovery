@@ -4,10 +4,11 @@ pragma solidity ^0.8.25;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { Verifier } from "ether-email-auth/src/utils/Verifier.sol";
-import { Groth16Verifier } from "ether-email-auth/src/utils/Groth16Verifier.sol";
-import { ECDSAOwnedDKIMRegistry } from "ether-email-auth/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth/src/EmailAuth.sol";
+import { Verifier } from "ether-email-auth-contracts/src/utils/Verifier.sol";
+import { Groth16Verifier } from "ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
+import { ECDSAOwnedDKIMRegistry } from
+    "ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
