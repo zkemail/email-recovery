@@ -1,6 +1,6 @@
 {
   "name": "@zk-email/email-recovery",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Smart account module and related contracts to enable email recovery for validators",
   "license": "MIT",
   "author": {
@@ -32,7 +32,7 @@
     "@zk-email/ether-email-auth-contracts": "0.0.2-preview",
     "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
-    "solidity-stringutils": "github:Arachnid/solidity-stringutils"
+    "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
   "files": [
     "src",
