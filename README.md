@@ -5,7 +5,7 @@ Account recovery has traditionally been one of the most complex UX hurdles that 
 
 Modular accounts get account recovery for 'free' by using our pre-deployed universal email recovery module. Since Safe's can be made 7579 compatible, the following contracts also support Safe account recovery out of the box too. For older existing Safes that are not compatible with ERC4337 (and subsequenty ERC7579), we provide a native Safe module too.
 
-Modular account developers can easily integrate email recovery with richer and more specific email subjects by writing their own subject handler contracts, which are designed to be simple and contain the modular account-specific logic to recover an account.
+Modular account developers can easily integrate email recovery with richer and more specific commands in the email body by writing their own command handler contracts, which are designed to be simple and contain the modular account-specific logic to recover an account.
 
 ## Usage
 
@@ -43,7 +43,7 @@ It inherits from a ZK Email contract called `EmailAccountRecovery.sol` which def
 
 The guardians are represented onchain by `EmailAuth.sol` instances. `EmailAuth.sol` is designed to authenticate that a user is a correct holder of the specific email address and authorize anything described in the email. The guardians privacy is protected onchain, for more info on ZK Email privacy and EmailAuth - see the [ZK Email docs](https://zkemail.gitbook.io/zk-email).
 
-`EmailRecoveryManager` relies on a dedicated recovery module to execute a recovery attempt - the recovery module inherits from the email recovery manager contract. The `EmailRecoveryManager` contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core `EmailRecoveryManager` contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. For example, we have a native Safe module as well as two 7579 modules that use the same underlying manager. It's functionality can be extended by creating new subject handler contracts such as `EmailRecoverySubjectHandler.sol`. 
+`EmailRecoveryManager` relies on a dedicated recovery module to execute a recovery attempt - the recovery module inherits from the email recovery manager contract. The `EmailRecoveryManager` contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core `EmailRecoveryManager` contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. For example, we have a native Safe module as well as two 7579 modules that use the same underlying manager. It's functionality can be extended by creating new command handler contracts such as `EmailRecoveryCommandHandler.sol`. 
 
 ## EmailRecoveryManager flow walkthrough
 
@@ -77,7 +77,7 @@ This function handles the acceptance of each guardian. Each guardian must accept
 function handleAcceptance(
     address guardian,
     uint256 templateIdx,
-    bytes[] memory subjectParams,
+    bytes[] memory commandParams,
     bytes32
 ) internal;
 ```
@@ -89,7 +89,7 @@ This function processes each guardian's recovery request. A guardian can initiat
 function handleRecovery(
     address guardian,
     uint256 templateIdx,
-    bytes[] memory subjectParams,
+    bytes[] memory commandParams,
     bytes32
 ) internal;
 ```
@@ -101,93 +101,93 @@ The final function to complete the recovery process. This function completes the
 function completeRecovery(address account, bytes memory recoveryCalldata) public;
 ```
 
-## Subject Handlers
+## Command Handlers
 
-Subject handlers define the subjects for recovery emails and how they should be validated. They are designed to be simple and self-contained contracts that hold the modular account-specific logic needed for adding email recovery. We currently define three subject handlers. We have a universal subject handler which essentially gives 7579 module developers recovery for free that is generic to any validator (so long as the validator has functionality to recover itself). We provide a Safe account subject handler which provides email account recovery for Safe's. The third is an address hiding email subject handler which offers offchain privacy protection for accounts from guardians. 
+Command handlers define the commands for recovery emails and how they should be validated. They are designed to be simple and self-contained contracts that hold the modular account-specific logic needed for adding email recovery. We currently define three command handlers. We have a universal command handler which essentially gives 7579 module developers recovery for free that is generic to any validator (so long as the validator has functionality to recover itself). We provide a Safe account command handler which provides email account recovery for Safe's. The third is an address hiding email command handler which offers offchain privacy protection for accounts from guardians. 
 
-Subject handlers contain functions for defining the email subjects, of which there are two subject types - acceptance and recovery subjects. The acceptance subject is for the email that is displayed to the guardian when they have to accept becoming a guardian for an account. The recovery subject is for the email displayed to the guardian when an account is actually being recovered. Handlers also contain helper functions to extract the account address from both subject types. The acceptance and recovery templates can be written to contain any functional info, but they must contain the account address. The subject is an important part of the functional info that is used to generate and verify the zkp.
+Command handlers contain functions for defining the commands in the email body, of which there are two command types - acceptance and recovery commands. The acceptance command is for the email that is displayed to the guardian when they have to accept becoming a guardian for an account. The recovery command is for the email displayed to the guardian when an account is actually being recovered. Handlers also contain helper functions to extract the account address from both command types. The acceptance and recovery templates can be written to contain any functional info, but they must contain the account address. The command is an important part of the functional info that is used to generate and verify the zkp.
 
-Once a new subject has been written and audited, the deployment bytecode of the subject handler can be passed into one of the provided factories, which ensures that the deployment of a module, manager and subject handler are tightly coupled. The deployment of these contracts can be attested to via the use of an [ERC-7484 resistry](https://eips.ethereum.org/EIPS/eip-7484).
+Once a new command has been written and audited, the deployment bytecode of the command handler can be passed into one of the provided factories, which ensures that the deployment of a module, manager and command handler are tightly coupled. The deployment of these contracts can be attested to via the use of an [ERC-7484 resistry](https://eips.ethereum.org/EIPS/eip-7484).
 
-### Why write your own subject handler?
-The generic subject handler supported out of the box is sufficiently generic for recovering any modular account via the use of a recovery hash in the email subject, which is validated against when executing recovery. A modular account developer may want to provide a more specifc and human readable subject handler for their users. It's also possible to write a subject template in a non-english language to support non-english speakers.
+### Why write your own command handler?
+The generic command handler supported out of the box is sufficiently generic for recovering any modular account via the use of a recovery hash in the command, which is validated against when executing recovery. A modular account developer may want to provide a more specifc and human readable command handler for their users. It's also possible to write a command template in a non-english language to support non-english speakers.
 
 It is important to re-iterate that modular accounts already get account recovery out of the box with these contracts, via the use of the unviversal email recovery module.
 
-### EmailRecoverySubjectHandler.sol
-`EmailRecoverySubjectHandler` is a generic subject handler that can be used to recovery any validator. 
+### EmailRecoveryCommandHandler.sol
+`EmailRecoveryCommandHandler` is a generic command handler that can be used to recovery any validator. 
 
-The acceptance subject template is:
+The acceptance command template is:
 `Accept guardian request for {ethAddr}`
 
-The recovery subject template is:
+The recovery command template is:
 `Recover account {ethAddr} using recovery hash {string}`
 
-### SafeRecoverySubjectHandler.sol
+### SafeRecoveryCommandHandler.sol
 
-`SafeRecoverySubjectHandler` is a specific subject handler that can be used to recover a Safe. It provides a good example of how to write a custom subject handler for a different account implementation. In contrast to the `EmailRecoverySubjectHandler`, the Safe subject requires additional info in order to complete the recovery request.
+`SafeRecoveryCommandHandler` is a specific command handler that can be used to recover a Safe. It provides a good example of how to write a custom command handler for a different account implementation. In contrast to the `EmailRecoveryCommandHandler`, the Safe command requires additional info in order to complete the recovery request.
  
-The acceptance subject remains the same as the acceptance subject is already quite generic. This will be a common scenario where only the recovery subject-related functions will need changing. A scenario in which you would definitely need to update both is if you wanted to provide email recovery functionality to users who didn't speak English. In which case you could translate the required subjects into the chosen language.
+The acceptance command remains the same as the acceptance command is already quite generic. This will be a common scenario where only the recovery command-related functions will need changing. A scenario in which you would definitely need to update both is if you wanted to provide email recovery functionality to users who didn't speak English. In which case you could translate the required commands into the chosen language.
 
-The acceptance subject template is:
+The acceptance command template is:
 `Accept guardian request for {ethAddr}`
 
-The recovery subject template is:
+The recovery command template is:
 `Recover account {ethAddr} from old owner {ethAddr} to new owner {ethAddr}`
 
-### AccountHidingRecoverySubjectHandler.sol
+### AccountHidingRecoveryCommandHandler.sol
 
-`AccountHidingRecoverySubjectHandler` is a specific subject handler that can be used to recover a Safe. This subject handler hashes the account address so that it is not revealed in recovery emails to guardians. This is important if an account does not want to easily reveal it's financial history to guardians. This handler is similar to the generic subject handler except the account address is replaced by a hash.     
+`AccountHidingRecoveryCommandHandler` is a specific command handler that can be used to recover a Safe. This command handler hashes the account address so that it is not revealed in recovery emails to guardians. This is important if an account does not want to easily reveal it's financial history to guardians. This handler is similar to the generic command handler except the account address is replaced by a hash.     
 
-The acceptance subject template is:
+The acceptance command template is:
 `Accept guardian request for {string}`
 
-The recovery subject template is:
+The recovery command template is:
 `Recover account {string} using recovery hash {string}`
 
-## How you can write a custom subject template
+## How you can write a custom command template
 
 When you know what recovery specific information you need, you can create a new handler contract. The following functions must be implemented:
 
-* `acceptanceSubjectTemplates()`
-* `extractRecoveredAccountFromAcceptanceSubject(bytes[],uint256)`
-* `validateAcceptanceSubject(uint256,bytes[])`
+* `acceptanceCommandTemplates()`
+* `extractRecoveredAccountFromAcceptanceCommand(bytes[],uint256)`
+* `validateAcceptanceCommand(uint256,bytes[])`
 
-* `recoverySubjectTemplates()`
-* `extractRecoveredAccountFromRecoverySubject(bytes[],uint256)`
-* `validateRecoverySubject(uint256,bytes[])`
+* `recoveryCommandTemplates()`
+* `extractRecoveredAccountFromRecoveryCommand(bytes[],uint256)`
+* `validateRecoveryCommand(uint256,bytes[])`
 
 * `parseRecoveryDataHash(uint256,bytes[])`
 
 
-### How a subject is interpreted
+### How a command is interpreted
 
-With an email subject of:
+With an email command of:
 ```bash
 Recover account 0x50Bc6f1F08ff752F7F5d687F35a0fA25Ab20EF52 to new owner 0x7240b687730BE024bcfD084621f794C2e4F8408f
 ```
 
-Where the first address in the subject is the account address recovery is being executed for, and the second is the new owner address. This subject would lead to the the following subject params
+Where the first address in the command is the account address recovery is being executed for, and the second is the new owner address. This command would lead to the the following command params
 
-The subject params would be:
+The command params would be:
 
 ```ts
-bytes[] memory subjectParamsForRecovery = new bytes[](2);
-subjectParamsForRecovery[0] = abi.encode(accountAddress);
-subjectParamsForRecovery[1] = abi.encode(newOwner);
+bytes[] memory commandParamsForRecovery = new bytes[](2);
+commandParamsForRecovery[0] = abi.encode(accountAddress);
+commandParamsForRecovery[1] = abi.encode(newOwner);
 ```
 
-### What can I add to a subject template?
-A subject template defines the expected format of the message in the subject for each recovery implementation. The underlying ZK Email contracts are generic for any subject, negating some type and size constraints, so developers can write application-specific messages without writing new zk circuits. The use of different subject templates in this case allows for a flexible and extensible mechanism to define recovery messages, making it adaptable to different modular account implemtations. For recovery subjects using these contracts, the email subjects can be completely generic, but they **must** return the account address for which recovery is for.
+### What can I add to a command template?
+A command template defines the expected format of the message in the command for each recovery implementation. The underlying ZK Email contracts are generic for any command, negating some type and size constraints, so developers can write application-specific messages without writing new zk circuits. The use of different command templates in this case allows for a flexible and extensible mechanism to define recovery messages, making it adaptable to different modular account implemtations. For recovery commands using these contracts, the email commands can be completely generic, but they **must** return the account address for which recovery is for.
 
-The subject template is an array of strings, each of which has some fixed strings without space and the following variable parts. Subject variables must meet the following type constraints:
-- `"{string}"`: a string. Its Solidity type is `string`. The subject string type can be used to add the solidity `bytes` type to email subjects.
+The command template is an array of strings, each of which has some fixed strings without space and the following variable parts. Command variables must meet the following type constraints:
+- `"{string}"`: a string. Its Solidity type is `string`. The command string type can be used to add the solidity `bytes` type to commands.
 - `"{uint}"`: a decimal string of the unsigned integer. Its Solidity type is `uint256`.
 - `"{int}"`: a decimal string of the signed integer. Its Solidity type is `int256`.
 - `"{decimals}"`: a decimal string of the decimals. Its Solidity type is `uint256`. Its decimal size is fixed to 18. E.g., “2.7” ⇒ `abi.encode(2.7 * (10**18))`.
 - `"{ethAddr}"`: a hex string of the Ethereum address. Its Solidity type is `address`. Its value MUST satisfy the checksum of the Ethereum address.
 
-If you are recovering an account that needs to rotate a public key which is of type `bytes` in solidity, you can use the string type for that for the subject template. To read more about the underlying ZK Email contracts that this repo uses, take a look at the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo.
+If you are recovering an account that needs to rotate a public key which is of type `bytes` in solidity, you can use the string type for that for the command template. To read more about the underlying ZK Email contracts that this repo uses, take a look at the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo.
 
 ### EmailRecoveryModule.sol
 A recovery module that recovers a specific validator.
@@ -198,7 +198,7 @@ The `recover()` function on the module is the key entry point where recovery is 
 
 `completeRecovery()` calls `recover()` which calls executeFromExecutor to execute the account specific recovery logic. The call from the executor retains the context of the account so the `msg.sender` of the next call is the account itself. This simplifies access control in the validator being recovered as it can just do a `msg.sender` check.
 
-When writing a custom subject handler, an account developer would likely chose to deploy a `EmailRecoveryModule` instance rather than a `UniversalEmailRecoveryModule` instance. This is because a custom subject handler would likely be specific to an validator implementation, so using the recovery module for specific validators is more appropriate than the generic recovery module.
+When writing a custom command handler, an account developer would likely chose to deploy a `EmailRecoveryModule` instance rather than a `UniversalEmailRecoveryModule` instance. This is because a custom command handler would likely be specific to an validator implementation, so using the recovery module for specific validators is more appropriate than the generic recovery module.
 
 **Note:** This module is an executor and does not abide by the 4337 validation rules. The `onInstall` function breaks the validation rules and it is possible for it to be called during account deployment in the first userOp. So you cannot install this module during account deployment as onInstall will be called as part of the validation phase. Supporting executor initialization during account deployment is not mandated by ERC7579 - if required, install this module after the account has been setup.
 
@@ -221,18 +221,18 @@ The target selector is hardcoded as a constant variable, as the recovery functio
 `completeRecovery()` calls `recover()` which calls `execTransactionFromModule` to execute the recovery attempt. `execTransactionFromModule` can only be called from an installed Safe module.
 
 ### EmailRecoveryFactory.sol
-The factory for deploying new instances of `EmailRecoveryModule.sol` and associated subject handlers. The factory ensures there is a tight coupling between a deployed module and a subject handler.
+The factory for deploying new instances of `EmailRecoveryModule.sol` and associated command handlers. The factory ensures there is a tight coupling between a deployed module and a command handler.
 
-The deployment function for this factory deploys an `EmailRecoveryModule`, which takes a target validator and function selector. The other values passed into the deployment function are the same as the `EmailRecoveryUniversalFactory`, which include deployment salts, subject handler bytecode, and a dkim registry.
+The deployment function for this factory deploys an `EmailRecoveryModule`, which takes a target validator and function selector. The other values passed into the deployment function are the same as the `EmailRecoveryUniversalFactory`, which include deployment salts, command handler bytecode, and a dkim registry.
 
-When deploying a new recovery module for a specific validator with a more human readable subject, modular account developers can write their own subject handler and pass the deployment bytecode of that handler into the factory. The security of each module deployment and associated contracts can then be attested to via an ERC7484 registry.
+When deploying a new recovery module for a specific validator with a more human readable command, modular account developers can write their own command handler and pass the deployment bytecode of that handler into the factory. The security of each module deployment and associated contracts can then be attested to via an ERC7484 registry.
 
 ### EmailRecoveryUniversalFactory.sol
-The factory for deploying new instances of `UniversalEmailRecoveryModule.sol` and associated subject handlers.
+The factory for deploying new instances of `UniversalEmailRecoveryModule.sol` and associated command handlers.
 
-The deployment function for this factory deploys an `UniversalEmailRecoveryModule`, which takes deployment salts, subject handler bytecode, and a dkim registry as arguments. The target validator and target function selector are set when the universal module is installed.
+The deployment function for this factory deploys an `UniversalEmailRecoveryModule`, which takes deployment salts, command handler bytecode, and a dkim registry as arguments. The target validator and target function selector are set when the universal module is installed.
 
-While the subject handler for `EmailRecoveryUniversalFactory` will be more stable in comparison to a subject handlers used for `EmailRecoveryModule`, developers may want to write a generic subject handler in a slightly different way, or even in a non-english lanaguage, so the bytecode is still passed in here directly. The security of each module deployment and associated contracts can then be attested to via an ERC7484 registry.
+While the command handler for `EmailRecoveryUniversalFactory` will be more stable in comparison to a command handlers used for `EmailRecoveryModule`, developers may want to write a generic command handler in a slightly different way, or even in a non-english lanaguage, so the bytecode is still passed in here directly. The security of each module deployment and associated contracts can then be attested to via an ERC7484 registry.
 
 ## Threat model
 Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. Additionally, the current 7579 spec allows accounts to forcefully uninstall modules in the case of a malicious module, this means an attacker could forcefully uninstall a recovery module anyway. This is expected to be addressed in the future. This contract is designed to recover modular accounts in the case of a lost device/authentication method (private key), but does not provide adequate security for a scenario in which a malicious actor has control of the lost device/authentication method (private key).
