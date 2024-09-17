@@ -97,7 +97,6 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
             validatorAddr = address(new OwnableValidator());
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
-        OwnableValidator validator = OwnableValidator(validatorAddr);
 
         // Create initcode to be sent to Factory
         BootstrapConfig[] memory validators = new BootstrapConfig[](1);
@@ -223,8 +222,15 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         vm.stopBroadcast();
     }
 
-    function getNonce(address account, address validator) internal returns (uint256 nonce) {
+    function getNonce(
+        address smartAccount,
+        address validator
+    )
+        internal
+        view
+        returns (uint256 nonce)
+    {
         uint192 key = uint192(bytes24(bytes20(address(validator))));
-        nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(account), key);
+        nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(smartAccount), key);
     }
 }

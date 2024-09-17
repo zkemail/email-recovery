@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
@@ -28,7 +27,7 @@ contract EmailRecoveryManager_getGuardianConfig_Test is UnitBase {
         vm.stopPrank();
     }
 
-    function test_GetGuardianConfig_Succeeds() public {
+    function test_GetGuardianConfig_Succeeds() public view {
         IGuardianManager.GuardianConfig memory guardianConfig =
             emailRecoveryModule.getGuardianConfig(accountAddress);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);

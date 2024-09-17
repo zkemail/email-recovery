@@ -54,8 +54,6 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
-        EmailRecoveryCommandHandler emailRecoveryHandler = new EmailRecoveryCommandHandler();
-
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryUniversalFactory(verifier, emailAuthImpl));

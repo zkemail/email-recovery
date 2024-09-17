@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -170,6 +169,7 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         address guardian
     )
         public
+        view
         returns (bytes32)
     {
         address[] memory guardians;

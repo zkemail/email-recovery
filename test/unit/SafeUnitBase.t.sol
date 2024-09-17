@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
@@ -31,7 +30,7 @@ abstract contract SafeUnitBase is IntegrationBase {
     /**
      * Helper function to return if current account type is safe or not
      */
-    function isAccountTypeSafe() public returns (bool) {
+    function isAccountTypeSafe() public view returns (bool) {
         string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
         if (Strings.equal(currentAccountType, "SAFE")) {
             return true;
@@ -73,7 +72,7 @@ abstract contract SafeUnitBase is IntegrationBase {
         bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
         );
-        bytes memory recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
+        recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
         recoveryDataHash = keccak256(recoveryData);
         isInstalledContext = bytes("0");
 

@@ -61,8 +61,6 @@ contract DeployEmailRecoveryModuleScript is Script {
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
 
-        EmailRecoveryCommandHandler emailRecoveryHandler = new EmailRecoveryCommandHandler();
-
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));

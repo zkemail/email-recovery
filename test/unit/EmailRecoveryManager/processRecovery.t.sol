@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";

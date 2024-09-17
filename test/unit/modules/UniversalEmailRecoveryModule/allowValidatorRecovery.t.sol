@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
@@ -129,26 +128,26 @@ contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     function test_AllowValidatorRecovery_RevertWhen_MaxValidatorsReached() public {
         // One validator is already installed from setup
         for (uint256 i = 1; i <= 31; i++) {
-            address newValidatorAddress = address(new OwnableValidator());
+            address _newValidatorAddress = address(new OwnableValidator());
             instance.installModule({
                 moduleTypeId: MODULE_TYPE_VALIDATOR,
-                module: newValidatorAddress,
+                module: _newValidatorAddress,
                 data: abi.encode(owner)
             });
             vm.startPrank(accountAddress);
-            emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", functionSelector);
+            emailRecoveryModule.allowValidatorRecovery(_newValidatorAddress, "", functionSelector);
             vm.stopPrank();
         }
 
-        address newValidatorAddress = address(new OwnableValidator());
+        address lastValidatorAddress = address(new OwnableValidator());
         instance.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: newValidatorAddress,
+            module: lastValidatorAddress,
             data: abi.encode(owner)
         });
         vm.startPrank(accountAddress);
         vm.expectRevert(UniversalEmailRecoveryModule.MaxValidatorsReached.selector);
-        emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", functionSelector);
+        emailRecoveryModule.allowValidatorRecovery(lastValidatorAddress, "", functionSelector);
 
         uint256 validatorCount = emailRecoveryModule.validatorCount(accountAddress);
         assertEq(validatorCount, 32);

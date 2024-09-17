@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
@@ -24,7 +23,7 @@ contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
         assertEq(recoveryConfig.expiry, newExpiry);
     }
 
-    function test_GetRecoveryConfig_Succeeds() public {
+    function test_GetRecoveryConfig_Succeeds() public view {
         IEmailRecoveryManager.RecoveryConfig memory result =
             emailRecoveryModule.getRecoveryConfig(accountAddress);
         assertEq(result.delay, newDelay);

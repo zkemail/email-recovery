@@ -5,7 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
 contract Compute7579RecoveryDataHash is Script {
-    function run() public {
+    function run() public view {
         bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
         address newOwner = vm.envAddress("NEW_OWNER");
         address validator = vm.envAddress("VALIDATOR");

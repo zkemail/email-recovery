@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
@@ -37,8 +36,6 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         );
         bytes memory recoveryData = abi.encode(safeAddress, recoveryCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
-
-        bytes32 accountHash = keccak256(abi.encodePacked(safeAddress));
 
         AccountHidingRecoveryCommandHandler(commandHandler).storeAccountHash(safeAddress);
 

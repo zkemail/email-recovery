@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ISafe7579 } from "safe7579/Safe7579.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
@@ -92,7 +91,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
     function test_Recover_RevertWhen_IncorrectValidatorAddress() public {
         address wrongValidator = accountAddress;
         bytes memory validCalldata = abi.encodeWithSelector(functionSelector, newOwner);
-        bytes memory invalidData = abi.encode(accountAddress, validCalldata);
+        bytes memory invalidData = abi.encode(wrongValidator, validCalldata);
         vm.startPrank(recoveryModuleAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
