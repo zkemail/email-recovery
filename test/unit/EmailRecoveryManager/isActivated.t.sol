@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -15,7 +14,7 @@ contract EmailRecoveryManager_isActivated_Test is UnitBase {
         super.setUp();
     }
 
-    function test_isActivated_ReturnsTrueWhenModuleIsInstalled() public {
+    function test_isActivated_ReturnsTrueWhenModuleIsInstalled() public view {
         bool isActivated = emailRecoveryModule.isActivated(accountAddress);
         assertTrue(isActivated);
     }

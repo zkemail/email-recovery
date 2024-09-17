@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -32,7 +31,7 @@ contract EmailRecoveryCommandHandler_parseRecoveryDataHash_Test is UnitBase {
         emailRecoveryHandler.parseRecoveryDataHash(invalidTemplateIdx, commandParams);
     }
 
-    function test_ParseRecoveryDataHash_Succeeds() public {
+    function test_ParseRecoveryDataHash_Succeeds() public view {
         bytes32 expectedRecoveryDataHash = keccak256(recoveryData);
 
         bytes32 recoveryDataHash =

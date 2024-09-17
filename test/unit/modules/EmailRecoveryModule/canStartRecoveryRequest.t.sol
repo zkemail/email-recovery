@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-import { UnitBase } from "../../UnitBase.t.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 
@@ -11,7 +9,7 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
         super.setUp();
     }
 
-    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public {
+    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public view {
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
 
         // Checking accepted weight is what we expect for this test case

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -53,9 +52,6 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         emailRecoveryHandler = new EmailRecoveryCommandHandler();
 
         // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
-        bytes32 commandHandlerSalt = bytes32(uint256(0));
-        bytes32 recoveryModuleSalt = bytes32(uint256(0));
-        bytes memory commandHandlerBytecode = type(EmailRecoveryCommandHandler).creationCode;
         emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
             address(verifier),
             address(dkimRegistry),
@@ -194,6 +190,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         address guardian
     )
         public
+        view
         returns (bytes32)
     {
         address[] memory guardians;

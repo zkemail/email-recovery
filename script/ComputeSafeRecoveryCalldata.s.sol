@@ -5,7 +5,7 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 
 contract ComputeSafeRecoveryCalldataScript is Script {
-    function run() public {
+    function run() public view {
         address oldOwner = vm.envAddress("OLD_OWNER");
         address newOwner = vm.envAddress("NEW_OWNER");
         address previousOwnerInLinkedList = address(1);

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-import { Test } from "forge-std/Test.sol";
 import {
     RhinestoneModuleKit,
     AccountInstance,
@@ -21,6 +19,7 @@ import {
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
+import { BaseTest } from "test/Base.t.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
@@ -28,7 +27,7 @@ import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
+abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, BaseTest {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
@@ -253,15 +252,9 @@ abstract contract EmailRecoveryModuleBase is RhinestoneModuleKit, Test {
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
     }
 
-    function handleRecovery(
-        address recoveryModule,
-        bytes32 recoveryDataHash,
-        bytes32 accountSalt
-    )
-        public
-    {
+    function handleRecovery(bytes32 _recoveryDataHash, bytes32 accountSalt) public {
         string memory accountString = CommandUtils.addressToChecksumHexString(accountAddress);
-        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+        string memory recoveryDataHashString = uint256(_recoveryDataHash).toHexString(32);
 
         string memory commandPart1 = string.concat("Recover account ", accountString);
         string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);

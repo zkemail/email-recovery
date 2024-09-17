@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
@@ -31,7 +29,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     /**
      * Helper function to return if current account type is safe or not
      */
-    function isAccountTypeSafe() public returns (bool) {
+    function isAccountTypeSafe() public view returns (bool) {
         string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
         if (Strings.equal(currentAccountType, "SAFE")) {
             return true;
@@ -118,7 +116,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         return emailProof;
     }
 
-    function getAccountSaltForGuardian(address guardian) public returns (bytes32) {
+    function getAccountSaltForGuardian(address guardian) public view returns (bytes32) {
         if (guardian == guardians1[0]) {
             return accountSalt1;
         }

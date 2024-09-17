@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";

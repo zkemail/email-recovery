@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
@@ -100,6 +99,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address validator
     )
         external
+        view
         returns (bool)
     {
         return validators[account].contains(validator);
