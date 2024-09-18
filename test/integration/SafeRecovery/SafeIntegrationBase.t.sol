@@ -45,7 +45,6 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
-        vm.prank(accountAddress1);
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: emailRecoveryModuleAddress,
@@ -60,7 +59,6 @@ abstract contract SafeIntegrationBase is IntegrationBase {
                 expiry
             )
         });
-        vm.stopPrank();
     }
 
     function computeEmailAuthAddress(

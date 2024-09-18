@@ -15,9 +15,7 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
     }
 
     function test_OnUninstall_Succeeds() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         bytes4 allowedSelector =
             emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress1);
@@ -46,9 +44,7 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
         assertEq(allowedValidators.length, 0);
         assertEq(allowedSelectors.length, 0);
 
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress1);
         allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);

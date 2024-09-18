@@ -24,9 +24,7 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
             accountAddress1, guardians1[0], emailRecoveryModuleAddress
@@ -96,9 +94,7 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
@@ -169,9 +165,7 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
@@ -204,9 +198,7 @@ contract EmailRecoveryManager_Integration_Test is
         );
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
 
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.warp(12 seconds);
 
@@ -222,9 +214,7 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_TryCompleteRecoveryWhenModuleNotInstalled() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);

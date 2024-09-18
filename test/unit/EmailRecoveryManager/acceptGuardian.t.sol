@@ -37,9 +37,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     }
 
     function test_AcceptGuardian_RevertWhen_RecoveryModuleNotInstalled() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.exposed_acceptGuardian(

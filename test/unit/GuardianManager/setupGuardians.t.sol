@@ -65,9 +65,7 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
     }
 
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         guardianWeights[0] = 0;
 
@@ -89,9 +87,7 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
     function test_SetupGuardians_RevertWhen_ThresholdExceedsTotalWeight() public {
         uint256 invalidThreshold = totalWeight + 1;
 
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -109,9 +105,7 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
         uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold;
 
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         (uint256 guardianCount, uint256 totalWeight) = emailRecoveryModule.exposed_setupGuardians(
             accountAddress1, guardians1, guardianWeights, threshold

@@ -13,9 +13,7 @@ contract GuardianManager_updateGuardianStatus_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
     }
 
     function test_UpdateGuardianStatus_RevertWhen_StatusIsAlreadyNONE() public {
