@@ -17,8 +17,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
     }
 
     function test_CompleteRecovery_RevertWhen_NotEnoughApprovals() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         // only one guardian added and one approval
@@ -28,12 +28,12 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.NotEnoughApprovals.selector, guardianWeights[0], threshold
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 
     function test_CompleteRecovery_RevertWhen_DelayNotPassed() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -48,14 +48,14 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 block.timestamp + delay
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampEqualToExpiry()
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -69,14 +69,14 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 
     function test_CompleteRecovery_RevertWhen_RecoveryRequestExpiredAndTimestampMoreThanExpiry()
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -90,14 +90,14 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 IEmailRecoveryManager.RecoveryRequestExpired.selector, block.timestamp, executeAfter
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 
     function test_CompleteRecovery_RevertWhen_InvalidRecoveryDataHash() public {
         bytes memory invalidRecoveryData = bytes("Invalid calldata");
 
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -111,12 +111,12 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
                 recoveryDataHash
             )
         );
-        emailRecoveryModule.completeRecovery(accountAddress, invalidRecoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, invalidRecoveryData);
     }
 
     function test_CompleteRecovery_Succeeds() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -124,11 +124,11 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         vm.warp(block.timestamp + delay);
 
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress1);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);
@@ -136,8 +136,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
     }
 
     function test_CompleteRecovery_SucceedsAlmostExpiry() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         handleRecovery(recoveryDataHash, accountSalt1);
         handleRecovery(recoveryDataHash, accountSalt2);
@@ -145,11 +145,11 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         vm.warp(block.timestamp + expiry - 1 seconds);
 
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress);
-        emailRecoveryModule.completeRecovery(accountAddress, recoveryData);
+        emit IEmailRecoveryManager.RecoveryCompleted(accountAddress1);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, 0);
         assertEq(recoveryRequest.executeBefore, 0);
         assertEq(recoveryRequest.currentWeight, 0);

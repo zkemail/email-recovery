@@ -11,14 +11,14 @@ contract GuardianManager_getGuardian_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
         vm.stopPrank();
     }
 
     function test_GetGuardian_Succeeds() public view {
         GuardianStorage memory guardianStorage =
-            emailRecoveryModule.getGuardian(accountAddress, newGuardian);
+            emailRecoveryModule.getGuardian(accountAddress1, newGuardian);
         assertEq(uint256(guardianStorage.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage.weight, newGuardianWeight);
     }

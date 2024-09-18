@@ -38,13 +38,13 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
             emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
 
         // Accept guardian
-        acceptGuardian(accountAddress1, guardians1[0]);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         guardianStorage1 = emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
-        acceptGuardian(accountAddress1, guardians1[1]);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         GuardianStorage memory guardianStorage2 =
             emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
@@ -96,7 +96,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
     //     // Uninstall module
     //     vm.prank(accountAddress1);
-    //     account.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+    //     account.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
     //     vm.stopPrank();
 
     //     // bool isModuleInstalled = account.isModuleInstalled(

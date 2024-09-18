@@ -14,24 +14,24 @@ contract GuardianManager_removeAllGuardians_Test is UnitBase {
     }
 
     function test_RemoveAllGuardians_Succeeds() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
-        acceptGuardian(accountSalt3);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_removeAllGuardians(accountAddress);
+        emailRecoveryModule.exposed_removeAllGuardians(accountAddress1);
 
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryModule.getGuardian(accountAddress, guardian1);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage1.weight, 0);
 
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryModule.getGuardian(accountAddress, guardian2);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage2.weight, 0);
 
         GuardianStorage memory guardianStorage3 =
-            emailRecoveryModule.getGuardian(accountAddress, guardian3);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[2]);
         assertEq(uint256(guardianStorage3.status), uint256(GuardianStatus.NONE));
         assertEq(guardianStorage3.weight, 0);
     }

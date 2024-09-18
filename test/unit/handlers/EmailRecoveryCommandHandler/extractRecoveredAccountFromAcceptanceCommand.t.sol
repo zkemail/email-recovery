@@ -12,11 +12,11 @@ contract EmailRecoveryCommandHandler_extractRecoveredAccountFromAcceptanceComman
 
     function test_ExtractRecoveredAccountFromAcceptanceCommand_Succeeds() public view {
         bytes[] memory commandParams = new bytes[](1);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
 
         address extractedAccount = emailRecoveryHandler.extractRecoveredAccountFromAcceptanceCommand(
             commandParams, templateIdx
         );
-        assertEq(extractedAccount, accountAddress);
+        assertEq(extractedAccount, accountAddress1);
     }
 }

@@ -10,11 +10,11 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
     }
 
     function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public view {
-        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
+        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
         // Checking accepted weight is what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
 
         // No guardians have accepted
         assertFalse(canStartRecoveryRequest);
@@ -22,15 +22,15 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
     }
 
     function test_CanStartRecoveryRequest_ReturnsTrue_WhenThresholdIsHigherThanWeight() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
-        acceptGuardian(accountSalt3);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
-        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
+        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
         // Checking accepted weight is what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
 
         // Enough guardians have accepted so that accepted weight is higher than the threshold
         assertTrue(canStartRecoveryRequest);
@@ -38,14 +38,14 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
     }
 
     function test_CanStartRecoveryRequest_ReturnsTrue_WhenThresholdIsEqualToWeight() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress);
+        bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
         // Checking accepted weight is what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
 
         // Enough guardians have accepted so that accepted weight is equal to the threshold
         assertTrue(canStartRecoveryRequest);

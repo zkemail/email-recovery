@@ -29,10 +29,8 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     EmailRecoveryCommandHandler emailRecoveryHandler;
     UniversalEmailRecoveryModuleHarness emailRecoveryModule;
 
-    address recoveryModuleAddress;
-    address validatorAddress;
+    address emailRecoveryModuleAddress;
 
-    OwnableValidator validator;
     bytes isInstalledContext;
     bytes4 functionSelector;
     bytes recoveryData1;
@@ -42,27 +40,9 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
     bytes32 recoveryDataHash2;
     bytes32 recoveryDataHash3;
 
-    uint256 nullifierCount;
-
     function setUp() public virtual override {
         super.setUp();
 
-        emailRecoveryFactory =
-            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
-        emailRecoveryHandler = new EmailRecoveryCommandHandler();
-
-        // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
-        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler)
-        );
-        recoveryModuleAddress = address(emailRecoveryModule);
-
-        // Deploy validator to be recovered
-        validator = new OwnableValidator();
-        validatorAddress = address(validator);
         isInstalledContext = bytes("0");
         functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
         bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
@@ -74,20 +54,6 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         recoveryDataHash1 = keccak256(recoveryData1);
         recoveryDataHash2 = keccak256(recoveryData2);
         recoveryDataHash3 = keccak256(recoveryData3);
-
-        // Compute guardian addresses
-        guardians1 = new address[](3);
-        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt1);
-        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt2);
-        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(instance1.account, accountSalt3);
-        guardians2 = new address[](3);
-        guardians2[0] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt1);
-        guardians2[1] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt2);
-        guardians2[2] = emailRecoveryModule.computeEmailAuthAddress(instance2.account, accountSalt3);
-        guardians3 = new address[](3);
-        guardians3[0] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt1);
-        guardians3[1] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt2);
-        guardians3[2] = emailRecoveryModule.computeEmailAuthAddress(instance3.account, accountSalt3);
 
         bytes memory recoveryModuleInstallData1 = abi.encode(
             validatorAddress,
@@ -128,7 +94,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         });
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
+            module: emailRecoveryModuleAddress,
             data: recoveryModuleInstallData1
         });
 
@@ -140,7 +106,7 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         });
         instance2.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
+            module: emailRecoveryModuleAddress,
             data: recoveryModuleInstallData2
         });
 
@@ -152,132 +118,39 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
         });
         instance3.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
+            module: emailRecoveryModuleAddress,
             data: recoveryModuleInstallData3
         });
     }
 
     // Helper functions
 
-    function generateMockEmailProof(
-        string memory command,
-        bytes32 nullifier,
+    function computeEmailAuthAddress(
+        address account,
         bytes32 accountSalt
     )
         public
         view
-        returns (EmailProof memory)
+        override
+        returns (address)
     {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.publicKeyHash = bytes32(
-            vm.parseUint(
-                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
-            )
+        return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
+    }
+
+    function deployModule() public override {
+        // Deploy handler, manager and module
+        emailRecoveryFactory =
+            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryHandler = new EmailRecoveryCommandHandler();
+
+        // Deploy EmailRecoveryManager & UniversalEmailRecoveryModule
+        emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(emailRecoveryHandler)
         );
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = command;
-        emailProof.emailNullifier = nullifier;
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-        emailProof.proof = bytes("0");
-
-        return emailProof;
-    }
-
-    function getAccountSaltForGuardian(
-        address account,
-        address guardian
-    )
-        public
-        view
-        returns (bytes32)
-    {
-        address[] memory guardians;
-        if (account == instance1.account) {
-            guardians = guardians1;
-        } else if (account == instance2.account) {
-            guardians = guardians2;
-        } else if (account == instance3.account) {
-            guardians = guardians3;
-        } else {
-            revert("Invalid account address");
-        }
-        if (guardian == guardians[0]) {
-            return accountSalt1;
-        }
-        if (guardian == guardians[1]) {
-            return accountSalt2;
-        }
-        if (guardian == guardians[2]) {
-            return accountSalt3;
-        }
-
-        revert("Invalid guardian address");
-    }
-
-    function generateNewNullifier() public returns (bytes32) {
-        return keccak256(abi.encode(nullifierCount++));
-    }
-
-    function acceptGuardian(address account, address guardian) public {
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
-    }
-
-    // WithAccountSalt variation - used for creating incorrect recovery setups
-    function acceptGuardianWithAccountSalt(
-        address account,
-        address guardian,
-        bytes32 optionalAccountSalt
-    )
-        public
-    {
-        EmailAuthMsg memory emailAuthMsg =
-            getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, optionalAccountSalt);
-        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
-    }
-
-    function getAcceptanceEmailAuthMessage(
-        address account,
-        address guardian
-    )
-        public
-        returns (EmailAuthMsg memory)
-    {
-        return getAcceptanceEmailAuthMessageWithAccountSalt(account, guardian, bytes32(0));
-    }
-
-    // WithAccountSalt variation - used for creating incorrect recovery setups
-    function getAcceptanceEmailAuthMessageWithAccountSalt(
-        address account,
-        address guardian,
-        bytes32 optionalAccountSalt
-    )
-        public
-        returns (EmailAuthMsg memory)
-    {
-        string memory accountString = CommandUtils.addressToChecksumHexString(account);
-        string memory command = string.concat("Accept guardian request for ", accountString);
-        bytes32 nullifier = generateNewNullifier();
-
-        bytes32 accountSalt;
-        if (optionalAccountSalt == bytes32(0)) {
-            accountSalt = getAccountSaltForGuardian(account, guardian);
-        } else {
-            accountSalt = optionalAccountSalt;
-        }
-
-        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
-
-        bytes[] memory commandParamsForAcceptance = new bytes[](1);
-        commandParamsForAcceptance[0] = abi.encode(account);
-        return EmailAuthMsg({
-            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
-            commandParams: commandParamsForAcceptance,
-            skippedCommandPrefix: 0,
-            proof: emailProof
-        });
+        emailRecoveryModuleAddress = address(emailRecoveryModule);
     }
 
     function handleRecovery(address account, address guardian, bytes32 recoveryDataHash) public {

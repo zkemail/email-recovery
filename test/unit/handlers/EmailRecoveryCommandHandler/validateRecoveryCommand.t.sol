@@ -17,7 +17,7 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         commandParams = new bytes[](2);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
         commandParams[1] = abi.encode(recoveryDataHashString);
     }
 
@@ -47,7 +47,7 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
 
     function test_ValidateRecoveryCommand_RevertWhen_TooManyCommandParams() public {
         bytes[] memory longCommandParams = new bytes[](3);
-        longCommandParams[0] = abi.encode(accountAddress);
+        longCommandParams[0] = abi.encode(accountAddress1);
         longCommandParams[1] = abi.encode(recoveryDataHashString);
         longCommandParams[2] = abi.encode("extra param");
 
@@ -85,6 +85,6 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
     function test_ValidateRecoveryCommand_Succeeds() public view {
         address accountFromEmail =
             emailRecoveryHandler.validateRecoveryCommand(templateIdx, commandParams);
-        assertEq(accountFromEmail, accountAddress);
+        assertEq(accountFromEmail, accountAddress1);
     }
 }

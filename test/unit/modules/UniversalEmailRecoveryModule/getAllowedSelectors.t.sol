@@ -14,7 +14,7 @@ contract UniversalEmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
     }
 
     function test_GetAllowedSelectors_Succeeds() public view {
-        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);
 
         assertEq(allowedSelectors.length, 1);
         assertEq(allowedSelectors[0], functionSelector);
@@ -24,18 +24,18 @@ contract UniversalEmailRecoveryModule_getAllowedSelectors_Test is UnitBase {
         // Deplopy and install new validator
         OwnableValidator newValidator = new OwnableValidator();
         address newValidatorAddress = address(newValidator);
-        instance.installModule({
+        instance1.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: newValidatorAddress,
-            data: abi.encode(owner)
+            data: abi.encode(owner1)
         });
         bytes4 newFunctionSelector = bytes4(keccak256(bytes("rotateOwner(address,address)")));
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.allowValidatorRecovery(newValidatorAddress, "", newFunctionSelector);
         vm.stopPrank();
 
-        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);
         assertEq(allowedSelectors.length, 2);
         assertEq(allowedSelectors[0], newFunctionSelector);
         assertEq(allowedSelectors[1], functionSelector);

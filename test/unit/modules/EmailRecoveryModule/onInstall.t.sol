@@ -15,41 +15,41 @@ contract EmailRecoveryModule_onInstall_Test is EmailRecoveryModuleBase {
     }
 
     function test_OnInstall_RevertWhen_InvalidOnInstallData() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         bytes memory emptyData = new bytes(0);
         assertEq(emptyData.length, 0);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(EmailRecoveryModule.InvalidOnInstallData.selector);
         emailRecoveryModule.onInstall(emptyData);
     }
 
     function test_OnInstall_RevertWhen_InvalidValidator() public {
-        instance.uninstallModule(MODULE_TYPE_VALIDATOR, validatorAddress, "");
+        instance1.uninstallModule(MODULE_TYPE_VALIDATOR, validatorAddress, "");
 
         vm.expectRevert(
             abi.encodeWithSelector(EmailRecoveryModule.InvalidValidator.selector, validatorAddress)
         );
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.onInstall(
-            abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay, expiry)
+            abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry)
         );
     }
 
     function test_OnInstall_Succeeds() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        instance.installModule({
+        instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: recoveryModuleAddress,
-            data: abi.encode(isInstalledContext, guardians, guardianWeights, threshold, delay, expiry)
+            module: emailRecoveryModuleAddress,
+            data: abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry)
         });
 
-        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
+        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress1);
         assertTrue(isInitialized);
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertTrue(isActivated);
     }
 }

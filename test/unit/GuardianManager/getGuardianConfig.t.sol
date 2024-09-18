@@ -17,19 +17,19 @@ contract EmailRecoveryManager_getGuardianConfig_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        expectedGuardianCount = guardians.length + 1;
+        expectedGuardianCount = guardians1.length + 1;
         expectedTotalWeight = totalWeight + newGuardianWeight;
         expectedAcceptedWeight = 0; // no guardians accepted
         expectedThreshold = threshold;
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
         vm.stopPrank();
     }
 
     function test_GetGuardianConfig_Succeeds() public view {
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);
