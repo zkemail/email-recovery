@@ -15,7 +15,7 @@ contract SafeRecoveryCommandHandler_extractRecoveredAccountFromRecoveryCommand_T
         bytes[] memory commandParams = new bytes[](3);
         commandParams[0] = abi.encode(accountAddress1);
         commandParams[1] = abi.encode(newOwner1);
-        commandParams[2] = abi.encode(recoveryModuleAddress);
+        commandParams[2] = abi.encode(emailRecoveryModuleAddress);
 
         address extractedAccount = safeRecoveryCommandHandler
             .extractRecoveredAccountFromRecoveryCommand(commandParams, templateIdx);

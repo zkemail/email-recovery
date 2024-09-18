@@ -15,14 +15,14 @@ contract EmailRecoveryModule_onUninstall_Test is EmailRecoveryModuleBase {
     }
 
     function test_OnUninstall_Succeeds() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
-        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
+        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress1);
         assertFalse(isInitialized);
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
 }

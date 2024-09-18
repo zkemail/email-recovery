@@ -15,47 +15,47 @@ contract UniversalEmailRecoveryModule_onUninstall_Test is UnitBase {
     }
 
     function test_OnUninstall_Succeeds() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
         bytes4 allowedSelector =
-            emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress);
+            emailRecoveryModule.exposed_allowedSelectors(validatorAddress, accountAddress1);
         assertEq(allowedSelector, bytes4(0));
 
         address[] memory allowedValidators =
-            emailRecoveryModule.getAllowedValidators(accountAddress);
-        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+            emailRecoveryModule.getAllowedValidators(accountAddress1);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);
         assertEq(allowedValidators.length, 0);
         assertEq(allowedSelectors.length, 0);
     }
 
     function test_OnUninstall_SucceedsWhenNoValidatorsConfigured() public {
         address[] memory allowedValidators =
-            emailRecoveryModule.getAllowedValidators(accountAddress);
+            emailRecoveryModule.getAllowedValidators(accountAddress1);
         address prevValidator = allowedValidators.findPrevious(validatorAddress);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.disallowValidatorRecovery(
             validatorAddress, prevValidator, functionSelector
         );
         vm.stopPrank();
 
-        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
-        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress1);
+        bytes4[] memory allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);
         assertEq(allowedValidators.length, 0);
         assertEq(allowedSelectors.length, 0);
 
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
-        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress);
-        allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress);
+        allowedValidators = emailRecoveryModule.getAllowedValidators(accountAddress1);
+        allowedSelectors = emailRecoveryModule.getAllowedSelectors(accountAddress1);
         assertEq(allowedValidators.length, 0);
         assertEq(allowedSelectors.length, 0);
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
 }

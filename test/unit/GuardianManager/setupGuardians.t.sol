@@ -24,12 +24,12 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGuardianManager.IncorrectNumberOfWeights.selector,
-                guardians.length,
+                guardians1.length,
                 invalidGuardianWeights.length
             )
         );
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, invalidGuardianWeights, threshold
+            accountAddress1, guardians1, invalidGuardianWeights, threshold
         );
     }
 
@@ -38,59 +38,59 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
 
         vm.expectRevert(IGuardianManager.ThresholdCannotBeZero.selector);
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, zeroThreshold
+            accountAddress1, guardians1, guardianWeights, zeroThreshold
         );
     }
 
     function test_SetupGuardians_RevertWhen_InvalidGuardianAddress() public {
-        guardians[0] = address(0);
+        guardians1[0] = address(0);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians[0])
+            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians1[0])
         );
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, threshold
+            accountAddress1, guardians1, guardianWeights, threshold
         );
     }
 
     function test_SetupGuardians_RevertWhen_GuardianAddressIsAccountAddress() public {
-        guardians[0] = accountAddress;
+        guardians1[0] = accountAddress1;
 
         vm.expectRevert(
-            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians[0])
+            abi.encodeWithSelector(IGuardianManager.InvalidGuardianAddress.selector, guardians1[0])
         );
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, threshold
+            accountAddress1, guardians1, guardianWeights, threshold
         );
     }
 
     function test_SetupGuardians_RevertWhen_InvalidGuardianWeight() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
         guardianWeights[0] = 0;
 
         vm.expectRevert(IGuardianManager.InvalidGuardianWeight.selector);
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, threshold
+            accountAddress1, guardians1, guardianWeights, threshold
         );
     }
 
     function test_SetupGuardians_RevertWhen_AddressAlreadyGuardian() public {
-        guardians[0] = guardians[1];
+        guardians1[0] = guardians1[1];
 
         vm.expectRevert(IGuardianManager.AddressAlreadyGuardian.selector);
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, threshold
+            accountAddress1, guardians1, guardianWeights, threshold
         );
     }
 
     function test_SetupGuardians_RevertWhen_ThresholdExceedsTotalWeight() public {
         uint256 invalidThreshold = totalWeight + 1;
 
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
         vm.expectRevert(
@@ -99,30 +99,30 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, invalidThreshold
+            accountAddress1, guardians1, guardianWeights, invalidThreshold
         );
     }
 
     function test_SetupGuardians_Succeeds() public {
-        uint256 expectedGuardianCount = guardians.length;
+        uint256 expectedGuardianCount = guardians1.length;
         uint256 expectedTotalWeight = totalWeight;
         uint256 expectedAcceptedWeight = 0; // no guardians accepted
         uint256 expectedThreshold = threshold;
 
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        vm.prank(accountAddress1);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.stopPrank();
 
         (uint256 guardianCount, uint256 totalWeight) = emailRecoveryModule.exposed_setupGuardians(
-            accountAddress, guardians, guardianWeights, threshold
+            accountAddress1, guardians1, guardianWeights, threshold
         );
 
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryModule.getGuardian(accountAddress, guardians[0]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryModule.getGuardian(accountAddress, guardians[1]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         GuardianStorage memory guardianStorage3 =
-            emailRecoveryModule.getGuardian(accountAddress, guardians[2]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[2]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardianStorage1.weight, guardianWeights[0]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.REQUESTED));
@@ -134,7 +134,7 @@ contract GuardianManager_setupGuardians_Test is UnitBase {
         assertEq(totalWeight, expectedTotalWeight);
 
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);

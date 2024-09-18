@@ -19,12 +19,13 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
     }
 
     function test_Set_AddsAKey() public {
-        guardiansStorage[accountAddress].set({
-            key: guardian1,
+        guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
         require(
-            guardiansStorage[accountAddress]._values[guardian1].status == GuardianStatus.REQUESTED,
+            guardiansStorage[accountAddress1]._values[guardians1[0]].status
+                == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
     }
@@ -33,25 +34,25 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         bool result;
 
         result = guardiansStorage[vm.addr(1)].set({
-            key: guardian1,
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
         assertEq(result, true);
         result = guardiansStorage[vm.addr(2)].set({
-            key: guardian2,
+            key: guardians1[1],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[2])
         });
         assertEq(result, true);
         require(
-            guardiansStorage[vm.addr(1)]._values[guardian1].status == GuardianStatus.REQUESTED,
+            guardiansStorage[vm.addr(1)]._values[guardians1[0]].status == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
         require(
-            guardiansStorage[vm.addr(2)]._values[guardian2].status == GuardianStatus.REQUESTED,
+            guardiansStorage[vm.addr(2)]._values[guardians1[1]].status == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
         require(
-            guardiansStorage[vm.addr(3)]._values[guardian3].status == GuardianStatus.NONE,
+            guardiansStorage[vm.addr(3)]._values[guardians1[2]].status == GuardianStatus.NONE,
             "Expected status to be NONE"
         );
     }
@@ -60,12 +61,12 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         bool result;
 
         result = guardiansStorage[vm.addr(1)].set({
-            key: guardian1,
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
         assertEq(result, true);
         result = guardiansStorage[vm.addr(1)].set({
-            key: guardian1,
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
         assertEq(result, false);
@@ -75,17 +76,17 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         bool result;
 
         result = guardiansStorage[vm.addr(1)].set({
-            key: guardian1,
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
         assertEq(result, true);
         result = guardiansStorage[vm.addr(1)].set({
-            key: guardian1,
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.ACCEPTED, guardianWeights[1])
         });
         assertEq(result, false);
         require(
-            guardiansStorage[vm.addr(1)]._values[guardian1].status == GuardianStatus.ACCEPTED,
+            guardiansStorage[vm.addr(1)]._values[guardians1[0]].status == GuardianStatus.ACCEPTED,
             "Expected status to be ACCEPTED"
         );
     }
@@ -93,15 +94,15 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
     function test_Set_RevertWhen_MaxNumberOfGuardiansReached() public {
         bool result;
         for (uint256 i = 1; i <= 32; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
         vm.expectRevert(EnumerableGuardianMap.MaxNumberOfGuardiansReached.selector);
-        guardiansStorage[accountAddress].set({
-            key: guardian1,
+        guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
         });
     }
@@ -109,24 +110,24 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
     function test_Set_UpdatesValueWhenMaxNumberOfGuardiansReached() public {
         bool result;
         for (uint256 i = 1; i <= 32; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
 
-        bool success = guardiansStorage[accountAddress].set({
+        bool success = guardiansStorage[accountAddress1].set({
             key: vm.addr(1), // update first guardian added in loop
             value: GuardianStorage(GuardianStatus.ACCEPTED, guardianWeights[0])
         });
         assertEq(success, false);
         require(
-            guardiansStorage[accountAddress]._values[vm.addr(1)].status == GuardianStatus.ACCEPTED,
+            guardiansStorage[accountAddress1]._values[vm.addr(1)].status == GuardianStatus.ACCEPTED,
             "Expected status to be ACCEPTED"
         );
         require(
-            guardiansStorage[accountAddress]._values[vm.addr(1)].weight == guardianWeights[0],
+            guardiansStorage[accountAddress1]._values[vm.addr(1)].weight == guardianWeights[0],
             "Expected weight to be 1"
         );
     }

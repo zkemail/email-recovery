@@ -11,7 +11,7 @@ contract EmailRecoveryCommandHandler_validateAcceptanceCommand_Test is UnitBase 
 
     function test_ValidateAcceptanceCommand_RevertWhen_InvalidTemplateIndex() public {
         bytes[] memory commandParams = new bytes[](1);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
         uint256 invalidTemplateIdx = 1;
 
         vm.expectRevert(
@@ -37,7 +37,7 @@ contract EmailRecoveryCommandHandler_validateAcceptanceCommand_Test is UnitBase 
 
     function test_ValidateAcceptanceCommand_RevertWhen_TooManyCommandParams() public {
         bytes[] memory commandParams = new bytes[](2);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
         commandParams[1] = abi.encode("extra param");
 
         vm.expectRevert(
@@ -50,9 +50,9 @@ contract EmailRecoveryCommandHandler_validateAcceptanceCommand_Test is UnitBase 
 
     function test_ValidateAcceptanceCommand_Succeeds() public view {
         bytes[] memory commandParams = new bytes[](1);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
 
         address account = emailRecoveryHandler.validateAcceptanceCommand(templateIdx, commandParams);
-        assertEq(account, accountAddress);
+        assertEq(account, accountAddress1);
     }
 }

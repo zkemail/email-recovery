@@ -15,14 +15,14 @@ contract EmailRecoveryManager_isActivated_Test is UnitBase {
     }
 
     function test_isActivated_ReturnsTrueWhenModuleIsInstalled() public view {
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertTrue(isActivated);
     }
 
     function test_isActivated_ReturnsFalseWhenModuleIsInstalled() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
 }

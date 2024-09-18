@@ -17,7 +17,7 @@ contract EmailRecoveryCommandHandler_parseRecoveryDataHash_Test is UnitBase {
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         commandParams = new bytes[](2);
-        commandParams[0] = abi.encode(accountAddress);
+        commandParams[0] = abi.encode(accountAddress1);
         commandParams[1] = abi.encode(recoveryDataHashString);
     }
 
