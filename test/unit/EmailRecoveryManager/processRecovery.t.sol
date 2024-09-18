@@ -65,9 +65,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     }
 
     function test_ProcessRecovery_RevertWhen_RecoveryModuleNotInstalled() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.exposed_processRecovery(

@@ -26,9 +26,7 @@ contract GuardianManager_addGuardian_Test is UnitBase {
     }
 
     function test_AddGuardian_RevertWhen_SetupNotCalled() public {
-        vm.prank(accountAddress1);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
-        vm.stopPrank();
 
         vm.startPrank(accountAddress1);
         vm.expectRevert(IGuardianManager.SetupNotCalled.selector);
