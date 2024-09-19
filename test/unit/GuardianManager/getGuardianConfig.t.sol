@@ -2,17 +2,16 @@
 pragma solidity ^0.8.25;
 
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_getGuardianConfig_Test is UnitBase {
-    address newGuardian = address(1);
-    uint256 newGuardianWeight = 1;
+    address public newGuardian = address(1);
+    uint256 public newGuardianWeight = 1;
 
-    uint256 expectedGuardianCount;
-    uint256 expectedTotalWeight;
-    uint256 expectedAcceptedWeight;
-    uint256 expectedThreshold;
+    uint256 public expectedGuardianCount;
+    uint256 public expectedTotalWeight;
+    uint256 public expectedAcceptedWeight;
+    uint256 public expectedThreshold;
 
     function setUp() public override {
         super.setUp();

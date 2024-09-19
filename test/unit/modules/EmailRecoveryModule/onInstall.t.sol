@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { AccountInstance, ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 

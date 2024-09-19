@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ISafe7579 } from "safe7579/Safe7579.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 
@@ -43,6 +42,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         bytes memory invalidCalldata = abi.encode(accountAddress1, invalidChangeOwnerCaldata);
 
         bytes4 expectedSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             expectedSelector := mload(add(invalidChangeOwnerCaldata, 32))
         }

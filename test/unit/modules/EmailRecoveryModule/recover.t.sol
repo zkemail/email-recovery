@@ -31,6 +31,7 @@ contract EmailRecoveryModule_recover_Test is EmailRecoveryModuleBase {
         bytes memory invalidCalldata = abi.encode(accountAddress1, invalidChangeOwnerCaldata);
 
         bytes4 expectedSelector;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             expectedSelector := mload(add(invalidChangeOwnerCaldata, 32))
         }

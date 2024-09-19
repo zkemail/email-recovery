@@ -8,6 +8,8 @@ import {
     GuardianStatus
 } from "../../../../src/libraries/EnumerableGuardianMap.sol";
 
+/* solhint-disable gas-custom-errors */
+
 contract EnumerableGuardianMap_set_Test is UnitBase {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 

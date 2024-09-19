@@ -4,9 +4,7 @@ pragma solidity ^0.8.25;
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
-import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryFactory_deployAll_Test is UnitBase {

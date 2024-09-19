@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";

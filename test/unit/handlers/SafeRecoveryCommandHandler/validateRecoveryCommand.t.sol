@@ -8,7 +8,7 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase {
     using Strings for uint256;
 
-    bytes[] commandParams;
+    bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();

@@ -2,10 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
@@ -54,7 +51,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         vm.warp(12 seconds);
 
         // handle recovery request for guardian 1
-        handleRecovery(accountAddress1, owner1, newOwner1, guardians1[0]);
+        handleRecoveryForSafe(accountAddress1, owner1, newOwner1, guardians1[0]);
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.currentWeight, 1);
@@ -62,7 +59,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
-        handleRecovery(accountAddress1, owner1, newOwner1, guardians1[1]);
+        handleRecoveryForSafe(accountAddress1, owner1, newOwner1, guardians1[1]);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);

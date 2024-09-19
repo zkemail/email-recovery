@@ -5,8 +5,8 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract GuardianManager_getGuardian_Test is UnitBase {
-    address newGuardian = address(1);
-    uint256 newGuardianWeight = 1;
+    address public newGuardian = address(1);
+    uint256 public newGuardianWeight = 1;
 
     function setUp() public override {
         super.setUp();

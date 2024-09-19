@@ -4,17 +4,9 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import {
-    EmailAuth,
-    EmailAuthMsg,
-    EmailProof
-} from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { IntegrationBase } from "../../IntegrationBase.t.sol";
 
 abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is IntegrationBase {
@@ -23,20 +15,20 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
     using Strings for uint256;
     using Strings for address;
 
-    EmailRecoveryFactory emailRecoveryFactory;
-    EmailRecoveryCommandHandler emailRecoveryHandler;
-    EmailRecoveryModule emailRecoveryModule;
+    EmailRecoveryFactory public emailRecoveryFactory;
+    EmailRecoveryCommandHandler public emailRecoveryHandler;
+    EmailRecoveryModule public emailRecoveryModule;
 
-    address emailRecoveryModuleAddress;
+    address public emailRecoveryModuleAddress;
 
-    bytes isInstalledContext;
-    bytes4 constant functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
-    bytes recoveryData1;
-    bytes recoveryData2;
-    bytes recoveryData3;
-    bytes32 recoveryDataHash1;
-    bytes32 recoveryDataHash2;
-    bytes32 recoveryDataHash3;
+    bytes public isInstalledContext;
+    bytes4 public constant functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+    bytes public recoveryData1;
+    bytes public recoveryData2;
+    bytes public recoveryData3;
+    bytes32 public recoveryDataHash1;
+    bytes32 public recoveryDataHash2;
+    bytes32 public recoveryDataHash3;
 
     function setUp() public virtual override {
         super.setUp();
@@ -129,78 +121,5 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
             functionSelector
         );
         emailRecoveryModule = EmailRecoveryModule(emailRecoveryModuleAddress);
-    }
-
-    function handleRecovery(address account, address guardian, bytes32 recoveryDataHash) public {
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(account, guardian, recoveryDataHash);
-        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-    }
-
-    // WithAccountSalt variation - used for creating incorrect recovery setups
-    function handleRecoveryWithAccountSalt(
-        address account,
-        address guardian,
-        bytes32 recoveryDataHash,
-        bytes32 optionalAccountSalt
-    )
-        public
-    {
-        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
-            account, guardian, recoveryDataHash, optionalAccountSalt
-        );
-        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-    }
-
-    function getRecoveryEmailAuthMessage(
-        address account,
-        address guardian,
-        bytes32 recoveryDataHash
-    )
-        public
-        returns (EmailAuthMsg memory)
-    {
-        return getRecoveryEmailAuthMessageWithAccountSalt(
-            account, guardian, recoveryDataHash, bytes32(0)
-        );
-    }
-
-    // WithAccountSalt variation - used for creating incorrect recovery setups
-    function getRecoveryEmailAuthMessageWithAccountSalt(
-        address account,
-        address guardian,
-        bytes32 recoveryDataHash,
-        bytes32 optionalAccountSalt
-    )
-        public
-        returns (EmailAuthMsg memory)
-    {
-        string memory accountString = CommandUtils.addressToChecksumHexString(account);
-        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory commandPart1 = string.concat("Recover account ", accountString);
-        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
-
-        string memory command = string.concat(commandPart1, commandPart2);
-        bytes32 nullifier = generateNewNullifier();
-
-        bytes32 accountSalt;
-        if (optionalAccountSalt == bytes32(0)) {
-            accountSalt = getAccountSaltForGuardian(account, guardian);
-        } else {
-            accountSalt = optionalAccountSalt;
-        }
-
-        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
-
-        bytes[] memory commandParamsForRecovery = new bytes[](2);
-        commandParamsForRecovery[0] = abi.encode(account);
-        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
-
-        return EmailAuthMsg({
-            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            commandParams: commandParamsForRecovery,
-            skippedCommandPrefix: 0,
-            proof: emailProof
-        });
     }
 }
