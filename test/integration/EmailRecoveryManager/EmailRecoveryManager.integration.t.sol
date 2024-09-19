@@ -2,13 +2,12 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 import { OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base } from
     "../OwnableValidatorRecovery/UniversalEmailRecoveryModule/UniversalEmailRecoveryModuleBase.t.sol";
@@ -37,8 +36,9 @@ contract EmailRecoveryManager_Integration_Test is
     function test_RevertWhen_HandleRecoveryCalled_BeforeTimeStampChanged() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert("invalid timestamp");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
@@ -48,7 +48,9 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
             accountAddress1, guardians1[1], emailRecoveryModuleAddress
@@ -65,8 +67,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
             accountAddress1, guardians1[2], emailRecoveryModuleAddress
@@ -80,8 +86,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
@@ -96,16 +106,18 @@ contract EmailRecoveryManager_Integration_Test is
     function test_RevertWhen_HandleRecoveryCalled_BeforeConfigureRecovery() public {
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert();
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeHandleAcceptance() public {
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
@@ -117,10 +129,13 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[2], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[2], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
@@ -132,11 +147,16 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[2], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[2], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
@@ -147,8 +167,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
@@ -156,8 +180,9 @@ contract EmailRecoveryManager_Integration_Test is
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.currentWeight, 0);
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[2], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[2], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
@@ -202,13 +227,15 @@ contract EmailRecoveryManager_Integration_Test is
 
         vm.warp(12 seconds);
 
-        emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
 
-        emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], recoveryDataHash1);
+        emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
@@ -224,8 +251,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         uint256 executeAfter = block.timestamp + expiry;
 
         vm.warp(10 weeks);
@@ -254,8 +285,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         uint256 executeAfter = block.timestamp + expiry;
 
         vm.warp(executeAfter);
@@ -283,8 +318,12 @@ contract EmailRecoveryManager_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         uint256 executeAfter = block.timestamp + expiry;
 
         vm.warp(executeAfter);

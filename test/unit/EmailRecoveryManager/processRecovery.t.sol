@@ -6,16 +6,16 @@ import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
 
-    string recoveryDataHashString;
-    bytes[] commandParams;
-    bytes32 nullifier;
+    string public recoveryDataHashString;
+    bytes[] public commandParams;
+    bytes32 public nullifier;
 
     function setUp() public override {
         super.setUp();
@@ -161,7 +161,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         // Call processRecovery - increases currentWeight to 1 so not >= threshold yet
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
         // Call processRecovery with guardians2 which increases currentWeight to >= threshold
         vm.expectEmit();

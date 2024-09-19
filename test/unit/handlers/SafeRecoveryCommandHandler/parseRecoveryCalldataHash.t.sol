@@ -5,7 +5,7 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_parseRecoveryDataHash_Test is SafeUnitBase {
-    bytes[] commandParams;
+    bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();

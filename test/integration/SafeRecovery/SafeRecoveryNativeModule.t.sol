@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
-import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";

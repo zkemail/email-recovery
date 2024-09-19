@@ -8,8 +8,8 @@ import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHa
 contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
     using Strings for uint256;
 
-    string recoveryDataHashString;
-    bytes[] commandParams;
+    string public recoveryDataHashString;
+    bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();

@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-/* solhint-disable no-console, no-unused-import */
-
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 import { RhinestoneModuleKit, AccountInstance } from "modulekit/ModuleKit.sol";
 import {
     EmailAuth,
@@ -16,12 +13,17 @@ import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
+/* solhint-disable gas-custom-errors, custom-errors, reason-string, max-states-count */
+
 interface IEmailRecoveryModule {
     function computeAcceptanceTemplateId(uint256 templateIdx) external pure returns (uint256);
+
+    function computeRecoveryTemplateId(uint256 templateIdx) external pure returns (uint256);
 
     function handleAcceptance(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external;
 
@@ -31,50 +33,53 @@ interface IEmailRecoveryModule {
 }
 
 abstract contract BaseTest is RhinestoneModuleKit, Test {
+    using Strings for uint256;
+
     // ZK Email contracts and variables
-    address zkEmailDeployer;
-    ECDSAOwnedDKIMRegistry dkimRegistry;
-    MockGroth16Verifier verifier;
-    EmailAuth emailAuthImpl;
+    address public zkEmailDeployer;
+    ECDSAOwnedDKIMRegistry public dkimRegistry;
+    MockGroth16Verifier public verifier;
+    EmailAuth public emailAuthImpl;
 
-    OwnableValidator validator;
-    address validatorAddress;
+    OwnableValidator public validator;
+    address public validatorAddress;
 
-    // account and owners
-    address owner1;
-    address owner2;
-    address owner3;
-    address newOwner1;
-    address newOwner2;
-    address newOwner3;
-    AccountInstance instance1;
-    AccountInstance instance2;
-    AccountInstance instance3;
-    address accountAddress1;
-    address accountAddress2;
-    address accountAddress3;
+    // public account and owners
+    address public owner1;
+    address public owner2;
+    address public owner3;
+    address public newOwner1;
+    address public newOwner2;
+    address public newOwner3;
+    AccountInstance public instance1;
+    AccountInstance public instance2;
+    AccountInstance public instance3;
+    address public accountAddress1;
+    address public accountAddress2;
+    address public accountAddress3;
 
-    // Account salts
-    bytes32 accountSalt1;
-    bytes32 accountSalt2;
-    bytes32 accountSalt3;
+    // public Account salts
+    bytes32 public accountSalt1;
+    bytes32 public accountSalt2;
+    bytes32 public accountSalt3;
 
-    // recovery config
-    address[] guardians1;
-    address[] guardians2;
-    address[] guardians3;
-    uint256[] guardianWeights;
-    uint256 totalWeight;
-    uint256 delay;
-    uint256 expiry;
-    uint256 threshold;
-    uint256 templateIdx;
+    // public recovery config
+    address[] public guardians1;
+    address[] public guardians2;
+    address[] public guardians3;
+    uint256[] public guardianWeights;
+    uint256 public totalWeight;
+    uint256 public delay;
+    uint256 public expiry;
+    uint256 public threshold;
+    uint256 public templateIdx;
 
-    string selector = "12345";
-    string domainName = "gmail.com";
-    bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+    string public selector = "12345";
+    string public domainName = "gmail.com";
+    bytes32 public publicKeyHash =
+        0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
 
-    uint256 nullifierCount;
+    uint256 public nullifierCount;
 
     function setUp() public virtual {
         init();
@@ -265,6 +270,90 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
                 templateIdx
             ),
             commandParams: commandParamsForAcceptance,
+            skippedCommandPrefix: 0,
+            proof: emailProof
+        });
+    }
+
+    function handleRecovery(
+        address account,
+        address guardian,
+        bytes32 recoveryDataHash,
+        address emailRecoveryModule
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg =
+            getRecoveryEmailAuthMessage(account, guardian, recoveryDataHash, emailRecoveryModule);
+        IEmailRecoveryModule(emailRecoveryModule).handleRecovery(emailAuthMsg, templateIdx);
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    // FIXME: not used???
+    function handleRecoveryWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 recoveryDataHash,
+        address emailRecoveryModule,
+        bytes32 optionalAccountSalt
+    )
+        public
+    {
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
+            account, guardian, recoveryDataHash, emailRecoveryModule, optionalAccountSalt
+        );
+        IEmailRecoveryModule(emailRecoveryModule).handleRecovery(emailAuthMsg, templateIdx);
+    }
+
+    function getRecoveryEmailAuthMessage(
+        address account,
+        address guardian,
+        bytes32 recoveryDataHash,
+        address emailRecoveryModule
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
+        return getRecoveryEmailAuthMessageWithAccountSalt(
+            account, guardian, recoveryDataHash, emailRecoveryModule, bytes32(0)
+        );
+    }
+
+    // WithAccountSalt variation - used for creating incorrect recovery setups
+    function getRecoveryEmailAuthMessageWithAccountSalt(
+        address account,
+        address guardian,
+        bytes32 recoveryDataHash,
+        address emailRecoveryModule,
+        bytes32 optionalAccountSalt
+    )
+        public
+        returns (EmailAuthMsg memory)
+    {
+        string memory accountString = CommandUtils.addressToChecksumHexString(account);
+        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+        string memory commandPart1 = string.concat("Recover account ", accountString);
+        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+
+        string memory command = string.concat(commandPart1, commandPart2);
+        bytes32 nullifier = generateNewNullifier();
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
+
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
+
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
+        commandParamsForRecovery[0] = abi.encode(account);
+        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+
+        return EmailAuthMsg({
+            templateId: IEmailRecoveryModule(emailRecoveryModule).computeRecoveryTemplateId(templateIdx),
+            commandParams: commandParamsForRecovery,
             skippedCommandPrefix: 0,
             proof: emailProof
         });

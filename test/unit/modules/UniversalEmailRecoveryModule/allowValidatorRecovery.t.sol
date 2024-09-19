@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -15,7 +14,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract UniversalEmailRecoveryModule_allowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
 
-    address newValidatorAddress;
+    address public newValidatorAddress;
 
     function setUp() public override {
         super.setUp();

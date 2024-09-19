@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {

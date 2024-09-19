@@ -2,12 +2,11 @@
 pragma solidity ^0.8.25;
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_getRecoveryConfig_Test is UnitBase {
-    uint256 newDelay = 1 days;
-    uint256 newExpiry = 4 weeks;
+    uint256 public newDelay = 1 days;
+    uint256 public newExpiry = 4 weeks;
 
     function setUp() public override {
         super.setUp();

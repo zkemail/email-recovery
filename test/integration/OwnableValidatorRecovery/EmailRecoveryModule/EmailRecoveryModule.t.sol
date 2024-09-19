@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
-import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 import { OwnableValidatorRecovery_EmailRecoveryModule_Base } from "./EmailRecoveryModuleBase.t.sol";
 
@@ -32,8 +30,8 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(account, guardians[0], emailRecoveryModuleAddress);
         acceptGuardian(account, guardians[1], emailRecoveryModuleAddress);
         vm.warp(block.timestamp + 12 seconds);
-        handleRecovery(account, guardians[0], recoveryDataHash);
-        handleRecovery(account, guardians[1], recoveryDataHash);
+        handleRecovery(account, guardians[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(account, guardians[1], recoveryDataHash, emailRecoveryModuleAddress);
         vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(account, recoveryData);
     }
@@ -60,7 +58,9 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         // Time travel so that EmailAuth timestamp is valid
         vm.warp(12 seconds);
         // handle recovery request for guardian 1
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         uint256 executeBefore = block.timestamp + expiry;
         IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
@@ -71,7 +71,9 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         assertEq(recoveryRequest.executeAfter, executeAfter);
         assertEq(recoveryRequest.executeBefore, executeBefore);
@@ -101,14 +103,16 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         );
         vm.warp(12 seconds);
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[1], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert("guardian is not deployed");
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
 
-        emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -126,10 +130,16 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(block.timestamp + 12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
-            accountAddress2, guardians1[1], recoveryDataHash2, accountSalt2
+            accountAddress2,
+            guardians1[1],
+            recoveryDataHash2,
+            emailRecoveryModuleAddress,
+            accountSalt2
         );
 
         vm.expectRevert(
@@ -174,8 +184,9 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
 
-        EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(accountAddress1, guardians1[0], recoveryDataHash1);
+        EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
@@ -187,7 +198,9 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
 
         vm.startPrank(accountAddress1);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
@@ -200,8 +213,12 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash1);
-        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash1);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
         vm.warp(block.timestamp + delay);
 
         vm.startPrank(accountAddress1);

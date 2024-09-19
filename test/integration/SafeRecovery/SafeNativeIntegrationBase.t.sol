@@ -2,9 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
@@ -20,14 +18,14 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
     using Strings for uint256;
     using Strings for address;
 
-    SafeEmailRecoveryModule emailRecoveryModule;
-    address emailRecoveryModuleAddress;
+    SafeEmailRecoveryModule public emailRecoveryModule;
+    address public emailRecoveryModuleAddress;
     Safe public safeSingleton;
     Safe public safe;
     address public safeAddress;
-    bytes isInstalledContext;
-    bytes4 functionSelector;
-    address commandHandler;
+    bytes public isInstalledContext;
+    bytes4 public functionSelector;
+    address public commandHandler;
 
     /**
      * Helper function to return if current account type is safe or not
@@ -115,13 +113,14 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
             return accountSalt3;
         }
 
+        /* solhint-disable-next-line gas-custom-errors, custom-errors  */
         revert("Invalid guardian address");
     }
 
     function getAcceptanceEmailAuthMessageWithAccountSalt(
         address account,
         address guardian,
-        address emailRecoveryModule,
+        address _emailRecoveryModule,
         bytes32 optionalAccountSalt
     )
         public
@@ -145,7 +144,7 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         bytes[] memory commandParamsForAcceptance = new bytes[](1);
         commandParamsForAcceptance[0] = abi.encode(accountHashString);
         return EmailAuthMsg({
-            templateId: IEmailRecoveryModule(emailRecoveryModule).computeAcceptanceTemplateId(
+            templateId: IEmailRecoveryModule(_emailRecoveryModule).computeAcceptanceTemplateId(
                 templateIdx
             ),
             commandParams: commandParamsForAcceptance,
@@ -154,7 +153,13 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         });
     }
 
-    function handleRecovery(address account, bytes32 recoveryDataHash, address guardian) public {
+    function handleRecoveryForSafe(
+        address account,
+        bytes32 recoveryDataHash,
+        address guardian
+    )
+        public
+    {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, recoveryDataHash, guardian);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);

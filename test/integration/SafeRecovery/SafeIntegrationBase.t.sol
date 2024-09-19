@@ -7,7 +7,6 @@ import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/s
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
@@ -17,12 +16,12 @@ abstract contract SafeIntegrationBase is IntegrationBase {
     using Strings for uint256;
     using Strings for address;
 
-    SafeRecoveryCommandHandler safeRecoveryCommandHandler;
-    UniversalEmailRecoveryModule emailRecoveryModule;
-    address emailRecoveryModuleAddress;
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
+    UniversalEmailRecoveryModule public emailRecoveryModule;
+    address public emailRecoveryModuleAddress;
 
-    bytes isInstalledContext;
-    bytes4 functionSelector;
+    bytes public isInstalledContext;
+    bytes4 public functionSelector;
 
     /**
      * Helper function to return if current account type is safe or not
@@ -86,7 +85,7 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         emailRecoveryModuleAddress = address(emailRecoveryModule);
     }
 
-    function handleRecovery(
+    function handleRecoveryForSafe(
         address account,
         address oldOwner,
         address newOwner1,

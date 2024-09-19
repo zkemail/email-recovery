@@ -20,7 +20,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
         // only one guardian added and one approval
 
         vm.expectRevert(
@@ -35,8 +35,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
         // one second before it should be valid
         vm.warp(block.timestamp + delay - 1 seconds);
@@ -57,8 +57,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
         uint256 executeAfter = block.timestamp + expiry;
 
         // block.timestamp == recoveryRequest.executeBefore
@@ -78,8 +78,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
         uint256 executeAfter = block.timestamp + expiry;
 
         // block.timestamp > recoveryRequest.executeBefore
@@ -99,8 +99,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
         vm.warp(block.timestamp + delay);
 
@@ -118,8 +118,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
         vm.warp(block.timestamp + delay);
 
@@ -139,8 +139,8 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
         vm.warp(block.timestamp + expiry - 1 seconds);
 

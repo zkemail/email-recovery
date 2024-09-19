@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console, gas-custom-errors, max-states-count */
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAccountRecovery } from
@@ -27,27 +29,27 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     using Strings for uint256;
     using Strings for address;
 
-    uint256 privKey;
-    address deployer;
-    MSABasic msaBasicImpl;
-    MSAFactory msaFactory;
-    Bootstrap bootstrap;
-    MockHook hook;
-    MockTarget mockTarget;
+    uint256 public privKey;
+    address public deployer;
+    MSABasic public msaBasicImpl;
+    MSAFactory public msaFactory;
+    Bootstrap public bootstrap;
+    MockHook public hook;
+    MockTarget public mockTarget;
 
-    bytes32 accountSalt;
-    address validatorAddr;
-    address recoveryModuleAddr;
-    address[] guardians = new address[](0);
-    uint256[] guardianWeights = new uint256[](0);
+    bytes32 public accountSalt;
+    address public validatorAddr;
+    address public recoveryModuleAddr;
+    address[] public guardians = new address[](0);
+    uint256[] public guardianWeights = new uint256[](0);
 
-    address account;
-    bytes initCode;
-    bytes userOpCalldata;
-    PackedUserOperation userOp;
-    bytes32 userOpHash;
+    address public account;
+    bytes public initCode;
+    bytes public userOpCalldata;
+    PackedUserOperation public userOp;
+    bytes32 public userOpHash;
 
-    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+    bytes4 public functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
 
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");

@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianManager } from "src/GuardianManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
@@ -13,8 +12,8 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
-    bytes[] commandParams;
-    bytes32 nullifier;
+    bytes[] public commandParams;
+    bytes32 public nullifier;
 
     function setUp() public override {
         super.setUp();
@@ -28,7 +27,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
         emailRecoveryModule.exposed_acceptGuardian(

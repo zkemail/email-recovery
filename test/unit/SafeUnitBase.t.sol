@@ -3,11 +3,8 @@ pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { EmailRecoveryManager } from "src/EmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { SafeRecoveryCommandHandlerHarness } from "./SafeRecoveryCommandHandlerHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
@@ -17,15 +14,15 @@ abstract contract SafeUnitBase is IntegrationBase {
     using ModuleKitHelpers for *;
     using Strings for uint256;
 
-    EmailRecoveryFactory emailRecoveryFactory;
-    SafeRecoveryCommandHandlerHarness safeRecoveryCommandHandler;
-    UniversalEmailRecoveryModule emailRecoveryModule;
-    address emailRecoveryModuleAddress;
+    EmailRecoveryFactory public emailRecoveryFactory;
+    SafeRecoveryCommandHandlerHarness public safeRecoveryCommandHandler;
+    UniversalEmailRecoveryModule public emailRecoveryModule;
+    address public emailRecoveryModuleAddress;
 
-    bytes4 functionSelector;
-    bytes recoveryData;
-    bytes32 recoveryDataHash;
-    bytes isInstalledContext;
+    bytes4 public functionSelector;
+    bytes public recoveryData;
+    bytes32 public recoveryDataHash;
+    bytes public isInstalledContext;
 
     /**
      * Helper function to return if current account type is safe or not
@@ -102,30 +99,5 @@ abstract contract SafeUnitBase is IntegrationBase {
             address(safeRecoveryCommandHandler)
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
-    }
-
-    function handleRecovery(address account, bytes32 accountSalt) public {
-        string memory accountString = CommandUtils.addressToChecksumHexString(account);
-        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-
-        string memory commandPart1 = string.concat("Recover account ", accountString);
-        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
-        string memory command = string.concat(commandPart1, commandPart2);
-        bytes32 nullifier = keccak256(abi.encode("nullifier 2"));
-        uint256 templateIdx = 0;
-
-        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
-
-        bytes[] memory commandParamsForRecovery = new bytes[](2);
-        commandParamsForRecovery[0] = abi.encode(account);
-        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
-
-        EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-            templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            commandParams: commandParamsForRecovery,
-            skippedCommandPrefix: 0,
-            proof: emailProof
-        });
-        emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
     }
 }

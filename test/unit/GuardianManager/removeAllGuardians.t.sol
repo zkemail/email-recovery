@@ -2,11 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { UnitBase } from "../UnitBase.t.sol";
-import {
-    EnumerableGuardianMap,
-    GuardianStorage,
-    GuardianStatus
-} from "src/libraries/EnumerableGuardianMap.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract GuardianManager_removeAllGuardians_Test is UnitBase {
     function setUp() public override {
