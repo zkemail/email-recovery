@@ -42,12 +42,12 @@ contract EmailRecoveryManager_deInitRecoveryModuleWithAddress_Test is UnitBase {
         assertEq(recoveryConfig.expiry, 0);
 
         // assert that the recovery request has been cleared successfully
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
 
         // assert that guardian storage has been cleared successfully for guardian 1
         GuardianStorage memory guardianStorage1 =

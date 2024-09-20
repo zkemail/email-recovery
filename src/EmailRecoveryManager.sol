@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { EmailAccountRecovery } from
     "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
@@ -33,6 +34,7 @@ abstract contract EmailRecoveryManager is
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+    using EnumerableMap for EnumerableMap.Bytes32ToUintMap;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -97,10 +99,39 @@ abstract contract EmailRecoveryManager is
      * @notice Retrieves the recovery request details for a given account
      * @param account The address of the account for which the recovery request details are being
      * retrieved
-     * @return RecoveryRequest The recovery request details for the specified account
+     * @return executeAfter // TODO:
+     * @return executeBefore // TODO:
      */
-    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory) {
-        return recoveryRequests[account];
+    function getRecoveryRequest(address account)
+        external
+        view
+        returns (uint256 executeAfter, uint256 executeBefore)
+    {
+        return (recoveryRequests[account].executeAfter, recoveryRequests[account].executeBefore);
+    }
+
+    // TODO: natspec
+    function getRecoveryDataHashWeight(
+        address account,
+        bytes32 recoveryDataHash
+    )
+        public
+        view
+        returns (uint256)
+    {
+        return recoveryRequests[account].recoveryDataHashWeight.get(recoveryDataHash);
+    }
+
+    // TODO: natspec
+    function hasGuardianVoted(
+        address account,
+        address guardian
+    )
+        public
+        view
+        returns (bool)
+    {
+        return recoveryRequests[account].guardianVoted[guardian];
     }
 
     /**
@@ -278,7 +309,7 @@ abstract contract EmailRecoveryManager is
             templateIdx, commandParams
         );
 
-        if (recoveryRequests[account].currentWeight > 0) {
+        if (recoveryRequests[account].executeBefore != 0) {
             revert RecoveryInProcess();
         }
 
@@ -348,19 +379,18 @@ abstract contract EmailRecoveryManager is
         bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
             .parseRecoveryDataHash(templateIdx, commandParams);
 
-        if (recoveryRequest.recoveryDataHash == bytes32(0)) {
-            recoveryRequest.recoveryDataHash = recoveryDataHash;
-            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
-            recoveryRequest.executeBefore = executeBefore;
+        if (recoveryRequest.guardianVoted[guardian]) {
+            revert GuardianAlreadyVoted();
         }
 
-        if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
-            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
-        }
+        uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
+        recoveryRequest.executeBefore = executeBefore;
+        recoveryRequest.guardianVoted[guardian] = true;
 
-        recoveryRequest.currentWeight += guardianStorage.weight;
+        uint256 currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        recoveryRequest.recoveryDataHashWeight.set(recoveryDataHash, currentWeight += guardianStorage.weight);
 
-        if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
+        if (recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash) >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             recoveryRequest.executeAfter = executeAfter;
 
@@ -393,15 +423,17 @@ abstract contract EmailRecoveryManager is
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
-        RecoveryRequest memory recoveryRequest = recoveryRequests[account];
+        RecoveryRequest storage recoveryRequest = recoveryRequests[account];
 
         uint256 threshold = guardianConfigs[account].threshold;
         if (threshold == 0) {
             revert NoRecoveryConfigured();
         }
 
-        if (recoveryRequest.currentWeight < threshold) {
-            revert NotEnoughApprovals(recoveryRequest.currentWeight, threshold);
+        bytes32 recoveryDataHash = keccak256(recoveryData);
+        uint256 currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        if (currentWeight < threshold) {
+            revert NotEnoughApprovals(currentWeight, threshold);
         }
 
         if (block.timestamp < recoveryRequest.executeAfter) {
@@ -411,13 +443,9 @@ abstract contract EmailRecoveryManager is
         if (block.timestamp >= recoveryRequest.executeBefore) {
             revert RecoveryRequestExpired(block.timestamp, recoveryRequest.executeBefore);
         }
-
-        bytes32 recoveryDataHash = keccak256(recoveryData);
-        if (recoveryDataHash != recoveryRequest.recoveryDataHash) {
-            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
-        }
-
+ 
         delete recoveryRequests[account];
+        // TODO: delete mapping values
 
         recover(account, recoveryData);
 
@@ -448,7 +476,7 @@ abstract contract EmailRecoveryManager is
      * @dev Deletes the current recovery request associated with the caller's account
      */
     function cancelRecovery() external {
-        if (recoveryRequests[msg.sender].currentWeight == 0) {
+        if (recoveryRequests[msg.sender].executeBefore == 0) {
             revert NoRecoveryInProcess();
         }
         delete recoveryRequests[msg.sender];
@@ -462,7 +490,7 @@ abstract contract EmailRecoveryManager is
      * @param account The address of the account for which the recovery is being cancelled
      */
     function cancelExpiredRecovery(address account) external {
-        if (recoveryRequests[account].currentWeight == 0) {
+        if (recoveryRequests[account].executeBefore == 0) {
             revert NoRecoveryInProcess();
         }
         if (recoveryRequests[account].executeBefore > block.timestamp) {

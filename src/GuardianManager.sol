@@ -32,7 +32,9 @@ abstract contract GuardianManager is IGuardianManager {
      * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
      */
     modifier onlyWhenNotRecovering() {
-        if (IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender).currentWeight > 0) {
+        (, uint256 executeBefore) =
+            IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender);
+        if (executeBefore != 0) {
             revert RecoveryInProcess();
         }
         _;
