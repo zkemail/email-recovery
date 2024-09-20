@@ -35,7 +35,7 @@ abstract contract UnitBase is BaseTest {
         functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
         bytes memory changeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner1);
         recoveryData = abi.encode(validatorAddress, changeOwnerCalldata);
-        recoveryDataHash = keccak256(recoveryData); // FIXME: remove this
+        recoveryDataHash = keccak256(recoveryData); // FIXME: (merge-ok) remove this
 
         // Install modules
         instance1.installModule({

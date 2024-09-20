@@ -176,17 +176,16 @@ contract EmailRecoveryManager_Integration_Test is
         vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.currentWeight, 0);
+        uint256 weight = emailRecoveryModule.getRecoveryDataHashWeight(accountAddress1, recoveryDataHash1);
+        assertEq(weight, 0);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
             accountAddress1, guardians1[2], recoveryDataHash1, emailRecoveryModuleAddress
         );
 
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.currentWeight, 1);
+        weight = emailRecoveryModule.getRecoveryDataHashWeight(accountAddress1, recoveryDataHash1);
+        assertEq(weight, 1);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
@@ -273,12 +272,18 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelRecovery();
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        (uint256 _executeAfter, uint256 executeBefore) =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        uint256 weight = emailRecoveryModule.getRecoveryDataHashWeight(accountAddress1, recoveryDataHash1);
+        bool hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(weight, 0);
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
     }
 
     function test_CancelExpiredRecoveryRequest() public {
@@ -306,12 +311,18 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        (uint256 _executeAfter, uint256 executeBefore) =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        uint256 weight = emailRecoveryModule.getRecoveryDataHashWeight(accountAddress1, recoveryDataHash1);
+        bool hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(weight, 0);
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
     }
 
     function test_CannotComplete_CancelledExpiredRecoveryRequest() public {
@@ -332,17 +343,23 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        (uint256 _executeAfter, uint256 executeBefore) =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        uint256 weight = emailRecoveryModule.getRecoveryDataHashWeight(accountAddress1, recoveryDataHash1);
+        bool hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(weight, 0);
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.NotEnoughApprovals.selector,
-                recoveryRequest.currentWeight,
+                weight,
                 threshold
             )
         );
