@@ -33,7 +33,7 @@ interface IEmailRecoveryManager {
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         // mapping(bytes32 recoveryDataHash => uint256 currentWeight) recoveryDataHashWeight; // total weight of all guardian approvals for the recovery request
         EnumerableMap.Bytes32ToUintMap recoveryDataHashWeight;
-        mapping(address guardian => bool isVoted) guardianVoted; // the keccak256 hash of the recovery data used to execute the recovery attempt
+        EnumerableMap.AddressToUintMap guardianVoted;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
