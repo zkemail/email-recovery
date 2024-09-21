@@ -35,7 +35,7 @@ abstract contract EmailRecoveryManager is
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableMap for EnumerableMap.Bytes32ToUintMap;
-
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
@@ -131,7 +131,10 @@ abstract contract EmailRecoveryManager is
         view
         returns (bool)
     {
-        return recoveryRequests[account].guardianVoted[guardian];
+        if(!recoveryRequests[account].guardianVoted.contains(guardian)) {
+            return false;
+        }
+        return recoveryRequests[account].guardianVoted.get(guardian) == 1;
     }
 
     /**
@@ -379,15 +382,18 @@ abstract contract EmailRecoveryManager is
         bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
             .parseRecoveryDataHash(templateIdx, commandParams);
 
-        if (recoveryRequest.guardianVoted[guardian]) {
+        if (hasGuardianVoted(account, guardian)) {
             revert GuardianAlreadyVoted();
         }
 
         uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
         recoveryRequest.executeBefore = executeBefore;
-        recoveryRequest.guardianVoted[guardian] = true;
+        recoveryRequest.guardianVoted.set(guardian,1);
 
-        uint256 currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        uint256 currentWeight = 0;
+        if(recoveryRequest.recoveryDataHashWeight.contains(recoveryDataHash)) {
+            currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        }
         recoveryRequest.recoveryDataHashWeight.set(recoveryDataHash, currentWeight += guardianStorage.weight);
 
         if (recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash) >= guardianConfig.threshold) {
@@ -431,7 +437,10 @@ abstract contract EmailRecoveryManager is
         }
 
         bytes32 recoveryDataHash = keccak256(recoveryData);
-        uint256 currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        uint256 currentWeight = 0;
+        if(recoveryRequest.recoveryDataHashWeight.contains(recoveryDataHash)) {
+            currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        }
         if (currentWeight < threshold) {
             revert NotEnoughApprovals(currentWeight, threshold);
         }
@@ -443,9 +452,8 @@ abstract contract EmailRecoveryManager is
         if (block.timestamp >= recoveryRequest.executeBefore) {
             revert RecoveryRequestExpired(block.timestamp, recoveryRequest.executeBefore);
         }
- 
-        delete recoveryRequests[account];
-        // TODO: delete mapping values
+
+        clearRecoveryRequest(account);
 
         recover(account, recoveryData);
 
@@ -528,5 +536,28 @@ abstract contract EmailRecoveryManager is
         delete guardianConfigs[account];
 
         emit RecoveryDeInitialized(account);
+    }
+
+    function clearRecoveryRequest(address account) internal {
+        RecoveryRequest storage recoveryRequest = recoveryRequests[account];
+        uint256 lengthWeights = recoveryRequest.recoveryDataHashWeight.length();
+        bytes32[] memory keysWeights = new bytes32[](lengthWeights);
+        for (uint256 i = 0; i < lengthWeights; i++) {
+            (bytes32 key, ) = recoveryRequest.recoveryDataHashWeight.at(i);
+            keysWeights[i] = key;
+        }
+        for(uint256 i = 0; i < lengthWeights; i++) {
+            recoveryRequest.recoveryDataHashWeight.remove(keysWeights[i]);
+        }
+        uint256 lengthVotes = recoveryRequest.guardianVoted.length();
+        address[] memory keysVotes = new address[](lengthVotes);
+        for (uint256 i = 0; i < lengthVotes; i++) {
+            (address key, ) = recoveryRequest.guardianVoted.at(i);
+            keysVotes[i] = key;
+        }
+        for(uint256 i = 0; i < lengthVotes; i++) {
+            recoveryRequest.guardianVoted.remove(keysVotes[i]);
+        }
+        delete recoveryRequests[account];
     }
 }
