@@ -20,7 +20,8 @@
     "prepack": "pnpm install",
     "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
     "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
-    "test": "forge test",
+    "test": "forge test --match-path \"test/**/*.sol\"",
+    "test:script": "forge test --match-path script/test/**/*.sol --threads 1",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
