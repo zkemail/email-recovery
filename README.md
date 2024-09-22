@@ -18,13 +18,25 @@ pnpm install
 ### Build
 
 ```shell
-forge build
+pnpm build
+# or 
+# forge build
 ```
 
 ### Test
 
 ```shell
-forge test
+pnpm test 
+# or 
+# forge test --match-path "test/**/*.sol" or 
+```
+
+### Test for scripts
+
+```shell
+pnpm test:script
+# or 
+# forge test --match-path "script/test/**/*.sol" --threads 1 
 ```
 
 # ZK Email Recovery
