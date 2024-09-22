@@ -119,6 +119,9 @@ abstract contract EmailRecoveryManager is
         view
         returns (uint256)
     {
+        if(!recoveryRequests[account].recoveryDataHashWeight.contains(recoveryDataHash)) {
+            return 0;
+        }
         return recoveryRequests[account].recoveryDataHashWeight.get(recoveryDataHash);
     }
 
@@ -487,7 +490,7 @@ abstract contract EmailRecoveryManager is
         if (recoveryRequests[msg.sender].executeBefore == 0) {
             revert NoRecoveryInProcess();
         }
-        delete recoveryRequests[msg.sender];
+        clearRecoveryRequest(msg.sender);
         emit RecoveryCancelled(msg.sender);
     }
 
@@ -506,7 +509,7 @@ abstract contract EmailRecoveryManager is
                 account, block.timestamp, recoveryRequests[account].executeBefore
             );
         }
-        delete recoveryRequests[account];
+        clearRecoveryRequest(account);
         emit RecoveryCancelled(account);
     }
 

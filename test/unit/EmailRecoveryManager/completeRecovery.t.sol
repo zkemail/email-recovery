@@ -106,9 +106,9 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
-                keccak256(invalidRecoveryData),
-                recoveryDataHash
+                IEmailRecoveryManager.NotEnoughApprovals.selector,
+                0,
+                3
             )
         );
         emailRecoveryModule.completeRecovery(accountAddress1, invalidRecoveryData);

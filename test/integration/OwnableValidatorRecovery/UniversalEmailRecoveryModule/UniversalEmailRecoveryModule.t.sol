@@ -408,9 +408,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
-                validator2RecoveryDataHash,
-                recoveryDataHash1
+                IEmailRecoveryManager.GuardianAlreadyVoted.selector
             )
         );
         // process recovery for validator 2
