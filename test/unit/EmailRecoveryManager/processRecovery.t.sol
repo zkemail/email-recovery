@@ -125,9 +125,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
-                invalidRecoveryDataHash,
-                recoveryDataHash
+                IEmailRecoveryManager.GuardianAlreadyVoted.selector
             )
         );
         emailRecoveryModule.exposed_processRecovery(
