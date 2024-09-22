@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import { GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
@@ -30,9 +31,9 @@ interface IEmailRecoveryManager {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
-        uint256 currentWeight; // total weight of all guardian approvals for the recovery request
-        bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
-            // recovery attempt.
+        // mapping(bytes32 recoveryDataHash => uint256 currentWeight) recoveryDataHashWeight; // total weight of all guardian approvals for the recovery request
+        EnumerableMap.Bytes32ToUintMap recoveryDataHashWeight;
+        EnumerableMap.AddressToUintMap guardianVoted;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -72,6 +73,7 @@ interface IEmailRecoveryManager {
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
+    error GuardianAlreadyVoted();
     error InvalidAccountAddress();
     error NoRecoveryConfigured();
     error NotEnoughApprovals(uint256 currentWeight, uint256 threshold);
@@ -88,7 +90,10 @@ interface IEmailRecoveryManager {
 
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 
-    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
+    function getRecoveryRequest(address account)
+        external
+        view
+        returns (uint256 executeAfter, uint256 executeBefore);
 
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 

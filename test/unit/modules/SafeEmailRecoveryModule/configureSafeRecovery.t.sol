@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { SafeNativeIntegrationBase } from
     "../../../integration/SafeRecovery/SafeNativeIntegrationBase.t.sol";

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
@@ -9,7 +8,7 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase {
     using Strings for uint256;
 
-    bytes[] commandParams;
+    bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();

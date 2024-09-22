@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {
-    EnumerableGuardianMap,
-    GuardianStorage,
-    GuardianStatus
-} from "../libraries/EnumerableGuardianMap.sol";
+import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IGuardianManager {
     /**

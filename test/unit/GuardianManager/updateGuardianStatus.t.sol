@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
@@ -14,9 +13,7 @@ contract GuardianManager_updateGuardianStatus_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.stopPrank();
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
     }
 
     function test_UpdateGuardianStatus_RevertWhen_StatusIsAlreadyNONE() public {
@@ -27,46 +24,46 @@ contract GuardianManager_updateGuardianStatus_Test is UnitBase {
                 IGuardianManager.StatusCannotBeTheSame.selector, uint256(newStatus)
             )
         );
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
     }
 
     function test_UpdateGuardianStatus_RevertWhen_StatusIsAlreadyREQUESTED() public {
         GuardianStatus newStatus = GuardianStatus.REQUESTED;
 
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGuardianManager.StatusCannotBeTheSame.selector, uint256(newStatus)
             )
         );
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
     }
 
     function test_UpdateGuardianStatus_RevertWhen_StatusIsAlreadyACCEPTED() public {
         GuardianStatus newStatus = GuardianStatus.ACCEPTED;
 
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGuardianManager.StatusCannotBeTheSame.selector, uint256(newStatus)
             )
         );
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
     }
 
     function test_UpdateGuardianStatus_UpdatesStatusToNONE() public {
         GuardianStatus newStatus = GuardianStatus.NONE;
 
         emailRecoveryModule.exposed_updateGuardianStatus(
-            accountAddress, guardian1, GuardianStatus.REQUESTED
+            accountAddress1, guardians1[0], GuardianStatus.REQUESTED
         );
 
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryModule.getGuardian(accountAddress, guardian1);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage.status), uint256(newStatus));
         assertEq(guardianStorage.weight, 0);
     }
@@ -74,10 +71,10 @@ contract GuardianManager_updateGuardianStatus_Test is UnitBase {
     function test_UpdateGuardianStatus_UpdatesStatusToREQUESTED() public {
         GuardianStatus newStatus = GuardianStatus.REQUESTED;
 
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryModule.getGuardian(accountAddress, guardian1);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage.status), uint256(newStatus));
         assertEq(guardianStorage.weight, 0);
     }
@@ -86,11 +83,11 @@ contract GuardianManager_updateGuardianStatus_Test is UnitBase {
         GuardianStatus newStatus = GuardianStatus.ACCEPTED;
 
         vm.expectEmit();
-        emit IGuardianManager.GuardianStatusUpdated(accountAddress, guardian1, newStatus);
-        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress, guardian1, newStatus);
+        emit IGuardianManager.GuardianStatusUpdated(accountAddress1, guardians1[0], newStatus);
+        emailRecoveryModule.exposed_updateGuardianStatus(accountAddress1, guardians1[0], newStatus);
 
         GuardianStorage memory guardianStorage =
-            emailRecoveryModule.getGuardian(accountAddress, guardian1);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage.status), uint256(newStatus));
         assertEq(guardianStorage.weight, 0);
     }

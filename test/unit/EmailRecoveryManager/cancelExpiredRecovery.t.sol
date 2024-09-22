@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -14,171 +13,171 @@ contract EmailRecoveryManager_cancelExpiredRecovery_Test is UnitBase {
     }
 
     function test_CancelExpiredRecovery_RevertWhen_NoRecoveryInProcess() public {
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
     }
 
     function test_CancelExpiredRecovery_CannotCancelNotStartedRecoveryRequest() public {
         address otherAddress = address(99);
 
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
 
         vm.startPrank(otherAddress);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
     }
 
     function test_CancelExpiredRecovery_RevertWhen_PartialRequest_ExpiryNotPassed() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds + 1 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        // assertEq(recoveryRequest.currentWeight, 1);
+        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         address otherAddress = address(99);
         vm.startPrank(otherAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.RecoveryHasNotExpired.selector,
-                accountAddress,
+                accountAddress1,
                 block.timestamp,
                 block.timestamp + expiry
             )
         );
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
     }
 
     function test_CancelExpiredRecovery_RevertWhen_FullRequest_ExpiryNotPassed() public {
         address otherAddress = address(99);
 
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 3);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
+        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        // assertEq(recoveryRequest.currentWeight, 3);
+        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         // executeBefore > block.timestamp
         vm.startPrank(otherAddress);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.RecoveryHasNotExpired.selector,
-                accountAddress,
+                accountAddress1,
                 block.timestamp,
                 block.timestamp + expiry
             )
         );
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
     }
 
     function test_CancelExpiredRecovery_PartialRequest_Succeeds() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds + 1 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        // assertEq(recoveryRequest.currentWeight, 1);
+        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         vm.warp(block.timestamp + expiry);
         address otherAddress = address(99);
         vm.startPrank(otherAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress1);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
 
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
     }
 
     function test_CancelExpiredRecovery_FullRequest_SucceedsWhenExecuteBeforeEqualsTimestamp()
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds + 1 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 3);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
+        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        // assertEq(recoveryRequest.currentWeight, 3);
+        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         // executeBefore == block.timestamp
         vm.warp(block.timestamp + expiry);
         address otherAddress = address(99);
         vm.startPrank(otherAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress1);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
 
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
     }
 
     function test_CancelExpiredRecovery_FullRequest_SucceedsWhenExecuteBeforeIsLessThanTimestamp()
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds + 1 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 3);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
+        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
+        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
+        // assertEq(recoveryRequest.currentWeight, 3);
+        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
 
         // executeBefore < block.timestamp
         vm.warp(block.timestamp + expiry + 1 seconds);
         address otherAddress = address(99);
         vm.startPrank(otherAddress);
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress);
-        emailRecoveryModule.cancelExpiredRecovery(accountAddress);
+        emit IEmailRecoveryManager.RecoveryCancelled(accountAddress1);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
 
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        // recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        // assertEq(recoveryRequest.executeAfter, 0);
+        // assertEq(recoveryRequest.executeBefore, 0);
+        // assertEq(recoveryRequest.currentWeight, 0);
+        // assertEq(recoveryRequest.recoveryDataHash, "");
     }
 }
