@@ -14,7 +14,7 @@ ignored_warnings_from = [
     "node_modules/@rhinestone/modulekit/src/**/*.sol",
     "lib",
 ]
-
+threads = 1
 [rpc_endpoints]
 sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
