@@ -59,6 +59,8 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x50799cce));
         assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x7c3e983c));
         assertEq(IEmailRecoveryManager.InvalidGuardianStatus.selector, bytes4(0x5689b51a));
+        assertEq(IEmailRecoveryManager.GuardianAlreadyVoted.selector, bytes4(0xe11487a7));
+        assertEq(IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, bytes4(0x8035b5fd));
         assertEq(IEmailRecoveryManager.InvalidAccountAddress.selector, bytes4(0x401b6ade));
         assertEq(IEmailRecoveryManager.NoRecoveryConfigured.selector, bytes4(0xa66e66b6));
         assertEq(IEmailRecoveryManager.NotEnoughApprovals.selector, bytes4(0x443282f5));

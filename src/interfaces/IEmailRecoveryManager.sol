@@ -23,6 +23,13 @@ interface IEmailRecoveryManager {
             // request
     }
 
+    struct PreviousRecoveryRequest {
+        address previousGuardianInitiated; // the address of the guardian who initiated the previous
+            // recovery request. Used to prevent a malicious guardian threatening the liveness of
+            // the recovery attempt
+        uint256 cancelRecoveryCooldown;
+    }
+
     /**
      * A struct representing the values required for a recovery request
      * The request state should be maintained over a single recovery attempts unless
@@ -31,8 +38,9 @@ interface IEmailRecoveryManager {
     struct RecoveryRequest {
         uint256 executeAfter; // the timestamp from which the recovery request can be executed
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
-        // mapping(bytes32 recoveryDataHash => uint256 currentWeight) recoveryDataHashWeight; // total weight of all guardian approvals for the recovery request
-        EnumerableMap.Bytes32ToUintMap recoveryDataHashWeight;
+        uint256 currentWeight; // total weight of all guardian approvals for the recovery request
+        bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
+            // recovery attempt
         EnumerableMap.AddressToUintMap guardianVoted;
     }
 
@@ -74,6 +82,7 @@ interface IEmailRecoveryManager {
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
     error GuardianAlreadyVoted();
+    error GuardianMustWaitForCooldown(address guardian);
     error InvalidAccountAddress();
     error NoRecoveryConfigured();
     error NotEnoughApprovals(uint256 currentWeight, uint256 threshold);
@@ -93,7 +102,12 @@ interface IEmailRecoveryManager {
     function getRecoveryRequest(address account)
         external
         view
-        returns (uint256 executeAfter, uint256 executeBefore);
+        returns (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        );
 
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 

@@ -296,6 +296,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         bytes memory newValidatorRecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
         bytes32 newValidatorRecoveryDataHash = keccak256(newValidatorRecoveryData);
 
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
+
         handleRecovery(
             accountAddress1, guardians1[0], newValidatorRecoveryDataHash, emailRecoveryModuleAddress
         );
@@ -328,6 +332,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
+
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
 
         handleRecovery(
             accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
@@ -364,6 +372,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
         bytes memory validator2RecoveryData = abi.encode(validator2Address, newChangeOwnerCalldata);
         bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
+
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
 
         handleRecovery(
             accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
@@ -403,12 +415,14 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(block.timestamp + 12 seconds);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
-            accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
+            accountAddress1, guardians1[1], validator2RecoveryDataHash, emailRecoveryModuleAddress
         );
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.GuardianAlreadyVoted.selector
+                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
+                validator2RecoveryDataHash,
+                recoveryDataHash1
             )
         );
         // process recovery for validator 2
