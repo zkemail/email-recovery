@@ -34,13 +34,19 @@ abstract contract EmailRecoveryManager is
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-    using EnumerableMap for EnumerableMap.Bytes32ToUintMap;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
+
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
      */
     uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
+
+    /**
+     * The cooldown period after which a subsequent recovery attempt can be initiated by the same
+     * guardian
+     */
+    uint256 public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
 
     /**
      * The command handler that returns and validates the command templates
@@ -56,6 +62,12 @@ abstract contract EmailRecoveryManager is
      * Account address to recovery request
      */
     mapping(address account => RecoveryRequest recoveryRequest) internal recoveryRequests;
+
+    /**
+     * Account address to previous recovery request
+     */
+    mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
+        previousRecoveryRequests;
 
     constructor(
         address _verifier,
@@ -95,46 +107,39 @@ abstract contract EmailRecoveryManager is
         return recoveryConfigs[account];
     }
 
+    // TODO: test
     /**
      * @notice Retrieves the recovery request details for a given account
      * @param account The address of the account for which the recovery request details are being
      * retrieved
-     * @return executeAfter // TODO:
-     * @return executeBefore // TODO:
+     * @return executeAfter The timestamp from which the recovery request can be executed
+     * @return executeBefore The timestamp from which the recovery request becomes invalid
+     * @return currentWeight Total weight of all guardian approvals for the recovery request
+     * @return recoveryDataHash The keccak256 hash of the recovery data used to execute the recovery
+     * attempt
      */
     function getRecoveryRequest(address account)
         external
         view
-        returns (uint256 executeAfter, uint256 executeBefore)
+        returns (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        )
     {
-        return (recoveryRequests[account].executeAfter, recoveryRequests[account].executeBefore);
+        return (
+            recoveryRequests[account].executeAfter,
+            recoveryRequests[account].executeBefore,
+            recoveryRequests[account].currentWeight,
+            recoveryRequests[account].recoveryDataHash
+        );
     }
 
+    // TODO: test
     // TODO: natspec
-    function getRecoveryDataHashWeight(
-        address account,
-        bytes32 recoveryDataHash
-    )
-        public
-        view
-        returns (uint256)
-    {
-        if(!recoveryRequests[account].recoveryDataHashWeight.contains(recoveryDataHash)) {
-            return 0;
-        }
-        return recoveryRequests[account].recoveryDataHashWeight.get(recoveryDataHash);
-    }
-
-    // TODO: natspec
-    function hasGuardianVoted(
-        address account,
-        address guardian
-    )
-        public
-        view
-        returns (bool)
-    {
-        if(!recoveryRequests[account].guardianVoted.contains(guardian)) {
+    function hasGuardianVoted(address account, address guardian) public view returns (bool) {
+        if (!recoveryRequests[account].guardianVoted.contains(guardian)) {
             return false;
         }
         return recoveryRequests[account].guardianVoted.get(guardian) == 1;
@@ -315,7 +320,7 @@ abstract contract EmailRecoveryManager is
             templateIdx, commandParams
         );
 
-        if (recoveryRequests[account].executeBefore != 0) {
+        if (recoveryRequests[account].currentWeight > 0) {
             revert RecoveryInProcess();
         }
 
@@ -340,6 +345,7 @@ abstract contract EmailRecoveryManager is
     /*                      HANDLE RECOVERY                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    // TODO: update tests
     /**
      * @notice Processes a recovery request for a given account. This is the third core function
      * that must be called during the end-to-end recovery flow
@@ -389,17 +395,33 @@ abstract contract EmailRecoveryManager is
             revert GuardianAlreadyVoted();
         }
 
-        uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
-        recoveryRequest.executeBefore = executeBefore;
-        recoveryRequest.guardianVoted.set(guardian,1);
-
-        uint256 currentWeight = 0;
-        if(recoveryRequest.recoveryDataHashWeight.contains(recoveryDataHash)) {
-            currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
+        // A malicious guardian can submit an invalid recovery hash that the
+        // other guardians do not agree with, and also re-submit the same invalid hash once
+        // the expired recovery attempt has been cancelled, thereby threatening the
+        // liveness of the recovery attempt.
+        uint256 guardianCount = guardianCount(account);
+        bool cooldownNotExpired =
+            previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
+        if (
+            previousRecoveryRequests[account].previousGuardianInitiated == guardian
+                && cooldownNotExpired && guardianCount > 1
+        ) {
+            revert GuardianMustWaitForCooldown(guardian);
         }
-        recoveryRequest.recoveryDataHashWeight.set(recoveryDataHash, currentWeight += guardianStorage.weight);
 
-        if (recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash) >= guardianConfig.threshold) {
+        if (recoveryRequest.recoveryDataHash == bytes32(0)) {
+            recoveryRequest.recoveryDataHash = recoveryDataHash;
+            previousRecoveryRequests[account].previousGuardianInitiated = guardian;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
+            recoveryRequest.executeBefore = executeBefore;
+        }
+
+        if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
+            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
+        }
+
+        recoveryRequest.currentWeight += guardianStorage.weight;
+        if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             recoveryRequest.executeAfter = executeAfter;
 
@@ -439,13 +461,8 @@ abstract contract EmailRecoveryManager is
             revert NoRecoveryConfigured();
         }
 
-        bytes32 recoveryDataHash = keccak256(recoveryData);
-        uint256 currentWeight = 0;
-        if(recoveryRequest.recoveryDataHashWeight.contains(recoveryDataHash)) {
-            currentWeight = recoveryRequest.recoveryDataHashWeight.get(recoveryDataHash);
-        }
-        if (currentWeight < threshold) {
-            revert NotEnoughApprovals(currentWeight, threshold);
+        if (recoveryRequest.currentWeight < threshold) {
+            revert NotEnoughApprovals(recoveryRequest.currentWeight, threshold);
         }
 
         if (block.timestamp < recoveryRequest.executeAfter) {
@@ -454,6 +471,11 @@ abstract contract EmailRecoveryManager is
 
         if (block.timestamp >= recoveryRequest.executeBefore) {
             revert RecoveryRequestExpired(block.timestamp, recoveryRequest.executeBefore);
+        }
+
+        bytes32 recoveryDataHash = keccak256(recoveryData);
+        if (recoveryDataHash != recoveryRequest.recoveryDataHash) {
+            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
         }
 
         clearRecoveryRequest(account);
@@ -487,13 +509,14 @@ abstract contract EmailRecoveryManager is
      * @dev Deletes the current recovery request associated with the caller's account
      */
     function cancelRecovery() external {
-        if (recoveryRequests[msg.sender].executeBefore == 0) {
+        if (recoveryRequests[msg.sender].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
         clearRecoveryRequest(msg.sender);
         emit RecoveryCancelled(msg.sender);
     }
 
+    // TODO: update tests
     /**
      * @notice Cancels the recovery request for a given account if it is expired.
      * @dev Deletes the current recovery request associated with the given account if the recovery
@@ -501,7 +524,7 @@ abstract contract EmailRecoveryManager is
      * @param account The address of the account for which the recovery is being cancelled
      */
     function cancelExpiredRecovery(address account) external {
-        if (recoveryRequests[account].executeBefore == 0) {
+        if (recoveryRequests[account].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
         if (recoveryRequests[account].executeBefore > block.timestamp) {
@@ -509,6 +532,8 @@ abstract contract EmailRecoveryManager is
                 account, block.timestamp, recoveryRequests[account].executeBefore
             );
         }
+        previousRecoveryRequests[account].cancelRecoveryCooldown =
+            block.timestamp + CANCEL_EXPIRED_RECOVERY_COOLDOWN;
         clearRecoveryRequest(account);
         emit RecoveryCancelled(account);
     }
@@ -523,6 +548,7 @@ abstract contract EmailRecoveryManager is
         deInitRecoveryModule(account);
     }
 
+    // TODO: update tests
     /**
      * @notice Removes all state related to an account.
      * @dev Although this function is internal, it should be used carefully as it can be called by
@@ -534,6 +560,7 @@ abstract contract EmailRecoveryManager is
     function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
         delete recoveryConfigs[account];
         delete recoveryRequests[account];
+        delete previousRecoveryRequests[account];
 
         removeAllGuardians(account);
         delete guardianConfigs[account];
@@ -541,24 +568,17 @@ abstract contract EmailRecoveryManager is
         emit RecoveryDeInitialized(account);
     }
 
+    // TODO: test
+    // TODO: natspec
     function clearRecoveryRequest(address account) internal {
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
-        uint256 lengthWeights = recoveryRequest.recoveryDataHashWeight.length();
-        bytes32[] memory keysWeights = new bytes32[](lengthWeights);
-        for (uint256 i = 0; i < lengthWeights; i++) {
-            (bytes32 key, ) = recoveryRequest.recoveryDataHashWeight.at(i);
-            keysWeights[i] = key;
-        }
-        for(uint256 i = 0; i < lengthWeights; i++) {
-            recoveryRequest.recoveryDataHashWeight.remove(keysWeights[i]);
-        }
         uint256 lengthVotes = recoveryRequest.guardianVoted.length();
         address[] memory keysVotes = new address[](lengthVotes);
         for (uint256 i = 0; i < lengthVotes; i++) {
-            (address key, ) = recoveryRequest.guardianVoted.at(i);
+            (address key,) = recoveryRequest.guardianVoted.at(i);
             keysVotes[i] = key;
         }
-        for(uint256 i = 0; i < lengthVotes; i++) {
+        for (uint256 i = 0; i < lengthVotes; i++) {
             recoveryRequest.guardianVoted.remove(keysVotes[i]);
         }
         delete recoveryRequests[account];

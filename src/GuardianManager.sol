@@ -32,9 +32,9 @@ abstract contract GuardianManager is IGuardianManager {
      * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
      */
     modifier onlyWhenNotRecovering() {
-        (, uint256 executeBefore) =
+        (,, uint256 currentWeight,) =
             IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender);
-        if (executeBefore != 0) {
+        if (currentWeight > 0) {
             revert RecoveryInProcess();
         }
         _;
@@ -251,5 +251,11 @@ abstract contract GuardianManager is IGuardianManager {
      */
     function removeAllGuardians(address account) internal {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
+    }
+
+    // TODO: test
+    // TODO: natspec
+    function guardianCount(address account) internal view returns (uint256) {
+        return guardiansStorage[account].length();
     }
 }

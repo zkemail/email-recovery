@@ -125,7 +125,30 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.GuardianAlreadyVoted.selector
+                IEmailRecoveryManager.InvalidRecoveryDataHash.selector,
+                invalidRecoveryDataHash,
+                recoveryDataHash
+            )
+        );
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[1], templateIdx, commandParams, nullifier
+        );
+    }
+
+    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
             )
         );
         emailRecoveryModule.exposed_processRecovery(
