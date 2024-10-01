@@ -255,7 +255,7 @@ abstract contract GuardianManager is IGuardianManager {
 
     // TODO: test
     // TODO: natspec
-    function guardianCount(address account) internal view returns (uint256) {
+    function getGuardianCount(address account) internal view returns (uint256) {
         return guardiansStorage[account].length();
     }
 }

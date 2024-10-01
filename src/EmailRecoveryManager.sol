@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { EmailAccountRecovery } from
     "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
-import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
@@ -34,7 +34,7 @@ abstract contract EmailRecoveryManager is
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -139,10 +139,7 @@ abstract contract EmailRecoveryManager is
     // TODO: test
     // TODO: natspec
     function hasGuardianVoted(address account, address guardian) public view returns (bool) {
-        if (!recoveryRequests[account].guardianVoted.contains(guardian)) {
-            return false;
-        }
-        return recoveryRequests[account].guardianVoted.get(guardian) == 1;
+        return recoveryRequests[account].guardianVoted.contains(guardian);
     }
 
     /**
@@ -399,7 +396,7 @@ abstract contract EmailRecoveryManager is
         // other guardians do not agree with, and also re-submit the same invalid hash once
         // the expired recovery attempt has been cancelled, thereby threatening the
         // liveness of the recovery attempt.
-        uint256 guardianCount = guardianCount(account);
+        uint256 guardianCount = getGuardianCount(account);
         bool cooldownNotExpired =
             previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
         if (
@@ -421,6 +418,7 @@ abstract contract EmailRecoveryManager is
         }
 
         recoveryRequest.currentWeight += guardianStorage.weight;
+        recoveryRequest.guardianVoted.add(guardian);
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             recoveryRequest.executeAfter = executeAfter;
@@ -572,14 +570,11 @@ abstract contract EmailRecoveryManager is
     // TODO: natspec
     function clearRecoveryRequest(address account) internal {
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
-        uint256 lengthVotes = recoveryRequest.guardianVoted.length();
-        address[] memory keysVotes = new address[](lengthVotes);
-        for (uint256 i = 0; i < lengthVotes; i++) {
-            (address key,) = recoveryRequest.guardianVoted.at(i);
-            keysVotes[i] = key;
-        }
-        for (uint256 i = 0; i < lengthVotes; i++) {
-            recoveryRequest.guardianVoted.remove(keysVotes[i]);
+
+        address[] memory guardiansVoted = recoveryRequest.guardianVoted.values();
+        uint256 voteCount = guardiansVoted.length;
+        for (uint256 i = 0; i < voteCount; i++) {
+            recoveryRequest.guardianVoted.remove(guardiansVoted[i]);
         }
         delete recoveryRequests[account];
     }
