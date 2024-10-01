@@ -252,10 +252,4 @@ abstract contract GuardianManager is IGuardianManager {
     function removeAllGuardians(address account) internal {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
     }
-
-    // TODO: test
-    // TODO: natspec
-    function getGuardianCount(address account) internal view returns (uint256) {
-        return guardiansStorage[account].length();
-    }
 }

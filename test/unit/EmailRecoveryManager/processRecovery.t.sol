@@ -109,6 +109,20 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         );
     }
 
+    function test_ProcessRecovery_RevertWhen_GuardianAlreadyVoted() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.expectRevert(IEmailRecoveryManager.GuardianAlreadyVoted.selector);
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+    }
+
     function test_ProcessRecovery_RevertWhen_InvalidRecoveryDataHash() public {
         bytes32 invalidRecoveryDataHash = keccak256(abi.encode("invalid hash"));
         string memory invalidRecoveryDataHashString =
@@ -156,6 +170,167 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         );
     }
 
+    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown_GuardianCountIsTwo() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        // remove guardian 3
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.removeGuardian(guardians1[2]);
+        vm.stopPrank();
+
+        uint256 guardianCount = emailRecoveryModule.getGuardianConfig(accountAddress1).guardianCount;
+        assertEq(guardianCount, 2);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
+            )
+        );
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+    }
+
+    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown_CooldownOneSecondRemaining() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        // warp to after cooldown has expired
+        vm.warp(block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() - 1 seconds);
+
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
+            )
+        );
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+    }
+
+    function test_ProcessRecovery_PreviousGuardianInitiatedButCooldownOver() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        // warp to after cooldown has expired + 1 seconds
+        vm.warp(block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        assertEq(executeAfter, 0);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, guardianWeights[0]);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+    }
+
+    function test_ProcessRecovery_PreviousGuardianInitiatedButCooldownOver_CooldownIsEqual() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        // warp to after cooldown has expired - cooldown end is equal to timestamp
+        vm.warp(block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN());
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        assertEq(executeAfter, 0);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, guardianWeights[0]);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+    }
+
+    function test_ProcessRecovery_PreviousGuardianInitiatedButGuardianCountIsOne() public {
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        // remove guardians 1 & 3
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.changeThreshold(2);
+        emailRecoveryModule.removeGuardian(guardians1[0]);
+        emailRecoveryModule.removeGuardian(guardians1[2]);
+        vm.stopPrank();
+
+        uint256 guardianCount = emailRecoveryModule.getGuardianConfig(accountAddress1).guardianCount;
+        assertEq(guardianCount, 1);
+
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[1], templateIdx, commandParams, nullifier
+        );
+
+        vm.warp(block.timestamp + expiry);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+
+        // guardian count is 1, so processRecovery can be executed subsequently by the same guardian
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[1], templateIdx, commandParams, nullifier
+        );
+
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(executeAfter, block.timestamp + delay);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, guardianWeights[1]);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian2Voted, true);
+    }
+
     function test_ProcessRecovery_IncreasesTotalWeight() public {
         uint256 guardian1Weight = guardianWeights[0];
 
@@ -170,7 +345,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
@@ -179,7 +354,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(executeAfter, 0);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, guardian1Weight);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, false);
     }
@@ -211,7 +386,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
@@ -220,7 +395,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(executeAfter, block.timestamp + delay);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, guardian1Weight + guardian2Weight);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, true);
     }
