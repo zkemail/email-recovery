@@ -342,7 +342,6 @@ abstract contract EmailRecoveryManager is
     /*                      HANDLE RECOVERY                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    // TODO: update tests
     /**
      * @notice Processes a recovery request for a given account. This is the third core function
      * that must be called during the end-to-end recovery flow
@@ -396,7 +395,7 @@ abstract contract EmailRecoveryManager is
         // other guardians do not agree with, and also re-submit the same invalid hash once
         // the expired recovery attempt has been cancelled, thereby threatening the
         // liveness of the recovery attempt.
-        uint256 guardianCount = getGuardianCount(account);
+        uint256 guardianCount = guardianConfigs[account].guardianCount;
         bool cooldownNotExpired =
             previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
         if (
