@@ -166,12 +166,22 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             guardians1[0], templateIdx, commandParams, nullifier
         );
 
-        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        // assertEq(recoveryRequest.executeAfter, 0);
-        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        // assertEq(recoveryRequest.currentWeight, guardian1Weight);
-        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(executeAfter, 0);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, guardian1Weight);
+        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, false);
     }
 
     function test_ProcessRecovery_InitiatesRecovery() public {
@@ -197,11 +207,21 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             guardians1[1], templateIdx, commandParams, nullifier
         );
 
-        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-        //     emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        // assertEq(recoveryRequest.executeAfter, block.timestamp + delay);
-        // assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        // assertEq(recoveryRequest.currentWeight, guardian1Weight + guardian2Weight);
-        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(executeAfter, block.timestamp + delay);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, guardian1Weight + guardian2Weight);
+        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, true);
     }
 }
