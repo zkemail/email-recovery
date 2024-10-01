@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
@@ -41,7 +41,7 @@ interface IEmailRecoveryManager {
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
         bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
             // recovery attempt
-        EnumerableMap.AddressToUintMap guardianVoted;
+        EnumerableSet.AddressSet guardianVoted;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

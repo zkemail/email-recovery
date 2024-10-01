@@ -3,33 +3,36 @@ pragma solidity ^0.8.25;
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeNativeIntegrationBase } from "./SafeNativeIntegrationBase.t.sol";
 
 contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase {
+    bytes public recoveryCalldata;
+    bytes public recoveryData;
+    bytes32 public recoveryDataHash;
+
     function setUp() public override {
         super.setUp();
+
+        newOwner1 = owner2;
+        recoveryCalldata = abi.encodeWithSignature(
+            "swapOwner(address,address,address)", address(1), owner1, newOwner1
+        );
+        recoveryData = abi.encode(safeAddress, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 
     function testIntegration_AccountRecovery() public {
         skipIfNotSafeAccountType();
 
-        address newOwner1 = owner2;
         // Configure recovery
         vm.startPrank(safeAddress);
         emailRecoveryModule.configureSafeRecovery(
             guardians1, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
-
-        bytes memory recoveryCalldata = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", address(1), owner1, newOwner1
-        );
-        bytes memory recoveryData = abi.encode(safeAddress, recoveryCalldata);
-        bytes32 recoveryDataHash = keccak256(recoveryData);
 
         AccountHidingRecoveryCommandHandler(commandHandler).storeAccountHash(safeAddress);
 
@@ -60,33 +63,53 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         uint256 executeBefore = block.timestamp + expiry;
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[0]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-        // IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-        //     emailRecoveryModule.getRecoveryRequest(safeAddress);
-        // assertEq(recoveryRequest.executeAfter, 0);
-        // assertEq(recoveryRequest.executeBefore, executeBefore);
-        // assertEq(recoveryRequest.currentWeight, 1);
-        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        (
+            uint256 _executeAfter,
+            uint256 _executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(safeAddress);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 1);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, false);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[1]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-        // recoveryRequest = emailRecoveryModule.getRecoveryRequest(safeAddress);
-        // assertEq(recoveryRequest.executeAfter, executeAfter);
-        // assertEq(recoveryRequest.executeBefore, executeBefore);
-        // assertEq(recoveryRequest.currentWeight, 3);
-        // assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        (_executeAfter, _executeBefore, currentWeight, _recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(safeAddress);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+        assertEq(_executeAfter, executeAfter);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 3);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, true);
 
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
         emailRecoveryModule.completeRecovery(safeAddress, recoveryData);
 
-        // recoveryRequest = emailRecoveryModule.getRecoveryRequest(safeAddress);
-        // assertEq(recoveryRequest.executeAfter, 0);
-        // assertEq(recoveryRequest.executeBefore, 0);
-        // assertEq(recoveryRequest.currentWeight, 0);
-        // assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        (_executeAfter, _executeBefore, currentWeight, _recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(safeAddress);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(_recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
 
         vm.prank(safeAddress);
         bool isOwner = Safe(payable(safeAddress)).isOwner(newOwner1);
@@ -104,7 +127,6 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         assertTrue(isModuleEnabled);
 
         // Uninstall module
-        // instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.prank(safeAddress);
         Safe(payable(safeAddress)).disableModule(address(1), emailRecoveryModuleAddress);
         vm.stopPrank();
