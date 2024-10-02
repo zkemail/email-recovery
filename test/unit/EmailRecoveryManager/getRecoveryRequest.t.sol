@@ -18,7 +18,7 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
@@ -27,7 +27,7 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
         assertEq(executeAfter, 0);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, 1);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, false);
     }
