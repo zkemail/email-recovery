@@ -8,11 +8,11 @@ import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { EmailAuthMsg } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { AccountHidingRecoverySubjectHandler } from
-    "src/handlers/AccountHidingRecoverySubjectHandler.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeNativeIntegrationBase } from "./SafeNativeIntegrationBase.t.sol";
 
@@ -40,7 +40,7 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         bytes32 accountHash = keccak256(abi.encodePacked(safeAddress));
 
-        AccountHidingRecoverySubjectHandler(subjectHandler).storeAccountHash(safeAddress);
+        AccountHidingRecoveryCommandHandler(commandHandler).storeAccountHash(safeAddress);
 
         // Accept guardian
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[0]);

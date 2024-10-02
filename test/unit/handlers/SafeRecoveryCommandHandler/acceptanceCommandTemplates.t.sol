@@ -2,17 +2,17 @@
 pragma solidity ^0.8.25;
 
 import { console2 } from "forge-std/console2.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
-contract SafeRecoverySubjectHandler_acceptanceSubjectTemplates_Test is SafeUnitBase {
+contract SafeRecoveryCommandHandler_acceptanceSubjectTemplates_Test is SafeUnitBase {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_AcceptanceSubjectTemplates_Succeeds() public {
+    function test_AcceptanceCommandTemplates_Succeeds() public {
         skipIfNotSafeAccountType();
-        string[][] memory templates = safeRecoverySubjectHandler.acceptanceSubjectTemplates();
+        string[][] memory templates = safeRecoveryCommandHandler.acceptanceCommandTemplates();
 
         assertEq(templates.length, 1);
         assertEq(templates[0].length, 5);

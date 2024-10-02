@@ -13,9 +13,9 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler
+        address commandHandler
     )
-        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler)
     { }
 
     function exposed_configureRecovery(
@@ -33,23 +33,23 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     function exposed_acceptGuardian(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
+        acceptGuardian(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_processRecovery(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        processRecovery(guardian, templateIdx, subjectParams, nullifier);
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {

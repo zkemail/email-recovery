@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { console2 } from "forge-std/console2.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
-contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUnitBase {
+contract SafeRecoveryCommandHandler_getPreviousOwnerInLinkedList_Test is SafeUnitBase {
     address internal constant SENTINEL_OWNERS = address(0x1);
 
     function setUp() public override {
@@ -15,7 +15,7 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         skipIfNotSafeAccountType();
         address invalidOwner = address(0);
 
-        address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
+        address previousOwner = safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(
             accountAddress1, invalidOwner
         );
 
@@ -26,7 +26,7 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         skipIfNotSafeAccountType();
         address invalidOwner = SENTINEL_OWNERS;
 
-        address previousOwner = safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(
+        address previousOwner = safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(
             accountAddress1, invalidOwner
         );
 
@@ -38,14 +38,14 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         address invalidAccount = address(0);
 
         vm.expectRevert();
-        safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(invalidAccount, owner1);
+        safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(invalidAccount, owner1);
     }
 
     function test_GetPreviousOwnerInLinkedList_Succeeds() public {
         skipIfNotSafeAccountType();
         address expectedPreviousOwner = address(1);
         address previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
+            safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
 
         assertEq(expectedPreviousOwner, previousOwner);
     }
@@ -54,11 +54,11 @@ contract SafeRecoverySubjectHandler_getPreviousOwnerInLinkedList_Test is SafeUni
         skipIfNotSafeAccountType();
         address expectedPreviousOwner = address(1);
         address previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
+            safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner1);
 
         assertEq(expectedPreviousOwner, previousOwner);
         previousOwner =
-            safeRecoverySubjectHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner2);
+            safeRecoveryCommandHandler.exposed_getPreviousOwnerInLinkedList(accountAddress1, owner2);
         assertEq(expectedPreviousOwner, previousOwner);
     }
 }

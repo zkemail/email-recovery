@@ -14,14 +14,14 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
-    bytes[] subjectParams;
+    bytes[] commandParams;
     bytes32 nullifier;
 
     function setUp() public override {
         super.setUp();
 
-        subjectParams = new bytes[](1);
-        subjectParams[0] = abi.encode(accountAddress);
+        commandParams = new bytes[](1);
+        commandParams[0] = abi.encode(accountAddress);
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
@@ -32,7 +32,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         handleRecovery(recoveryDataHash, accountSalt1);
 
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
-        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, commandParams, nullifier);
     }
 
     function test_AcceptGuardian_RevertWhen_RecoveryModuleNotInstalled() public {
@@ -41,7 +41,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         vm.stopPrank();
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
-        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, commandParams, nullifier);
     }
 
     function test_AcceptGuardian_RevertWhen_GuardianStatusIsNONE() public {
@@ -55,12 +55,12 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_acceptGuardian(
-            invalidGuardian, templateIdx, subjectParams, nullifier
+            invalidGuardian, templateIdx, commandParams, nullifier
         );
     }
 
     function test_AcceptGuardian_RevertWhen_GuardianStatusIsACCEPTED() public {
-        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, commandParams, nullifier);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -69,13 +69,13 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
                 uint256(GuardianStatus.REQUESTED)
             )
         );
-        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, commandParams, nullifier);
     }
 
     function test_AcceptGuardian_Succeeds() public {
         vm.expectEmit();
         emit IEmailRecoveryManager.GuardianAccepted(accountAddress, guardian1);
-        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, subjectParams, nullifier);
+        emailRecoveryModule.exposed_acceptGuardian(guardian1, templateIdx, commandParams, nullifier);
 
         GuardianStorage memory guardianStorage =
             emailRecoveryModule.getGuardian(accountAddress, guardian1);
