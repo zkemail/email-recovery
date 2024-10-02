@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_isActivated_Test is UnitBase {
@@ -15,15 +12,15 @@ contract EmailRecoveryManager_isActivated_Test is UnitBase {
         super.setUp();
     }
 
-    function test_isActivated_ReturnsTrueWhenModuleIsInstalled() public {
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+    function test_isActivated_ReturnsTrueWhenModuleIsInstalled() public view {
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertTrue(isActivated);
     }
 
     function test_isActivated_ReturnsFalseWhenModuleIsInstalled() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
 }

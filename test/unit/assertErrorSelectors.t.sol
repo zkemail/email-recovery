@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
+
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -20,7 +20,7 @@ import { EnumerableGuardianMap } from "src/libraries/EnumerableGuardianMap.sol";
 // in the contracts but this method reduces human error from copying values and also when updating
 // errors
 contract LogErrorSelectors_Test is Test {
-    function test_AccountHidingRecoveryCommandHandler_AssertSelectors() public {
+    function test_AccountHidingRecoveryCommandHandler_AssertSelectors() public pure {
         assertEq(
             AccountHidingRecoveryCommandHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855)
         );
@@ -34,20 +34,20 @@ contract LogErrorSelectors_Test is Test {
         );
     }
 
-    function test_EmailRecoveryCommandHandler_AssertSelectors() public {
+    function test_EmailRecoveryCommandHandler_AssertSelectors() public pure {
         assertEq(EmailRecoveryCommandHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
         assertEq(EmailRecoveryCommandHandler.InvalidCommandParams.selector, bytes4(0x9648bb3c));
         assertEq(EmailRecoveryCommandHandler.InvalidAccount.selector, bytes4(0x6d187b28));
     }
 
-    function test_SafeRecoveryCommandHandler_AssertSelectors() public {
+    function test_SafeRecoveryCommandHandler_AssertSelectors() public pure {
         assertEq(SafeRecoveryCommandHandler.InvalidTemplateIndex.selector, bytes4(0x5be77855));
         assertEq(SafeRecoveryCommandHandler.InvalidCommandParams.selector, bytes4(0x9648bb3c));
         assertEq(SafeRecoveryCommandHandler.InvalidOldOwner.selector, bytes4(0x377abe51));
         assertEq(SafeRecoveryCommandHandler.InvalidNewOwner.selector, bytes4(0x896d9ad0));
     }
 
-    function test_IEmailRecoveryManager_AssertSelectors() public {
+    function test_IEmailRecoveryManager_AssertSelectors() public pure {
         assertEq(IEmailRecoveryManager.InvalidVerifier.selector, bytes4(0xbaa3de5f));
         assertEq(IEmailRecoveryManager.InvalidDkimRegistry.selector, bytes4(0x260ce05b));
         assertEq(IEmailRecoveryManager.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
@@ -70,23 +70,23 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.RecoveryIsNotActivated.selector, bytes4(0xc737140f));
     }
 
-    function test_EmailRecoveryUniversalFactory_AssertSelectors() public {
+    function test_EmailRecoveryUniversalFactory_AssertSelectors() public pure {
         assertEq(EmailRecoveryUniversalFactory.InvalidVerifier.selector, bytes4(0xbaa3de5f));
         assertEq(EmailRecoveryUniversalFactory.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
     }
 
-    function test_EmailRecoveryFactory_AssertSelectors() public {
+    function test_EmailRecoveryFactory_AssertSelectors() public pure {
         assertEq(EmailRecoveryFactory.InvalidVerifier.selector, bytes4(0xbaa3de5f));
         assertEq(EmailRecoveryFactory.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
     }
 
-    function test_EmailRecoveryModule_AssertSelectors() public {
+    function test_EmailRecoveryModule_AssertSelectors() public pure {
         assertEq(EmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
         assertEq(EmailRecoveryModule.InvalidOnInstallData.selector, bytes4(0x5c223882));
         assertEq(EmailRecoveryModule.InvalidValidator.selector, bytes4(0x11d5c560));
     }
 
-    function test_UniversalEmailRecoveryModule_AssertSelectors() public {
+    function test_UniversalEmailRecoveryModule_AssertSelectors() public pure {
         assertEq(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
         assertEq(
             UniversalEmailRecoveryModule.RecoveryModuleNotInitialized.selector, bytes4(0x0b088c23)
@@ -96,7 +96,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(UniversalEmailRecoveryModule.MaxValidatorsReached.selector, bytes4(0xed7948d6));
     }
 
-    function test_SafeEmailRecoveryModule_AssertSelectors() public {
+    function test_SafeEmailRecoveryModule_AssertSelectors() public pure {
         assertEq(SafeEmailRecoveryModule.ModuleNotInstalled.selector, bytes4(0x026d9639));
         assertEq(SafeEmailRecoveryModule.InvalidAccount.selector, bytes4(0x4b579b22));
         assertEq(SafeEmailRecoveryModule.InvalidSelector.selector, bytes4(0x12ba286f));
@@ -104,12 +104,12 @@ contract LogErrorSelectors_Test is Test {
         assertEq(SafeEmailRecoveryModule.ResetFailed.selector, bytes4(0x8078983d));
     }
 
-    function test_EnumerableGuardianMap_AssertSelectors() public {
+    function test_EnumerableGuardianMap_AssertSelectors() public pure {
         assertEq(EnumerableGuardianMap.MaxNumberOfGuardiansReached.selector, bytes4(0xbb6c1e93));
         assertEq(EnumerableGuardianMap.TooManyValuesToRemove.selector, bytes4(0xe023c211));
     }
 
-    function test_IGuardianManager_AssertSelectors() public {
+    function test_IGuardianManager_AssertSelectors() public pure {
         assertEq(IGuardianManager.RecoveryInProcess.selector, bytes4(0xf90ea6fc));
         assertEq(IGuardianManager.IncorrectNumberOfWeights.selector, bytes4(0x166e79bd));
         assertEq(IGuardianManager.ThresholdCannotBeZero.selector, bytes4(0xf4124166));

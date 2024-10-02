@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
@@ -15,27 +11,26 @@ import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { IntegrationBase } from "../IntegrationBase.t.sol";
+import { IEmailRecoveryModule } from "../../Base.t.sol";
 
 abstract contract SafeNativeIntegrationBase is IntegrationBase {
     using ModuleKitHelpers for *;
     using Strings for uint256;
     using Strings for address;
 
-    SafeEmailRecoveryModule emailRecoveryModule;
-    address emailRecoveryModuleAddress;
+    SafeEmailRecoveryModule public emailRecoveryModule;
+    address public emailRecoveryModuleAddress;
     Safe public safeSingleton;
     Safe public safe;
     address public safeAddress;
-    address public owner;
-    bytes isInstalledContext;
-    bytes4 functionSelector;
-    uint256 nullifierCount;
-    address commandHandler;
+    bytes public isInstalledContext;
+    bytes4 public functionSelector;
+    address public commandHandler;
 
     /**
      * Helper function to return if current account type is safe or not
      */
-    function isAccountTypeSafe() public returns (bool) {
+    function isAccountTypeSafe() public view returns (bool) {
         string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
         if (Strings.equal(currentAccountType, "SAFE")) {
             return true;
@@ -58,32 +53,21 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         }
         super.setUp();
 
-        commandHandler = address(new AccountHidingRecoveryCommandHandler());
-        emailRecoveryModule = new SafeEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(commandHandler)
-        );
-        emailRecoveryModuleAddress = address(emailRecoveryModule);
-
         safeSingleton = new Safe();
         SafeProxy safeProxy = new SafeProxy(address(safeSingleton));
         safe = Safe(payable(address(safeProxy)));
         safeAddress = address(safe);
 
-        isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
-
-        // Compute guardian addresses
-        guardians1 = new address[](3);
+        // Overwrite the default values
         guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt1);
         guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt2);
         guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt3);
 
+        isInstalledContext = bytes("0");
+        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+
         address[] memory owners = new address[](1);
-        owner = owner1;
-        owners[0] = owner;
+        owners[0] = owner1;
 
         safe.setup(
             owners, 1, address(0), bytes("0"), address(0), address(0), 0, payable(address(0))
@@ -94,33 +78,31 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         vm.stopPrank();
     }
 
-    function generateMockEmailProof(
-        string memory command,
-        bytes32 nullifier,
+    function computeEmailAuthAddress(
+        address account,
         bytes32 accountSalt
     )
         public
         view
-        returns (EmailProof memory)
+        override
+        returns (address)
     {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.publicKeyHash = bytes32(
-            vm.parseUint(
-                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
-            )
-        );
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = command;
-        emailProof.emailNullifier = nullifier;
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-        emailProof.proof = bytes("0");
-
-        return emailProof;
+        return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function getAccountSaltForGuardian(address guardian) public returns (bytes32) {
+    function deployModule() public override {
+        // Deploy handler, manager and module
+        commandHandler = address(new AccountHidingRecoveryCommandHandler());
+        emailRecoveryModule = new SafeEmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(commandHandler)
+        );
+        emailRecoveryModuleAddress = address(emailRecoveryModule);
+    }
+
+    function getAccountSaltForGuardian(address guardian) public view returns (bytes32) {
         if (guardian == guardians1[0]) {
             return accountSalt1;
         }
@@ -131,44 +113,53 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
             return accountSalt3;
         }
 
+        /* solhint-disable-next-line gas-custom-errors, custom-errors  */
         revert("Invalid guardian address");
     }
 
-    function generateNewNullifier() public returns (bytes32) {
-        return keccak256(abi.encode(nullifierCount++));
-    }
-
-    function acceptGuardian(address account, address guardian) public {
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
-    }
-
-    function getAcceptanceEmailAuthMessage(
+    function getAcceptanceEmailAuthMessageWithAccountSalt(
         address account,
-        address guardian
+        address guardian,
+        address _emailRecoveryModule,
+        bytes32 optionalAccountSalt
     )
         public
+        override
         returns (EmailAuthMsg memory)
     {
         bytes32 accountHash = keccak256(abi.encodePacked(account));
         string memory accountHashString = uint256(accountHash).toHexString(32);
         string memory command = string.concat("Accept guardian request for ", accountHashString);
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(guardian);
+
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
         EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
         bytes[] memory commandParamsForAcceptance = new bytes[](1);
         commandParamsForAcceptance[0] = abi.encode(accountHashString);
         return EmailAuthMsg({
-            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
+            templateId: IEmailRecoveryModule(_emailRecoveryModule).computeAcceptanceTemplateId(
+                templateIdx
+            ),
             commandParams: commandParamsForAcceptance,
             skippedCommandPrefix: 0,
             proof: emailProof
         });
     }
 
-    function handleRecovery(address account, bytes32 recoveryDataHash, address guardian) public {
+    function handleRecoveryForSafe(
+        address account,
+        bytes32 recoveryDataHash,
+        address guardian
+    )
+        public
+    {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, recoveryDataHash, guardian);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);

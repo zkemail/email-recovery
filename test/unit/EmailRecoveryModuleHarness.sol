@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryModuleHarness is EmailRecoveryModule {

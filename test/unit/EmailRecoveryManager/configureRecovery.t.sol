@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -17,67 +16,67 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     }
 
     function test_ConfigureRecovery_RevertWhen_AlreadyRecovering() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
         vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.exposed_configureRecovery(
-            guardians, guardianWeights, threshold, delay, expiry
+            guardians1, guardianWeights, threshold, delay, expiry
         );
     }
 
     function test_ConfigureRecovery_RevertWhen_ConfigureRecoveryCalledTwice() public {
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(IEmailRecoveryManager.SetupAlreadyCalled.selector);
         emailRecoveryModule.exposed_configureRecovery(
-            guardians, guardianWeights, threshold, delay, expiry
+            guardians1, guardianWeights, threshold, delay, expiry
         );
     }
 
     function test_ConfigureRecovery_Succeeds() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress1, validatorAddress);
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
 
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryConfigured(
-            instance.account, guardians.length, totalWeight, threshold
+            instance1.account, guardians1.length, totalWeight, threshold
         );
         emailRecoveryModule.exposed_configureRecovery(
-            guardians, guardianWeights, threshold, delay, expiry
+            guardians1, guardianWeights, threshold, delay, expiry
         );
 
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
-            emailRecoveryModule.getRecoveryConfig(accountAddress);
+            emailRecoveryModule.getRecoveryConfig(accountAddress1);
         assertEq(recoveryConfig.delay, delay);
         assertEq(recoveryConfig.expiry, expiry);
 
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
-        assertEq(guardianConfig.guardianCount, guardians.length);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
+        assertEq(guardianConfig.guardianCount, guardians1.length);
         assertEq(guardianConfig.totalWeight, totalWeight);
-        assertEq(guardianConfig.acceptedWeight, 0); // no guardians accepted yet
+        assertEq(guardianConfig.acceptedWeight, 0); // no guardians1 accepted yet
         assertEq(guardianConfig.threshold, threshold);
 
         GuardianStorage memory guardian =
-            emailRecoveryModule.getGuardian(accountAddress, guardians[0]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardian.status), uint256(GuardianStatus.REQUESTED));
         assertEq(guardian.weight, guardianWeights[0]);
 
-        isActivated = emailRecoveryModule.isActivated(accountAddress);
+        isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertTrue(isActivated);
     }
 
     function test_ConfigureRecovery_RevertWhen_ZeroGuardians() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress1, validatorAddress);
         address[] memory zeroGuardians;
 
         vm.expectRevert(
@@ -93,39 +92,39 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
     }
 
     function test_ConfigureRecovery_RevertWhen_ZeroGuardianWeights() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress1, validatorAddress);
         uint256[] memory zeroGuardianWeights;
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGuardianManager.IncorrectNumberOfWeights.selector,
-                guardians.length,
+                guardians1.length,
                 zeroGuardianWeights.length
             )
         );
         emailRecoveryModule.exposed_configureRecovery(
-            guardians, zeroGuardianWeights, threshold, delay, expiry
+            guardians1, zeroGuardianWeights, threshold, delay, expiry
         );
     }
 
     function test_ConfigureRecovery_RevertWhen_ZeroThreshold() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress1, validatorAddress);
         uint256 zeroThreshold = 0;
 
         vm.expectRevert(IGuardianManager.ThresholdCannotBeZero.selector);
         emailRecoveryModule.exposed_configureRecovery(
-            guardians, guardianWeights, zeroThreshold, delay, expiry
+            guardians1, guardianWeights, zeroThreshold, delay, expiry
         );
     }
 
     function test_ConfigureRecovery_RevertWhen_NoGuardians() public {
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.startPrank(accountAddress);
-        emailRecoveryModule.workaround_validatorsPush(accountAddress, validatorAddress);
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.workaround_validatorsPush(accountAddress1, validatorAddress);
 
         address[] memory zeroGuardians;
         uint256[] memory zeroGuardianWeights;

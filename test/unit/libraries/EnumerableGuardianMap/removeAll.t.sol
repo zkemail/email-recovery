@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
     GuardianStatus
 } from "../../../../src/libraries/EnumerableGuardianMap.sol";
+
+/* solhint-disable gas-custom-errors */
 
 contract EnumerableGuardianMap_removeAll_Test is UnitBase {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
@@ -23,7 +24,7 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         bool result;
 
         for (uint256 i = 1; i <= 3; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
@@ -33,10 +34,10 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         addresses[0] = vm.addr(1);
         addresses[1] = vm.addr(2);
         addresses[2] = vm.addr(3);
-        guardiansStorage[accountAddress].removeAll(addresses);
+        guardiansStorage[accountAddress1].removeAll(addresses);
         for (uint256 i = 1; i <= 3; i++) {
             require(
-                guardiansStorage[accountAddress]._values[vm.addr(i)].status == GuardianStatus.NONE,
+                guardiansStorage[accountAddress1]._values[vm.addr(i)].status == GuardianStatus.NONE,
                 "Expected status to be NONE"
             );
         }
@@ -46,7 +47,7 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         bool result;
 
         for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
@@ -57,10 +58,10 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         for (uint256 i = 0; i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             addresses[i] = vm.addr(i + 1);
         }
-        guardiansStorage[accountAddress].removeAll(addresses);
+        guardiansStorage[accountAddress1].removeAll(addresses);
         for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             require(
-                guardiansStorage[accountAddress]._values[vm.addr(i)].status == GuardianStatus.NONE,
+                guardiansStorage[accountAddress1]._values[vm.addr(i)].status == GuardianStatus.NONE,
                 "Expected status to be NONE"
             );
         }
@@ -74,6 +75,6 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
             addresses[i] = vm.addr(i + 1);
         }
         vm.expectRevert(EnumerableGuardianMap.TooManyValuesToRemove.selector);
-        guardiansStorage[accountAddress].removeAll(addresses);
+        guardiansStorage[accountAddress1].removeAll(addresses);
     }
 }
