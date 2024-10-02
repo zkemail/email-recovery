@@ -30,8 +30,10 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        IEmailRecoveryManager.PreviousRecoveryRequest memory previousRecoveryRequest =
+            emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
         bool hasGuardian2Voted =
@@ -39,7 +41,9 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(executeAfter, 0);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, 1);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, guardians1[0]);
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, false);
 
@@ -58,8 +62,10 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        IEmailRecoveryManager.PreviousRecoveryRequest memory previousRecoveryRequest =
+            emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
         bool hasGuardian2Voted =
@@ -67,21 +73,26 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(executeAfter, 0);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, 1);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, guardians1[0]);
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, false);
 
         vm.startPrank(accountAddress1);
         emailRecoveryModule.cancelRecovery();
 
-        (executeAfter, executeBefore, currentWeight, recoveryDataHash) =
+        (executeAfter, executeBefore, currentWeight, _recoveryDataHash) =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        previousRecoveryRequest = emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
         hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
         hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         assertEq(executeAfter, 0);
         assertEq(executeBefore, 0);
         assertEq(currentWeight, 0);
-        assertEq(recoveryDataHash, "");
+        assertEq(_recoveryDataHash, "");
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, guardians1[0]);
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
         assertEq(hasGuardian1Voted, false);
         assertEq(hasGuardian2Voted, false);
     }
@@ -97,8 +108,10 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
             uint256 executeAfter,
             uint256 executeBefore,
             uint256 currentWeight,
-            bytes32 recoveryDataHash
+            bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        IEmailRecoveryManager.PreviousRecoveryRequest memory previousRecoveryRequest =
+            emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
         bool hasGuardian1Voted =
             emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
         bool hasGuardian2Voted =
@@ -106,7 +119,9 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         assertEq(executeAfter, block.timestamp + delay);
         assertEq(executeBefore, block.timestamp + expiry);
         assertEq(currentWeight, 3);
-        assertEq(recoveryDataHash, recoveryDataHash);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, guardians1[0]);
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
         assertEq(hasGuardian1Voted, true);
         assertEq(hasGuardian2Voted, true);
 
@@ -115,14 +130,17 @@ contract EmailRecoveryManager_cancelRecovery_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryCancelled(accountAddress1);
         emailRecoveryModule.cancelRecovery();
 
-        (executeAfter, executeBefore, currentWeight, recoveryDataHash) =
+        (executeAfter, executeBefore, currentWeight, _recoveryDataHash) =
             emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        previousRecoveryRequest = emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
         hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
         hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         assertEq(executeAfter, 0);
         assertEq(executeBefore, 0);
         assertEq(currentWeight, 0);
-        assertEq(recoveryDataHash, "");
+        assertEq(_recoveryDataHash, "");
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, guardians1[0]);
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
         assertEq(hasGuardian1Voted, false);
         assertEq(hasGuardian2Voted, false);
     }

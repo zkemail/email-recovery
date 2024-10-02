@@ -134,10 +134,4 @@ library EnumerableGuardianMap {
     function keys(AddressToGuardianMap storage map) internal view returns (address[] memory) {
         return map._keys.values();
     }
-
-    // TODO: test
-    // TODO: natspec
-    function length(AddressToGuardianMap storage map) internal view returns (uint256) {
-        return map._keys.length();
-    }
 }

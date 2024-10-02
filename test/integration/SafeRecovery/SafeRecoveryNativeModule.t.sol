@@ -69,10 +69,8 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
             uint256 currentWeight,
             bytes32 _recoveryDataHash
         ) = emailRecoveryModule.getRecoveryRequest(safeAddress);
-        bool hasGuardian1Voted =
-            emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
-        bool hasGuardian2Voted =
-            emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+        bool hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
+        bool hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
         assertEq(_executeAfter, 0);
         assertEq(_executeBefore, executeBefore);
         assertEq(currentWeight, 1);
