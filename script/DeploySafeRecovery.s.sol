@@ -30,8 +30,9 @@ contract DeploySafeRecovery_Script is Script {
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-
+    
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        uint salt = vm.envOr("CREATE2_SALT", uint(0));
 
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
@@ -68,15 +69,15 @@ contract DeploySafeRecovery_Script is Script {
         EmailRecoveryUniversalFactory factory =
             new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
         (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
-            bytes32(uint256(0)),
-            bytes32(uint256(0)),
+            bytes32(salt),
+            bytes32(salt),
             type(SafeRecoveryCommandHandler).creationCode,
             dkimRegistry
         );
 
-        address safe7579 = address(new Safe7579{ salt: bytes32(uint256(0)) }());
+        address safe7579 = address(new Safe7579{ salt: bytes32(salt) }());
         address safe7579Launchpad =
-            address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
+            address(new Safe7579Launchpad{ salt: bytes32(salt) }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
         console.log("Deployed Email Recovery Handler at ", vm.toString(commandHandler));
