@@ -107,7 +107,6 @@ abstract contract EmailRecoveryManager is
         return recoveryConfigs[account];
     }
 
-    // TODO: test
     /**
      * @notice Retrieves the recovery request details for a given account
      * @param account The address of the account for which the recovery request details are being
@@ -136,8 +135,31 @@ abstract contract EmailRecoveryManager is
         );
     }
 
-    // TODO: test
-    // TODO: natspec
+    /**
+     * @notice Retrieves the previous recovery request details for a given account
+     * @dev the previous recovery request is stored as this helps prevent guardians threatening the
+     * liveness of recovery attempts by submitting malicious recovery hashes before honest guardians
+     * correct submit theirs. See `processRecovery` and `cancelExpiredRecovery` for more details
+     * @param account The address of the account for which the previous recovery request details are
+     * being retrieved
+     * @return PreviousRecoveryRequest The previous recovery request for the specified account
+     */
+    function getPreviousRecoveryRequest(address account)
+        external
+        view
+        returns (PreviousRecoveryRequest memory)
+    {
+        return previousRecoveryRequests[account];
+    }
+
+    /**
+     * @notice Returns whether a guardian has voted on the current recovery request for a given
+     * account
+     * @param account The address of the account for which the recovery request is being checked
+     * @param guardian The address of the guardian to check voted status
+     * @return bool The boolean value indicating whether the guardian has voted on the recovery
+     * request
+     */
     function hasGuardianVoted(address account, address guardian) public view returns (bool) {
         return recoveryRequests[account].guardianVoted.contains(guardian);
     }
@@ -513,7 +535,6 @@ abstract contract EmailRecoveryManager is
         emit RecoveryCancelled(msg.sender);
     }
 
-    // TODO: update tests
     /**
      * @notice Cancels the recovery request for a given account if it is expired.
      * @dev Deletes the current recovery request associated with the given account if the recovery
@@ -545,7 +566,6 @@ abstract contract EmailRecoveryManager is
         deInitRecoveryModule(account);
     }
 
-    // TODO: update tests
     /**
      * @notice Removes all state related to an account.
      * @dev Although this function is internal, it should be used carefully as it can be called by
@@ -565,8 +585,14 @@ abstract contract EmailRecoveryManager is
         emit RecoveryDeInitialized(account);
     }
 
-    // TODO: test
-    // TODO: natspec
+    /**
+     * @notice Clears the recovery request for an account
+     * @dev Because `guardianVoted` on the `RecoveryRequest` struct is an `EnumerableSet`, we need
+     * to manually clear all entries. The maximum guardian count is 32, which is enforced by
+     * `EnumerableGuardianMap.sol`. Therefore no more than 32 values should have to be removed from
+     * the set
+     * @param account The address of the account for which the recovery request is being cleared
+     */
     function clearRecoveryRequest(address account) internal {
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
 
