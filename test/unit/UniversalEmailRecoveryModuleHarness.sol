@@ -2,11 +2,13 @@
 pragma solidity ^0.8.25;
 
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
         address verifier,
@@ -114,5 +116,13 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         returns (bytes4)
     {
         return allowedSelectors[validator][account];
+    }
+
+    function exposed_clearRecoveryRequest(address account) external {
+        return clearRecoveryRequest(account);
+    }
+
+    function workaround_getVoteCount(address account) external view returns (uint256) {
+        return recoveryRequests[account].guardianVoted.values().length;
     }
 }

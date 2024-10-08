@@ -42,12 +42,27 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         assertEq(recoveryConfig.expiry, 0);
 
         // assert that the recovery request has been cleared successfully
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, "");
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(_recoveryDataHash, "");
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+
+        IEmailRecoveryManager.PreviousRecoveryRequest memory previousRecoveryRequest =
+            emailRecoveryModule.getPreviousRecoveryRequest(accountAddress1);
+        assertEq(previousRecoveryRequest.previousGuardianInitiated, address(0));
+        assertEq(previousRecoveryRequest.cancelRecoveryCooldown, 0);
 
         // assert that guardian storage has been cleared successfully for guardian 1
         GuardianStorage memory guardianStorage1 =
