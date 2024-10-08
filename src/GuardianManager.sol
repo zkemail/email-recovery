@@ -261,7 +261,7 @@ abstract contract GuardianManager is IGuardianManager {
      * be quite expensive.
      * @param account The address of the account associated with the guardians
      */
-    function getAllGuardians(address account) external returns (address[] memory) {
+    function getAllGuardians(address account) external view returns (address[] memory) {
         return guardiansStorage[account].keys();
     }
 }
