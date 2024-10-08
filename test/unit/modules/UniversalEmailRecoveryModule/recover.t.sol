@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
+import { CommandHandlerType } from "test/Base.t.sol";
 
 contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
     function setUp() public override {
@@ -91,7 +93,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
     }
 
     function test_Recover_RevertWhen_IncorrectValidatorAddress() public {
-        address wrongValidator = accountAddress1;
+        address wrongValidator = address(1);
         bytes memory validCalldata = abi.encodeWithSelector(functionSelector, newOwner1);
         bytes memory invalidData = abi.encode(wrongValidator, validCalldata);
         vm.startPrank(emailRecoveryModuleAddress);
@@ -109,7 +111,13 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         emit UniversalEmailRecoveryModule.RecoveryExecuted(accountAddress1, validatorAddress);
         emailRecoveryModule.exposed_recover(accountAddress1, recoveryData);
 
-        address updatedOwner = validator.owners(accountAddress1);
-        assertEq(updatedOwner, newOwner1);
+        address updatedOwner;
+        if (isAccountTypeSafe()) {
+            bool isOwner = Safe(payable(accountAddress1)).isOwner(newOwner1);
+            assertTrue(isOwner);
+        } else {
+            updatedOwner = validator.owners(accountAddress1);
+            assertEq(updatedOwner, newOwner1);
+        }
     }
 }

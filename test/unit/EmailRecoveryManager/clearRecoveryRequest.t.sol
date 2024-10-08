@@ -3,9 +3,6 @@ pragma solidity ^0.8.25;
 
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianManager } from "src/GuardianManager.sol";
-import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract EmailRecoveryManager_clearRecoveryRequest_Test is UnitBase {
     function setUp() public override {

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console2.sol";
 import { DeploySafeNativeRecovery_Script } from "../DeploySafeNativeRecovery.s.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console2.sol";
+/* solhint-disable no-console */
+
+import { Test } from "forge-std/Test.sol";
+import { console2 } from "forge-std/console2.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -27,7 +29,7 @@ abstract contract BaseDeployTest is Test {
         setupEnvironmentVariables();
 
         // Deploy EmailRecoveryCommandHandler
-        EmailRecoveryCommandHandler emailRecoveryHandler = new EmailRecoveryCommandHandler();
+        new EmailRecoveryCommandHandler();
 
         // Deploy EmailRecoveryUniversalFactory and set up module
         deployEmailRecoveryModule(verifier);
@@ -78,7 +80,7 @@ abstract contract BaseDeployTest is Test {
      */
     function deployDKIMRegistry(address dkimRegistrySigner) internal returns (address) {
         ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-        console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
+        console2.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
             address(dkimImpl),
             abi.encodeCall(
