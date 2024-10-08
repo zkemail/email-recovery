@@ -8,12 +8,13 @@ import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHa
 contract EmailRecoveryCommandHandler_parseRecoveryDataHash_Test is UnitBase {
     using Strings for uint256;
 
+    EmailRecoveryCommandHandler public emailRecoveryCommandHandler;
     string public recoveryDataHashString;
     bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();
-
+        emailRecoveryCommandHandler = new EmailRecoveryCommandHandler();
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         commandParams = new bytes[](2);
@@ -28,14 +29,14 @@ contract EmailRecoveryCommandHandler_parseRecoveryDataHash_Test is UnitBase {
                 EmailRecoveryCommandHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        emailRecoveryHandler.parseRecoveryDataHash(invalidTemplateIdx, commandParams);
+        emailRecoveryCommandHandler.parseRecoveryDataHash(invalidTemplateIdx, commandParams);
     }
 
     function test_ParseRecoveryDataHash_Succeeds() public view {
         bytes32 expectedRecoveryDataHash = keccak256(recoveryData);
 
         bytes32 _recoveryDataHash =
-            emailRecoveryHandler.parseRecoveryDataHash(templateIdx, commandParams);
+            emailRecoveryCommandHandler.parseRecoveryDataHash(templateIdx, commandParams);
 
         assertEq(_recoveryDataHash, expectedRecoveryDataHash);
     }

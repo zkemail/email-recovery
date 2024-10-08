@@ -14,10 +14,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidVerifier = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidVerifier.selector);
         new UniversalEmailRecoveryModule(
-            invalidVerifier,
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler)
+            invalidVerifier, address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
         );
     }
 
@@ -25,7 +22,7 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidDkim = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), invalidDkim, address(emailAuthImpl), address(emailRecoveryHandler)
+            address(verifier), invalidDkim, address(emailAuthImpl), commandHandlerAddress
         );
     }
 
@@ -33,14 +30,11 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidEmailAuth = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidEmailAuthImpl.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            invalidEmailAuth,
-            address(emailRecoveryHandler)
+            address(verifier), address(dkimRegistry), invalidEmailAuth, commandHandlerAddress
         );
     }
 
-    function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
+    function test_Constructor_RevertWhen_InvalidCommandHandler() public {
         address invalidHandler = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidCommandHandler.selector);
         new UniversalEmailRecoveryModule(
@@ -50,15 +44,12 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
 
     function test_Constructor() public {
         UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(emailRecoveryHandler)
+            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
         );
 
         assertEq(address(verifier), emailRecoveryModule.verifier());
         assertEq(address(dkimRegistry), emailRecoveryModule.dkim());
         assertEq(address(emailAuthImpl), emailRecoveryModule.emailAuthImplementation());
-        assertEq(address(emailRecoveryHandler), emailRecoveryModule.commandHandler());
+        assertEq(commandHandlerAddress, emailRecoveryModule.commandHandler());
     }
 }

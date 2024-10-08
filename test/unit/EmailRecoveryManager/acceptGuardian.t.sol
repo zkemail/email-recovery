@@ -3,14 +3,17 @@ pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
 
 contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
+    using Strings for uint256;
 
     bytes[] public commandParams;
     bytes32 public nullifier;
@@ -18,8 +21,15 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        commandParams = new bytes[](1);
-        commandParams[0] = abi.encode(accountAddress1);
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            commandParams = new bytes[](1);
+            commandParams[0] =
+                abi.encode(uint256(keccak256(abi.encodePacked(accountAddress1))).toHexString(32));
+        } else {
+            commandParams = new bytes[](1);
+            commandParams[0] = abi.encode(accountAddress1);
+        }
+
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 

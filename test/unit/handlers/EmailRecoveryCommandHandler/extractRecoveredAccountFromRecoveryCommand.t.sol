@@ -3,12 +3,16 @@ pragma solidity ^0.8.25;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 
 contract EmailRecoveryCommandHandler_extractRecoveredAccountFromRecoveryCommand_Test is UnitBase {
     using Strings for uint256;
 
+    EmailRecoveryCommandHandler public emailRecoveryCommandHandler;
+
     function setUp() public override {
         super.setUp();
+        emailRecoveryCommandHandler = new EmailRecoveryCommandHandler();
     }
 
     function test_ExtractRecoveredAccountFromRecoveryCommand_Succeeds() public view {
@@ -19,9 +23,8 @@ contract EmailRecoveryCommandHandler_extractRecoveredAccountFromRecoveryCommand_
         commandParams[1] = abi.encode(emailRecoveryModuleAddress);
         commandParams[2] = abi.encode(recoveryDataHashString);
 
-        address extractedAccount = emailRecoveryHandler.extractRecoveredAccountFromRecoveryCommand(
-            commandParams, templateIdx
-        );
+        address extractedAccount = emailRecoveryCommandHandler
+            .extractRecoveredAccountFromRecoveryCommand(commandParams, templateIdx);
         assertEq(extractedAccount, accountAddress1);
     }
 }
