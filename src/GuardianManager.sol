@@ -252,4 +252,16 @@ abstract contract GuardianManager is IGuardianManager {
     function removeAllGuardians(address account) internal {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
     }
+
+    /**
+     * @notice Gets all guardians associated with an account
+     * @dev Return an array containing all the keys. O(n) where n <= 32
+     *
+     * WARNING: This operation will copy the entire storage to memory, which could
+     * be quite expensive.
+     * @param account The address of the account associated with the guardians
+     */
+    function getAllGuardians(address account) external returns (address[] memory) {
+        return guardiansStorage[account].keys();
+    }
 }
