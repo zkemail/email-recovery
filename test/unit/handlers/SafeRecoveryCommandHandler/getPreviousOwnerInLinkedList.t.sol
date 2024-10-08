@@ -2,12 +2,16 @@
 pragma solidity ^0.8.25;
 
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
+import { SafeRecoveryCommandHandlerHarness } from "../../SafeRecoveryCommandHandlerHarness.sol";
 
 contract SafeRecoveryCommandHandler_getPreviousOwnerInLinkedList_Test is SafeUnitBase {
     address internal constant SENTINEL_OWNERS = address(0x1);
 
+    SafeRecoveryCommandHandlerHarness public safeRecoveryCommandHandler;
+
     function setUp() public override {
         super.setUp();
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandlerHarness();
     }
 
     function test_GetPreviousOwnerInLinkedList_InvalidOwner_ReturnsSentinel() public {

@@ -4,60 +4,28 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
-import { SafeRecoveryCommandHandlerHarness } from "./SafeRecoveryCommandHandlerHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
-import { IntegrationBase } from "../integration/IntegrationBase.t.sol";
+import { BaseTest, CommandHandlerType } from "../Base.t.sol";
 
-abstract contract SafeUnitBase is IntegrationBase {
+abstract contract SafeUnitBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
 
     EmailRecoveryFactory public emailRecoveryFactory;
-    SafeRecoveryCommandHandlerHarness public safeRecoveryCommandHandler;
+    address public commandHandlerAddress;
     UniversalEmailRecoveryModule public emailRecoveryModule;
     address public emailRecoveryModuleAddress;
-
-    bytes4 public functionSelector;
-    bytes public recoveryData;
-    bytes32 public recoveryDataHash;
-    bytes public isInstalledContext;
-
-    /**
-     * Helper function to return if current account type is safe or not
-     */
-    function isAccountTypeSafe() public view returns (bool) {
-        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
-        if (Strings.equal(currentAccountType, "SAFE")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function skipIfNotSafeAccountType() public {
-        if (isAccountTypeSafe()) {
-            vm.skip(false);
-        } else {
-            vm.skip(true);
-        }
-    }
 
     function setUp() public virtual override {
         if (!isAccountTypeSafe()) {
             return;
         }
         super.setUp();
-
-        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
-        address previousOwnerInLinkedList = address(1);
-        bytes memory swapOwnerCalldata = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", previousOwnerInLinkedList, owner1, newOwner1
-        );
-        recoveryData = abi.encode(accountAddress1, swapOwnerCalldata);
-        recoveryDataHash = keccak256(recoveryData);
-        isInstalledContext = bytes("0");
 
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
@@ -87,17 +55,26 @@ abstract contract SafeUnitBase is IntegrationBase {
         return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function deployModule() public override {
-        // Deploy handler, manager and module
-        safeRecoveryCommandHandler = new SafeRecoveryCommandHandlerHarness();
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+    function deployModule(bytes memory handlerBytecode) public override {
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(safeRecoveryCommandHandler)
+            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
+
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress1
+            );
+        }
+    }
+
+    function setRecoveryData() public override {
+        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, address(1), owner1, newOwner1);
+        recoveryData = abi.encode(accountAddress1, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 }

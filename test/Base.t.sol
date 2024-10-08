@@ -17,6 +17,10 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 /* solhint-disable gas-custom-errors, custom-errors, reason-string, max-states-count */
 
@@ -30,6 +34,12 @@ interface IEmailRecoveryModule {
     function handleRecovery(EmailAuthMsg memory emailAuthMsg, uint256 templateIdx) external;
 
     function completeRecovery(address account, bytes memory completeCalldata) external;
+}
+
+enum CommandHandlerType {
+    EmailRecoveryCommandHandler,
+    AccountHidingRecoveryCommandHandler,
+    SafeRecoveryCommandHandler
 }
 
 abstract contract BaseTest is RhinestoneModuleKit, Test {
@@ -73,11 +83,17 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     uint256 public expiry;
     uint256 public threshold;
     uint256 public templateIdx;
+    bytes public isInstalledContext;
 
     string public selector = "12345";
     string public domainName = "gmail.com";
     bytes32 public publicKeyHash =
         0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+
+    bytes4 public functionSelector;
+    bytes public recoveryCalldata;
+    bytes public recoveryData;
+    bytes32 public recoveryDataHash;
 
     uint256 public nullifierCount;
 
@@ -134,7 +150,9 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         validator = new OwnableValidator();
         validatorAddress = address(validator);
 
-        deployModule();
+        bytes memory handlerBytecode = getHandlerBytecode();
+        setRecoveryData();
+        deployModule(handlerBytecode);
 
         // Compute guardian addresses
         guardians1 = new address[](3);
@@ -160,7 +178,83 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         expiry = 2 weeks;
         threshold = 3;
         templateIdx = 0;
+        isInstalledContext = bytes("0");
     }
+
+    /**
+     * Return if current account type is safe or not
+     */
+    function isAccountTypeSafe() public view returns (bool) {
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (Strings.equal(currentAccountType, "SAFE")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Skip the test if the account type is not safe
+     */
+    function skipIfNotSafeAccountType() public {
+        if (isAccountTypeSafe()) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
+    }
+
+    /**
+     * Returns the commmand handler type
+     */
+    function getCommandHandlerType() public view returns (CommandHandlerType) {
+        return CommandHandlerType(vm.envOr("COMMAND_HANDLER_TYPE", uint256(0)));
+    }
+
+    /**
+     * Return the command handler bytecode based on the command handler type
+     */
+    function getHandlerBytecode() public view returns (bytes memory) {
+        CommandHandlerType commandHandlerType = getCommandHandlerType();
+
+        if (commandHandlerType == CommandHandlerType.EmailRecoveryCommandHandler) {
+            return type(EmailRecoveryCommandHandler).creationCode;
+        }
+        if (commandHandlerType == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            return type(AccountHidingRecoveryCommandHandler).creationCode;
+        }
+        if (commandHandlerType == CommandHandlerType.SafeRecoveryCommandHandler) {
+            return type(SafeRecoveryCommandHandler).creationCode;
+        }
+
+        revert("Invalid command handler type");
+    }
+
+    /**
+     * Skip the test if command handler type is not the expected type
+     */
+    function skipIfNotCommandHandlerType(CommandHandlerType commandHandlerType) public {
+        if (getCommandHandlerType() == commandHandlerType) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
+    }
+
+    /**
+     * Skip the test if command handler type is the expected type
+     */
+    function skipIfCommandHandlerType(CommandHandlerType commandHandlerType) public {
+        if (getCommandHandlerType() == commandHandlerType) {
+            vm.skip(true);
+        } else {
+            vm.skip(false);
+        }
+    }
+
+    function setRecoveryData() public virtual;
+
+    function deployModule(bytes memory handlerBytecode) public virtual;
 
     function computeEmailAuthAddress(
         address account,
@@ -170,8 +264,6 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         view
         virtual
         returns (address);
-
-    function deployModule() public virtual;
 
     function generateMockEmailProof(
         string memory command,
@@ -250,8 +342,19 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         virtual
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = CommandUtils.addressToChecksumHexString(account);
-        string memory command = string.concat("Accept guardian request for ", accountString);
+        string memory command;
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(32);
+            command = string.concat("Accept guardian request for ", accountHashString);
+            commandParamsForAcceptance[0] = abi.encode(accountHashString);
+        } else {
+            string memory accountString = CommandUtils.addressToChecksumHexString(account);
+            command = string.concat("Accept guardian request for ", accountString);
+            commandParamsForAcceptance[0] = abi.encode(account);
+        }
+
         bytes32 nullifier = generateNewNullifier();
 
         bytes32 accountSalt;
@@ -262,9 +365,6 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         }
 
         EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
-
-        bytes[] memory commandParamsForAcceptance = new bytes[](1);
-        commandParamsForAcceptance[0] = abi.encode(account);
         return EmailAuthMsg({
             templateId: IEmailRecoveryModule(emailRecoveryModule).computeAcceptanceTemplateId(
                 templateIdx
@@ -278,13 +378,13 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     function handleRecovery(
         address account,
         address guardian,
-        bytes32 recoveryDataHash,
+        bytes32 _recoveryDataHash,
         address emailRecoveryModule
     )
         public
     {
         EmailAuthMsg memory emailAuthMsg =
-            getRecoveryEmailAuthMessage(account, guardian, recoveryDataHash, emailRecoveryModule);
+            getRecoveryEmailAuthMessage(account, guardian, _recoveryDataHash, emailRecoveryModule);
         IEmailRecoveryModule(emailRecoveryModule).handleRecovery(emailAuthMsg, templateIdx);
     }
 
@@ -292,14 +392,14 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     function handleRecoveryWithAccountSalt(
         address account,
         address guardian,
-        bytes32 recoveryDataHash,
+        bytes32 _recoveryDataHash,
         address emailRecoveryModule,
         bytes32 optionalAccountSalt
     )
         public
     {
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessageWithAccountSalt(
-            account, guardian, recoveryDataHash, emailRecoveryModule, optionalAccountSalt
+            account, guardian, _recoveryDataHash, emailRecoveryModule, optionalAccountSalt
         );
         IEmailRecoveryModule(emailRecoveryModule).handleRecovery(emailAuthMsg, templateIdx);
     }
@@ -307,14 +407,14 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     function getRecoveryEmailAuthMessage(
         address account,
         address guardian,
-        bytes32 recoveryDataHash,
+        bytes32 _recoveryDataHash,
         address emailRecoveryModule
     )
         public
         returns (EmailAuthMsg memory)
     {
         return getRecoveryEmailAuthMessageWithAccountSalt(
-            account, guardian, recoveryDataHash, emailRecoveryModule, bytes32(0)
+            account, guardian, _recoveryDataHash, emailRecoveryModule, bytes32(0)
         );
     }
 
@@ -322,19 +422,60 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     function getRecoveryEmailAuthMessageWithAccountSalt(
         address account,
         address guardian,
-        bytes32 recoveryDataHash,
+        bytes32 _recoveryDataHash,
         address emailRecoveryModule,
         bytes32 optionalAccountSalt
     )
         public
         returns (EmailAuthMsg memory)
     {
-        string memory accountString = CommandUtils.addressToChecksumHexString(account);
-        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory commandPart1 = string.concat("Recover account ", accountString);
-        string memory commandPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
+        string memory command;
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
 
-        string memory command = string.concat(commandPart1, commandPart2);
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(32);
+            string memory recoveryDataHashString = uint256(_recoveryDataHash).toHexString(32);
+            string memory commandPart1 = string.concat("Recover account ", accountHashString);
+            string memory commandPart2 =
+                string.concat(" using recovery hash ", recoveryDataHashString);
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(accountHashString);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
+        if (getCommandHandlerType() == CommandHandlerType.EmailRecoveryCommandHandler) {
+            string memory accountString = CommandUtils.addressToChecksumHexString(account);
+            string memory recoveryDataHashString = uint256(_recoveryDataHash).toHexString(32);
+            string memory commandPart1 = string.concat("Recover account ", accountString);
+            string memory commandPart2 =
+                string.concat(" using recovery hash ", recoveryDataHashString);
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(account);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
+        if (getCommandHandlerType() == CommandHandlerType.SafeRecoveryCommandHandler) {
+            string memory accountString = CommandUtils.addressToChecksumHexString(account);
+            string memory oldOwnerString = CommandUtils.addressToChecksumHexString(owner1);
+            string memory newOwnerString = CommandUtils.addressToChecksumHexString(newOwner1);
+            command = string.concat(
+                "Recover account ",
+                accountString,
+                " from old owner ",
+                oldOwnerString,
+                " to new owner ",
+                newOwnerString
+            );
+
+            commandParamsForRecovery = new bytes[](3);
+            commandParamsForRecovery[0] = abi.encode(accountAddress1);
+            commandParamsForRecovery[1] = abi.encode(owner1);
+            commandParamsForRecovery[2] = abi.encode(newOwner1);
+        }
+
         bytes32 nullifier = generateNewNullifier();
 
         bytes32 accountSalt;
@@ -345,11 +486,6 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         }
 
         EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
-
-        bytes[] memory commandParamsForRecovery = new bytes[](2);
-        commandParamsForRecovery[0] = abi.encode(account);
-        commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
-
         return EmailAuthMsg({
             templateId: IEmailRecoveryModule(emailRecoveryModule).computeRecoveryTemplateId(templateIdx),
             commandParams: commandParamsForRecovery,

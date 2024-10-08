@@ -13,10 +13,12 @@ contract SafeEmailRecoveryModule_configureSafeRecovery_Test is SafeNativeIntegra
     function test_ConfigureSafeRecovery_RevertWhen_ModuleNotInstalled() public {
         skipIfNotSafeAccountType();
 
-        vm.startPrank(safeAddress);
+        vm.startPrank(accountAddress1);
         safe.disableModule(address(1), address(emailRecoveryModule));
         vm.expectRevert(
-            abi.encodeWithSelector(SafeEmailRecoveryModule.ModuleNotInstalled.selector, safeAddress)
+            abi.encodeWithSelector(
+                SafeEmailRecoveryModule.ModuleNotInstalled.selector, accountAddress1
+            )
         );
         emailRecoveryModule.configureSafeRecovery(
             guardians1, guardianWeights, threshold, delay, expiry
