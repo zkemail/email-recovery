@@ -2,12 +2,16 @@
 pragma solidity ^0.8.25;
 
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_extractRecoveredAccountFromRecoveryCommand_Test is
     SafeUnitBase
 {
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
+
     function setUp() public override {
         super.setUp();
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
     }
 
     function test_ExtractRecoveredAccountFromRecoveryCommand_Succeeds() public {

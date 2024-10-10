@@ -3,56 +3,43 @@ pragma solidity ^0.8.25;
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { AccountHidingRecoveryCommandHandler } from
-    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeNativeIntegrationBase } from "./SafeNativeIntegrationBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
 
 contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase {
-    bytes public recoveryCalldata;
-    bytes public recoveryData;
-    bytes32 public recoveryDataHash;
-
     function setUp() public override {
         super.setUp();
-
-        newOwner1 = owner2;
-        recoveryCalldata = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", address(1), owner1, newOwner1
-        );
-        recoveryData = abi.encode(safeAddress, recoveryCalldata);
-        recoveryDataHash = keccak256(recoveryData);
     }
 
     function testIntegration_AccountRecovery() public {
         skipIfNotSafeAccountType();
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
 
         // Configure recovery
-        vm.startPrank(safeAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.configureSafeRecovery(
             guardians1, guardianWeights, threshold, delay, expiry
         );
         vm.stopPrank();
 
-        AccountHidingRecoveryCommandHandler(commandHandler).storeAccountHash(safeAddress);
-
         // Accept guardian
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
-            safeAddress, guardians1[0], emailRecoveryModuleAddress, accountSalt1
+            accountAddress1, guardians1[0], emailRecoveryModuleAddress, accountSalt1
         );
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage1 =
-            emailRecoveryModule.getGuardian(safeAddress, guardians1[0]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
         assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
         emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
-            safeAddress, guardians1[1], emailRecoveryModuleAddress, accountSalt2
+            accountAddress1, guardians1[1], emailRecoveryModuleAddress, accountSalt2
         );
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage2 =
-            emailRecoveryModule.getGuardian(safeAddress, guardians1[1]);
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
         assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
         assertEq(guardianStorage2.weight, uint256(2));
 
@@ -61,16 +48,18 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         // handle recovery request for guardian 1
         uint256 executeBefore = block.timestamp + expiry;
-        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[0]);
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, recoveryDataHash, guardians1[0]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         (
             uint256 _executeAfter,
             uint256 _executeBefore,
             uint256 currentWeight,
             bytes32 _recoveryDataHash
-        ) = emailRecoveryModule.getRecoveryRequest(safeAddress);
-        bool hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
-        bool hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         assertEq(_executeAfter, 0);
         assertEq(_executeBefore, executeBefore);
         assertEq(currentWeight, 1);
@@ -80,12 +69,12 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
-        emailAuthMsg = getRecoveryEmailAuthMessage(safeAddress, recoveryDataHash, guardians1[1]);
+        emailAuthMsg = getRecoveryEmailAuthMessage(accountAddress1, recoveryDataHash, guardians1[1]);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
         (_executeAfter, _executeBefore, currentWeight, _recoveryDataHash) =
-            emailRecoveryModule.getRecoveryRequest(safeAddress);
-        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
-        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         assertEq(_executeAfter, executeAfter);
         assertEq(_executeBefore, executeBefore);
         assertEq(currentWeight, 3);
@@ -96,12 +85,12 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
-        emailRecoveryModule.completeRecovery(safeAddress, recoveryData);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
         (_executeAfter, _executeBefore, currentWeight, _recoveryDataHash) =
-            emailRecoveryModule.getRecoveryRequest(safeAddress);
-        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[0]);
-        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(safeAddress, guardians1[1]);
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         assertEq(_executeAfter, 0);
         assertEq(_executeBefore, 0);
         assertEq(currentWeight, 0);
@@ -109,11 +98,11 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         assertEq(hasGuardian1Voted, false);
         assertEq(hasGuardian2Voted, false);
 
-        vm.prank(safeAddress);
-        bool isOwner = Safe(payable(safeAddress)).isOwner(newOwner1);
+        vm.prank(accountAddress1);
+        bool isOwner = Safe(payable(accountAddress1)).isOwner(newOwner1);
         assertTrue(isOwner);
 
-        bool oldOwnerIsOwner = Safe(payable(safeAddress)).isOwner(owner1);
+        bool oldOwnerIsOwner = Safe(payable(accountAddress1)).isOwner(owner1);
         assertFalse(oldOwnerIsOwner);
     }
 
@@ -121,19 +110,19 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         testIntegration_AccountRecovery();
 
         bool isModuleEnabled =
-            Safe(payable(safeAddress)).isModuleEnabled(emailRecoveryModuleAddress);
+            Safe(payable(accountAddress1)).isModuleEnabled(emailRecoveryModuleAddress);
         assertTrue(isModuleEnabled);
 
         // Uninstall module
-        vm.prank(safeAddress);
-        Safe(payable(safeAddress)).disableModule(address(1), emailRecoveryModuleAddress);
+        vm.prank(accountAddress1);
+        Safe(payable(accountAddress1)).disableModule(address(1), emailRecoveryModuleAddress);
         vm.stopPrank();
 
-        isModuleEnabled = Safe(payable(safeAddress)).isModuleEnabled(emailRecoveryModuleAddress);
+        isModuleEnabled = Safe(payable(accountAddress1)).isModuleEnabled(emailRecoveryModuleAddress);
         assertFalse(isModuleEnabled);
 
-        vm.prank(safeAddress);
-        emailRecoveryModule.resetWhenDisabled(safeAddress);
+        vm.prank(accountAddress1);
+        emailRecoveryModule.resetWhenDisabled(accountAddress1);
         vm.stopPrank();
     }
 }

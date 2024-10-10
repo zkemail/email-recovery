@@ -5,10 +5,13 @@ import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_parseRecoveryDataHash_Test is SafeUnitBase {
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
     bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();
+
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
 
         commandParams = new bytes[](3);
         commandParams[0] = abi.encode(accountAddress1);

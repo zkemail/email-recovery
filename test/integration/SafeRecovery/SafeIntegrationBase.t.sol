@@ -6,43 +6,27 @@ import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
-import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
-import { IntegrationBase } from "../IntegrationBase.t.sol";
+import { BaseTest, CommandHandlerType } from "../../Base.t.sol";
 
-abstract contract SafeIntegrationBase is IntegrationBase {
+abstract contract SafeIntegrationBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
     using Strings for address;
 
-    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
+    address public commandHandlerAddress;
     UniversalEmailRecoveryModule public emailRecoveryModule;
     address public emailRecoveryModuleAddress;
-
-    bytes public isInstalledContext;
-    bytes4 public functionSelector;
-
-    /**
-     * Helper function to return if current account type is safe or not
-     */
-    function isAccountTypeSafe() public view returns (bool) {
-        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
-        if (Strings.equal(currentAccountType, "SAFE")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     function setUp() public virtual override {
         if (!isAccountTypeSafe()) {
             return;
         }
         super.setUp();
-
-        isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
@@ -72,17 +56,20 @@ abstract contract SafeIntegrationBase is IntegrationBase {
         return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function deployModule() public override {
-        // Deploy handler, manager and module
-        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
+    function deployModule(bytes memory handlerBytecode) public override {
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(safeRecoveryCommandHandler)
+            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
+
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress1
+            );
+        }
     }
 
     function handleRecoveryForSafe(
@@ -135,5 +122,12 @@ abstract contract SafeIntegrationBase is IntegrationBase {
             skippedCommandPrefix: 0,
             proof: emailProof
         });
+    }
+
+    function setRecoveryData() public override {
+        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, address(1), owner1, newOwner1);
+        recoveryData = abi.encode(accountAddress1, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 }

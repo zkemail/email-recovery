@@ -4,9 +4,11 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
-import { BaseTest } from "test/Base.t.sol";
-import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { BaseTest, CommandHandlerType } from "test/Base.t.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { EmailRecoveryModuleHarness } from "../../EmailRecoveryModuleHarness.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 
@@ -16,15 +18,10 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
     using Strings for uint256;
 
     EmailRecoveryFactory public emailRecoveryFactory;
-    EmailRecoveryCommandHandler public emailRecoveryHandler;
+    address public commandHandlerAddress;
     EmailRecoveryModuleHarness public emailRecoveryModule;
 
     address public emailRecoveryModuleAddress;
-
-    bytes public isInstalledContext;
-    bytes4 public constant functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
-    bytes public recoveryData;
-    bytes32 public recoveryDataHash;
 
     function setUp() public virtual override {
         super.setUp();
@@ -32,11 +29,6 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
         // create owners
         address[] memory owners = new address[](1);
         owners[0] = owner1;
-
-        isInstalledContext = bytes("0");
-        bytes memory changeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner1);
-        recoveryData = abi.encode(validatorAddress, changeOwnerCalldata);
-        recoveryDataHash = keccak256(recoveryData);
 
         // Install modules
         instance1.installModule({
@@ -65,47 +57,31 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
         return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function deployModule() public override {
-        // Deploy handler and module
-        emailRecoveryHandler = new EmailRecoveryCommandHandler();
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+    function deployModule(bytes memory handlerBytecode) public override {
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new EmailRecoveryModuleHarness(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
             validatorAddress,
             functionSelector
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
+
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress1
+            );
+        }
     }
 
-    function acceptanceCommandTemplates() public pure returns (string[][] memory) {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](5);
-        templates[0][0] = "Accept";
-        templates[0][1] = "guardian";
-        templates[0][2] = "request";
-        templates[0][3] = "for";
-        templates[0][4] = "{ethAddr}";
-        return templates;
-    }
-
-    function recoveryCommandTemplates() public pure returns (string[][] memory) {
-        string[][] memory templates = new string[][](1);
-        templates[0] = new string[](11);
-        templates[0][0] = "Recover";
-        templates[0][1] = "account";
-        templates[0][2] = "{ethAddr}";
-        templates[0][3] = "via";
-        templates[0][4] = "recovery";
-        templates[0][5] = "module";
-        templates[0][6] = "{ethAddr}";
-        templates[0][7] = "using";
-        templates[0][8] = "recovery";
-        templates[0][9] = "hash";
-        templates[0][10] = "{string}";
-        return templates;
+    function setRecoveryData() public override {
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, newOwner1);
+        recoveryData = abi.encode(validatorAddress, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 }
