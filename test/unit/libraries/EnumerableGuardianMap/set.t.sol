@@ -20,6 +20,17 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         super.setUp();
     }
 
+    function test_Set_AddsAZeroKey() public {
+        guardiansStorage[accountAddress1].set({
+            key: address(0),
+            value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
+        });
+        require(
+            guardiansStorage[accountAddress1]._values[address(0)].status == GuardianStatus.REQUESTED,
+            "Expected status to be REQUESTED"
+        );
+    }
+
     function test_Set_AddsAKey() public {
         guardiansStorage[accountAddress1].set({
             key: guardians1[0],
