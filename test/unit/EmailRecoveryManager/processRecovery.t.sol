@@ -362,6 +362,10 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
+        vm.expectEmit();
+        emit IEmailRecoveryManager.RecoveryRequestStarted(
+            accountAddress1, guardians1[0], block.timestamp + expiry, recoveryDataHash
+        );
         emailRecoveryModule.exposed_processRecovery(
             guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -395,11 +399,18 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
         // Call processRecovery - increases currentWeight to 1 so not >= threshold yet
-        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+
+        vm.expectEmit();
+        emit IEmailRecoveryManager.GuardianVoted(
+            accountAddress1, guardians1[0], guardian1Weight, guardian1Weight
+        );
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
 
         // Call processRecovery with guardians2 which increases currentWeight to >= threshold
         vm.expectEmit();
-        emit IEmailRecoveryManager.RecoveryProcessed(
+        emit IEmailRecoveryManager.RecoveryRequestComplete(
             accountAddress1,
             guardians1[1],
             block.timestamp + delay,

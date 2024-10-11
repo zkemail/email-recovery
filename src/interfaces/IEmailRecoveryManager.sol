@@ -53,7 +53,19 @@ interface IEmailRecoveryManager {
     );
     event RecoveryConfigUpdated(address indexed account, uint256 delay, uint256 expiry);
     event GuardianAccepted(address indexed account, address indexed guardian);
-    event RecoveryProcessed(
+    event RecoveryRequestStarted(
+        address indexed account,
+        address indexed guardian,
+        uint256 executeBefore,
+        bytes32 recoveryDataHash
+    );
+    event GuardianVoted(
+        address indexed account,
+        address indexed guardian,
+        uint256 currentWeight,
+        uint256 guardianWeight
+    );
+    event RecoveryRequestComplete(
         address indexed account,
         address indexed guardian,
         uint256 executeAfter,
