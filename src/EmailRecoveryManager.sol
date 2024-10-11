@@ -432,6 +432,7 @@ abstract contract EmailRecoveryManager is
             previousRecoveryRequests[account].previousGuardianInitiated = guardian;
             uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
             recoveryRequest.executeBefore = executeBefore;
+            emit RecoveryRequestStarted(account, guardian, executeBefore, recoveryDataHash);
         }
 
         if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
@@ -440,11 +441,12 @@ abstract contract EmailRecoveryManager is
 
         recoveryRequest.currentWeight += guardianStorage.weight;
         recoveryRequest.guardianVoted.add(guardian);
+        emit GuardianVoted(account, guardian, recoveryRequest.currentWeight, guardianStorage.weight);
         if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
             uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
             recoveryRequest.executeAfter = executeAfter;
 
-            emit RecoveryProcessed(
+            emit RecoveryRequestComplete(
                 account, guardian, executeAfter, recoveryRequest.executeBefore, recoveryDataHash
             );
         }
