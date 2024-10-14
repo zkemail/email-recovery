@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { CommandHandlerType } from "test/Base.t.sol";
 
 contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
     function setUp() public override {

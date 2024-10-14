@@ -8,7 +8,6 @@ import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { CommandHandlerType } from "test/Base.t.sol";
 
 contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
