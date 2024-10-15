@@ -1,19 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
+    using ModuleKitHelpers for *;
+
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdIsZero() public {
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        bool canStartRecoveryRequest =
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
+
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
+
+        // Threshold is zero
+        assertFalse(canStartRecoveryRequest);
+        assertFalse(
+            guardianConfig.threshold > 0
+                && guardianConfig.acceptedWeight >= guardianConfig.threshold
+        );
     }
 
     function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public view {
         bool canStartRecoveryRequest =
             emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
             emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =
@@ -33,7 +52,6 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
         bool canStartRecoveryRequest =
             emailRecoveryModule.canStartRecoveryRequest(accountAddress1, invalidValidatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
             emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains = emailRecoveryModule.workaround_validatorsContains(
@@ -46,7 +64,7 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
         assertFalse(contains);
     }
 
-    function test_CanStartRecoveryRequest_ReturnsTrue_WhenThresholdIsHigherThanWeightAndValidatorAdded(
+    function test_CanStartRecoveryRequest_ReturnsTrue_WhenWeightIsHigherThanThresholdAndValidatorAdded(
     )
         public
     {
@@ -57,7 +75,6 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
         bool canStartRecoveryRequest =
             emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
             emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =
@@ -79,7 +96,6 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
         bool canStartRecoveryRequest =
             emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
             emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =

@@ -9,7 +9,7 @@ import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
+import { SafeEmailRecoveryModuleHarness } from "test/unit/SafeEmailRecoveryModuleHarness.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { BaseTest, CommandHandlerType } from "../../Base.t.sol";
@@ -20,7 +20,7 @@ abstract contract SafeNativeIntegrationBase is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    SafeEmailRecoveryModule public emailRecoveryModule;
+    SafeEmailRecoveryModuleHarness public emailRecoveryModule;
     address public emailRecoveryModuleAddress;
     Safe public safeSingleton;
     Safe public safe;
@@ -76,7 +76,7 @@ abstract contract SafeNativeIntegrationBase is BaseTest {
         bytes32 commandHandlerSalt = bytes32(uint256(0));
         commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
-        emailRecoveryModule = new SafeEmailRecoveryModule(
+        emailRecoveryModule = new SafeEmailRecoveryModuleHarness(
             address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);

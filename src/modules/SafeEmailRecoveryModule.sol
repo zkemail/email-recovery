@@ -68,7 +68,8 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     function canStartRecoveryRequest(address account) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.acceptedWeight >= guardianConfig.threshold;
+        return guardianConfig.threshold > 0
+            && guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /**
