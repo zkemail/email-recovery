@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
-import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
+import { SafeNativeIntegrationBase } from
+    "../../../integration/SafeRecovery/SafeNativeIntegrationBase.t.sol";
 
-contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModuleBase {
-    using ModuleKitHelpers for *;
-
+contract SafeEmailRecoveryModule_canStartRecoveryRequest_Test is SafeNativeIntegrationBase {
     function setUp() public override {
         super.setUp();
     }
 
     function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdIsZero() public {
-        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        skipIfNotSafeAccountType();
+
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
         IGuardianManager.GuardianConfig memory guardianConfig =
@@ -28,7 +27,14 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
         );
     }
 
-    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public view {
+    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public {
+        skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.configureSafeRecovery(
+            guardians1, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
         IGuardianManager.GuardianConfig memory guardianConfig =
@@ -43,9 +49,25 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
     }
 
     function test_CanStartRecoveryRequest_ReturnsTrue_WhenWeightIsHigherThanThreshold() public {
-        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
-        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
-        acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
+        skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.configureSafeRecovery(
+            guardians1, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            accountAddress1, guardians1[0], emailRecoveryModuleAddress, accountSalt1
+        );
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            accountAddress1, guardians1[1], emailRecoveryModuleAddress, accountSalt2
+        );
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            accountAddress1, guardians1[2], emailRecoveryModuleAddress, accountSalt3
+        );
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
 
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
@@ -60,8 +82,21 @@ contract EmailRecoveryModule_canStartRecoveryRequest_Test is EmailRecoveryModule
     }
 
     function test_CanStartRecoveryRequest_ReturnsTrue_WhenThresholdIsEqualToWeight() public {
-        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
-        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+        skipIfNotSafeAccountType();
+        vm.startPrank(accountAddress1);
+        emailRecoveryModule.configureSafeRecovery(
+            guardians1, guardianWeights, threshold, delay, expiry
+        );
+        vm.stopPrank();
+
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            accountAddress1, guardians1[0], emailRecoveryModuleAddress, accountSalt1
+        );
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
+        emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            accountAddress1, guardians1[1], emailRecoveryModuleAddress, accountSalt2
+        );
+        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
 
         bool canStartRecoveryRequest = emailRecoveryModule.canStartRecoveryRequest(accountAddress1);
 
