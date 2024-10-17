@@ -2,13 +2,15 @@
 pragma solidity ^0.8.25;
 
 import { UnitBase } from "../UnitBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
 
 contract EmailRecoveryManager_acceptanceCommandTemplates_Test is UnitBase {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_AcceptanceCommandTemplates_Succeeds() public view {
+    function test_AcceptanceCommandTemplates_Succeeds() public {
+        skipIfNotCommandHandlerType(CommandHandlerType.EmailRecoveryCommandHandler);
         string[][] memory templates = emailRecoveryModule.acceptanceCommandTemplates();
 
         assertEq(templates.length, 1);
