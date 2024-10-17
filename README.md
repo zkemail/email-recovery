@@ -264,3 +264,30 @@ While the command handler for `EmailRecoveryUniversalFactory` will be more stabl
 ## Threat model
 
 Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. Additionally, the current 7579 spec allows accounts to forcefully uninstall modules in the case of a malicious module, this means an attacker could forcefully uninstall a recovery module anyway. This is expected to be addressed in the future. This contract is designed to recover modular accounts in the case of a lost device/authentication method (private key), but does not provide adequate security for a scenario in which a malicious actor has control of the lost device/authentication method (private key).
+
+## How to Solve Errors
+
+### If You Get Only '0x' as a Return Value
+
+This usually means you're trying to call a contract or function that doesn't exist. Check if:
+
+1. The contract address is correct and deployed
+2. The function you're calling is defined correctly
+
+You can verify contracts on block explorers or use cast commands to test contract calls. See these links for help:
+
+https://book.getfoundry.sh/reference/cast/cast-call
+https://book.getfoundry.sh/reference/cast/cast-send
+
+For ZKSync, deploy libraries first and add their addresses to your Foundry or Hardhat settings. Make sure these addresses are correct.
+
+### If You Get an Error Message as Bytes
+
+The first 4 bytes are the function selector. The rest is the encoded error message.
+
+Check this test file for a list of function selectors:
+test/unit/assertErrorSelectors.t.sol
+
+### Command Template Mismatch
+
+We have three different command handlers. Each has its own expected commands for accept and recovery actions. If you get a command-related error, check which command handler you're using. You can do this with block explorers or cast commands.
