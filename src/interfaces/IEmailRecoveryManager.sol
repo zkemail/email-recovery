@@ -85,6 +85,7 @@ interface IEmailRecoveryManager {
     error InvalidEmailAuthImpl();
     error InvalidCommandHandler();
     error InvalidFactory();
+    error InvalidProxyBytecodeHash();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
     error DelayMoreThanExpiry(uint256 delay, uint256 expiry);
