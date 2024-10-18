@@ -34,9 +34,9 @@ contract EmailRecoveryCommandHandler_parseRecoveryDataHash_Test is UnitBase {
     function test_ParseRecoveryDataHash_Succeeds() public view {
         bytes32 expectedRecoveryDataHash = keccak256(recoveryData);
 
-        bytes32 recoveryDataHash =
+        bytes32 _recoveryDataHash =
             emailRecoveryHandler.parseRecoveryDataHash(templateIdx, commandParams);
 
-        assertEq(recoveryDataHash, expectedRecoveryDataHash);
+        assertEq(_recoveryDataHash, expectedRecoveryDataHash);
     }
 }

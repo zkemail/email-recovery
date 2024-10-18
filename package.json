@@ -1,6 +1,6 @@
 {
   "name": "@zk-email/email-recovery",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "description": "Smart account module and related contracts to enable email recovery for validators",
   "license": "MIT",
   "author": {
@@ -16,7 +16,10 @@
     "gas:snapshot:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge snapshot --mp \"./test/integration/**/*.sol\"",
     "lint": "forge fmt --check && pnpm solhint \"{script,src,test}/**/*.sol\"",
     "prepack": "pnpm install",
-    "test": "forge test",
+    "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
+    "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
+    "test": "forge test --match-path \"test/**/*.sol\"",
+    "test:script": "forge test --match-path script/test/**/*.sol --threads 1",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
@@ -25,8 +28,7 @@
     "@openzeppelin/contracts-upgradeable": "5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
     "@zk-email/contracts": "6.0.3",
-    "@zk-email/ether-email-auth-contracts": "0.0.2-preview",
-    "email-wallet-sdk": "github:zkemail/email-wallet-sdk",
+    "@zk-email/ether-email-auth-contracts": "0.1.1-preview",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },

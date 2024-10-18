@@ -53,12 +53,15 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
         assertEq(IEmailRecoveryManager.InvalidCommandHandler.selector, bytes4(0xfce1ed6f));
         assertEq(IEmailRecoveryManager.InvalidFactory.selector, bytes4(0x7a44db95));
+        assertEq(IEmailRecoveryManager.InvalidProxyBytecodeHash.selector, bytes4(0xa65b3f53));
         assertEq(IEmailRecoveryManager.SetupAlreadyCalled.selector, bytes4(0xb3af5593));
         assertEq(IEmailRecoveryManager.AccountNotConfigured.selector, bytes4(0x66ecbd6d));
         assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0xb742a43c));
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x50799cce));
         assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x7c3e983c));
         assertEq(IEmailRecoveryManager.InvalidGuardianStatus.selector, bytes4(0x5689b51a));
+        assertEq(IEmailRecoveryManager.GuardianAlreadyVoted.selector, bytes4(0xe11487a7));
+        assertEq(IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, bytes4(0x8035b5fd));
         assertEq(IEmailRecoveryManager.InvalidAccountAddress.selector, bytes4(0x401b6ade));
         assertEq(IEmailRecoveryManager.NoRecoveryConfigured.selector, bytes4(0xa66e66b6));
         assertEq(IEmailRecoveryManager.NotEnoughApprovals.selector, bytes4(0x443282f5));

@@ -253,7 +253,8 @@ contract UniversalEmailRecoveryModule is
     {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.acceptedWeight >= guardianConfig.threshold
+        return guardianConfig.threshold > 0
+            && guardianConfig.acceptedWeight >= guardianConfig.threshold
             && validators[account].contains(validator);
     }
 

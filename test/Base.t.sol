@@ -289,7 +289,6 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     }
 
     // WithAccountSalt variation - used for creating incorrect recovery setups
-    // FIXME: not used???
     function handleRecoveryWithAccountSalt(
         address account,
         address guardian,

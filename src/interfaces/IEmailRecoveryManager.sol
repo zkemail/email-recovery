@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IEmailRecoveryManager {
@@ -22,6 +23,13 @@ interface IEmailRecoveryManager {
             // request
     }
 
+    struct PreviousRecoveryRequest {
+        address previousGuardianInitiated; // the address of the guardian who initiated the previous
+            // recovery request. Used to prevent a malicious guardian threatening the liveness of
+            // the recovery attempt
+        uint256 cancelRecoveryCooldown;
+    }
+
     /**
      * A struct representing the values required for a recovery request
      * The request state should be maintained over a single recovery attempts unless
@@ -32,7 +40,8 @@ interface IEmailRecoveryManager {
         uint256 executeBefore; // the timestamp from which the recovery request becomes invalid
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
         bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
-            // recovery attempt.
+            // recovery attempt
+        EnumerableSet.AddressSet guardianVoted;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -44,7 +53,19 @@ interface IEmailRecoveryManager {
     );
     event RecoveryConfigUpdated(address indexed account, uint256 delay, uint256 expiry);
     event GuardianAccepted(address indexed account, address indexed guardian);
-    event RecoveryProcessed(
+    event RecoveryRequestStarted(
+        address indexed account,
+        address indexed guardian,
+        uint256 executeBefore,
+        bytes32 recoveryDataHash
+    );
+    event GuardianVoted(
+        address indexed account,
+        address indexed guardian,
+        uint256 currentWeight,
+        uint256 guardianWeight
+    );
+    event RecoveryRequestComplete(
         address indexed account,
         address indexed guardian,
         uint256 executeAfter,
@@ -64,6 +85,7 @@ interface IEmailRecoveryManager {
     error InvalidEmailAuthImpl();
     error InvalidCommandHandler();
     error InvalidFactory();
+    error InvalidProxyBytecodeHash();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
     error DelayMoreThanExpiry(uint256 delay, uint256 expiry);
@@ -72,6 +94,8 @@ interface IEmailRecoveryManager {
     error InvalidGuardianStatus(
         GuardianStatus guardianStatus, GuardianStatus expectedGuardianStatus
     );
+    error GuardianAlreadyVoted();
+    error GuardianMustWaitForCooldown(address guardian);
     error InvalidAccountAddress();
     error NoRecoveryConfigured();
     error NotEnoughApprovals(uint256 currentWeight, uint256 threshold);
@@ -88,7 +112,15 @@ interface IEmailRecoveryManager {
 
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 
-    function getRecoveryRequest(address account) external view returns (RecoveryRequest memory);
+    function getRecoveryRequest(address account)
+        external
+        view
+        returns (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        );
 
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 

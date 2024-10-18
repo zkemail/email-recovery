@@ -53,4 +53,6 @@ interface IGuardianManager {
     function removeGuardian(address guardian) external;
 
     function changeThreshold(uint256 threshold) external;
+
+    function getAllGuardians(address account) external returns (address[] memory);
 }
