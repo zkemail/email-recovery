@@ -578,7 +578,7 @@ abstract contract EmailRecoveryManager is
      */
     function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {
         delete recoveryConfigs[account];
-        delete recoveryRequests[account];
+        clearRecoveryRequest(account);
         delete previousRecoveryRequests[account];
 
         removeAllGuardians(account);
