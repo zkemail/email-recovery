@@ -19,14 +19,19 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
         address _dkimRegistry,
         address _emailAuthImpl,
         address _commandHandler,
-        address _factoryAddr
+        address _factoryAddr,
+        bytes32 _proxyBytecodeHash
     )
         EmailRecoveryManager(_verifier, _dkimRegistry, _emailAuthImpl, _commandHandler)
     {
         if (_factoryAddr == address(0)) {
             revert InvalidFactory();
         }
+        if (_proxyBytecodeHash == bytes32(0)) {
+            revert InvalidProxyBytecodeHash();
+        }
         factoryAddr = _factoryAddr;
+        proxyBytecodeHash = _proxyBytecodeHash;
     }
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
