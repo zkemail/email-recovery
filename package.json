@@ -28,7 +28,7 @@
     "@openzeppelin/contracts-upgradeable": "5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
     "@zk-email/contracts": "6.0.3",
-    "@zk-email/ether-email-auth-contracts": "https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09",
+    "@zk-email/ether-email-auth-contracts": "0.1.1-preview",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
