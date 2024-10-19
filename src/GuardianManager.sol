@@ -209,7 +209,6 @@ abstract contract GuardianManager is IGuardianManager {
             revert ThresholdExceedsTotalWeight(threshold, guardianConfigs[msg.sender].totalWeight);
         }
 
-        // Guardian weight should be at least 1
         if (threshold == 0) {
             revert ThresholdCannotBeZero();
         }

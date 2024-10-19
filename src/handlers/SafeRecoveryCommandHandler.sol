@@ -82,6 +82,7 @@ contract SafeRecoveryCommandHandler is IEmailRecoveryCommandHandler {
      * recovery email.
      * @param commandParams The command parameters of the recovery email.
      * @param {templateIdx} Unused parameter. The index of the template used for the recovery
+     * request
      */
     function extractRecoveredAccountFromRecoveryCommand(
         bytes[] calldata commandParams,

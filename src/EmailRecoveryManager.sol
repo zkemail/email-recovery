@@ -16,15 +16,15 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
  * guardian contracts and handling email verification.
  *
  * This contract defines an implementation for email-based recovery. It is designed to
- * provide the core logic for email based account recovery that can be used across different modular
- * account implementations.
+ * provide the core logic for email-based account recovery that can be used across different
+ * account implementations. The core logic is agnostic to the account implementation and could be
+ * implemented as part of a smart account module, or on a smart account itself.
  *
- * EmailRecoveryManager relies on a dedicated recovery module to execute a recovery attempt. This
- * (EmailRecoveryManager) contract defines "what a valid recovery attempt is for an account", and
- * the recovery module defines "how that recovery attempt is executed on the account". A
- * specific email command handler is also accociated with a recovery manager. A command handler
- * defines and validates the recovery email commands. Developers can write their own command
- * handlers to make specifc commands for recovering modules
+ * EmailRecoveryManager defines "what a valid recovery attempt is for an account", and leaves
+ * defining "how that recovery attempt is executed on the account" to contracts implementing
+ * EmailRecoveryManager. A specific email command handler is also accociated with a recovery
+ * manager. A command handler defines and validates the recovery email commands. Developers can
+ * write their own command handlers to make specifc commands
  */
 abstract contract EmailRecoveryManager is
     EmailAccountRecovery,
@@ -109,6 +109,7 @@ abstract contract EmailRecoveryManager is
 
     /**
      * @notice Retrieves the recovery request details for a given account
+     * @dev Does not return guardianVoted as that is part of a nested mapping
      * @param account The address of the account for which the recovery request details are being
      * retrieved
      * @return executeAfter The timestamp from which the recovery request can be executed
@@ -139,7 +140,7 @@ abstract contract EmailRecoveryManager is
      * @notice Retrieves the previous recovery request details for a given account
      * @dev the previous recovery request is stored as this helps prevent guardians threatening the
      * liveness of recovery attempts by submitting malicious recovery hashes before honest guardians
-     * correct submit theirs. See `processRecovery` and `cancelExpiredRecovery` for more details
+     * correctly submit theirs. See `processRecovery` and `cancelExpiredRecovery` for more details
      * @param account The address of the account for which the previous recovery request details are
      * being retrieved
      * @return PreviousRecoveryRequest The previous recovery request for the specified account
@@ -348,7 +349,7 @@ abstract contract EmailRecoveryManager is
         }
 
         // This check ensures GuardianStatus is correct and also implicitly that the
-        // account in email is a valid account
+        // account in the email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.REQUESTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
@@ -368,7 +369,7 @@ abstract contract EmailRecoveryManager is
      * @notice Processes a recovery request for a given account. This is the third core function
      * that must be called during the end-to-end recovery flow
      * @dev Called once per guardian until the threshold is reached
-     * @param guardian The address of the guardian initiating the recovery
+     * @param guardian The address of the guardian initiating/voting on the recovery request
      * @param templateIdx The index of the template used for the recovery request
      * @param commandParams An array of bytes containing the command parameters
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
@@ -399,7 +400,7 @@ abstract contract EmailRecoveryManager is
         }
 
         // This check ensures GuardianStatus is correct and also implicitly that the
-        // account in email is a valid account
+        // account in the email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
         if (guardianStorage.status != GuardianStatus.ACCEPTED) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
@@ -416,7 +417,8 @@ abstract contract EmailRecoveryManager is
         // A malicious guardian can submit an invalid recovery hash that the
         // other guardians do not agree with, and also re-submit the same invalid hash once
         // the expired recovery attempt has been cancelled, thereby threatening the
-        // liveness of the recovery attempt.
+        // liveness of the recovery attempt. Adding a cooldown period in this scenario gives other
+        // guardians time to react before the malicious guardian adds another recovery hash
         uint256 guardianCount = guardianConfigs[account].guardianCount;
         bool cooldownNotExpired =
             previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
@@ -427,6 +429,7 @@ abstract contract EmailRecoveryManager is
             revert GuardianMustWaitForCooldown(guardian);
         }
 
+        // If recoveryDataHash is 0, this is the first guardian and the request is initialized
         if (recoveryRequest.recoveryDataHash == bytes32(0)) {
             recoveryRequest.recoveryDataHash = recoveryDataHash;
             previousRecoveryRequests[account].previousGuardianInitiated = guardian;
@@ -461,14 +464,14 @@ abstract contract EmailRecoveryManager is
      * core function that must be called during the end-to-end recovery flow. Can be called by
      * anyone.
      * @dev Validates the recovery request by checking the total weight, that the delay has passed,
-     * and the request has not expired. Triggers the recovery module to perform the recovery. This
-     * function deletes the recovery request but recovery config state is maintained so future
-     * recovery requests can be made without having to reconfigure everything
+     * and the request has not expired. Calls the virtual `recover()` function which triggers
+     * recovery. This function deletes the recovery request but recovery config state is maintained
+     * so future recovery requests can be made without having to reconfigure everything
      * @param account The address of the account for which the recovery is being completed
      * @param recoveryData The data that is passed to recover the validator or account.
      * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
-     * possible to design a recovery module using this manager without encoding the validator or
-     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * possible to design an account/module using this manager without encoding the validator or
+     * account, depending on how the `handler.parseRecoveryDataHash()` and `recover()` functions
      * are implemented
      */
     function completeRecovery(address account, bytes calldata recoveryData) external override {
@@ -507,16 +510,16 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Called during completeRecovery to finalize recovery. Contains recovery module
-     * implementation-specific logic to recover an account/module
+     * @notice Called during completeRecovery to finalize recovery. Contains implementation-specific
+     * logic to recover an account
      * @dev this is the only function that must be implemented by consuming contracts to use the
      * email recovery manager. This does not encompass other important logic such as module
-     * installation, that logic is specific to each module and must be implemeted separately
+     * installation, that logic is specific to each implementation and must be implemeted separately
      * @param account The address of the account for which the recovery is being completed
      * @param recoveryData The data that is passed to recover the validator or account.
      * recoveryData = abi.encode(validatorOrAccount, recoveryFunctionCalldata). Although, it is
-     * possible to design a recovery module using this manager without encoding the validator or
-     * account, depending on how the handler.parseRecoveryDataHash() and module.recover() functions
+     * possible to design an account/module using this manager without encoding the validator or
+     * account, depending on how the `handler.parseRecoveryDataHash()` and `recover()` functions
      * are implemented
      */
     function recover(address account, bytes calldata recoveryData) internal virtual;
@@ -560,8 +563,9 @@ abstract contract EmailRecoveryManager is
 
     /**
      * @notice Removes all state related to msg.sender.
-     * @dev In order to prevent unexpected behaviour when reinstalling account modules, the module
-     * should be deinitialized. This should include removing state accociated with an account.
+     * @dev A feature specifically important for smart account modules - in order to prevent
+     * unexpected behaviour when reinstalling account modules, the contract state should be
+     * deinitialized. This should include removing state accociated with an account.
      */
     function deInitRecoveryModule() internal onlyWhenNotRecovering {
         address account = msg.sender;
@@ -571,9 +575,9 @@ abstract contract EmailRecoveryManager is
     /**
      * @notice Removes all state related to an account.
      * @dev Although this function is internal, it should be used carefully as it can be called by
-     * anyone. In order to prevent unexpected behaviour when reinstalling account modules, the
-     * module should be deinitialized. This should include removing state accociated with an
-     * account
+     * anyone. A feature specifically important for smart account modules - in order to prevent
+     * unexpected behaviour when reinstalling account modules, the contract state should be
+     * deinitialized. This should include removing state accociated with an account
      * @param account The address of the account for which recovery is being deinitialized
      */
     function deInitRecoveryModule(address account) internal onlyWhenNotRecovering {

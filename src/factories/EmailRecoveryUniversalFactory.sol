@@ -5,7 +5,7 @@ import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { UniversalEmailRecoveryModule } from "../modules/UniversalEmailRecoveryModule.sol";
 
 /**
- * @title EmailRecoveryFactory
+ * @title EmailRecoveryUniversalFactory
  * @notice This contract facilitates the deployment of universal email recovery modules and their
  * associated command handlers.
  * Create2 is leveraged to ensure deterministic addresses, which assists with module

@@ -65,8 +65,9 @@ contract UniversalEmailRecoveryModule is
         allowedSelectors;
 
     /**
-     * @notice Modifier to check whether the selector is safe. Reverts if the selector is for
-     * "onInstall" or "onUninstall"
+     * @notice Modifier to check whether the selector is safe
+     * @dev Reverts if the selector is for "onInstall" or "onUninstall", or if the selector is not
+     * on a whitelist if the validator is equal to msg.sender
      */
     modifier withoutUnsafeSelector(address validator, bytes4 selector) {
         if (validator == msg.sender) {
@@ -112,7 +113,7 @@ contract UniversalEmailRecoveryModule is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * Initializes the module with the threshold and guardians
+     * @notice Initializes the module with the threshold, guardians and other configuration
      * @dev You cannot install this module during account deployment as it breaks the 4337
      * validation rules. ERC7579 does not mandate that executors abide by the validation rules
      * during account setup - if required, install this module after the account has been setup. The
@@ -212,7 +213,7 @@ contract UniversalEmailRecoveryModule is
     }
 
     /**
-     * Handles the uninstallation of the module and clears the recovery configuration
+     * @notice Handles the uninstallation of the module and clears the recovery configuration
      * @param {data} Unused parameter.
      */
     function onUninstall(bytes calldata /* data */ ) external {
@@ -229,19 +230,19 @@ contract UniversalEmailRecoveryModule is
     }
 
     /**
-     * Check if the module is initialized
+     * @notice Check if the module is initialized
      * @param account The smart account to check
-     * @return true if the module is initialized, false otherwise
+     * @return bool True if the module is initialized, false otherwise
      */
     function isInitialized(address account) public view returns (bool) {
         return getGuardianConfig(account).threshold != 0;
     }
 
     /**
-     * Check if a recovery request can be initiated based on guardian acceptance
+     * @notice Check if a recovery request can be initiated based on guardian acceptance
      * @param account The smart account to check
      * @param validator The validator to check
-     * @return true if the recovery request can be started, false otherwise
+     * @return bool True if the recovery request can be started, false otherwise
      */
     function canStartRecoveryRequest(
         address account,
@@ -328,25 +329,25 @@ contract UniversalEmailRecoveryModule is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * Returns the name of the module
-     * @return name of the module
+     * @notice Returns the name of the module
+     * @return string name of the module
      */
     function name() external pure returns (string memory) {
         return "ZKEmail.UniversalEmailRecoveryModule";
     }
 
     /**
-     * Returns the version of the module
-     * @return version of the module
+     * @notice Returns the version of the module
+     * @return string version of the module
      */
     function version() external pure returns (string memory) {
         return "1.0.0";
     }
 
     /**
-     * Returns the type of the module
+     * @notice Returns the type of the module
      * @param typeID type of the module
-     * @return true if the type is a module type, false otherwise
+     * @return bool true if the type is a module type, false otherwise
      */
     function isModuleType(uint256 typeID) external pure returns (bool) {
         return typeID == TYPE_EXECUTOR;

@@ -15,24 +15,34 @@ interface IEmailRecoveryManager {
      */
     struct RecoveryConfig {
         uint256 delay; // the time from when the threshold for a recovery request has passed (when
-            // the attempt is successful), until the recovery request can be executed
-        uint256 expiry; // the time from when recovery is started until the recovery request becomes
-            // invalid. The recovery expiry encourages the timely execution of successful recovery
-            // attempts, and reduces the risk of unauthorized access through stale or outdated
-            // requests. After the recovery expiry has passed, anyone can cancel the recovery
-            // request
+            // the attempt is successful), until the recovery request can be executed. The delay can
+            // be used to give the account owner time to react in case a malicious recovery
+            // attempt is started by a guardian
+        uint256 expiry; // the time from when a recovery request is started until the recovery
+            // request becomes invalid. The recovery expiry encourages the timely execution of
+            // successful recovery attempts, and reduces the risk of unauthorized access through
+            // stale or outdated requests. After the recovery expiry has passed, anyone can cancel
+            // the recovery request
     }
 
     struct PreviousRecoveryRequest {
         address previousGuardianInitiated; // the address of the guardian who initiated the previous
             // recovery request. Used to prevent a malicious guardian threatening the liveness of
-            // the recovery attempt
-        uint256 cancelRecoveryCooldown;
+            // the recovery attempt. For example, a guardian could initiate a recovery request with
+            // a recovery data hash for calldata that recovers the account to their own
+            // private key. Recording the previous guardian to initiate the request can be used
+            // in combination with a cooldown to stop the guardian blocking recovery with an
+            // invalid hash which is replaced by another invalid recovery hash after the request
+            // is cancelled
+        uint256 cancelRecoveryCooldown; // Used in conjunction with previousGuardianInitiated to
+            // stop a guardian blocking subsequent recovery requests with an invalid hash each time.
+            // Other guardians can react in time before the cooldown expires to start a valid
+            // recovery request with a valid hash
     }
 
     /**
-     * A struct representing the values required for a recovery request
-     * The request state should be maintained over a single recovery attempts unless
+     * A struct representing the values required for a recovery request.
+     * The request state should be maintained over a single recovery attempt unless
      * explicitly modified. It should be deleted after a recovery attempt has been processed
      */
     struct RecoveryRequest {
@@ -41,7 +51,8 @@ interface IEmailRecoveryManager {
         uint256 currentWeight; // total weight of all guardian approvals for the recovery request
         bytes32 recoveryDataHash; // the keccak256 hash of the recovery data used to execute the
             // recovery attempt
-        EnumerableSet.AddressSet guardianVoted;
+        EnumerableSet.AddressSet guardianVoted; // the set of guardians who have voted for the
+            // recovery request. Must be looped through manually to delete each value
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
