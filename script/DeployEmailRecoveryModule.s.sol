@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console, gas-custom-errors */
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
-import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -26,8 +29,10 @@ contract DeployEmailRecoveryModuleScript is Script {
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
+            Groth16Verifier groth16Verifier = new Groth16Verifier();
             ERC1967Proxy verifierProxy = new ERC1967Proxy(
-                address(verifierImpl), abi.encodeCall(verifierImpl.initialize, (initialOwner))
+                address(verifierImpl),
+                abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
             verifier = address(Verifier(address(verifierProxy)));
             vm.setEnv("VERIFIER", vm.toString(address(verifier)));
@@ -58,8 +63,6 @@ contract DeployEmailRecoveryModuleScript is Script {
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
 
-        EmailRecoverySubjectHandler emailRecoveryHandler = new EmailRecoverySubjectHandler();
-
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));
@@ -67,17 +70,17 @@ contract DeployEmailRecoveryModuleScript is Script {
         }
         {
             EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-            (address module, address subjectHandler) = factory.deployEmailRecoveryModule(
+            (address module, address commandHandler) = factory.deployEmailRecoveryModule(
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
-                type(EmailRecoverySubjectHandler).creationCode,
+                type(EmailRecoveryCommandHandler).creationCode,
                 dkimRegistry,
                 validatorAddr,
                 bytes4(keccak256(bytes("changeOwner(address)")))
             );
 
             console.log("Deployed Email Recovery Module at", vm.toString(module));
-            console.log("Deployed Email Recovery Handler at", vm.toString(subjectHandler));
+            console.log("Deployed Email Recovery Handler at", vm.toString(commandHandler));
             vm.stopBroadcast();
         }
     }

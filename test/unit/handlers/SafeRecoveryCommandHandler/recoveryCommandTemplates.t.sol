@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
 
-contract SafeRecoverySubjectHandler_recoverySubjectTemplates_Test is SafeUnitBase {
+contract SafeRecoveryCommandHandler_recoveryCommandTemplates_Test is SafeUnitBase {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_RecoverySubjectTemplates_Succeeds() public {
+    function test_RecoveryCommandTemplates_Succeeds() public {
         skipIfNotSafeAccountType();
-        string[][] memory templates = safeRecoverySubjectHandler.recoverySubjectTemplates();
+        string[][] memory templates = safeRecoveryCommandHandler.recoveryCommandTemplates();
 
         assertEq(templates.length, 1);
         assertEq(templates[0].length, 11);

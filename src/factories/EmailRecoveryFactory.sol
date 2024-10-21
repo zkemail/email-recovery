@@ -7,7 +7,7 @@ import { EmailRecoveryModule } from "../modules/EmailRecoveryModule.sol";
 /**
  * @title EmailRecoveryFactory
  * @notice This contract facilitates the deployment of email recovery modules and their associated
- * subject handlers.
+ * command handlers.
  * Create2 is leveraged to ensure deterministic addresses, which assists with module
  * attestations
  */
@@ -24,7 +24,7 @@ contract EmailRecoveryFactory {
 
     event EmailRecoveryModuleDeployed(
         address emailRecoveryModule,
-        address subjectHandler,
+        address commandHandler,
         address validator,
         bytes4 functionSelector
     );
@@ -44,28 +44,28 @@ contract EmailRecoveryFactory {
     }
 
     /**
-     * @notice Deploys an email recovery module along with its subject handler
-     * @dev The subject handler bytecode cannot be determined ahead of time, unlike the recovery
+     * @notice Deploys an email recovery module along with its command handler
+     * @dev The command handler bytecode cannot be determined ahead of time, unlike the recovery
      * module, which is why it is passed in directly. In practice, this means a
-     * developer will write their own subject handler, and then pass the bytecode into this factory
+     * developer will write their own command handler, and then pass the bytecode into this factory
      * function.
      *
      * This deployment function deploys an `EmailRecoveryModule`, which takes a target validator and
      * target function selector
-     * @param subjectHandlerSalt Salt for the subject handler deployment
+     * @param commandHandlerSalt Salt for the command handler deployment
      * @param recoveryModuleSalt Salt for the recovery module deployment
-     * @param subjectHandlerBytecode Bytecode of the subject handler contract
+     * @param commandHandlerBytecode Bytecode of the command handler contract
      * @param dkimRegistry Address of the DKIM registry
      * @param validator Address of the validator to be recovered
      * @param functionSelector Function selector for the recovery function to be called on the
      * target validator
      * @return emailRecoveryModule The deployed email recovery module
-     * @return subjectHandler The deployed subject handler
+     * @return commandHandler The deployed command handler
      */
     function deployEmailRecoveryModule(
-        bytes32 subjectHandlerSalt,
+        bytes32 commandHandlerSalt,
         bytes32 recoveryModuleSalt,
-        bytes calldata subjectHandlerBytecode,
+        bytes calldata commandHandlerBytecode,
         address dkimRegistry,
         address validator,
         bytes4 functionSelector
@@ -73,20 +73,20 @@ contract EmailRecoveryFactory {
         external
         returns (address, address)
     {
-        // Deploy subject handler
-        address subjectHandler = Create2.deploy(0, subjectHandlerSalt, subjectHandlerBytecode);
+        // Deploy command handler
+        address commandHandler = Create2.deploy(0, commandHandlerSalt, commandHandlerBytecode);
 
         // Deploy recovery module
         address emailRecoveryModule = address(
             new EmailRecoveryModule{ salt: recoveryModuleSalt }(
-                verifier, dkimRegistry, emailAuthImpl, subjectHandler, validator, functionSelector
+                verifier, dkimRegistry, emailAuthImpl, commandHandler, validator, functionSelector
             )
         );
 
         emit EmailRecoveryModuleDeployed(
-            emailRecoveryModule, subjectHandler, validator, functionSelector
+            emailRecoveryModule, commandHandler, validator, functionSelector
         );
 
-        return (emailRecoveryModule, subjectHandler);
+        return (emailRecoveryModule, commandHandler);
     }
 }

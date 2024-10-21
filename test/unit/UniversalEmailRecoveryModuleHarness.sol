@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
@@ -13,9 +12,9 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler
+        address commandHandler
     )
-        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler)
     { }
 
     function exposed_configureRecovery(
@@ -33,23 +32,23 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     function exposed_acceptGuardian(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
+        acceptGuardian(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_processRecovery(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        processRecovery(guardian, templateIdx, subjectParams, nullifier);
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {
@@ -100,6 +99,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address validator
     )
         external
+        view
         returns (bool)
     {
         return validators[account].contains(validator);

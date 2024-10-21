@@ -30,9 +30,9 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler
+        address commandHandler
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler)
     { }
 
     /**

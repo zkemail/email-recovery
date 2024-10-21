@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console, gas-custom-errors */
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
-import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
+    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 import { Safe7579 } from "safe7579/Safe7579.sol";
 import { Safe7579Launchpad } from "safe7579/Safe7579Launchpad.sol";
@@ -29,14 +31,17 @@ contract DeploySafeRecovery_Script is Script {
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-
+    
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        uint salt = vm.envOr("CREATE2_SALT", uint(0));
 
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
+            Groth16Verifier groth16Verifier = new Groth16Verifier();
             ERC1967Proxy verifierProxy = new ERC1967Proxy(
-                address(verifierImpl), abi.encodeCall(verifierImpl.initialize, (initialOwner))
+                address(verifierImpl),
+                abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
             verifier = address(Verifier(address(verifierProxy)));
             vm.setEnv("VERIFIER", vm.toString(address(verifier)));
@@ -64,19 +69,19 @@ contract DeploySafeRecovery_Script is Script {
 
         EmailRecoveryUniversalFactory factory =
             new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
-        (address module, address subjectHandler) = factory.deployUniversalEmailRecoveryModule(
-            bytes32(uint256(0)),
-            bytes32(uint256(0)),
-            type(SafeRecoverySubjectHandler).creationCode,
+        (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
+            bytes32(salt),
+            bytes32(salt),
+            type(SafeRecoveryCommandHandler).creationCode,
             dkimRegistry
         );
 
-        address safe7579 = address(new Safe7579{ salt: bytes32(uint256(0)) }());
+        address safe7579 = address(new Safe7579{ salt: bytes32(salt) }());
         address safe7579Launchpad =
-            address(new Safe7579Launchpad{ salt: bytes32(uint256(0)) }(entryPoint, registry));
+            address(new Safe7579Launchpad{ salt: bytes32(salt) }(entryPoint, registry));
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
-        console.log("Deployed Email Recovery Handler at ", vm.toString(subjectHandler));
+        console.log("Deployed Email Recovery Handler at ", vm.toString(commandHandler));
         console.log("Deployed Safe 7579 at              ", vm.toString(safe7579));
         console.log("Deployed Safe 7579 Launchpad at    ", vm.toString(safe7579Launchpad));
 

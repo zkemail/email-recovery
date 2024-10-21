@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
@@ -15,13 +14,13 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(delay, expiry);
 
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
-        handleRecovery(recoveryDataHash, accountSalt2);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
+        handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(IGuardianManager.RecoveryInProcess.selector);
         emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
@@ -42,7 +41,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(invalidDelay, expiry);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.DelayMoreThanExpiry.selector, invalidDelay, expiry
@@ -58,7 +57,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
@@ -74,7 +73,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEmailRecoveryManager.RecoveryWindowTooShort.selector, newExpiry - newDelay
@@ -92,10 +91,10 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
+        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress1);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
@@ -107,14 +106,14 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(newDelay, newExpiry);
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryConfigUpdated(
-            accountAddress, recoveryConfig.delay, recoveryConfig.expiry
+            accountAddress1, recoveryConfig.delay, recoveryConfig.expiry
         );
         emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress);
+        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress1);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, newExpiry);
     }
