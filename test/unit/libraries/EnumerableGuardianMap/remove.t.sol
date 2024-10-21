@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import {
     EnumerableGuardianMap,
     GuardianStorage,
     GuardianStatus
 } from "../../../../src/libraries/EnumerableGuardianMap.sol";
+
+/* solhint-disable gas-custom-errors */
 
 contract EnumerableGuardianMap_remove_Test is UnitBase {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
@@ -22,14 +23,14 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
     function test_Remove_RemovesAddedKeys() public {
         bool result;
 
-        guardiansStorage[accountAddress].set({
-            key: guardian1,
+        guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
-        result = guardiansStorage[accountAddress].remove(guardian1);
+        result = guardiansStorage[accountAddress1].remove(guardians1[0]);
         assertEq(result, true);
         require(
-            guardiansStorage[accountAddress]._values[guardian1].status == GuardianStatus.NONE,
+            guardiansStorage[accountAddress1]._values[guardians1[0]].status == GuardianStatus.NONE,
             "Expected status to be NONE"
         );
     }
@@ -37,7 +38,7 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
     function test_Remove_ReturnsFalseWhenRemovingKeysNotInTheSet() public {
         bool result;
 
-        result = guardiansStorage[accountAddress].remove(guardian1);
+        result = guardiansStorage[accountAddress1].remove(guardians1[0]);
         assertEq(result, false);
     }
 
@@ -46,86 +47,88 @@ contract EnumerableGuardianMap_remove_Test is UnitBase {
 
         // []
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian1,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
-        result = guardiansStorage[accountAddress].set({
-            key: guardian3,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[2],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
 
         // [1, 3]
 
-        result = guardiansStorage[accountAddress].remove(guardian1);
+        result = guardiansStorage[accountAddress1].remove(guardians1[0]);
         assertEq(result, true);
-        result = guardiansStorage[accountAddress].remove(guardian2);
+        result = guardiansStorage[accountAddress1].remove(guardians1[1]);
         assertEq(result, false);
 
         // [3]
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian2,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[1],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
 
         // [3,2]
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian1,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
-        result = guardiansStorage[accountAddress].remove(guardian3);
+        result = guardiansStorage[accountAddress1].remove(guardians1[2]);
         assertEq(result, true);
 
         // [1,2]
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian1,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, false);
-        result = guardiansStorage[accountAddress].set({
-            key: guardian2,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[1],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, false);
 
         // [1,2]
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian3,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[2],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
-        result = guardiansStorage[accountAddress].remove(guardian1);
+        result = guardiansStorage[accountAddress1].remove(guardians1[0]);
         assertEq(result, true);
 
         // [2,3]
 
-        result = guardiansStorage[accountAddress].set({
-            key: guardian1,
+        result = guardiansStorage[accountAddress1].set({
+            key: guardians1[0],
             value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[0])
         });
         assertEq(result, true);
-        result = guardiansStorage[accountAddress].remove(guardian2);
+        result = guardiansStorage[accountAddress1].remove(guardians1[1]);
         assertEq(result, true);
 
         // [1,3]
         require(
-            guardiansStorage[accountAddress]._values[guardian1].status == GuardianStatus.REQUESTED,
+            guardiansStorage[accountAddress1]._values[guardians1[0]].status
+                == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
         require(
-            guardiansStorage[accountAddress]._values[guardian2].status == GuardianStatus.NONE,
+            guardiansStorage[accountAddress1]._values[guardians1[1]].status == GuardianStatus.NONE,
             "Expected status to be NONE"
         );
         require(
-            guardiansStorage[accountAddress]._values[guardian3].status == GuardianStatus.REQUESTED,
+            guardiansStorage[accountAddress1]._values[guardians1[2]].status
+                == GuardianStatus.REQUESTED,
             "Expected status to be REQUESTED"
         );
     }

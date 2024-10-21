@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
-import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
@@ -24,7 +17,7 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
     function testIntegration_AccountRecovery() public {
         skipIfNotSafeAccountType();
 
-        address newOwner = owner2;
+        address newOwner1 = owner2;
         // Configure recovery
         vm.startPrank(safeAddress);
         emailRecoveryModule.configureSafeRecovery(
@@ -33,17 +26,17 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         vm.stopPrank();
 
         bytes memory recoveryCalldata = abi.encodeWithSignature(
-            "swapOwner(address,address,address)", address(1), owner, newOwner
+            "swapOwner(address,address,address)", address(1), owner1, newOwner1
         );
         bytes memory recoveryData = abi.encode(safeAddress, recoveryCalldata);
         bytes32 recoveryDataHash = keccak256(recoveryData);
 
-        bytes32 accountHash = keccak256(abi.encodePacked(safeAddress));
-
         AccountHidingRecoveryCommandHandler(commandHandler).storeAccountHash(safeAddress);
 
         // Accept guardian
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[0]);
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            safeAddress, guardians1[0], emailRecoveryModuleAddress, accountSalt1
+        );
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage1 =
             emailRecoveryModule.getGuardian(safeAddress, guardians1[0]);
@@ -51,7 +44,9 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         assertEq(guardianStorage1.weight, uint256(1));
 
         // Accept guardian
-        emailAuthMsg = getAcceptanceEmailAuthMessage(safeAddress, guardians1[1]);
+        emailAuthMsg = getAcceptanceEmailAuthMessageWithAccountSalt(
+            safeAddress, guardians1[1], emailRecoveryModuleAddress, accountSalt2
+        );
         emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
         GuardianStorage memory guardianStorage2 =
             emailRecoveryModule.getGuardian(safeAddress, guardians1[1]);
@@ -94,10 +89,10 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
 
         vm.prank(safeAddress);
-        bool isOwner = Safe(payable(safeAddress)).isOwner(newOwner);
+        bool isOwner = Safe(payable(safeAddress)).isOwner(newOwner1);
         assertTrue(isOwner);
 
-        bool oldOwnerIsOwner = Safe(payable(safeAddress)).isOwner(owner);
+        bool oldOwnerIsOwner = Safe(payable(safeAddress)).isOwner(owner1);
         assertFalse(oldOwnerIsOwner);
     }
 
@@ -109,7 +104,7 @@ contract SafeRecoveryNativeModule_Integration_Test is SafeNativeIntegrationBase 
         assertTrue(isModuleEnabled);
 
         // Uninstall module
-        // instance1.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
+        // instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         vm.prank(safeAddress);
         Safe(payable(safeAddress)).disableModule(address(1), emailRecoveryModuleAddress);
         vm.stopPrank();

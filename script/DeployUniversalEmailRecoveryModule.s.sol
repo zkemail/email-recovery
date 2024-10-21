@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console, gas-custom-errors */
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -53,8 +55,6 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
             emailAuthImpl = address(new EmailAuth());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
-
-        EmailRecoveryCommandHandler emailRecoveryHandler = new EmailRecoveryCommandHandler();
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {

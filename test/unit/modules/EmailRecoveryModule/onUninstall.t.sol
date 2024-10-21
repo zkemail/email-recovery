@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { SentinelListHelper } from "sentinellist/SentinelListHelper.sol";
@@ -16,14 +15,12 @@ contract EmailRecoveryModule_onUninstall_Test is EmailRecoveryModuleBase {
     }
 
     function test_OnUninstall_Succeeds() public {
-        vm.prank(accountAddress);
-        instance.uninstallModule(MODULE_TYPE_EXECUTOR, recoveryModuleAddress, "");
-        vm.stopPrank();
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress);
+        bool isInitialized = emailRecoveryModule.isInitialized(accountAddress1);
         assertFalse(isInitialized);
 
-        bool isActivated = emailRecoveryModule.isActivated(accountAddress);
+        bool isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
 }

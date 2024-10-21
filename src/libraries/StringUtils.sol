@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import { strings } from "solidity-stringutils/src/strings.sol";
 
+/* solhint-disable gas-custom-errors */
+
 // Extracted from https://github.com/zkemail/email-wallet-sdk/blob/main/src/helpers/StringUtils.sol
 library StringUtils {
     using strings for *;
