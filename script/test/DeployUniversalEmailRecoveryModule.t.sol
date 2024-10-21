@@ -42,7 +42,7 @@ contract DeployUniversalEmailRecoveryModule_TestFail is BaseDeployTest {
     function testFail_run_no_dkim_registry_no_signer() public {
         BaseDeployTest.setUp();
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
-        vm.setEnv("SIGNER", vm.toString(address(0)));
+        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(address(0)));
         DeployUniversalEmailRecoveryModuleScript target =
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();

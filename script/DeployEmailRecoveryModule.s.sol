@@ -10,6 +10,9 @@ import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifie
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { ForwardDKIMRegistry } from
+    "@zk-email/ether-email-auth-contracts/src/utils/ForwardDKIMRegistry.sol";
+import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -19,12 +22,13 @@ contract DeployEmailRecoveryModuleScript is Script {
     function run() public {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
-        address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
-        address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         address validatorAddr = vm.envOr("VALIDATOR", address(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+
+        ForwardDKIMRegistry dkim;
 
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
@@ -39,18 +43,31 @@ contract DeployEmailRecoveryModuleScript is Script {
             console.log("Deployed Verifier at", verifier);
         }
 
-        if (dkimRegistry == address(0)) {
+        // Deploy Useroverridable and Forward DKIM registries
+        dkim = ForwardDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
+        uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
+        if (address(dkim) == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
-                address(dkimImpl),
-                abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
+            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            console.log(
+                "UserOverrideableDKIMRegistry implementation deployed at: %s",
+                address(overrideableDkimImpl)
             );
-            dkimRegistry = address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-            vm.setEnv("ECDSA_DKIM", vm.toString(address(dkimRegistry)));
-            console.log("Deployed DKIM Registry at", dkimRegistry);
+            ForwardDKIMRegistry forwardDkimImpl = new ForwardDKIMRegistry();
+            ERC1967Proxy forwardDkimProxy = new ERC1967Proxy(
+                address(forwardDkimImpl),
+                abi.encodeCall(
+                    forwardDkimImpl.initializeWithUserOverrideableDKIMRegistry,
+                    (initialOwner, address(overrideableDkimImpl), dkimRegistrySigner, setTimeDelay)
+                )
+            );
+            dkim = ForwardDKIMRegistry(address(forwardDkimProxy));
+            vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkim)));
+            console.log(
+                "UseroverrideableDKIMRegistry proxy deployed at: %s",
+                address(dkim.sourceDKIMRegistry())
+            );
+            console.log("ForwardDKIMRegistry deployed at: %s", address(dkim));
         }
 
         if (emailAuthImpl == address(0)) {
@@ -74,7 +91,7 @@ contract DeployEmailRecoveryModuleScript is Script {
                 bytes32(uint256(0)),
                 bytes32(uint256(0)),
                 type(EmailRecoveryCommandHandler).creationCode,
-                dkimRegistry,
+                address(dkim),
                 validatorAddr,
                 bytes4(keccak256(bytes("changeOwner(address)")))
             );
