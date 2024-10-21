@@ -4,9 +4,9 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     using ModuleKitHelpers for *;
@@ -20,6 +20,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         if (!isAccountTypeSafe()) {
             vm.skip(true);
         }
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
 
         bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", address(1), owner1, newOwner1

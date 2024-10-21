@@ -5,7 +5,9 @@ import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
+import { IEmailRecoveryCommandHandler } from "src/interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
@@ -20,10 +22,26 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     function setUp() public override {
         super.setUp();
 
-        recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        commandParams = new bytes[](2);
-        commandParams[0] = abi.encode(accountAddress1);
-        commandParams[1] = abi.encode(recoveryDataHashString);
+        if (getCommandHandlerType() == CommandHandlerType.EmailRecoveryCommandHandler) {
+            recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+            commandParams = new bytes[](2);
+            commandParams[0] = abi.encode(accountAddress1);
+            commandParams[1] = abi.encode(recoveryDataHashString);
+        }
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+            commandParams = new bytes[](2);
+            commandParams[0] =
+                abi.encode(uint256(keccak256(abi.encodePacked(accountAddress1))).toHexString(32));
+            commandParams[1] = abi.encode(recoveryDataHashString);
+        }
+        if (getCommandHandlerType() == CommandHandlerType.SafeRecoveryCommandHandler) {
+            commandParams = new bytes[](3);
+            commandParams[0] = abi.encode(accountAddress1);
+            commandParams[1] = abi.encode(owner1);
+            commandParams[2] = abi.encode(newOwner1);
+        }
+
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
@@ -124,10 +142,6 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     }
 
     function test_ProcessRecovery_RevertWhen_InvalidRecoveryDataHash() public {
-        bytes32 invalidRecoveryDataHash = keccak256(abi.encode("invalid hash"));
-        string memory invalidRecoveryDataHashString =
-            uint256(invalidRecoveryDataHash).toHexString(32);
-
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
@@ -135,7 +149,18 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             guardians1[0], templateIdx, commandParams, nullifier
         );
 
-        commandParams[1] = abi.encode(invalidRecoveryDataHashString);
+        bytes32 invalidRecoveryDataHash;
+        if (getCommandHandlerType() == CommandHandlerType.SafeRecoveryCommandHandler) {
+            address invalidOwner = address(1);
+            commandParams[2] = abi.encode(invalidOwner);
+            invalidRecoveryDataHash = IEmailRecoveryCommandHandler(commandHandlerAddress)
+                .parseRecoveryDataHash(templateIdx, commandParams);
+        } else {
+            invalidRecoveryDataHash = keccak256(abi.encode("invalid hash"));
+            string memory invalidRecoveryDataHashString =
+                uint256(invalidRecoveryDataHash).toHexString(32);
+            commandParams[1] = abi.encode(invalidRecoveryDataHashString);
+        }
 
         vm.expectRevert(
             abi.encodeWithSelector(

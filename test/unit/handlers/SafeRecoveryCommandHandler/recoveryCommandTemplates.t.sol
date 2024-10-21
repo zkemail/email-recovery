@@ -2,14 +2,20 @@
 pragma solidity ^0.8.25;
 
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
+import { CommandHandlerType } from "../../../Base.t.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_recoveryCommandTemplates_Test is SafeUnitBase {
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
+
     function setUp() public override {
         super.setUp();
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
     }
 
     function test_RecoveryCommandTemplates_Succeeds() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         string[][] memory templates = safeRecoveryCommandHandler.recoveryCommandTemplates();
 
         assertEq(templates.length, 1);

@@ -4,25 +4,24 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { IntegrationBase } from "../../IntegrationBase.t.sol";
+import { BaseTest, CommandHandlerType } from "../../../Base.t.sol";
 
-abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is IntegrationBase {
+abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
     using Strings for uint256;
     using Strings for address;
 
     EmailRecoveryFactory public emailRecoveryFactory;
-    EmailRecoveryCommandHandler public emailRecoveryHandler;
+    address public commandHandlerAddress;
     EmailRecoveryModule public emailRecoveryModule;
 
     address public emailRecoveryModuleAddress;
 
-    bytes public isInstalledContext;
-    bytes4 public constant functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
     bytes public recoveryData1;
     bytes public recoveryData2;
     bytes public recoveryData3;
@@ -32,8 +31,6 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
 
     function setUp() public virtual override {
         super.setUp();
-
-        isInstalledContext = bytes("0");
 
         bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(functionSelector, newOwner1);
         bytes memory changeOwnerCalldata2 = abi.encodeWithSelector(functionSelector, newOwner2);
@@ -103,23 +100,39 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is Integrati
         return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function deployModule() public override {
-        // Deploy handler, manager and module
+    function deployModule(bytes memory handlerBytecode) public override {
         emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
-        emailRecoveryHandler = new EmailRecoveryCommandHandler();
 
-        // Deploy EmailRecoveryManager & EmailRecoveryModule
         bytes32 commandHandlerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
-        bytes memory commandHandlerBytecode = type(EmailRecoveryCommandHandler).creationCode;
-        (emailRecoveryModuleAddress,) = emailRecoveryFactory.deployEmailRecoveryModule(
+        (emailRecoveryModuleAddress, commandHandlerAddress) = emailRecoveryFactory
+            .deployEmailRecoveryModule(
             commandHandlerSalt,
             recoveryModuleSalt,
-            commandHandlerBytecode,
+            handlerBytecode,
             address(dkimRegistry),
             validatorAddress,
             functionSelector
         );
         emailRecoveryModule = EmailRecoveryModule(emailRecoveryModuleAddress);
+
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress1
+            );
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress2
+            );
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress3
+            );
+        }
+    }
+
+    function setRecoveryData() public override {
+        functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, newOwner1);
+        recoveryData = abi.encode(validatorAddress, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 }

@@ -2,16 +2,20 @@
 pragma solidity ^0.8.25;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
+import { CommandHandlerType } from "../../../Base.t.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase {
     using Strings for uint256;
 
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
     bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();
+
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
 
         commandParams = new bytes[](3);
         commandParams[0] = abi.encode(accountAddress1);
@@ -21,6 +25,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateRecoveryCommand_RevertWhen_InvalidTemplateIndex() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         uint256 invalidTemplateIdx = 1;
 
         vm.expectRevert(
@@ -33,6 +38,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateAcceptanceCommand_RevertWhen_NoCommandParams() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         bytes[] memory emptyCommandParams;
 
         vm.expectRevert(
@@ -47,6 +53,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateAcceptanceCommand_RevertWhen_TooManyCommandParams() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         bytes[] memory longCommandParams = new bytes[](4);
         longCommandParams[0] = commandParams[0];
         longCommandParams[1] = commandParams[1];
@@ -65,6 +72,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateRecoveryCommand_RevertWhen_InvalidOldOwner() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         commandParams[1] = abi.encode(address(0));
 
         vm.expectRevert(
@@ -75,6 +83,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateRecoveryCommand_RevertWhen_ZeroNewOwner() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         commandParams[2] = abi.encode(address(0));
 
         vm.expectRevert(
@@ -85,6 +94,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateRecoveryCommand_RevertWhen_InvalidNewOwner() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         commandParams[2] = abi.encode(owner1);
 
         vm.expectRevert(
@@ -95,6 +105,7 @@ contract SafeRecoveryCommandHandler_validateRecoveryCommand_Test is SafeUnitBase
 
     function test_ValidateRecoveryCommand_Succeeds() public {
         skipIfNotSafeAccountType();
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
         address accountFromEmail =
             safeRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
         assertEq(accountFromEmail, accountAddress1);

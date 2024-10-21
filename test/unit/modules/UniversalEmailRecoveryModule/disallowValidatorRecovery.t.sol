@@ -109,6 +109,11 @@ contract UniversalEmailRecoveryModule_disallowValidatorRecovery_Test is UnitBase
     }
 
     function test_DisallowValidatorRecovery_SucceedsWhenValidatorUninstalled() public {
+        // skip if recovering a 7579 safe as the 7579 safe is the validator
+        if (isAccountTypeSafe()) {
+            vm.skip(true);
+        }
+
         instance1.uninstallModule(MODULE_TYPE_VALIDATOR, validatorAddress, "");
 
         address[] memory allowedValidators =

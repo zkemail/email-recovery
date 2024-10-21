@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { SafeUnitBase } from "../../SafeUnitBase.t.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract SafeRecoveryCommandHandler_validateAcceptanceCommand_Test is SafeUnitBase {
+    SafeRecoveryCommandHandler public safeRecoveryCommandHandler;
+
     function setUp() public override {
         super.setUp();
+        safeRecoveryCommandHandler = new SafeRecoveryCommandHandler();
     }
 
     function test_ValidateAcceptanceCommand_RevertWhen_InvalidTemplateIndex() public {

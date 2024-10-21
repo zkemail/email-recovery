@@ -8,5 +8,9 @@ contract UniversalEmailRecoveryModule_name_Test is UnitBase {
         super.setUp();
     }
 
-    function test_Name_ReturnsName() public view { }
+    function test_Name_ReturnsName() public {
+        string memory expectedName = "ZKEmail.UniversalEmailRecoveryModule";
+        string memory actualName = emailRecoveryModule.name();
+        assertEq(actualName, expectedName, "Module name should match expected value");
+    }
 }
