@@ -127,7 +127,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         zkEmailDeployer = vm.addr(1);
 
         vm.startPrank(zkEmailDeployer);
-        uint256 setTimeDelay = 7 days;
+        uint256 setTimeDelay = 0;
         UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
             address(overrideableDkimImpl),
