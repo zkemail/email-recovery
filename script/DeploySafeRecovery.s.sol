@@ -11,8 +11,6 @@ import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifie
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { ForwardDKIMRegistry } from
-    "@zk-email/ether-email-auth-contracts/src/utils/ForwardDKIMRegistry.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
@@ -37,7 +35,7 @@ contract DeploySafeRecovery_Script is Script {
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
 
-        ForwardDKIMRegistry dkim;
+        UserOverrideableDKIMRegistry dkim;
 
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
@@ -52,8 +50,8 @@ contract DeploySafeRecovery_Script is Script {
             console.log("Deployed Verifier at", verifier);
         }
 
-        // Deploy Useroverridable and Forward DKIM registries
-        dkim = ForwardDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
+        // Deploy Useroverridable DKIM registry
+        dkim = UserOverrideableDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
         uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
         if (address(dkim) == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
@@ -62,21 +60,16 @@ contract DeploySafeRecovery_Script is Script {
                 "UserOverrideableDKIMRegistry implementation deployed at: %s",
                 address(overrideableDkimImpl)
             );
-            ForwardDKIMRegistry forwardDkimImpl = new ForwardDKIMRegistry();
-            ERC1967Proxy forwardDkimProxy = new ERC1967Proxy(
-                address(forwardDkimImpl),
+            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+                address(overrideableDkimImpl),
                 abi.encodeCall(
-                    forwardDkimImpl.initializeWithUserOverrideableDKIMRegistry,
-                    (initialOwner, address(overrideableDkimImpl), dkimRegistrySigner, setTimeDelay)
+                    overrideableDkimImpl.initialize,
+                    (initialOwner, dkimRegistrySigner, setTimeDelay)
                 )
             );
-            dkim = ForwardDKIMRegistry(address(forwardDkimProxy));
+            dkim = UserOverrideableDKIMRegistry(address(dkimProxy));
             vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkim)));
-            console.log(
-                "UseroverrideableDKIMRegistry proxy deployed at: %s",
-                address(dkim.sourceDKIMRegistry())
-            );
-            console.log("ForwardDKIMRegistry deployed at: %s", address(dkim));
+            console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", address(dkim));
         }
 
         if (emailAuthImpl == address(0)) {

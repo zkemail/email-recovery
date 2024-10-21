@@ -11,8 +11,6 @@ import {
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { ForwardDKIMRegistry } from
-    "@zk-email/ether-email-auth-contracts/src/utils/ForwardDKIMRegistry.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
@@ -50,7 +48,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
 
     // ZK Email contracts and variables
     address public zkEmailDeployer;
-    ForwardDKIMRegistry public dkimRegistry;
+    UserOverrideableDKIMRegistry public dkimRegistry;
     MockGroth16Verifier public verifier;
     EmailAuth public emailAuthImpl;
 
@@ -131,22 +129,15 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         vm.startPrank(zkEmailDeployer);
         uint256 setTimeDelay = 7 days;
         UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
-        ForwardDKIMRegistry forwardDkimImpl = new ForwardDKIMRegistry();
-        ERC1967Proxy forwardDkimProxy = new ERC1967Proxy(
-            address(forwardDkimImpl),
+        ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            address(overrideableDkimImpl),
             abi.encodeCall(
-                forwardDkimImpl.initializeWithUserOverrideableDKIMRegistry,
-                (zkEmailDeployer, address(overrideableDkimImpl), zkEmailDeployer, setTimeDelay)
+                overrideableDkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer, setTimeDelay)
             )
         );
-        dkimRegistry = ForwardDKIMRegistry(address(forwardDkimProxy));
+        dkimRegistry = UserOverrideableDKIMRegistry(address(dkimProxy));
 
-        ForwardDKIMRegistry forwardDkim = ForwardDKIMRegistry(address(forwardDkimProxy));
-        UserOverrideableDKIMRegistry overrideableDkim =
-            UserOverrideableDKIMRegistry(address(forwardDkim.sourceDKIMRegistry()));
-        overrideableDkim.setDKIMPublicKeyHash(
-            domainName, publicKeyHash, zkEmailDeployer, new bytes(0)
-        );
+        dkimRegistry.setDKIMPublicKeyHash(domainName, publicKeyHash, zkEmailDeployer, new bytes(0));
 
         verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();
