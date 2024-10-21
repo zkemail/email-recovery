@@ -24,12 +24,17 @@ contract DeploySafeNativeRecovery_Script is Script {
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+
+        uint salt = vm.envOr("CREATE2_SALT", uint(0));
+
+        console.log("salt %s", salt);
         console.log("verifier %s", verifier);
+
         if (verifier == address(0)) {
-            Verifier verifierImpl = new Verifier();
+            Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-            Groth16Verifier groth16Verifier = new Groth16Verifier();
-            ERC1967Proxy verifierProxy = new ERC1967Proxy(
+            Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
+            ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(verifierImpl),
                 abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
@@ -41,9 +46,9 @@ contract DeploySafeNativeRecovery_Script is Script {
         if (dkimRegistry == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
 
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
+            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry{ salt: bytes32(salt) }();
             console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(dkimImpl),
                 abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
             );
@@ -53,17 +58,17 @@ contract DeploySafeNativeRecovery_Script is Script {
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         if (commandHandler == address(0)) {
-            commandHandler = address(new SafeRecoveryCommandHandler());
+            commandHandler = address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
             console.log("Deployed Command Handler at", commandHandler);
         }
 
         address module = address(
-            new SafeEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler)
+            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(verifier, dkimRegistry, emailAuthImpl, commandHandler)
         );
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));
