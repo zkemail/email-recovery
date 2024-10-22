@@ -38,14 +38,14 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
         handleRecovery(accountAddress1, guardians1[1], recoveryDataHash, emailRecoveryModuleAddress);
 
+        uint256 expectedExecuteAfter = block.timestamp + delay;
+
         // one second before it should be valid
         vm.warp(block.timestamp + delay - 1 seconds);
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.DelayNotPassed.selector,
-                block.timestamp,
-                block.timestamp + delay
+                IEmailRecoveryManager.DelayNotPassed.selector, block.timestamp, expectedExecuteAfter
             )
         );
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);

@@ -14,9 +14,16 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address commandHandler
+        address commandHandler,
+        uint256 minimumDelay
     )
-        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler)
+        UniversalEmailRecoveryModule(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay
+        )
     { }
 
     function exposed_configureRecovery(

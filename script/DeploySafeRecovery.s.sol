@@ -31,6 +31,7 @@ contract DeploySafeRecovery_Script is Script {
         address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
@@ -83,6 +84,7 @@ contract DeploySafeRecovery_Script is Script {
             bytes32(salt),
             bytes32(salt),
             type(SafeRecoveryCommandHandler).creationCode,
+            minimumDelay,
             address(dkim)
         );
 

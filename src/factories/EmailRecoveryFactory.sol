@@ -66,6 +66,7 @@ contract EmailRecoveryFactory {
         bytes32 commandHandlerSalt,
         bytes32 recoveryModuleSalt,
         bytes calldata commandHandlerBytecode,
+        uint256 minimumDelay,
         address dkimRegistry,
         address validator,
         bytes4 functionSelector
@@ -79,7 +80,13 @@ contract EmailRecoveryFactory {
         // Deploy recovery module
         address emailRecoveryModule = address(
             new EmailRecoveryModule{ salt: recoveryModuleSalt }(
-                verifier, dkimRegistry, emailAuthImpl, commandHandler, validator, functionSelector
+                verifier,
+                dkimRegistry,
+                emailAuthImpl,
+                commandHandler,
+                minimumDelay,
+                validator,
+                functionSelector
             )
         );
 

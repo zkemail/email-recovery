@@ -14,7 +14,11 @@ contract SafeEmailRecoveryModule_constructor_Test is SafeNativeIntegrationBase {
     function test_Constructor() public {
         skipIfNotSafeAccountType();
         new SafeEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
     }
 }

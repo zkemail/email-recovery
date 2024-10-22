@@ -77,7 +77,11 @@ abstract contract SafeNativeIntegrationBase is BaseTest {
         commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new SafeEmailRecoveryModuleHarness(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
     }

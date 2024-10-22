@@ -29,7 +29,8 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
                 address(verifier),
                 address(dkimRegistry),
                 address(emailAuthImpl),
-                expectedCommandHandler
+                expectedCommandHandler,
+                minimumDelay
             )
         );
         address expectedModule = Create2.computeAddress(
@@ -44,7 +45,11 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
         );
         (address emailRecoveryModule, address commandHandler) = emailRecoveryUniversalFactory
             .deployUniversalEmailRecoveryModule(
-            commandHandlerSalt, recoveryModuleSalt, commandHandlerBytecode, address(dkimRegistry)
+            commandHandlerSalt,
+            recoveryModuleSalt,
+            commandHandlerBytecode,
+            minimumDelay,
+            address(dkimRegistry)
         );
 
         assertEq(emailRecoveryModule, expectedModule);

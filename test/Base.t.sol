@@ -90,6 +90,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     string public domainName = "gmail.com";
     bytes32 public publicKeyHash =
         0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+    uint256 public minimumDelay = 12 hours;
 
     bytes4 public functionSelector;
     bytes public recoveryCalldata;
@@ -171,7 +172,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         guardianWeights[1] = 2;
         guardianWeights[2] = 1;
         totalWeight = 4;
-        delay = 1 seconds;
+        delay = 1 days;
         expiry = 2 weeks;
         threshold = 3;
         templateIdx = 0;

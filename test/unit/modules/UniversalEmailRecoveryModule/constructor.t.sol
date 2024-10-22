@@ -11,7 +11,11 @@ contract UniversalEmailRecoveryModule_constructor_Test is UnitBase {
 
     function test_Constructor() public {
         new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
     }
 }

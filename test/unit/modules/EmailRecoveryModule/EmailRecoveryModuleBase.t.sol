@@ -66,6 +66,7 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             functionSelector
         );
