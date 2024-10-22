@@ -36,7 +36,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     { }
 
     /**
-     * @notice Configures recovery for the caller's account
+     * @notice Initializes the module with the threshold, guardians and other configuration
      * @dev This function ensures that the module is installed before configuring recovery. Calls
      * internal configureRecovery function
      * @param guardians An array of guardian addresses
@@ -61,14 +61,15 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     }
 
     /**
-     * Check if a recovery request can be initiated based on guardian acceptance
+     * @notice Check if a recovery request can be initiated based on guardian acceptance
      * @param account The smart account to check
      * @return true if the recovery request can be started, false otherwise
      */
     function canStartRecoveryRequest(address account) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.acceptedWeight >= guardianConfig.threshold;
+        return guardianConfig.threshold > 0
+            && guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /**

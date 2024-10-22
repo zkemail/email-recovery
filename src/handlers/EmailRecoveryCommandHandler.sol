@@ -114,7 +114,7 @@ contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     }
 
     /**
-     * @notice Validates the command params for an acceptance email
+     * @notice Validates the command params for a recovery email
      * @param templateIdx The index of the template used for the recovery request
      * @param commandParams The command parameters of the recovery email
      * @return accountInEmail The account address in the recovery email
@@ -149,7 +149,7 @@ contract EmailRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     /**
      * @notice parses the recovery data hash from the command params. The data hash is
      * verified against later when recovery is executed
-     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
+     * @dev recoveryDataHash = keccak256(abi.encode(validatorOrAccount, recoveryFunctionCalldata))
      * @param templateIdx The index of the template used for the recovery request
      * @param commandParams The command parameters of the recovery email
      * @return recoveryDataHash The keccak256 hash of the recovery data

@@ -32,7 +32,6 @@ contract OwnableValidator is ERC7579ValidatorBase {
      */
     function onUninstall(bytes calldata) external override {
         delete owners[msg.sender];
-        // delete authorized[msg.sender][authorizedAccount];
     }
 
     function isInitialized(address smartAccount) external view returns (bool) {

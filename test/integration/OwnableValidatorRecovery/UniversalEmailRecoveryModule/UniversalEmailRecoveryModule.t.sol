@@ -10,6 +10,7 @@ import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
+import { CommandHandlerType } from "../../../Base.t.sol";
 
 import { OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base } from
     "./UniversalEmailRecoveryModuleBase.t.sol";
@@ -42,6 +43,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RotatesOwnerSuccessfully() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         // Accept guardian 1
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         GuardianStorage memory guardianStorage1 =
@@ -63,23 +66,38 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         handleRecovery(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
         );
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, executeBefore);
-        assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash1);
+        (
+            uint256 _executeAfter,
+            uint256 _executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 1);
+        assertEq(recoveryDataHash, recoveryDataHash1);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, false);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         handleRecovery(
             accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
         );
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, executeAfter);
-        assertEq(recoveryRequest.executeBefore, executeBefore);
-        assertEq(recoveryRequest.currentWeight, 3);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash1);
+        (_executeAfter, _executeBefore, currentWeight, recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, executeAfter);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 3);
+        assertEq(recoveryDataHash, recoveryDataHash1);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, true);
 
         // Time travel so that the recovery delay has passed
         vm.warp(block.timestamp + delay);
@@ -87,17 +105,24 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         // Complete recovery
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        (_executeAfter, _executeBefore, currentWeight, recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
         address updatedOwner = validator.owners(accountAddress1);
 
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
         assertEq(updatedOwner, newOwner1);
     }
 
     function test_Recover_RevertWhen_MixAccountHandleAcceptance() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardianWithAccountSalt(
             accountAddress2, guardians1[1], emailRecoveryModuleAddress, accountSalt2
@@ -124,6 +149,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_MixAccountHandleRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardianWithAccountSalt(
             accountAddress2, guardians1[1], emailRecoveryModuleAddress, accountSalt2
         );
@@ -154,6 +181,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_UninstallModuleBeforeAnyGuardiansAccepted() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
@@ -167,6 +196,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     function test_Recover_RevertWhen_UninstallModuleBeforeEnoughAcceptedAndTryHandleAcceptance()
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
@@ -181,6 +212,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     function test_Recover_RevertWhen_UninstallModuleAfterEnoughAcceptedAndTryHandleRecovery()
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -196,6 +229,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_UninstallModuleAfterOneApprovalAndTryHandleRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -211,6 +246,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     function test_Recover_RevertWhen_UninstallModuleProcessRecoveryAndTryCompleteRecovery()
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -228,6 +265,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_UninstallModuleAndTryRecoveryAgain() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
@@ -243,6 +282,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_UninstallModuleAndRecoverAgain() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner = validator.owners(accountAddress1);
         assertEq(updatedOwner, newOwner1);
@@ -275,6 +316,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RotatesMultipleOwnersSuccessfully() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         executeRecoveryFlowForAccount(accountAddress2, guardians2, recoveryDataHash2, recoveryData2);
         executeRecoveryFlowForAccount(accountAddress3, guardians3, recoveryDataHash3, recoveryData3);
@@ -288,6 +331,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RecoversSameValidatorAgain() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
@@ -295,6 +340,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         bytes memory newChangeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner2);
         bytes memory newValidatorRecoveryData = abi.encode(validatorAddress, newChangeOwnerCalldata);
         bytes32 newValidatorRecoveryDataHash = keccak256(newValidatorRecoveryData);
+
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
 
         handleRecovery(
             accountAddress1, guardians1[0], newValidatorRecoveryDataHash, emailRecoveryModuleAddress
@@ -313,6 +362,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     )
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         OwnableValidator validator2 = new OwnableValidator();
         address validator2Address = address(validator2);
         instance1.installModule({
@@ -328,6 +379,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
+
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
 
         handleRecovery(
             accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
@@ -346,6 +401,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RecoversMultipleValidatorsOneAfterTheOther() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         OwnableValidator validator2 = new OwnableValidator();
         address validator2Address = address(validator2);
         instance1.installModule({
@@ -365,6 +422,10 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         bytes memory validator2RecoveryData = abi.encode(validator2Address, newChangeOwnerCalldata);
         bytes32 validator2RecoveryDataHash = keccak256(validator2RecoveryData);
 
+        vm.warp(
+            block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
+        );
+
         handleRecovery(
             accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
         );
@@ -379,6 +440,8 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
     }
 
     function test_Recover_RevertWhen_RecoversMultipleValidatorsAtOnce() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         OwnableValidator validator2 = new OwnableValidator();
         address validator2Address = address(validator2);
         instance1.installModule({
@@ -403,7 +466,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         vm.warp(block.timestamp + 12 seconds);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
-            accountAddress1, guardians1[0], validator2RecoveryDataHash, emailRecoveryModuleAddress
+            accountAddress1, guardians1[1], validator2RecoveryDataHash, emailRecoveryModuleAddress
         );
 
         vm.expectRevert(

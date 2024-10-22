@@ -4,9 +4,9 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
+import { CommandHandlerType } from "../../Base.t.sol";
+import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     using ModuleKitHelpers for *;
@@ -20,6 +20,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         if (!isAccountTypeSafe()) {
             vm.skip(true);
         }
+        skipIfNotCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
 
         bytes memory swapOwnerCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", address(1), owner1, newOwner1
@@ -52,28 +53,41 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
 
         // handle recovery request for guardian 1
         handleRecoveryForSafe(accountAddress1, owner1, newOwner1, guardians1[0]);
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.currentWeight, 1);
+        (,, uint256 currentWeight,) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        assertEq(currentWeight, 1);
+        assertEq(hasGuardian1Voted, true);
 
         // handle recovery request for guardian 2
         uint256 executeAfter = block.timestamp + delay;
         uint256 executeBefore = block.timestamp + expiry;
         handleRecoveryForSafe(accountAddress1, owner1, newOwner1, guardians1[1]);
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, executeAfter);
-        assertEq(recoveryRequest.executeBefore, executeBefore);
-        assertEq(recoveryRequest.currentWeight, 3);
+        (uint256 _executeAfter, uint256 _executeBefore, uint256 currentWeight2,) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, executeAfter);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight2, 3);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, true);
 
         vm.warp(block.timestamp + delay);
 
         // Complete recovery
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
 
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
+        (_executeAfter, _executeBefore, currentWeight2,) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight2, 0);
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
 
         vm.prank(accountAddress1);
         bool isOwner = Safe(payable(accountAddress1)).isOwner(newOwner1);
@@ -83,7 +97,7 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
         assertFalse(oldOwnerIsOwner);
     }
 
-    // FIXME: This test cannot uninstall the module - reverts with no error message
+    // FIXME: (merge-ok) This test cannot uninstall the module - reverts with no error message
     // function test_OnUninstall_DeInitsStateSuccessfully() public {
     //     // configure and complete an entire recovery request
     //     test_Recover_RotatesOwnerSuccessfully();
@@ -113,10 +127,10 @@ contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     //     // assert that the recovery request has been cleared successfully
     //     IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
     //         emailRecoveryModule.getRecoveryRequest(accountAddress1);
-    //     assertEq(recoveryRequest.executeAfter, 0);
-    //     assertEq(recoveryRequest.executeBefore, 0);
-    //     assertEq(recoveryRequest.currentWeight, 0);
-    //     assertEq(recoveryRequest.commandParams.length, 0);
+    //     assertEq(executeAfter, 0);
+    //     assertEq(executeBefore, 0);
+    //     assertEq(currentWeight, 0);
+    //     assertEq(commandParams.length, 0);
 
     //     // assert that guardian storage has been cleared successfully for guardian 1
     //     GuardianStorage memory guardianStorage1 =

@@ -9,6 +9,7 @@ import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol"
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
+import { CommandHandlerType } from "../../Base.t.sol";
 import { OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base } from
     "../OwnableValidatorRecovery/UniversalEmailRecoveryModule/UniversalEmailRecoveryModuleBase.t.sol";
 
@@ -23,6 +24,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_BeforeConfigureRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
@@ -34,6 +37,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeTimeStampChanged() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
@@ -45,6 +50,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleAcceptanceCalled_DuringRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -64,6 +71,8 @@ contract EmailRecoveryManager_Integration_Test is
     )
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -83,6 +92,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_HandleNewAcceptanceSucceeds_AfterCompleteRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -104,6 +115,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeConfigureRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
@@ -115,6 +128,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_HandleRecoveryCalled_BeforeHandleAcceptance() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
         );
@@ -126,6 +141,8 @@ contract EmailRecoveryManager_Integration_Test is
     function test_RevertWhen_HandleRecoveryCalled_DuringRecoveryWithoutGuardianBeingDeployed()
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -144,6 +161,8 @@ contract EmailRecoveryManager_Integration_Test is
     function test_RevertWhen_HandleRecoveryCalled_AfterRecoveryProcessedButBeforeCompleteRecovery()
         public
     {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -163,6 +182,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_HandleRecoveryCalled_AfterCompleteRecoveryStartsNewRecoveryRequest() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
@@ -176,20 +197,21 @@ contract EmailRecoveryManager_Integration_Test is
         vm.warp(block.timestamp + delay);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.currentWeight, 0);
+        (,, uint256 currentWeight,) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(currentWeight, 0);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
             accountAddress1, guardians1[2], recoveryDataHash1, emailRecoveryModuleAddress
         );
 
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
-        recoveryRequest = emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.currentWeight, 1);
+        (,, currentWeight,) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        assertEq(currentWeight, 1);
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeConfigureRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
@@ -197,6 +219,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeHandleAcceptance() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         vm.expectRevert(
             abi.encodeWithSelector(IEmailRecoveryManager.NotEnoughApprovals.selector, 0, threshold)
         );
@@ -204,6 +228,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_RevertWhen_CompleteRecoveryCalled_BeforeProcessRecovery() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
 
         vm.expectRevert(
@@ -213,6 +239,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_TryRecoverFunctionsWhenModuleNotInstalled() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
             accountAddress1, guardians1[0], emailRecoveryModuleAddress
         );
@@ -241,6 +269,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_TryCompleteRecoveryWhenModuleNotInstalled() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryConfigured.selector);
@@ -248,6 +278,8 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_StaleRecoveryRequest() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -273,15 +305,30 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelRecovery();
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        (
+            uint256 _executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
     }
 
     function test_CancelExpiredRecoveryRequest() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -306,15 +353,30 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        (
+            uint256 _executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
     }
 
     function test_CannotComplete_CancelledExpiredRecoveryRequest() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
@@ -332,18 +394,29 @@ contract EmailRecoveryManager_Integration_Test is
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
         vm.stopPrank();
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress1);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, 0);
-        assertEq(recoveryRequest.currentWeight, 0);
-        assertEq(recoveryRequest.recoveryDataHash, bytes32(0));
+        (
+            uint256 _executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        bool hasGuardian3Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[2]);
+        assertEq(_executeAfter, 0);
+        assertEq(executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(hasGuardian3Voted, false);
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEmailRecoveryManager.NotEnoughApprovals.selector,
-                recoveryRequest.currentWeight,
-                threshold
+                IEmailRecoveryManager.NotEnoughApprovals.selector, currentWeight, threshold
             )
         );
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);

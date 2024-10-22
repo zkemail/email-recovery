@@ -7,7 +7,7 @@ import { StringUtils } from "../libraries/StringUtils.sol";
 /**
  * @title AccountHidingRecoveryCommandHandler
  * @notice Handler contract that defines command templates and how to validate them
- * This is the command handler that does not expose the account address in the email command
+ * This command handler does not expose the account address in the email command
  */
 contract AccountHidingRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     error InvalidTemplateIndex(uint256 templateIdx, uint256 expectedTemplateIdx);
@@ -56,7 +56,7 @@ contract AccountHidingRecoveryCommandHandler is IEmailRecoveryCommandHandler {
 
     /**
      * @notice Extracts the hash of the account address to be recovered from the command parameters
-     * of acceptance email and returns the corresponding address stored in the accountHashes.
+     * of the acceptance email and returns the corresponding address stored in accountHashes.
      * @param commandParams The command parameters of the acceptance email.
      * @param {templateIdx} Unused parameter. The index of the template used for acceptance
      */
@@ -74,7 +74,7 @@ contract AccountHidingRecoveryCommandHandler is IEmailRecoveryCommandHandler {
 
     /**
      * @notice Extracts the hash of the account address to be recovered from the command parameters
-     * of recovery email and returns the corresponding address stored in the accountHashes.
+     * of the recovery email and returns the corresponding address stored in accountHashes.
      * @param commandParams The command parameters of the recovery email.
      * @param {templateIdx} Unused parameter. The index of the template used for the recovery
      * request
@@ -155,9 +155,9 @@ contract AccountHidingRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     }
 
     /**
-     * @notice parses the recovery data hash from the command params. The data hash is
+     * @notice Parses the recovery data hash from the command params. The data hash is
      * verified against later when recovery is executed
-     * @dev recoveryDataHash = abi.encode(validator, recoveryFunctionCalldata)
+     * @dev recoveryDataHash = keccak256(abi.encode(validatorOrAccount, recoveryFunctionCalldata))
      * @param templateIdx The index of the template used for the recovery request
      * @param commandParams The command parameters of the recovery email
      * @return recoveryDataHash The keccak256 hash of the recovery data

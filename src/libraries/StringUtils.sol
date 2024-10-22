@@ -5,10 +5,21 @@ import { strings } from "solidity-stringutils/src/strings.sol";
 
 /* solhint-disable gas-custom-errors */
 
-// Extracted from https://github.com/zkemail/email-wallet-sdk/blob/main/src/helpers/StringUtils.sol
+/**
+ * @title StringUtils
+ * @notice This library provides utility functions for converting hexadecimal strings to bytes32.
+ * @dev Extracted from
+ * https://github.com/zkemail/email-wallet-sdk/blob/main/src/helpers/StringUtils.sol
+ */
 library StringUtils {
     using strings for *;
 
+    /**
+     * @notice Converts a hexadecimal string to bytes32
+     * @dev The input string must start with "0x" and be 66 characters long (including "0x")
+     * @param hexStr The hexadecimal string to convert
+     * @return result The converted bytes32 value
+     */
     function hexToBytes32(string calldata hexStr) public pure returns (bytes32 result) {
         require(hexStr.toSlice().startsWith("0x".toSlice()), "invalid hex prefix");
         hexStr = hexStr[2:];
@@ -21,6 +32,12 @@ library StringUtils {
         return bytes32(sum);
     }
 
+    /**
+     * @notice Converts a hexadecimal string to an array of integers
+     * @dev Each pair of characters in the input string is converted to a single integer
+     * @param hexStr The hexadecimal string to convert
+     * @return uint256[] An array of integers representing the converted hexadecimal string
+     */
     function hex2Ints(string memory hexStr) private pure returns (uint256[] memory) {
         uint256[] memory result = new uint256[](bytes(hexStr).length / 2);
         for (uint256 i = 0; i < result.length; i++) {
@@ -30,6 +47,12 @@ library StringUtils {
         return result;
     }
 
+    /**
+     * @notice Converts a single hexadecimal character to its integer representation
+     * @dev Supports lowercase hexadecimal characters
+     * @param char The hexadecimal character to convert
+     * @return uint256 The integer representation of the hexadecimal character
+     */
     function hexChar2Int(bytes1 char) private pure returns (uint256) {
         uint8 charInt = uint8(char);
         if (charInt >= 48 && charInt <= 57) {

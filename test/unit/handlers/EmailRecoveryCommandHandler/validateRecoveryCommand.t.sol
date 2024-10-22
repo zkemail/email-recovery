@@ -8,12 +8,13 @@ import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHa
 contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
     using Strings for uint256;
 
+    EmailRecoveryCommandHandler public emailRecoveryCommandHandler;
     string public recoveryDataHashString;
     bytes[] public commandParams;
 
     function setUp() public override {
         super.setUp();
-
+        emailRecoveryCommandHandler = new EmailRecoveryCommandHandler();
         recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
 
         commandParams = new bytes[](2);
@@ -29,7 +30,7 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
                 EmailRecoveryCommandHandler.InvalidTemplateIndex.selector, invalidTemplateIdx, 0
             )
         );
-        emailRecoveryHandler.validateRecoveryCommand(invalidTemplateIdx, commandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(invalidTemplateIdx, commandParams);
     }
 
     function test_ValidateRecoveryCommand_RevertWhen_NoCommandParams() public {
@@ -42,7 +43,7 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
                 2
             )
         );
-        emailRecoveryHandler.validateRecoveryCommand(templateIdx, emptyCommandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, emptyCommandParams);
     }
 
     function test_ValidateRecoveryCommand_RevertWhen_TooManyCommandParams() public {
@@ -58,33 +59,33 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
                 2
             )
         );
-        emailRecoveryHandler.validateRecoveryCommand(templateIdx, longCommandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, longCommandParams);
     }
 
     function test_ValidateRecoveryCommand_RevertWhen_InvalidAccount() public {
         commandParams[0] = abi.encode(address(0));
 
         vm.expectRevert(EmailRecoveryCommandHandler.InvalidAccount.selector);
-        emailRecoveryHandler.validateRecoveryCommand(templateIdx, commandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
     }
 
     function test_ValidateRecoveryCommand_RevertWhen_ZeroRecoveryDataHash() public {
         commandParams[1] = abi.encode(bytes32(0));
 
         vm.expectRevert("invalid hex prefix");
-        emailRecoveryHandler.validateRecoveryCommand(templateIdx, commandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
     }
 
     function test_ValidateRecoveryCommand_RevertWhen_InvalidHashLength() public {
         commandParams[1] = abi.encode(uint256(recoveryDataHash).toHexString(33));
 
         vm.expectRevert("invalid hex string length");
-        emailRecoveryHandler.validateRecoveryCommand(templateIdx, commandParams);
+        emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
     }
 
     function test_ValidateRecoveryCommand_Succeeds() public view {
         address accountFromEmail =
-            emailRecoveryHandler.validateRecoveryCommand(templateIdx, commandParams);
+            emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
         assertEq(accountFromEmail, accountAddress1);
     }
 }

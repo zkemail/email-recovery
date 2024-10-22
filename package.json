@@ -1,6 +1,6 @@
 {
   "name": "@zk-email/email-recovery",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "Smart account module and related contracts to enable email recovery for validators",
   "license": "MIT",
   "author": {
@@ -16,7 +16,17 @@
     "gas:snapshot:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge snapshot --mp \"./test/integration/**/*.sol\"",
     "lint": "forge fmt --check && pnpm solhint \"{script,src,test}/**/*.sol\"",
     "prepack": "pnpm install",
-    "test": "forge test",
+    "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
+    "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
+    "test": " COMMAND_HANDLER_TYPE=0 forge test --match-path \"test/**/*.sol\"",
+    "test:email-recovery-command-handler": "COMMAND_HANDLER_TYPE=0 forge test --match-path \"test/**/*.sol\" ",
+    "test:address-hiding-command-handler": "COMMAND_HANDLER_TYPE=1 forge test --match-path \"test/**/*.sol\"",
+    "test:safe-email-recovery-command-handler": "ACCOUNT_TYPE=SAFE COMMAND_HANDLER_TYPE=0 forge test --match-path \"test/**/*.sol\" ",
+    "test:safe-address-hiding-command-handler": "ACCOUNT_TYPE=SAFE COMMAND_HANDLER_TYPE=1 forge test --match-path \"test/**/*.sol\"",
+    "test:safe-recovery-command-handler": "ACCOUNT_TYPE=SAFE COMMAND_HANDLER_TYPE=2 forge test --match-path \"test/**/*.sol\"",
+    "test:all": "pnpm test:email-recovery-command-handler && pnpm test:address-hiding-command-handler && pnpm test:safe-recovery-command-handler",
+    "test:all-safe": "pnpm test:safe-email-recovery-command-handler && pnpm test:safe-address-hiding-command-handler && pnpm test:safe-recovery-command-handler",
+    "test:script": "forge test --match-path script/test/**/*.sol --threads 1",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
@@ -24,8 +34,8 @@
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
-    "@zk-email/contracts": "6.0.3",
-    "@zk-email/ether-email-auth-contracts": "0.0.2-preview",
+    "@zk-email/contracts": "https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates",
+    "@zk-email/ether-email-auth-contracts": "https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
