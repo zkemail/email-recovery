@@ -11,6 +11,7 @@ import {
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -47,7 +48,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
 
     // ZK Email contracts and variables
     address public zkEmailDeployer;
-    ECDSAOwnedDKIMRegistry public dkimRegistry;
+    UserOverrideableDKIMRegistry public dkimRegistry;
     MockGroth16Verifier public verifier;
     EmailAuth public emailAuthImpl;
 
@@ -126,21 +127,17 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         zkEmailDeployer = vm.addr(1);
 
         vm.startPrank(zkEmailDeployer);
-        {
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
-                address(dkimImpl),
-                abi.encodeCall(dkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer))
-            );
-            dkimRegistry = ECDSAOwnedDKIMRegistry(address(dkimProxy));
-        }
-        string memory signedMsg = dkimRegistry.computeSignedMsg(
-            dkimRegistry.SET_PREFIX(), selector, domainName, publicKeyHash
+        uint256 setTimeDelay = 0;
+        UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+        ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            address(overrideableDkimImpl),
+            abi.encodeCall(
+                overrideableDkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer, setTimeDelay)
+            )
         );
-        bytes32 digest = ECDSA.toEthSignedMessageHash(bytes(signedMsg));
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
-        dkimRegistry.setDKIMPublicKeyHash(selector, domainName, publicKeyHash, signature);
+        dkimRegistry = UserOverrideableDKIMRegistry(address(dkimProxy));
+
+        dkimRegistry.setDKIMPublicKeyHash(domainName, publicKeyHash, zkEmailDeployer, new bytes(0));
 
         verifier = new MockGroth16Verifier();
         emailAuthImpl = new EmailAuth();

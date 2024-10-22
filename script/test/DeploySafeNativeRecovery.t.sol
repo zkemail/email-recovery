@@ -51,14 +51,14 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
 
     /**
      * @notice Tests the deployment and execution of the DeploySafeNativeRecovery script
-     *         without a SIGNER configured.
+     *         without a DKIM_REGISTRY_SIGNER configured.
      */
     function test_run_no_signer() public {
         // Set up the base test environment
         BaseDeployTest.setUp();
 
-        // Disable the SIGNER environment variable
-        vm.setEnv("SIGNER", vm.toString(address(0)));
+        // Disable the DKIM_REGISTRY_SIGNER environment variable
+        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(address(0)));
 
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
@@ -75,9 +75,9 @@ contract DeploySafeNativeRecovery_TestFail is BaseDeployTest {
         // Set up the base test environment
         BaseDeployTest.setUp();
 
-        // Disable the DKIM_REGISTRY and SIGNER environment variables
+        // Disable the DKIM_REGISTRY and DKIM_REGISTRY_SIGNER environment variables
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
-        vm.setEnv("SIGNER", vm.toString(address(0)));
+        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(address(0)));
 
         // Instantiate the script and attempt to run it, expecting failure
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();

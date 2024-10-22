@@ -11,6 +11,7 @@ import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifie
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 import { Safe7579 } from "safe7579/Safe7579.sol";
@@ -28,12 +29,13 @@ contract DeploySafeRecovery_Script is Script {
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
-        address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
-        address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-    
+
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
-        uint salt = vm.envOr("CREATE2_SALT", uint(0));
+        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
+
+        UserOverrideableDKIMRegistry dkim;
 
         if (verifier == address(0)) {
             Verifier verifierImpl = new Verifier();
@@ -48,18 +50,26 @@ contract DeploySafeRecovery_Script is Script {
             console.log("Deployed Verifier at", verifier);
         }
 
-        if (dkimRegistry == address(0)) {
+        // Deploy Useroverridable DKIM registry
+        dkim = UserOverrideableDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
+        uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
+        if (address(dkim) == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
-                address(dkimImpl),
-                abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
+            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            console.log(
+                "UserOverrideableDKIMRegistry implementation deployed at: %s",
+                address(overrideableDkimImpl)
             );
-            dkimRegistry = address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-            vm.setEnv("ECDSA_DKIM", vm.toString(address(dkimRegistry)));
-            console.log("Deployed DKIM Registry at", dkimRegistry);
+            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+                address(overrideableDkimImpl),
+                abi.encodeCall(
+                    overrideableDkimImpl.initialize,
+                    (initialOwner, dkimRegistrySigner, setTimeDelay)
+                )
+            );
+            dkim = UserOverrideableDKIMRegistry(address(dkimProxy));
+            vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkim)));
+            console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", address(dkim));
         }
 
         if (emailAuthImpl == address(0)) {
@@ -73,7 +83,7 @@ contract DeploySafeRecovery_Script is Script {
             bytes32(salt),
             bytes32(salt),
             type(SafeRecoveryCommandHandler).creationCode,
-            dkimRegistry
+            address(dkim)
         );
 
         address safe7579 = address(new Safe7579{ salt: bytes32(salt) }());

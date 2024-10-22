@@ -56,12 +56,13 @@ contract DeployEmailRecoveryModule_TestFail is BaseDeployTest {
     }
 
     /**
-     * @dev Tests that deployment fails when both DKIM_REGISTRY and SIGNER environment variables are
+     * @dev Tests that deployment fails when both DKIM_REGISTRY and DKIM_REGISTRY_SIGNER environment
+     * variables are
      * not set.
      */
     function testFail_run_no_dkim_registry_no_signer() public {
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
-        vm.setEnv("SIGNER", vm.toString(address(0)));
+        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(address(0)));
         DeployEmailRecoveryModuleScript target = new DeployEmailRecoveryModuleScript();
         target.run();
     }

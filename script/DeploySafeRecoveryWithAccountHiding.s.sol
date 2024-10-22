@@ -5,7 +5,8 @@ pragma solidity ^0.8.25;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { AccountHidingRecoveryCommandHandler } from "src/handlers/AccountHidingRecoveryCommandHandler.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
@@ -17,9 +18,11 @@ import { Safe7579 } from "safe7579/Safe7579.sol";
 import { Safe7579Launchpad } from "safe7579/Safe7579Launchpad.sol";
 import { IERC7484 } from "safe7579/interfaces/IERC7484.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 
 // 1. `source .env`
-// 2. `forge script script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHiding_Script
+// 2. `forge script
+// script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHiding_Script
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHiding_Script is Script {
     function run() public {
@@ -49,16 +52,23 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
 
         if (dkimRegistry == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
-                address(dkimImpl),
-                abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
+            // Deploy Useroverridable DKIM registry
+            uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
+            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            console.log(
+                "UserOverrideableDKIMRegistry implementation deployed at: %s",
+                address(overrideableDkimImpl)
             );
-            dkimRegistry = address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-            vm.setEnv("ECDSA_DKIM", vm.toString(address(dkimRegistry)));
-            console.log("Deployed DKIM Registry at", dkimRegistry);
+            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+                address(overrideableDkimImpl),
+                abi.encodeCall(
+                    overrideableDkimImpl.initialize,
+                    (initialOwner, dkimRegistrySigner, setTimeDelay)
+                )
+            );
+            dkimRegistry = address(UserOverrideableDKIMRegistry(address(dkimProxy)));
+            vm.setEnv("DKIM_REGISTRY", vm.toString(dkimRegistry));
+            console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", dkimRegistry);
         }
 
         if (emailAuthImpl == address(0)) {

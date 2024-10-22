@@ -18,11 +18,11 @@ importers:
         specifier: github:rhinestonewtf/modulekit
         version: https://codeload.github.com/rhinestonewtf/modulekit/tar.gz/67a5c02dec798b25a3b2581d485d75e116b14af8(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
       '@zk-email/contracts':
-        specifier: 6.0.3
-        version: 6.0.3
+        specifier: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates
+        version: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates
       '@zk-email/ether-email-auth-contracts':
-        specifier: 0.1.1-preview
-        version: 0.1.1-preview
+        specifier: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry
+        version: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry
       erc7579-implementation:
         specifier: github:erc7579/erc7579-implementation
         version: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
@@ -317,8 +317,8 @@ packages:
     resolution: {integrity: sha512-c83qWb22rNRuB0UaVCI0uRPNRr8Z0FWnEIvT47jiHAmOIUHbBOg5XvV7pM5x+rKn9HRpjxquDbXYSXr3fAKFcw==}
     engines: {node: '>=12'}
 
-  '@prb/math@4.0.3':
-    resolution: {integrity: sha512-/RSt3VU1k2m3ox6U6kUL1MrktnAHr8vhydXu4eDtqFAms1gm3XnGpoZIPaK1lm2zdJQmKBwJ4EXALPARsuOlaA==}
+  '@prb/math@4.1.0':
+    resolution: {integrity: sha512-ef5Xrlh3BeX4xT5/Wi810dpEPq2bYPndRxgFIaKSU1F/Op/s8af03kyom+mfU7gEpvfIZ46xu8W0duiHplbBMg==}
 
   '@rhinestone/checknsignatures@https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/7ff44ef46da1266374e6a98e6cf69d727d7c357d':
     resolution: {tarball: https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/7ff44ef46da1266374e6a98e6cf69d727d7c357d}
@@ -330,8 +330,8 @@ packages:
   '@rhinestone/erc4337-validation@0.0.1-alpha.5':
     resolution: {integrity: sha512-yOrYyQBrT0JfHb+rjvx4pqk8uItKxEtn7n8z3k0qbZTzkXaNS9pCUBsTxy0kp6T2SNUrbQ8I4DMSiyGqjdh2ng==}
 
-  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/dd88e0a4e5673dd4676de2067c2e524cd8573523':
-    resolution: {tarball: https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/dd88e0a4e5673dd4676de2067c2e524cd8573523}
+  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/107cda409627e6f05285c7d8e1ea594d35fb3ac0':
+    resolution: {tarball: https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/107cda409627e6f05285c7d8e1ea594d35fb3ac0}
     version: 0.0.1
 
   '@rhinestone/modulekit@https://codeload.github.com/rhinestonewtf/modulekit/tar.gz/67a5c02dec798b25a3b2581d485d75e116b14af8':
@@ -446,11 +446,11 @@ packages:
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
 
-  '@types/node@20.16.12':
-    resolution: {integrity: sha512-LfPFB0zOeCeCNQV3i+67rcoVvoN5n0NVuR2vLG0O5ySQMgchuZlC4lgz546ZOJyDtj5KIgOxy+lacOimfqZAIA==}
+  '@types/node@20.16.13':
+    resolution: {integrity: sha512-GjQ7im10B0labo8ZGXDGROUl9k0BNyDgzfGpb4g/cl+4yYDWVKcozANF4FGr4/p0O/rAkQClM6Wiwkije++1Tg==}
 
-  '@types/node@22.7.6':
-    resolution: {integrity: sha512-/d7Rnj0/ExXDMcioS78/kf1lMzYk4BZV8MZGTBKzTGZ6/406ukkbYlIsZmMPhcR5KlkunDHQLrtAVmSq7r+mSw==}
+  '@types/node@22.7.7':
+    resolution: {integrity: sha512-SRxCrrg9CL/y54aiMCG3edPKdprgMVGDXjA3gB8UmmBW5TcXzRUYAh8EWzTnSJFAd1rgImPELza+A3bJ+qxz8Q==}
 
   '@types/pbkdf2@3.1.2':
     resolution: {integrity: sha512-uRwJqmiXmh9++aSu1VNEn3iIxWOhd8AHXNSdlaLfdAAdSTY9jYVeGWnzejM3dvrkbqE3/hyQkQQ29IFATEGlew==}
@@ -464,14 +464,13 @@ packages:
   '@types/secp256k1@4.0.6':
     resolution: {integrity: sha512-hHxJU6PAEUn0TP4S/ZOzuTUvJWuZ6eIKeNKb5RBpODvSl6hp1Wrw4s7ATY50rklRCScUDpHzVA/DQdSjJ3UoYQ==}
 
-  '@zk-email/contracts@6.0.3':
-    resolution: {integrity: sha512-nPSG27431Cz5bzPlR/ltn7qa9k+Joc/6LDHUz+JeFWEP/ff9VnzK11P0ay5qdX14qpQ647varPdxGtulosUtxw==}
+  '@zk-email/contracts@https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates':
+    resolution: {tarball: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates}
+    version: 6.2.0
 
-  '@zk-email/contracts@6.2.0':
-    resolution: {integrity: sha512-HlMyQNKmwdqfht6hHfTLgNnt/pGEc1cR5X4v8dMV+8IqoJTPbuvv19u69p/3U1W1SK2KUJl2Hg/bf0OxqVCNRQ==}
-
-  '@zk-email/ether-email-auth-contracts@0.1.1-preview':
-    resolution: {integrity: sha512-cgF86rZhtIHFmyyCviyLt+V7gA0A+ZZQi7kpO64k1SAGseIQ8MhQp6CRf1CILGt9vgoDTpO8g2IV/aJudQJhwg==}
+  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry':
+    resolution: {tarball: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry}
+    version: 0.1.1-preview
 
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
@@ -2483,7 +2482,7 @@ snapshots:
       '@pnpm/network.ca-file': 1.0.2
       config-chain: 1.1.13
 
-  '@prb/math@4.0.3': {}
+  '@prb/math@4.1.0': {}
 
   '@rhinestone/checknsignatures@https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/7ff44ef46da1266374e6a98e6cf69d727d7c357d':
     dependencies:
@@ -2530,7 +2529,7 @@ snapshots:
       - typechain
       - utf-8-validate
 
-  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/dd88e0a4e5673dd4676de2067c2e524cd8573523(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))':
+  '@rhinestone/module-bases@https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/107cda409627e6f05285c7d8e1ea594d35fb3ac0(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))':
     dependencies:
       '@ERC4337/account-abstraction': accountabstraction@https://codeload.github.com/kopy-kat/account-abstraction/tar.gz/c5887153fbfe3ed09b2637cac39873f96d676f38(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
       erc7579: erc7579-implementation@https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
@@ -2549,9 +2548,9 @@ snapshots:
     dependencies:
       '@ERC4337/account-abstraction': accountabstraction@https://codeload.github.com/kopy-kat/account-abstraction/tar.gz/c5887153fbfe3ed09b2637cac39873f96d676f38(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
       '@ERC4337/account-abstraction-v0.6': accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/7174d6d845618dbd11cee68eefa715f5263690b6(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
-      '@prb/math': 4.0.3
+      '@prb/math': 4.1.0
       '@rhinestone/erc4337-validation': 0.0.1-alpha.5(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
-      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/dd88e0a4e5673dd4676de2067c2e524cd8573523(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
+      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/107cda409627e6f05285c7d8e1ea594d35fb3ac0(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
       '@rhinestone/registry': https://codeload.github.com/rhinestonewtf/registry/tar.gz/1371979a97293e0c6188afcd923784f6a718ae7d
       '@rhinestone/safe7579': https://codeload.github.com/rhinestonewtf/safe7579/tar.gz/33f110f08ed5fcab75c29d7cfb93f7f3e4da76a7(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
       '@rhinestone/sentinellist': https://codeload.github.com/rhinestonewtf/sentinellist/tar.gz/67e42f0eb3cf355ddba5a017892f9cc28d924875
@@ -2586,7 +2585,7 @@ snapshots:
       '@ERC4337/account-abstraction-v0.6': accountabstraction@https://codeload.github.com/eth-infinitism/account-abstraction/tar.gz/7174d6d845618dbd11cee68eefa715f5263690b6(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
       '@rhinestone/checknsignatures': https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/7ff44ef46da1266374e6a98e6cf69d727d7c357d
       '@rhinestone/erc4337-validation': 0.0.1-alpha.2(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
-      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/dd88e0a4e5673dd4676de2067c2e524cd8573523(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
+      '@rhinestone/module-bases': https://codeload.github.com/rhinestonewtf/module-bases/tar.gz/107cda409627e6f05285c7d8e1ea594d35fb3ac0(ethers@5.7.2)(hardhat@2.22.13(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
       '@rhinestone/sentinellist': https://codeload.github.com/rhinestonewtf/sentinellist/tar.gz/67e42f0eb3cf355ddba5a017892f9cc28d924875
       '@safe-global/safe-contracts': 1.4.1(ethers@5.7.2)
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
@@ -2711,11 +2710,11 @@ snapshots:
 
   '@types/bn.js@4.11.6':
     dependencies:
-      '@types/node': 22.7.6
+      '@types/node': 22.7.7
 
   '@types/bn.js@5.1.6':
     dependencies:
-      '@types/node': 22.7.6
+      '@types/node': 22.7.7
 
   '@types/debug@4.1.12':
     dependencies:
@@ -2724,7 +2723,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 22.7.6
+      '@types/node': 22.7.7
 
   '@types/http-cache-semantics@4.0.4': {}
 
@@ -2736,17 +2735,17 @@ snapshots:
 
   '@types/ms@0.7.34': {}
 
-  '@types/node@20.16.12':
+  '@types/node@20.16.13':
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@22.7.6':
+  '@types/node@22.7.7':
     dependencies:
       undici-types: 6.19.8
 
   '@types/pbkdf2@3.1.2':
     dependencies:
-      '@types/node': 22.7.6
+      '@types/node': 22.7.7
 
   '@types/prettier@2.7.3': {}
 
@@ -2754,24 +2753,20 @@ snapshots:
 
   '@types/secp256k1@4.0.6':
     dependencies:
-      '@types/node': 22.7.6
+      '@types/node': 22.7.7
 
-  '@zk-email/contracts@6.0.3':
+  '@zk-email/contracts@https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates':
     dependencies:
       '@openzeppelin/contracts': 5.1.0
+      '@openzeppelin/contracts-upgradeable': 5.0.1(@openzeppelin/contracts@5.1.0)
       dotenv: 16.4.5
 
-  '@zk-email/contracts@6.2.0':
-    dependencies:
-      '@openzeppelin/contracts': 5.1.0
-      dotenv: 16.4.5
-
-  '@zk-email/ether-email-auth-contracts@0.1.1-preview':
+  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?feat/audit-fix-2024-09-registry':
     dependencies:
       '@matterlabs/zksync-contracts': 0.6.1(@openzeppelin/contracts-upgradeable@5.0.1(@openzeppelin/contracts@5.1.0))(@openzeppelin/contracts@5.1.0)
       '@openzeppelin/contracts': 5.1.0
       '@openzeppelin/contracts-upgradeable': 5.0.1(@openzeppelin/contracts@5.1.0)
-      '@zk-email/contracts': 6.2.0
+      '@zk-email/contracts': https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates
       solady: 0.0.123
 
   abbrev@1.0.9: {}
@@ -3906,7 +3901,7 @@ snapshots:
 
   mcl-wasm@1.7.0:
     dependencies:
-      '@types/node': 20.16.12
+      '@types/node': 20.16.13
 
   md5.js@1.3.5:
     dependencies:
