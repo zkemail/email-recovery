@@ -19,10 +19,11 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
         address _dkimRegistry,
         address _emailAuthImpl,
         address _commandHandler,
+        uint256 _minimumDelay,
         address _factoryAddr,
         bytes32 _proxyBytecodeHash
     )
-        EmailRecoveryManager(_verifier, _dkimRegistry, _emailAuthImpl, _commandHandler)
+        EmailRecoveryManager(_verifier, _dkimRegistry, _emailAuthImpl, _commandHandler, _minimumDelay)
     {
         if (_factoryAddr == address(0)) {
             revert InvalidFactory();

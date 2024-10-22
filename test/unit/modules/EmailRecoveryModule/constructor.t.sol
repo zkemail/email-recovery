@@ -21,6 +21,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             invalidValidator,
             functionSelector
         );
@@ -33,6 +34,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             ISafe.addOwnerWithThreshold.selector
         );
@@ -45,6 +47,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             ISafe.removeOwner.selector
         );
@@ -57,6 +60,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             ISafe.swapOwner.selector
         );
@@ -69,6 +73,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             ISafe.changeThreshold.selector
         );
@@ -85,6 +90,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             IModule.onInstall.selector
         );
@@ -101,6 +107,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             IModule.onUninstall.selector
         );
@@ -115,6 +122,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             bytes4(0)
         );
@@ -126,6 +134,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
+            minimumDelay,
             validatorAddress,
             functionSelector
         );

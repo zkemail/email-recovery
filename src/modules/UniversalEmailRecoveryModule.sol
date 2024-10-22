@@ -103,9 +103,10 @@ contract UniversalEmailRecoveryModule is
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address commandHandler
+        address commandHandler,
+        uint256 minimumDelay
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler)
+        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay)
     { }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
