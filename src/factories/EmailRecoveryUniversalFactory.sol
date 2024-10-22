@@ -62,6 +62,7 @@ contract EmailRecoveryUniversalFactory {
         bytes32 commandHandlerSalt,
         bytes32 recoveryModuleSalt,
         bytes calldata commandHandlerBytecode,
+        uint256 minimumDelay,
         address dkimRegistry
     )
         external
@@ -73,7 +74,7 @@ contract EmailRecoveryUniversalFactory {
         // Deploy recovery module
         address emailRecoveryModule = address(
             new UniversalEmailRecoveryModule{ salt: recoveryModuleSalt }(
-                verifier, dkimRegistry, emailAuthImpl, commandHandler
+                verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay
             )
         );
 

@@ -63,6 +63,8 @@ abstract contract BaseDeployTest is Test {
         address dkimRegistry = deployDKIMRegistry(dkimRegistrySigner);
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkimRegistry)));
 
+        vm.setEnv("MINIMUM_DELAY", vm.toString(uint256(0)));
+
         // Set EmailAuth implementation address
         address emailAuthImpl = address(new EmailAuth());
         vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(emailAuthImpl));
@@ -102,6 +104,7 @@ abstract contract BaseDeployTest is Test {
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(EmailRecoveryCommandHandler).creationCode,
+            vm.envUint("MINIMUM_DELAY"),
             vm.envAddress("DKIM_REGISTRY")
         );
         vm.setEnv("RECOVERY_MODULE", vm.toString(module));

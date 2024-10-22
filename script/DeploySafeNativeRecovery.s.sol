@@ -22,6 +22,7 @@ contract DeploySafeNativeRecovery_Script is Script {
         address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
+        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
@@ -74,7 +75,9 @@ contract DeploySafeNativeRecovery_Script is Script {
         }
 
         address module = address(
-            new SafeEmailRecoveryModule(verifier, address(dkim), emailAuthImpl, commandHandler)
+            new SafeEmailRecoveryModule(
+                verifier, address(dkim), emailAuthImpl, commandHandler, minimumDelay
+            )
         );
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));

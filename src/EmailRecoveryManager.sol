@@ -54,6 +54,11 @@ abstract contract EmailRecoveryManager is
     address public immutable commandHandler;
 
     /**
+     * The minimum delay before a successful recovery attempt can be executed
+     */
+    uint256 public immutable minimumDelay;
+
+    /**
      * Account address to recovery config
      */
     mapping(address account => RecoveryConfig recoveryConfig) internal recoveryConfigs;
@@ -73,7 +78,8 @@ abstract contract EmailRecoveryManager is
         address _verifier,
         address _dkimRegistry,
         address _emailAuthImpl,
-        address _commandHandler
+        address _commandHandler,
+        uint256 _minimumDelay
     ) {
         if (_verifier == address(0)) {
             revert InvalidVerifier();
@@ -91,6 +97,7 @@ abstract contract EmailRecoveryManager is
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
+        minimumDelay = _minimumDelay;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -296,6 +303,9 @@ abstract contract EmailRecoveryManager is
 
         if (guardianConfigs[account].threshold == 0) {
             revert AccountNotConfigured();
+        }
+        if (recoveryConfig.delay < minimumDelay) {
+            revert DelayLessThanMinimumDelay(recoveryConfig.delay, minimumDelay);
         }
         if (recoveryConfig.delay > recoveryConfig.expiry) {
             revert DelayMoreThanExpiry(recoveryConfig.delay, recoveryConfig.expiry);
