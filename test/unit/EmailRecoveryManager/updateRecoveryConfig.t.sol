@@ -123,23 +123,24 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
 
     function test_UpdateRecoveryConfig_Success_WithMinimumDelayOfZero() public {
         uint256 newMinimumDelay = 0;
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
-        UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(1), address(2), address(3), address(4), newMinimumDelay
+        UniversalEmailRecoveryModule newEmailRecoveryModule = new UniversalEmailRecoveryModule(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            address(4),
+            newMinimumDelay
         );
-        instance2.installModule({
-            moduleTypeId: MODULE_TYPE_VALIDATOR,
-            module: validatorAddress,
-            data: abi.encode(owner1)
-        });
-        instance2.installModule({
+
+        instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
-            module: address(emailRecoveryModule),
+            module: address(newEmailRecoveryModule),
             data: abi.encode(
                 validatorAddress,
                 isInstalledContext,
                 functionSelector,
-                guardians2,
+                guardians1,
                 guardianWeights,
                 threshold,
                 delay,
@@ -152,14 +153,14 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
             IEmailRecoveryManager.RecoveryConfig(newDelay, expiry);
 
-        vm.startPrank(accountAddress2);
+        vm.startPrank(accountAddress1);
         vm.expectEmit();
         emit IEmailRecoveryManager.RecoveryConfigUpdated(
-            accountAddress2, newDelay, recoveryConfig.expiry
+            accountAddress1, newDelay, recoveryConfig.expiry
         );
-        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
+        newEmailRecoveryModule.updateRecoveryConfig(recoveryConfig);
 
-        recoveryConfig = emailRecoveryModule.getRecoveryConfig(accountAddress2);
+        recoveryConfig = newEmailRecoveryModule.getRecoveryConfig(accountAddress1);
         assertEq(recoveryConfig.delay, newDelay);
         assertEq(recoveryConfig.expiry, expiry);
     }
