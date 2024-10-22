@@ -21,8 +21,8 @@ importers:
         specifier: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?057b8e95b7bca2884d8da384379c15be9975b30d
         version: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?057b8e95b7bca2884d8da384379c15be9975b30d
       '@zk-email/ether-email-auth-contracts':
-        specifier: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?050693093309766ecfcfae9d1c0715d6ed589d14
-        version: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?050693093309766ecfcfae9d1c0715d6ed589d14
+        specifier: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?4bb2dea1655758bf4f2ca9ebe48bd708b65619a8
+        version: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?4bb2dea1655758bf4f2ca9ebe48bd708b65619a8
       erc7579-implementation:
         specifier: github:erc7579/erc7579-implementation
         version: https://codeload.github.com/erc7579/erc7579-implementation/tar.gz/b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))
@@ -468,12 +468,8 @@ packages:
     resolution: {tarball: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?057b8e95b7bca2884d8da384379c15be9975b30d}
     version: 6.2.0
 
-  '@zk-email/contracts@https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates':
-    resolution: {tarball: https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates}
-    version: 6.2.0
-
-  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?050693093309766ecfcfae9d1c0715d6ed589d14':
-    resolution: {tarball: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?050693093309766ecfcfae9d1c0715d6ed589d14}
+  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?4bb2dea1655758bf4f2ca9ebe48bd708b65619a8':
+    resolution: {tarball: https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?4bb2dea1655758bf4f2ca9ebe48bd708b65619a8}
     version: 0.1.1-preview
 
   abbrev@1.0.9:
@@ -2765,18 +2761,12 @@ snapshots:
       '@openzeppelin/contracts-upgradeable': 5.0.1(@openzeppelin/contracts@5.1.0)
       dotenv: 16.4.5
 
-  '@zk-email/contracts@https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates':
-    dependencies:
-      '@openzeppelin/contracts': 5.1.0
-      '@openzeppelin/contracts-upgradeable': 5.0.1(@openzeppelin/contracts@5.1.0)
-      dotenv: 16.4.5
-
-  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?050693093309766ecfcfae9d1c0715d6ed589d14':
+  '@zk-email/ether-email-auth-contracts@https://gitpkg.vercel.app/zkemail/ether-email-auth/packages/contracts?4bb2dea1655758bf4f2ca9ebe48bd708b65619a8':
     dependencies:
       '@matterlabs/zksync-contracts': 0.6.1(@openzeppelin/contracts-upgradeable@5.0.1(@openzeppelin/contracts@5.1.0))(@openzeppelin/contracts@5.1.0)
       '@openzeppelin/contracts': 5.1.0
       '@openzeppelin/contracts-upgradeable': 5.0.1(@openzeppelin/contracts@5.1.0)
-      '@zk-email/contracts': https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?feat/dkim-registry-updates
+      '@zk-email/contracts': https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?057b8e95b7bca2884d8da384379c15be9975b30d
       solady: 0.0.123
 
   abbrev@1.0.9: {}
