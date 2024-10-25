@@ -26,9 +26,7 @@ contract DeploySafeNativeRecovery_Script is Script {
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
-        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
-
-        console.log("salt %s", salt);
+        uint salt = vm.envOr("CREATE2_SALT", uint256(0));
 
         console.log("verifier %s", verifier);
 

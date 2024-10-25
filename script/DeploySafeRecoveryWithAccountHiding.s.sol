@@ -37,12 +37,13 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        uint salt = vm.envOr("CREATE2_SALT", uint(0));
 
         if (verifier == address(0)) {
-            Verifier verifierImpl = new Verifier();
+            Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-            Groth16Verifier groth16Verifier = new Groth16Verifier();
-            ERC1967Proxy verifierProxy = new ERC1967Proxy(
+            Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
+            ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(verifierImpl),
                 abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
@@ -55,12 +56,12 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
             // Deploy Useroverridable DKIM registry
             uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
-            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
             console.log(
                 "UserOverrideableDKIMRegistry implementation deployed at: %s",
                 address(overrideableDkimImpl)
             );
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(overrideableDkimImpl),
                 abi.encodeCall(
                     overrideableDkimImpl.initialize,
@@ -73,12 +74,12 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         EmailRecoveryUniversalFactory factory =
-            new EmailRecoveryUniversalFactory(verifier, emailAuthImpl);
+            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl);
         (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
