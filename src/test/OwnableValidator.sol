@@ -73,6 +73,19 @@ contract OwnableValidator is ERC7579ValidatorBase {
             : EIP1271_FAILED;
     }
 
+    function validateSignatureWithData(
+        bytes32 hash,
+        bytes calldata signature,
+        bytes calldata data
+    )
+        external
+        view
+        override
+        returns (bool)
+    {
+        return false;
+    }
+
     function changeOwner(address newOwner) external {
         owners[msg.sender] = newOwner;
     }
