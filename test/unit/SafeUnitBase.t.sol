@@ -60,7 +60,11 @@ abstract contract SafeUnitBase is BaseTest {
         commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 

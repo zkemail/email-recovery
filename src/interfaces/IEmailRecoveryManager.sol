@@ -99,6 +99,7 @@ interface IEmailRecoveryManager {
     error InvalidProxyBytecodeHash();
     error SetupAlreadyCalled();
     error AccountNotConfigured();
+    error DelayLessThanMinimumDelay(uint256 delay, uint256 minimumDelay);
     error DelayMoreThanExpiry(uint256 delay, uint256 expiry);
     error RecoveryWindowTooShort(uint256 recoveryWindow);
     error ThresholdExceedsAcceptedWeight(uint256 threshold, uint256 acceptedWeight);

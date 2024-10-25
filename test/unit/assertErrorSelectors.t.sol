@@ -56,6 +56,7 @@ contract LogErrorSelectors_Test is Test {
         assertEq(IEmailRecoveryManager.InvalidProxyBytecodeHash.selector, bytes4(0xa65b3f53));
         assertEq(IEmailRecoveryManager.SetupAlreadyCalled.selector, bytes4(0xb3af5593));
         assertEq(IEmailRecoveryManager.AccountNotConfigured.selector, bytes4(0x66ecbd6d));
+        assertEq(IEmailRecoveryManager.DelayLessThanMinimumDelay.selector, bytes4(0x59780056));
         assertEq(IEmailRecoveryManager.DelayMoreThanExpiry.selector, bytes4(0xb742a43c));
         assertEq(IEmailRecoveryManager.RecoveryWindowTooShort.selector, bytes4(0x50799cce));
         assertEq(IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, bytes4(0x7c3e983c));

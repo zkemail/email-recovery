@@ -22,10 +22,11 @@ contract DeploySafeNativeRecovery_Script is Script {
         address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
+        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
-        uint salt = vm.envOr("CREATE2_SALT", uint(0));
+        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
 
         console.log("salt %s", salt);
 
@@ -51,7 +52,8 @@ contract DeploySafeNativeRecovery_Script is Script {
         uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
         if (address(dkim) == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
+            UserOverrideableDKIMRegistry overrideableDkimImpl =
+                new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
             console.log(
                 "UserOverrideableDKIMRegistry implementation deployed at: %s",
                 address(overrideableDkimImpl)
@@ -79,7 +81,9 @@ contract DeploySafeNativeRecovery_Script is Script {
         }
 
         address module = address(
-            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(verifier, address(dkim), emailAuthImpl, commandHandler)
+            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
+                verifier, address(dkim), emailAuthImpl, commandHandler
+            )
         );
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));

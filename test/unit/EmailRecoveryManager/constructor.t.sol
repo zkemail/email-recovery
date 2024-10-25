@@ -14,7 +14,11 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidVerifier = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidVerifier.selector);
         new UniversalEmailRecoveryModule(
-            invalidVerifier, address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            invalidVerifier,
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
     }
 
@@ -22,7 +26,11 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidDkim = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), invalidDkim, address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            invalidDkim,
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
     }
 
@@ -30,7 +38,11 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidEmailAuth = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidEmailAuthImpl.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), invalidEmailAuth, commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            invalidEmailAuth,
+            commandHandlerAddress,
+            minimumDelay
         );
     }
 
@@ -38,13 +50,21 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidHandler = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidCommandHandler.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), invalidHandler
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            invalidHandler,
+            minimumDelay
         );
     }
 
     function test_Constructor() public {
         UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), commandHandlerAddress
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay
         );
 
         assertEq(address(verifier), emailRecoveryModule.verifier());

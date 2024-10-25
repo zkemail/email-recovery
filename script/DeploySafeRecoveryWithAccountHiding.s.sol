@@ -34,6 +34,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
         address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
         address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
@@ -82,6 +83,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is Script {
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(AccountHidingRecoveryCommandHandler).creationCode,
+            minimumDelay,
             dkimRegistry
         );
 
