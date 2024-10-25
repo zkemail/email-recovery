@@ -26,14 +26,17 @@ contract DeploySafeNativeRecovery_Script is Script {
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
-        UserOverrideableDKIMRegistry dkim;
+        uint salt = vm.envOr("CREATE2_SALT", uint256(0));
 
         console.log("verifier %s", verifier);
+
+        UserOverrideableDKIMRegistry dkim;
+
         if (verifier == address(0)) {
-            Verifier verifierImpl = new Verifier();
+            Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-            Groth16Verifier groth16Verifier = new Groth16Verifier();
-            ERC1967Proxy verifierProxy = new ERC1967Proxy(
+            Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
+            ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(verifierImpl),
                 abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
@@ -47,12 +50,13 @@ contract DeploySafeNativeRecovery_Script is Script {
         uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
         if (address(dkim) == address(0)) {
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            UserOverrideableDKIMRegistry overrideableDkimImpl =
+                new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
             console.log(
                 "UserOverrideableDKIMRegistry implementation deployed at: %s",
                 address(overrideableDkimImpl)
             );
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(overrideableDkimImpl),
                 abi.encodeCall(
                     overrideableDkimImpl.initialize,
@@ -65,17 +69,17 @@ contract DeploySafeNativeRecovery_Script is Script {
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         if (commandHandler == address(0)) {
-            commandHandler = address(new SafeRecoveryCommandHandler());
+            commandHandler = address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
             console.log("Deployed Command Handler at", commandHandler);
         }
 
         address module = address(
-            new SafeEmailRecoveryModule(
+            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
                 verifier, address(dkim), emailAuthImpl, commandHandler, minimumDelay
             )
         );

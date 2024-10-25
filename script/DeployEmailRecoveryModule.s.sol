@@ -26,14 +26,15 @@ contract DeployEmailRecoveryModuleScript is Script {
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        uint salt = vm.envOr("CREATE2_SALT", uint(0));
 
         UserOverrideableDKIMRegistry dkim;
 
         if (verifier == address(0)) {
-            Verifier verifierImpl = new Verifier();
+            Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
             console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-            Groth16Verifier groth16Verifier = new Groth16Verifier();
-            ERC1967Proxy verifierProxy = new ERC1967Proxy(
+            Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
+            ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(verifierImpl),
                 abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
             );
@@ -44,15 +45,15 @@ contract DeployEmailRecoveryModuleScript is Script {
 
         // Deploy Useroverridable DKIM registry
         dkim = UserOverrideableDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
-        uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
         if (address(dkim) == address(0)) {
+            uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
             require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+            UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
             console.log(
                 "UserOverrideableDKIMRegistry implementation deployed at: %s",
                 address(overrideableDkimImpl)
             );
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
                 address(overrideableDkimImpl),
                 abi.encodeCall(
                     overrideableDkimImpl.initialize,
@@ -65,18 +66,18 @@ contract DeployEmailRecoveryModuleScript is Script {
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         if (validatorAddr == address(0)) {
-            validatorAddr = address(new OwnableValidator());
+            validatorAddr = address(new OwnableValidator{ salt: bytes32(salt) }());
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
 
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
-            _factory = address(new EmailRecoveryFactory(verifier, emailAuthImpl));
+            _factory = address(new EmailRecoveryFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
         {

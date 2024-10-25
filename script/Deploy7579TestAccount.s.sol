@@ -51,6 +51,8 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
 
     bytes4 public functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
 
+    uint salt = vm.envOr("CREATE2_SALT", uint(0));
+
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privKey);
@@ -61,42 +63,42 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
 
         address msaBasicImplAddr = vm.envOr("MSA_BASIC_IMPL", address(0));
         if (msaBasicImplAddr == address(0)) {
-            msaBasicImplAddr = address(new MSABasic());
+            msaBasicImplAddr = address(new MSABasic{ salt: bytes32(salt) }());
             console.log("Deployed MSABasic at", msaBasicImplAddr);
         }
         msaBasicImpl = MSABasic(payable(msaBasicImplAddr));
 
         address msaFactoryAddr = vm.envOr("MSA_FACTORY", address(0));
         if (msaFactoryAddr == address(0)) {
-            msaFactoryAddr = address(new MSAFactory(msaBasicImplAddr));
+            msaFactoryAddr = address(new MSAFactory{ salt: bytes32(salt) }(msaBasicImplAddr));
             console.log("Deployed MSAFactory at", msaFactoryAddr);
         }
         msaFactory = MSAFactory(msaFactoryAddr);
 
         address bootstrapAddr = vm.envOr("BOOTSTRAP", address(0));
         if (bootstrapAddr == address(0)) {
-            bootstrapAddr = address(new Bootstrap());
+            bootstrapAddr = address(new Bootstrap{ salt: bytes32(salt) }());
             console.log("Deployed Bootstrap at", bootstrapAddr);
         }
         bootstrap = Bootstrap(payable(bootstrapAddr));
 
         address hookAddr = vm.envOr("HOOK", address(0));
         if (hookAddr == address(0)) {
-            hookAddr = address(new MockHook());
+            hookAddr = address(new MockHook{ salt: bytes32(salt) }());
             console.log("Deployed MockHook at", hookAddr);
         }
         hook = MockHook(hookAddr);
 
         address mockTargetAddr = vm.envOr("MOCK_TARGET", address(0));
         if (mockTargetAddr == address(0)) {
-            mockTargetAddr = address(new MockTarget());
+            mockTargetAddr = address(new MockTarget{ salt: bytes32(salt) }());
             console.log("Deployed MockTarget at", mockTargetAddr);
         }
         mockTarget = MockTarget(mockTargetAddr);
 
         validatorAddr = vm.envOr("VALIDATOR", address(0));
         if (validatorAddr == address(0)) {
-            validatorAddr = address(new OwnableValidator());
+            validatorAddr = address(new OwnableValidator{ salt: bytes32(salt) }());
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
 
