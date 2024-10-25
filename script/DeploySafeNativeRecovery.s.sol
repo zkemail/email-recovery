@@ -82,7 +82,7 @@ contract DeploySafeNativeRecovery_Script is Script {
 
         address module = address(
             new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
-                verifier, address(dkim), emailAuthImpl, commandHandler
+                verifier, address(dkim), emailAuthImpl, commandHandler, minimumDelay
             )
         );
 
