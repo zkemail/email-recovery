@@ -94,7 +94,7 @@ contract AccountHidingRecoveryCommandHandler_validateRecoveryCommand_Test is Uni
 
         accountHidingRecoveryCommandHandler.storeAccountHash(accountAddress1);
 
-        vm.expectRevert("invalid hex string length");
+        vm.expectRevert("bytes length is not 32");
         accountHidingRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
     }
 

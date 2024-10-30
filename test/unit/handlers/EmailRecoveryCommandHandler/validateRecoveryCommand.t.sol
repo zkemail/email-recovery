@@ -79,7 +79,7 @@ contract EmailRecoveryCommandHandler_validateRecoveryCommand_Test is UnitBase {
     function test_ValidateRecoveryCommand_RevertWhen_InvalidHashLength() public {
         commandParams[1] = abi.encode(uint256(recoveryDataHash).toHexString(33));
 
-        vm.expectRevert("invalid hex string length");
+        vm.expectRevert("bytes length is not 32");
         emailRecoveryCommandHandler.validateRecoveryCommand(templateIdx, commandParams);
     }
 

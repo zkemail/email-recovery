@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { IEmailRecoveryCommandHandler } from "../interfaces/IEmailRecoveryCommandHandler.sol";
-import { StringUtils } from "../libraries/StringUtils.sol";
+import { StringUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/StringUtils.sol";
 
 /**
  * @title AccountHidingRecoveryCommandHandler

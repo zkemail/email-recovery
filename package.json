@@ -34,8 +34,8 @@
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "5.0.1",
     "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
-    "@zk-email/contracts": "https://gitpkg.vercel.app/zkemail/zk-email-verify/packages/contracts?e518903643c2c06080ccd9b409273b5fcb518a9a",
-    "@zk-email/ether-email-auth-contracts": "0.2.0-preview",
+    "@zk-email/contracts": "^6.3.1",
+    "@zk-email/ether-email-auth-contracts": "0.2.1-preview",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
