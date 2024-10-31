@@ -299,3 +299,12 @@ test/unit/assertErrorSelectors.t.sol
 ### Command Template Mismatch
 
 We have three different command handlers. Each has its own expected commands for accept and recovery actions. If you get a command-related error, check which command handler you're using. You can do this with block explorers or cast commands.
+
+## Support and Contact
+
+We prioritize the security and user experience of ZK Email. If you encounter any issues or have questions, please contact us at:
+
+- **Support Email**: [team@zk.email](mailto:team@zk.email)
+- **Telegram groups**: [t.me/zkemail](https://t.me/zkemail)
+
+Our team will respond quickly to help resolve any problems.
