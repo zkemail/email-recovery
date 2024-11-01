@@ -19,21 +19,31 @@ import { BaseDeployScript } from "./BaseDeployScript.s.sol";
 // script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHiding_Script
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
+    address verifier;
+    address dkim;
+    address dkimRegistrySigner;
+    address emailAuthImpl;
+    uint256 minimumDelay;
+    address killSwitchAuthorizer;
+
+    address initialOwner;
+    uint256 salt;
+
     function run() public override {
         super.run();
         address entryPoint = address(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
         IERC7484 registry = IERC7484(0xe0cde9239d16bEf05e62Bbf7aA93e420f464c826);
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        address verifier = address(0);
-        address dkim = vm.envOr("DKIM_REGISTRY", address(0));
-        address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
-        address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
-        address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        verifier = address(0);
+        dkim = vm.envOr("DKIM_REGISTRY", address(0));
+        dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
+        killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
-        address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
-        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
+        initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        salt = vm.envOr("CREATE2_SALT", uint256(0));
 
         if (verifier == address(0)) {
             verifier = deployVerifier(initialOwner, salt);
