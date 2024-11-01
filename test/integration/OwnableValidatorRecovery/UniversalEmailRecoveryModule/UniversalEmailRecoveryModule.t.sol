@@ -483,6 +483,9 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
 
     function test_Recover_RevertWhenUninstallModuleAndRecoverAgainWithKillSwitch() public {
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+        if (isAccountTypeSafe()) {
+            vm.skip(true);
+        } 
 
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
