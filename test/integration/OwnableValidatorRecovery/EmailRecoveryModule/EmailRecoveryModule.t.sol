@@ -366,4 +366,25 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(updatedOwner2, newOwner2);
         assertEq(updatedOwner3, newOwner3);
     }
+
+    function test_Recover_RevertWhenUninstallModuleAndRecoverAgainWithKillSwitch() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        address updatedOwner = validator.owners(accountAddress1);
+        assertEq(updatedOwner, newOwner1);
+
+        vm.prank(killSwitchAuthorizer);
+        IEmailRecoveryManager(emailRecoveryModuleAddress).toggleKillSwitch();
+        vm.stopPrank();
+
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+        // the second module installation should fail after the kill switch is enabled.
+        instance1.expect4337Revert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        instance1.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: emailRecoveryModuleAddress,
+            data: abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry)
+        });
+    }
 }

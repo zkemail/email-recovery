@@ -608,7 +608,7 @@ abstract contract EmailRecoveryManager is
      * unexpected behaviour when reinstalling account modules, the contract state should be
      * deinitialized. This should include removing state accociated with an account.
      */
-    function deInitRecoveryModule() internal onlyWhenNotRecovering onlyWhenActive {
+    function deInitRecoveryModule() internal onlyWhenNotRecovering {
         address account = msg.sender;
         deInitRecoveryModule(account);
     }
