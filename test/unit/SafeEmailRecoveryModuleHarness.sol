@@ -18,7 +18,8 @@ contract SafeEmailRecoveryModuleHarness is SafeEmailRecoveryModule {
             emailAuthImpl,
             commandHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         )
     { }
 

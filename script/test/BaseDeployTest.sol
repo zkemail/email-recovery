@@ -107,6 +107,7 @@ abstract contract BaseDeployTest is Test {
             type(EmailRecoveryCommandHandler).creationCode,
             vm.envUint("MINIMUM_DELAY"),
             vm.envAddress("KILL_SWITCH_AUTHORIZER"),
+            false,
             vm.envAddress("DKIM_REGISTRY")
         );
         vm.setEnv("RECOVERY_MODULE", vm.toString(module));

@@ -70,6 +70,7 @@ contract EmailRecoveryFactory {
         bytes calldata commandHandlerBytecode,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
+        bool enableSameTxProtection,
         address dkimRegistry,
         address validator,
         bytes4 functionSelector
@@ -89,6 +90,7 @@ contract EmailRecoveryFactory {
                 commandHandler,
                 minimumDelay,
                 killSwitchAuthorizer,
+                enableSameTxProtection,
                 validator,
                 functionSelector
             )

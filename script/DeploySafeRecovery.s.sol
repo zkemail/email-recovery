@@ -23,6 +23,7 @@ contract DeploySafeRecovery_Script is BaseDeployScript {
     address public emailAuthImpl;
     uint256 public minimumDelay;
     address public killSwitchAuthorizer;
+    bool public enableSameTxProtection;
 
     address public initialOwner;
     uint256 public salt;
@@ -40,6 +41,8 @@ contract DeploySafeRecovery_Script is BaseDeployScript {
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        enableSameTxProtection = vm.envOr("ENABLE_SAME_TX_PROTECTION", true);
+
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         salt = vm.envOr("CREATE2_SALT", uint256(0));
 
@@ -71,6 +74,7 @@ contract DeploySafeRecovery_Script is BaseDeployScript {
             type(SafeRecoveryCommandHandler).creationCode,
             minimumDelay,
             killSwitchAuthorizer,
+            enableSameTxProtection,
             address(dkim)
         );
 

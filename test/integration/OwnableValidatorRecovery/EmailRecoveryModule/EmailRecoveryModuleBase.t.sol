@@ -9,6 +9,7 @@ import { AccountHidingRecoveryCommandHandler } from
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { BaseTest, CommandHandlerType } from "../../../Base.t.sol";
+import {console} from "forge-std/console.sol";
 
 abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest {
     using ModuleKitHelpers for *;
@@ -50,11 +51,13 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest 
             abi.encode(isInstalledContext, guardians3, guardianWeights, threshold, delay, expiry);
 
         // Install modules for account 1
+        console.log("block number 1: %s", block.number);
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: validatorAddress,
             data: abi.encode(owner1)
         });
+        console.log("block number 2: %s", block.number);
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: emailRecoveryModuleAddress,
@@ -112,6 +115,7 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest 
             handlerBytecode,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             address(dkimRegistry),
             validatorAddress,
             functionSelector

@@ -16,7 +16,8 @@ contract UniversalEmailRecoveryModule_constructor_Test is UnitBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
     }
 }

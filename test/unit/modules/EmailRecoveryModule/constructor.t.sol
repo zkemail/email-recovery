@@ -23,6 +23,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             invalidValidator,
             functionSelector
         );
@@ -37,6 +38,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             ISafe.addOwnerWithThreshold.selector
         );
@@ -51,6 +53,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             ISafe.removeOwner.selector
         );
@@ -65,6 +68,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             ISafe.swapOwner.selector
         );
@@ -79,6 +83,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             ISafe.changeThreshold.selector
         );
@@ -97,6 +102,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             IModule.onInstall.selector
         );
@@ -115,6 +121,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             IModule.onUninstall.selector
         );
@@ -131,6 +138,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             bytes4(0)
         );
@@ -144,6 +152,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validatorAddress,
             functionSelector
         );

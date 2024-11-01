@@ -81,9 +81,20 @@ abstract contract EmailRecoveryManager is
     mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
         previousRecoveryRequests;
 
+    bool public enableSameTxProtection;
+    mapping(uint256 => mapping(address => bool)) public isTxOriginCalled;
+
     modifier onlyWhenActive() {
         if (killSwitchEnabled) {
             revert KillSwitchEnabled();
+        }
+        _;
+    }
+
+    modifier preventExecInSameTx() {
+        if(enableSameTxProtection){
+            require(isTxOriginCalled[block.number][tx.origin] == false, "EmailRecoveryManager: TX_ORIGIN_ALREADY_CALLED");
+            isTxOriginCalled[block.number][tx.origin] = true;
         }
         _;
     }
@@ -94,7 +105,8 @@ abstract contract EmailRecoveryManager is
         address _emailAuthImpl,
         address _commandHandler,
         uint256 _minimumDelay,
-        address _killSwitchAuthorizer
+        address _killSwitchAuthorizer,
+        bool _enableSameTxProtection
     )
         Ownable(_killSwitchAuthorizer)
     {
@@ -118,6 +130,7 @@ abstract contract EmailRecoveryManager is
         emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
+        enableSameTxProtection = _enableSameTxProtection;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -292,6 +305,7 @@ abstract contract EmailRecoveryManager is
     )
         internal
         onlyWhenActive
+        preventExecInSameTx
     {
         address account = msg.sender;
 
@@ -320,6 +334,7 @@ abstract contract EmailRecoveryManager is
         public
         onlyWhenNotRecovering
         onlyWhenActive
+        preventExecInSameTx
     {
         address account = msg.sender;
 
@@ -368,6 +383,7 @@ abstract contract EmailRecoveryManager is
         internal
         override
         onlyWhenActive
+        preventExecInSameTx
     {
         address account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
             templateIdx, commandParams
@@ -417,6 +433,7 @@ abstract contract EmailRecoveryManager is
         internal
         override
         onlyWhenActive
+        preventExecInSameTx
     {
         address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
             templateIdx, commandParams
@@ -515,6 +532,7 @@ abstract contract EmailRecoveryManager is
         external
         override
         onlyWhenActive
+        preventExecInSameTx
     {
         if (account == address(0)) {
             revert InvalidAccountAddress();
@@ -573,7 +591,7 @@ abstract contract EmailRecoveryManager is
      * @notice Cancels the recovery request for the caller's account
      * @dev Deletes the current recovery request associated with the caller's account
      */
-    function cancelRecovery() external onlyWhenActive {
+    function cancelRecovery() external onlyWhenActive preventExecInSameTx {
         if (recoveryRequests[msg.sender].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
@@ -587,7 +605,7 @@ abstract contract EmailRecoveryManager is
      * request has expired.
      * @param account The address of the account for which the recovery is being cancelled
      */
-    function cancelExpiredRecovery(address account) external onlyWhenActive {
+    function cancelExpiredRecovery(address account) external onlyWhenActive preventExecInSameTx {
         if (recoveryRequests[account].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }

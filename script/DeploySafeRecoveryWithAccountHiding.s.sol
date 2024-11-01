@@ -25,6 +25,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
     address emailAuthImpl;
     uint256 minimumDelay;
     address killSwitchAuthorizer;
+    bool enableSameTxProtection;
 
     address initialOwner;
     uint256 salt;
@@ -41,6 +42,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        enableSameTxProtection = vm.envOr("ENABLE_SAME_TX_PROTECTION", true);
 
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         salt = vm.envOr("CREATE2_SALT", uint256(0));
@@ -71,6 +73,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
             type(AccountHidingRecoveryCommandHandler).creationCode,
             minimumDelay,
             killSwitchAuthorizer,
+            enableSameTxProtection,
             dkim
         );
 

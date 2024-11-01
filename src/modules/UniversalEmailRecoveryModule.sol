@@ -105,7 +105,8 @@ contract UniversalEmailRecoveryModule is
         address emailAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
-        address killSwitchAuthorizer
+        address killSwitchAuthorizer,
+        bool enableSameTxProtection
     )
         EmailRecoveryManager(
             verifier,
@@ -113,7 +114,8 @@ contract UniversalEmailRecoveryModule is
             emailAuthImpl,
             commandHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            enableSameTxProtection
         )
     { }
 

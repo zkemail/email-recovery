@@ -19,6 +19,7 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        bool enableSameTxProtection = vm.envOr("ENABLE_SAME_TX_PROTECTION", true);
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
@@ -59,6 +60,7 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
                 type(EmailRecoveryCommandHandler).creationCode,
                 minimumDelay,
                 killSwitchAuthorizer,
+                enableSameTxProtection,
                 address(dkim)
             );
 

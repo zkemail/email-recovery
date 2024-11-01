@@ -18,6 +18,7 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
     address public validatorAddr;
     uint256 public minimumDelay;
     address public killSwitchAuthorizer;
+    bool public enableSameTxProtection;
 
     address public initialOwner;
     uint256 public salt;
@@ -33,6 +34,8 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         validatorAddr = vm.envOr("VALIDATOR", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        enableSameTxProtection = vm.envOr("ENABLE_SAME_TX_PROTECTION", true);
+
 
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         salt = vm.envOr("CREATE2_SALT", uint256(0));
@@ -76,6 +79,7 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
                 type(EmailRecoveryCommandHandler).creationCode,
                 minimumDelay,
                 killSwitchAuthorizer,
+                enableSameTxProtection,
                 address(dkim),
                 validatorAddr,
                 bytes4(keccak256(bytes("changeOwner(address)")))

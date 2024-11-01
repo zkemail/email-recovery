@@ -19,7 +19,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
     }
 
@@ -32,7 +33,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
     }
 
@@ -45,7 +47,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             invalidEmailAuth,
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
     }
 
@@ -58,7 +61,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(emailAuthImpl),
             invalidHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
     }
 
@@ -69,7 +73,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
 
         assertEq(address(verifier), emailRecoveryModule.verifier());

@@ -66,7 +66,8 @@ abstract contract SafeIntegrationBase is BaseTest {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 

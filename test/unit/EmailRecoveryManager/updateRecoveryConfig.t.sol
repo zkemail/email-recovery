@@ -144,7 +144,8 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             address(emailAuthImpl),
             address(4),
             newMinimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
 
         instance1.installModule({

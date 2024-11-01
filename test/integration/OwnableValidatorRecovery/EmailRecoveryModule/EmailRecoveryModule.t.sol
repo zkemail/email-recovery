@@ -333,6 +333,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
             getHandlerBytecode(),
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             address(dkimRegistry),
             validatorAddress,
             functionSelector

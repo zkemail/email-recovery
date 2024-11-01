@@ -65,7 +65,8 @@ abstract contract SafeUnitBase is BaseTest {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 

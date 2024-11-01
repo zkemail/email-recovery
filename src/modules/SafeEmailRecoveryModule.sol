@@ -32,7 +32,8 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         address emailAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
-        address killSwitchAuthorizer
+        address killSwitchAuthorizer,
+        bool enableSameTxProtection
     )
         EmailRecoveryManager(
             verifier,
@@ -40,7 +41,8 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
             emailAuthImpl,
             commandHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            enableSameTxProtection
         )
     { }
 

@@ -20,6 +20,8 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        bool enableSameTxProtection = vm.envOr("ENABLE_SAME_TX_PROTECTION", true);
+
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
@@ -61,7 +63,8 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
                 emailAuthImpl,
                 commandHandler,
                 minimumDelay,
-                killSwitchAuthorizer
+                killSwitchAuthorizer,
+                enableSameTxProtection
             )
         );
 

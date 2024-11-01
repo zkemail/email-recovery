@@ -30,6 +30,7 @@ contract EmailRecoveryFactory_deployAll_Test is UnitBase {
                 expectedCommandHandler,
                 minimumDelay,
                 killSwitchAuthorizer,
+                false,
                 validatorAddress,
                 functionSelector
             )
@@ -49,6 +50,7 @@ contract EmailRecoveryFactory_deployAll_Test is UnitBase {
             commandHandlerBytecode,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             address(dkimRegistry),
             validatorAddress,
             functionSelector

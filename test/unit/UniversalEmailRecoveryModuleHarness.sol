@@ -24,7 +24,8 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
             emailAuthImpl,
             commandHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            false
         )
     { }
 

@@ -24,6 +24,7 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
             commandHandler,
             minimumDelay,
             killSwitchAuthorizer,
+            false,
             validator,
             selector
         )

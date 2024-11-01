@@ -21,6 +21,7 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
         address _commandHandler,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer,
+        bool _enableSameTxProtection,
         address _factoryAddr,
         bytes32 _proxyBytecodeHash
     )
@@ -30,7 +31,8 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
             _emailAuthImpl,
             _commandHandler,
             _minimumDelay,
-            _killSwitchAuthorizer
+            _killSwitchAuthorizer,
+            _enableSameTxProtection
         )
     {
         if (_factoryAddr == address(0)) {

@@ -46,6 +46,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
+        bool enableSameTxProtection,
         address _validator,
         bytes4 _selector
     )
@@ -55,7 +56,8 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
             emailAuthImpl,
             commandHandler,
             minimumDelay,
-            killSwitchAuthorizer
+            killSwitchAuthorizer,
+            enableSameTxProtection
         )
     {
         if (_validator == address(0)) {

@@ -66,6 +66,7 @@ contract EmailRecoveryUniversalFactory {
         bytes calldata commandHandlerBytecode,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
+        bool enableSameTxProtection,
         address dkimRegistry
     )
         external
@@ -82,7 +83,8 @@ contract EmailRecoveryUniversalFactory {
                 emailAuthImpl,
                 commandHandler,
                 minimumDelay,
-                killSwitchAuthorizer
+                killSwitchAuthorizer,
+                enableSameTxProtection
             )
         );
 
