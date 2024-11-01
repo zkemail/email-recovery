@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { ModuleKitHelpers, AccountInstance } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { EmailAccountRecovery } from
+    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -309,6 +311,51 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
 
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        executeRecoveryFlowForAccount(accountAddress2, guardians2, recoveryDataHash2, recoveryData2);
+        executeRecoveryFlowForAccount(accountAddress3, guardians3, recoveryDataHash3, recoveryData3);
+
+        address updatedOwner1 = validator.owners(accountAddress1);
+        address updatedOwner2 = validator.owners(accountAddress2);
+        address updatedOwner3 = validator.owners(accountAddress3);
+        assertEq(updatedOwner1, newOwner1);
+        assertEq(updatedOwner2, newOwner2);
+        assertEq(updatedOwner3, newOwner3);
+    }
+
+    function test_ActivateKillSwitchDoesNotImpactOtherModules() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+
+        bytes32 commandHandlerSalt = bytes32(uint256(1));
+        bytes32 recoveryModuleSalt = bytes32(uint256(1));
+        (address newRecoveryModuleAddress,) = emailRecoveryFactory.deployEmailRecoveryModule(
+            commandHandlerSalt,
+            recoveryModuleSalt,
+            getHandlerBytecode(),
+            minimumDelay,
+            killSwitchAuthorizer,
+            address(dkimRegistry),
+            validatorAddress,
+            functionSelector
+        );
+        AccountInstance memory newAccountInstance = makeAccountInstance("account1");
+        newAccountInstance.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: newRecoveryModuleAddress,
+            data: abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry)
+        });
+
+        vm.prank(killSwitchAuthorizer);
+        IEmailRecoveryManager(newRecoveryModuleAddress).toggleKillSwitch();
+        vm.stopPrank();
+
+        // toggling kill switch for one module does not inpact other modules
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+
+        // new module should not be useable
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        EmailAccountRecovery(newRecoveryModuleAddress).completeRecovery(
+            accountAddress1, abi.encodePacked("1")
+        );
         executeRecoveryFlowForAccount(accountAddress2, guardians2, recoveryDataHash2, recoveryData2);
         executeRecoveryFlowForAccount(accountAddress3, guardians3, recoveryDataHash3, recoveryData3);
 

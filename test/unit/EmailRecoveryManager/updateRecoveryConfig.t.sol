@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
@@ -13,6 +13,19 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
 
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_UpdateRecoveryConfig_RevertWhen_KillSwitchEnabled() public {
+        IEmailRecoveryManager.RecoveryConfig memory recoveryConfig =
+            IEmailRecoveryManager.RecoveryConfig(delay, expiry);
+
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress1);
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 
     function test_UpdateRecoveryConfig_RevertWhen_AlreadyRecovering() public {
@@ -130,7 +143,8 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             address(4),
-            newMinimumDelay
+            newMinimumDelay,
+            killSwitchAuthorizer
         );
 
         instance1.installModule({

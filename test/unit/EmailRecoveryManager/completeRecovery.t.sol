@@ -9,6 +9,15 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         super.setUp();
     }
 
+    function test_CompleteRecovery_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
+    }
+
     function test_CompleteRecovery_RevertWhen_InvalidAccountAddress() public {
         address invalidAccount = address(0);
 

@@ -65,7 +65,8 @@ abstract contract SafeIntegrationBase is BaseTest {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 

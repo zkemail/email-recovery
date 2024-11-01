@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { EmailAccountRecovery } from
     "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
@@ -29,6 +30,7 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
 abstract contract EmailRecoveryManager is
     EmailAccountRecovery,
     GuardianManager,
+    Ownable,
     IEmailRecoveryManager
 {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -54,6 +56,11 @@ abstract contract EmailRecoveryManager is
     address public immutable commandHandler;
 
     /**
+     * boolean flag for the kill switch being enabled or disabled
+     */
+    bool public killSwitchEnabled;
+
+    /**
      * The minimum delay before a successful recovery attempt can be executed
      */
     uint256 public immutable minimumDelay;
@@ -74,13 +81,23 @@ abstract contract EmailRecoveryManager is
     mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
         previousRecoveryRequests;
 
+    modifier onlyWhenActive() {
+        if (killSwitchEnabled) {
+            revert KillSwitchEnabled();
+        }
+        _;
+    }
+
     constructor(
         address _verifier,
         address _dkimRegistry,
         address _emailAuthImpl,
         address _commandHandler,
-        uint256 _minimumDelay
-    ) {
+        uint256 _minimumDelay,
+        address _killSwitchAuthorizer
+    )
+        Ownable(_killSwitchAuthorizer)
+    {
         if (_verifier == address(0)) {
             revert InvalidVerifier();
         }
@@ -92,6 +109,9 @@ abstract contract EmailRecoveryManager is
         }
         if (_commandHandler == address(0)) {
             revert InvalidCommandHandler();
+        }
+        if (_killSwitchAuthorizer == address(0)) {
+            revert InvalidKillSwitchAuthorizer();
         }
         verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
@@ -271,6 +291,7 @@ abstract contract EmailRecoveryManager is
         uint256 expiry
     )
         internal
+        onlyWhenActive
     {
         address account = msg.sender;
 
@@ -298,6 +319,7 @@ abstract contract EmailRecoveryManager is
     function updateRecoveryConfig(RecoveryConfig memory recoveryConfig)
         public
         onlyWhenNotRecovering
+        onlyWhenActive
     {
         address account = msg.sender;
 
@@ -345,6 +367,7 @@ abstract contract EmailRecoveryManager is
     )
         internal
         override
+        onlyWhenActive
     {
         address account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
             templateIdx, commandParams
@@ -393,6 +416,7 @@ abstract contract EmailRecoveryManager is
     )
         internal
         override
+        onlyWhenActive
     {
         address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
             templateIdx, commandParams
@@ -484,7 +508,14 @@ abstract contract EmailRecoveryManager is
      * account, depending on how the `handler.parseRecoveryDataHash()` and `recover()` functions
      * are implemented
      */
-    function completeRecovery(address account, bytes calldata recoveryData) external override {
+    function completeRecovery(
+        address account,
+        bytes calldata recoveryData
+    )
+        external
+        override
+        onlyWhenActive
+    {
         if (account == address(0)) {
             revert InvalidAccountAddress();
         }
@@ -542,7 +573,7 @@ abstract contract EmailRecoveryManager is
      * @notice Cancels the recovery request for the caller's account
      * @dev Deletes the current recovery request associated with the caller's account
      */
-    function cancelRecovery() external {
+    function cancelRecovery() external onlyWhenActive {
         if (recoveryRequests[msg.sender].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
@@ -556,7 +587,7 @@ abstract contract EmailRecoveryManager is
      * request has expired.
      * @param account The address of the account for which the recovery is being cancelled
      */
-    function cancelExpiredRecovery(address account) external {
+    function cancelExpiredRecovery(address account) external onlyWhenActive {
         if (recoveryRequests[account].currentWeight == 0) {
             revert NoRecoveryInProcess();
         }
@@ -577,7 +608,7 @@ abstract contract EmailRecoveryManager is
      * unexpected behaviour when reinstalling account modules, the contract state should be
      * deinitialized. This should include removing state accociated with an account.
      */
-    function deInitRecoveryModule() internal onlyWhenNotRecovering {
+    function deInitRecoveryModule() internal onlyWhenNotRecovering onlyWhenActive {
         address account = msg.sender;
         deInitRecoveryModule(account);
     }
@@ -618,5 +649,13 @@ abstract contract EmailRecoveryManager is
             recoveryRequest.guardianVoted.remove(guardiansVoted[i]);
         }
         delete recoveryRequests[account];
+    }
+
+    /**
+     * @notice Toggles the kill switch on the manager
+     * @dev Can only be called by the kill switch authorizer
+     */
+    function toggleKillSwitch() external onlyOwner {
+        killSwitchEnabled = !killSwitchEnabled;
     }
 }

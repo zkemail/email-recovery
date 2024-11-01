@@ -31,9 +31,17 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
-        uint256 minimumDelay
+        uint256 minimumDelay,
+        address killSwitchAuthorizer
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay)
+        EmailRecoveryManager(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay,
+            killSwitchAuthorizer
+        )
     { }
 
     /**

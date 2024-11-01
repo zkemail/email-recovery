@@ -111,6 +111,7 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest 
             recoveryModuleSalt,
             handlerBytecode,
             minimumDelay,
+            killSwitchAuthorizer,
             address(dkimRegistry),
             validatorAddress,
             functionSelector

@@ -54,6 +54,8 @@ contract EmailRecoveryUniversalFactory {
      * @param commandHandlerSalt Salt for the command handler deployment
      * @param recoveryModuleSalt Salt for the recovery module deployment
      * @param commandHandlerBytecode Bytecode of the command handler contract
+     * @param minimumDelay Minimum delay for recovery requests
+     * @param killSwitchAuthorizer Address of the kill switch authorizer
      * @param dkimRegistry Address of the DKIM registry.
      * @return emailRecoveryModule The deployed email recovery module
      * @return commandHandler The deployed command handler
@@ -63,6 +65,7 @@ contract EmailRecoveryUniversalFactory {
         bytes32 recoveryModuleSalt,
         bytes calldata commandHandlerBytecode,
         uint256 minimumDelay,
+        address killSwitchAuthorizer,
         address dkimRegistry
     )
         external
@@ -74,7 +77,12 @@ contract EmailRecoveryUniversalFactory {
         // Deploy recovery module
         address emailRecoveryModule = address(
             new UniversalEmailRecoveryModule{ salt: recoveryModuleSalt }(
-                verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay
+                verifier,
+                dkimRegistry,
+                emailAuthImpl,
+                commandHandler,
+                minimumDelay,
+                killSwitchAuthorizer
             )
         );
 

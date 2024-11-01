@@ -33,6 +33,17 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
+    function test_AcceptGuardian_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.exposed_acceptGuardian(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+    }
+
     function test_AcceptGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);

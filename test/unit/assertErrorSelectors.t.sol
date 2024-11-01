@@ -48,10 +48,12 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_IEmailRecoveryManager_AssertSelectors() public pure {
+        assertEq(IEmailRecoveryManager.KillSwitchEnabled.selector, bytes4(0xec7fb2a0));
         assertEq(IEmailRecoveryManager.InvalidVerifier.selector, bytes4(0xbaa3de5f));
         assertEq(IEmailRecoveryManager.InvalidDkimRegistry.selector, bytes4(0x260ce05b));
         assertEq(IEmailRecoveryManager.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
         assertEq(IEmailRecoveryManager.InvalidCommandHandler.selector, bytes4(0xfce1ed6f));
+        assertEq(IEmailRecoveryManager.InvalidKillSwitchAuthorizer.selector, bytes4(0x0a19006f));
         assertEq(IEmailRecoveryManager.InvalidFactory.selector, bytes4(0x7a44db95));
         assertEq(IEmailRecoveryManager.InvalidProxyBytecodeHash.selector, bytes4(0xa65b3f53));
         assertEq(IEmailRecoveryManager.SetupAlreadyCalled.selector, bytes4(0xb3af5593));

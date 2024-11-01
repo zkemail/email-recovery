@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
-import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModule_isModuleType_Test is UnitBase {
     function setUp() public override {

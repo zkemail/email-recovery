@@ -9,9 +9,17 @@ contract SafeEmailRecoveryModuleHarness is SafeEmailRecoveryModule {
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
-        uint256 minimumDelay
+        uint256 minimumDelay,
+        address killSwitchAuthorizer
     )
-        SafeEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay)
+        SafeEmailRecoveryModule(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay,
+            killSwitchAuthorizer
+        )
     { }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {

@@ -15,14 +15,16 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
-        uint256 minimumDelay
+        uint256 minimumDelay,
+        address killSwitchAuthorizer
     )
         UniversalEmailRecoveryModule(
             verifier,
             dkimRegistry,
             emailAuthImpl,
             commandHandler,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         )
     { }
 

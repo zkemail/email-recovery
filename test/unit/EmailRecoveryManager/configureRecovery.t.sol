@@ -15,6 +15,18 @@ contract EmailRecoveryManager_configureRecovery_Test is UnitBase {
         super.setUp();
     }
 
+    function test_ConfigureRecovery_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress1);
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.exposed_configureRecovery(
+            guardians1, guardianWeights, threshold, delay, expiry
+        );
+    }
+
     function test_ConfigureRecovery_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);

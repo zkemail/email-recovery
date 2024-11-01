@@ -12,6 +12,15 @@ contract EmailRecoveryManager_cancelExpiredRecovery_Test is UnitBase {
         super.setUp();
     }
 
+    function test_CancelExpiredRecovery_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
+    }
+
     function test_CancelExpiredRecovery_RevertWhen_NoRecoveryInProcess() public {
         vm.startPrank(accountAddress1);
         vm.expectRevert(IEmailRecoveryManager.NoRecoveryInProcess.selector);

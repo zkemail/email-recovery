@@ -51,7 +51,7 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
 
     bytes4 public functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
 
-    uint salt = vm.envOr("CREATE2_SALT", uint(0));
+    uint256 public salt = vm.envOr("CREATE2_SALT", uint256(0));
 
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");

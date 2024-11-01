@@ -18,7 +18,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -30,7 +31,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             invalidDkim,
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -42,7 +44,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(dkimRegistry),
             invalidEmailAuth,
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -54,7 +57,8 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             invalidHandler,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -64,12 +68,15 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
 
         assertEq(address(verifier), emailRecoveryModule.verifier());
         assertEq(address(dkimRegistry), emailRecoveryModule.dkim());
         assertEq(address(emailAuthImpl), emailRecoveryModule.emailAuthImplementation());
         assertEq(commandHandlerAddress, emailRecoveryModule.commandHandler());
+        assertEq(minimumDelay, emailRecoveryModule.minimumDelay());
+        assertEq(killSwitchAuthorizer, emailRecoveryModule.owner());
     }
 }

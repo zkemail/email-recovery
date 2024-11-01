@@ -12,6 +12,15 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         super.setUp();
     }
 
+    function test_DeInitRecoveryModule_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.exposed_deInitRecoveryModule();
+    }
+
     function test_DeInitRecoveryModule_RevertWhen_RecoveryInProcess() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);

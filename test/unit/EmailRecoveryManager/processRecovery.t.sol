@@ -45,6 +45,17 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         nullifier = keccak256(abi.encode("nullifier 1"));
     }
 
+    function test_ProcessRecovery_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.exposed_processRecovery(
+            guardians1[0], templateIdx, commandParams, nullifier
+        );
+    }
+
     function test_ProcessRecovery_RevertWhen_GuardianStatusIsNONE() public {
         address invalidGuardian = address(1);
 

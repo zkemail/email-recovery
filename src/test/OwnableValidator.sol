@@ -7,6 +7,9 @@ import { PackedUserOperation } from "modulekit/external/ERC4337.sol";
 import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
+/**
+ * @notice NOT FOR USE IN PRODUCTION
+ */
 contract OwnableValidator is ERC7579ValidatorBase {
     using SignatureCheckerLib for address;
 

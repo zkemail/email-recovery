@@ -64,6 +64,7 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkimRegistry)));
 
         vm.setEnv("MINIMUM_DELAY", vm.toString(uint256(0)));
+        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(vm.addr(1)));
 
         // Set EmailAuth implementation address
         address emailAuthImpl = address(new EmailAuth());
@@ -105,6 +106,7 @@ abstract contract BaseDeployTest is Test {
             bytes32(uint256(0)),
             type(EmailRecoveryCommandHandler).creationCode,
             vm.envUint("MINIMUM_DELAY"),
+            vm.envAddress("KILL_SWITCH_AUTHORIZER"),
             vm.envAddress("DKIM_REGISTRY")
         );
         vm.setEnv("RECOVERY_MODULE", vm.toString(module));
