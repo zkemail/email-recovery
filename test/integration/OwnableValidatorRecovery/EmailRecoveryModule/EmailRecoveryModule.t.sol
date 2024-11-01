@@ -369,7 +369,8 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
     function test_Recover_RevertWhenUninstallModuleAndRecoverAgainWithKillSwitch() public {
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
-        if (isAccountTypeSafe()) {
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (currentAccountType != "") {
             vm.skip(true);
         } 
 
