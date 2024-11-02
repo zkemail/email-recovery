@@ -136,7 +136,8 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 

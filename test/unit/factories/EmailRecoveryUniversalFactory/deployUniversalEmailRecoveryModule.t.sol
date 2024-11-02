@@ -30,7 +30,8 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
                 address(dkimRegistry),
                 address(emailAuthImpl),
                 expectedCommandHandler,
-                minimumDelay
+                minimumDelay,
+                killSwitchAuthorizer
             )
         );
         address expectedModule = Create2.computeAddress(
@@ -49,6 +50,7 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
             recoveryModuleSalt,
             commandHandlerBytecode,
             minimumDelay,
+            killSwitchAuthorizer,
             address(dkimRegistry)
         );
 

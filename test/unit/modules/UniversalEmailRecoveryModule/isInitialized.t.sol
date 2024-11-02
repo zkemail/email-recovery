@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModule_isInitialized_Test is UnitBase {
     using ModuleKitHelpers for *;

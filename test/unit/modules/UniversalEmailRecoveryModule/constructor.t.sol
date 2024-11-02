@@ -15,7 +15,8 @@ contract UniversalEmailRecoveryModule_constructor_Test is UnitBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 }

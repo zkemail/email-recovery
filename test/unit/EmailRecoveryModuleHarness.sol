@@ -13,6 +13,7 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
         address emailAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
+        address killSwitchAuthorizer,
         address validator,
         bytes4 selector
     )
@@ -22,6 +23,7 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
             emailAuthImpl,
             commandHandler,
             minimumDelay,
+            killSwitchAuthorizer,
             validator,
             selector
         )

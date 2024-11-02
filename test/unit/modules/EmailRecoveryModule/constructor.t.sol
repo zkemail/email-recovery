@@ -22,6 +22,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             invalidValidator,
             functionSelector
         );
@@ -35,6 +36,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.addOwnerWithThreshold.selector
         );
@@ -48,6 +50,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.removeOwner.selector
         );
@@ -61,6 +64,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.swapOwner.selector
         );
@@ -74,6 +78,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.changeThreshold.selector
         );
@@ -91,6 +96,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             IModule.onInstall.selector
         );
@@ -108,6 +114,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             IModule.onUninstall.selector
         );
@@ -123,6 +130,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             bytes4(0)
         );
@@ -135,6 +143,7 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             functionSelector
         );

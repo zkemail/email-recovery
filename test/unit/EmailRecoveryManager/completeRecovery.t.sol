@@ -2,11 +2,21 @@
 pragma solidity ^0.8.25;
 
 import { UnitBase } from "../UnitBase.t.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 
 contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
     function setUp() public override {
         super.setUp();
+    }
+
+    function test_CompleteRecovery_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 
     function test_CompleteRecovery_RevertWhen_InvalidAccountAddress() public {

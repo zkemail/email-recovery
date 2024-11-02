@@ -18,7 +18,8 @@ contract SafeEmailRecoveryModule_constructor_Test is SafeNativeIntegrationBase {
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
-            minimumDelay
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 }

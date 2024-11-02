@@ -95,6 +95,7 @@ interface IEmailRecoveryManager {
     error InvalidDkimRegistry();
     error InvalidEmailAuthImpl();
     error InvalidCommandHandler();
+    error InvalidKillSwitchAuthorizer();
     error InvalidFactory();
     error InvalidProxyBytecodeHash();
     error SetupAlreadyCalled();
@@ -122,6 +123,8 @@ interface IEmailRecoveryManager {
     /*                          FUNCTIONS                         */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    function killSwitchEnabled() external returns (bool);
+
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 
     function getRecoveryRequest(address account)
@@ -136,5 +139,16 @@ interface IEmailRecoveryManager {
 
     function updateRecoveryConfig(RecoveryConfig calldata recoveryConfig) external;
 
+    function getPreviousRecoveryRequest(address account)
+        external
+        view
+        returns (PreviousRecoveryRequest memory);
+
+    function hasGuardianVoted(address account, address guardian) external view returns (bool);
+
     function cancelRecovery() external;
+
+    function cancelExpiredRecovery(address account) external;
+
+    function toggleKillSwitch() external;
 }

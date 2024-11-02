@@ -9,11 +9,8 @@ import {
     EmailProof
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
-import { ECDSAOwnedDKIMRegistry } from
-    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { ECDSA } from "solady/utils/ECDSA.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
@@ -68,6 +65,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     address public accountAddress1;
     address public accountAddress2;
     address public accountAddress3;
+    address public killSwitchAuthorizer;
 
     // public Account salts
     bytes32 public accountSalt1;
@@ -126,6 +124,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         accountSalt3 = keccak256(abi.encode("account salt 3"));
 
         zkEmailDeployer = vm.addr(1);
+        killSwitchAuthorizer = vm.addr(2);
 
         vm.startPrank(zkEmailDeployer);
         uint256 setTimeDelay = 0;

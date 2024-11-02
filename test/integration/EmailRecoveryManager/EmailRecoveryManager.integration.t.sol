@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
@@ -420,5 +421,61 @@ contract EmailRecoveryManager_Integration_Test is
             )
         );
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+    }
+
+    function test_Ownable_renounceOwnership() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+        assertTrue(emailRecoveryModule.killSwitchEnabled());
+
+        // renounce ownership
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.renounceOwnership();
+        vm.stopPrank();
+
+        address owner = emailRecoveryModule.owner();
+        assertEq(owner, address(0));
+
+        vm.prank(killSwitchAuthorizer);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector, killSwitchAuthorizer
+            )
+        );
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+    }
+
+    function test_Ownable_transferOwnership() public {
+        address newOwner = vm.addr(99);
+
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+        assertTrue(emailRecoveryModule.killSwitchEnabled());
+
+        // transfer ownership
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.transferOwnership(newOwner);
+        vm.stopPrank();
+
+        address owner = emailRecoveryModule.owner();
+        assertEq(owner, newOwner);
+
+        vm.prank(newOwner);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+        assertFalse(emailRecoveryModule.killSwitchEnabled());
+
+        vm.prank(killSwitchAuthorizer);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector, killSwitchAuthorizer
+            )
+        );
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+        assertFalse(emailRecoveryModule.killSwitchEnabled());
     }
 }

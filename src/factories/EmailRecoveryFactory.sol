@@ -55,6 +55,8 @@ contract EmailRecoveryFactory {
      * @param commandHandlerSalt Salt for the command handler deployment
      * @param recoveryModuleSalt Salt for the recovery module deployment
      * @param commandHandlerBytecode Bytecode of the command handler contract
+     * @param minimumDelay Minimum delay for recovery requests
+     * @param killSwitchAuthorizer Address of the kill switch authorizer
      * @param dkimRegistry Address of the DKIM registry
      * @param validator Address of the validator to be recovered
      * @param functionSelector Function selector for the recovery function to be called on the
@@ -67,6 +69,7 @@ contract EmailRecoveryFactory {
         bytes32 recoveryModuleSalt,
         bytes calldata commandHandlerBytecode,
         uint256 minimumDelay,
+        address killSwitchAuthorizer,
         address dkimRegistry,
         address validator,
         bytes4 functionSelector
@@ -85,6 +88,7 @@ contract EmailRecoveryFactory {
                 emailAuthImpl,
                 commandHandler,
                 minimumDelay,
+                killSwitchAuthorizer,
                 validator,
                 functionSelector
             )

@@ -67,6 +67,7 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
             address(emailAuthImpl),
             commandHandlerAddress,
             minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             functionSelector
         );

@@ -45,10 +45,18 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         address emailAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
+        address killSwitchAuthorizer,
         address _validator,
         bytes4 _selector
     )
-        EmailRecoveryManager(verifier, dkimRegistry, emailAuthImpl, commandHandler, minimumDelay)
+        EmailRecoveryManager(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay,
+            killSwitchAuthorizer
+        )
     {
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);

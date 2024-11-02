@@ -289,6 +289,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         assertEq(updatedOwner, newOwner1);
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: emailRecoveryModuleAddress,
@@ -478,5 +479,38 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         );
         // process recovery for validator 2
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
+    }
+
+    function test_Recover_RevertWhenUninstallModuleAndRecoverAgainWithKillSwitch() public {
+        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
+        if (bytes(currentAccountType).length != 0) {
+            vm.skip(true);
+        }
+        executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
+        address updatedOwner1 = validator.owners(accountAddress1);
+        assertEq(updatedOwner1, newOwner1);
+
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
+
+        vm.prank(killSwitchAuthorizer);
+        IEmailRecoveryManager(emailRecoveryModuleAddress).toggleKillSwitch();
+        vm.stopPrank();
+
+        instance1.expect4337Revert(IGuardianManager.KillSwitchEnabled.selector);
+        instance1.installModule({
+            moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: emailRecoveryModuleAddress,
+            data: abi.encode(
+                validatorAddress,
+                isInstalledContext,
+                functionSelector,
+                guardians1,
+                guardianWeights,
+                threshold,
+                delay,
+                expiry
+            )
+        });
     }
 }
