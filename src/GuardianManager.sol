@@ -40,6 +40,18 @@ abstract contract GuardianManager is IGuardianManager {
         _;
     }
 
+    /**
+     * @notice Modifier to check if the kill switch has been enabled
+     * @dev This impacts EmailRecoveryManager & GuardianManager
+     */
+    modifier onlyWhenActive() {
+        bool killSwitchEnabled = IEmailRecoveryManager(address(this)).killSwitchEnabled();
+        if (killSwitchEnabled) {
+            revert KillSwitchEnabled();
+        }
+        _;
+    }
+
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                       GUARDIAN LOGIC                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -120,7 +132,14 @@ abstract contract GuardianManager is IGuardianManager {
      * @param guardian The address of the guardian to be added
      * @param weight The weight assigned to the guardian
      */
-    function addGuardian(address guardian, uint256 weight) public onlyWhenNotRecovering {
+    function addGuardian(
+        address guardian,
+        uint256 weight
+    )
+        public
+        onlyWhenNotRecovering
+        onlyWhenActive
+    {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
         if (guardianConfigs[msg.sender].threshold == 0) {
@@ -165,7 +184,7 @@ abstract contract GuardianManager is IGuardianManager {
      * no recovery is in process
      * @param guardian The address of the guardian to be removed
      */
-    function removeGuardian(address guardian) external onlyWhenNotRecovering {
+    function removeGuardian(address guardian) external onlyWhenNotRecovering onlyWhenActive {
         GuardianConfig memory guardianConfig = guardianConfigs[msg.sender];
         GuardianStorage memory guardianStorage = guardiansStorage[msg.sender].get(guardian);
 
@@ -197,7 +216,7 @@ abstract contract GuardianManager is IGuardianManager {
      * only if no recovery is in process
      * @param threshold The new threshold for guardian approvals
      */
-    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
+    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering onlyWhenActive {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
         if (guardianConfigs[msg.sender].threshold == 0) {

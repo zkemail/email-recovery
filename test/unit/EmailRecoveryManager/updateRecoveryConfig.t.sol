@@ -24,7 +24,7 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
         vm.stopPrank();
 
         vm.startPrank(accountAddress1);
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.updateRecoveryConfig(recoveryConfig);
     }
 

@@ -38,7 +38,7 @@ contract EmailRecoveryManager_acceptGuardian_Test is UnitBase {
         emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.exposed_acceptGuardian(
             guardians1[0], templateIdx, commandParams, nullifier
         );

@@ -486,7 +486,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
         if (bytes(currentAccountType).length != 0) {
             vm.skip(true);
-        } 
+        }
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
         address updatedOwner1 = validator.owners(accountAddress1);
         assertEq(updatedOwner1, newOwner1);
@@ -497,7 +497,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         IEmailRecoveryManager(emailRecoveryModuleAddress).toggleKillSwitch();
         vm.stopPrank();
 
-        instance1.expect4337Revert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        instance1.expect4337Revert(IGuardianManager.KillSwitchEnabled.selector);
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: emailRecoveryModuleAddress,

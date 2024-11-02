@@ -48,7 +48,6 @@ contract LogErrorSelectors_Test is Test {
     }
 
     function test_IEmailRecoveryManager_AssertSelectors() public pure {
-        assertEq(IEmailRecoveryManager.KillSwitchEnabled.selector, bytes4(0xec7fb2a0));
         assertEq(IEmailRecoveryManager.InvalidVerifier.selector, bytes4(0xbaa3de5f));
         assertEq(IEmailRecoveryManager.InvalidDkimRegistry.selector, bytes4(0x260ce05b));
         assertEq(IEmailRecoveryManager.InvalidEmailAuthImpl.selector, bytes4(0xe98100fb));
@@ -117,6 +116,7 @@ contract LogErrorSelectors_Test is Test {
 
     function test_IGuardianManager_AssertSelectors() public pure {
         assertEq(IGuardianManager.RecoveryInProcess.selector, bytes4(0xf90ea6fc));
+        assertEq(IGuardianManager.KillSwitchEnabled.selector, bytes4(0xec7fb2a0));
         assertEq(IGuardianManager.IncorrectNumberOfWeights.selector, bytes4(0x166e79bd));
         assertEq(IGuardianManager.ThresholdCannotBeZero.selector, bytes4(0xf4124166));
         assertEq(IGuardianManager.InvalidGuardianAddress.selector, bytes4(0x1af74975));

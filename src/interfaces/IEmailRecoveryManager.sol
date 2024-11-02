@@ -91,7 +91,6 @@ interface IEmailRecoveryManager {
     /*                           ERRORS                           */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    error KillSwitchEnabled();
     error InvalidVerifier();
     error InvalidDkimRegistry();
     error InvalidEmailAuthImpl();
@@ -123,6 +122,8 @@ interface IEmailRecoveryManager {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          FUNCTIONS                         */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    function killSwitchEnabled() external returns (bool);
 
     function getRecoveryConfig(address account) external view returns (RecoveryConfig memory);
 

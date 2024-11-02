@@ -81,13 +81,6 @@ abstract contract EmailRecoveryManager is
     mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
         previousRecoveryRequests;
 
-    modifier onlyWhenActive() {
-        if (killSwitchEnabled) {
-            revert KillSwitchEnabled();
-        }
-        _;
-    }
-
     constructor(
         address _verifier,
         address _dkimRegistry,

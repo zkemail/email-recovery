@@ -14,6 +14,16 @@ contract GuardianManager_addGuardian_Test is UnitBase {
         super.setUp();
     }
 
+    function test_AddGuardian_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress1);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.addGuardian(guardians1[0], guardianWeights[0]);
+    }
+
     function test_AddGuardian_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);

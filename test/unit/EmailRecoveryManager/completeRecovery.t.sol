@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { UnitBase } from "../UnitBase.t.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 
 contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
@@ -14,7 +15,7 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
         emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.completeRecovery(accountAddress1, recoveryData);
     }
 

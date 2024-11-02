@@ -352,7 +352,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         executeRecoveryFlowForAccount(accountAddress1, guardians1, recoveryDataHash1, recoveryData1);
 
         // new module should not be useable
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         EmailAccountRecovery(newRecoveryModuleAddress).completeRecovery(
             accountAddress1, abi.encodePacked("1")
         );
@@ -386,7 +386,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         // the second module installation should fail after the kill switch is enabled.
-        instance1.expect4337Revert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        instance1.expect4337Revert(IGuardianManager.KillSwitchEnabled.selector);
         instance1.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
             module: emailRecoveryModuleAddress,

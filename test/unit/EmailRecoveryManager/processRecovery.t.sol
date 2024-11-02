@@ -9,6 +9,7 @@ import { CommandHandlerType } from "../../Base.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "src/interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
@@ -50,7 +51,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.exposed_processRecovery(
             guardians1[0], templateIdx, commandParams, nullifier
         );

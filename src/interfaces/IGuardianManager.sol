@@ -28,6 +28,7 @@ interface IGuardianManager {
     event ChangedThreshold(address indexed account, uint256 threshold);
 
     error RecoveryInProcess();
+    error KillSwitchEnabled();
     error IncorrectNumberOfWeights(uint256 guardianCount, uint256 weightCount);
     error ThresholdCannotBeZero();
     error InvalidGuardianAddress(address guardian);

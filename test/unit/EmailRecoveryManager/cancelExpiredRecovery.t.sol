@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 
 contract EmailRecoveryManager_cancelExpiredRecovery_Test is UnitBase {
@@ -17,7 +18,7 @@ contract EmailRecoveryManager_cancelExpiredRecovery_Test is UnitBase {
         emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
-        vm.expectRevert(IEmailRecoveryManager.KillSwitchEnabled.selector);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
     }
 

@@ -10,6 +10,18 @@ contract GuardianManager_removeGuardian_Test is UnitBase {
         super.setUp();
     }
 
+    function test_RemoveGuardian_RevertWhen_KillSwitchEnabled() public {
+        address guardian = guardians1[0];
+
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress1);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.removeGuardian(guardian);
+    }
+
     function test_RemoveGuardian_RevertWhen_AlreadyRecovering() public {
         address guardian = guardians1[0];
 

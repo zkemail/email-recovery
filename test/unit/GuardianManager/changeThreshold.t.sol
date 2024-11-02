@@ -9,6 +9,16 @@ contract GuardianManager_changeThreshold_Test is UnitBase {
         super.setUp();
     }
 
+    function test_RevertWhen_KillSwitchEnabled() public {
+        vm.prank(killSwitchAuthorizer);
+        emailRecoveryModule.toggleKillSwitch();
+        vm.stopPrank();
+
+        vm.startPrank(accountAddress1);
+        vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
+        emailRecoveryModule.changeThreshold(threshold);
+    }
+
     function test_RevertWhen_AlreadyRecovering() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
