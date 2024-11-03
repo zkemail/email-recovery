@@ -15,7 +15,7 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("ZK_VERIFIER", address(0));
-        address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
+        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));

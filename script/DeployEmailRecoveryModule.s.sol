@@ -28,7 +28,7 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         verifier = vm.envOr("VERIFIER", address(0));
-        dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
+        dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         validatorAddr = vm.envOr("VALIDATOR", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));

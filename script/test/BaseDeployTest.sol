@@ -56,8 +56,8 @@ abstract contract BaseDeployTest is Test {
      * @dev Sets up additional environment variables required for the deployment.
      */
     function setupEnvironmentVariables() internal {
-        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(vm.addr(5)));
-        address dkimRegistrySigner = vm.envOr("DKIM_REGISTRY_SIGNER", address(0));
+        vm.setEnv("DKIM_SIGNER", vm.toString(vm.addr(5)));
+        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
 
         // Deploy DKIM Registry and set up proxy
         address dkimRegistry = deployDKIMRegistry(dkimRegistrySigner);
