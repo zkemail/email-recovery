@@ -35,7 +35,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
         IERC7484 registry = IERC7484(0xe0cde9239d16bEf05e62Bbf7aA93e420f464c826);
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        verifier = address(0);
+        verifier = vm.envOr("VERIFIER", address(0));
         dkim = vm.envOr("DKIM_REGISTRY", address(0));
         dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
