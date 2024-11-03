@@ -75,9 +75,9 @@ contract DeploySafeNativeRecovery_TestFail is BaseDeployTest {
         // Set up the base test environment
         BaseDeployTest.setUp();
 
-        // Disable the DKIM_REGISTRY and DKIM_REGISTRY_SIGNER environment variables
+        // Disable the DKIM_REGISTRY and DKIM_SIGNER environment variables
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
-        vm.setEnv("DKIM_REGISTRY_SIGNER", vm.toString(address(0)));
+        vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
 
         // Instantiate the script and attempt to run it, expecting failure
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();

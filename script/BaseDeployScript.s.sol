@@ -41,7 +41,7 @@ contract BaseDeployScript is Script {
         public
         returns (address)
     {
-        require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
+        require(dkimRegistrySigner != address(0), "DKIM_SIGNER is required");
         UserOverrideableDKIMRegistry overrideableDkimImpl =
             new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
         console.log(
