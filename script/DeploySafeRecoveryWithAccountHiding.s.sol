@@ -36,8 +36,8 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         verifier = address(0);
-        dkim = vm.envOr("DKIM_SIGNER", address(0));
-        dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        dkim = vm.envOr("DKIM_REGISTRY", address(0));
+        dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
