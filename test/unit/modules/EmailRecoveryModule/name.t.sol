@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 
 contract EmailRecoveryModule_name_Test is EmailRecoveryModuleBase {
@@ -9,5 +8,9 @@ contract EmailRecoveryModule_name_Test is EmailRecoveryModuleBase {
         super.setUp();
     }
 
-    function test_Name_ReturnsName() public view { }
+    function test_Name_ReturnsName() public {
+        string memory expectedName = "ZKEmail.EmailRecoveryModule";
+        string memory actualName = emailRecoveryModule.name();
+        assertEq(actualName, expectedName, "Module name should match expected value");
+    }
 }

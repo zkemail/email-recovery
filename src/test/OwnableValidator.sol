@@ -7,6 +7,9 @@ import { PackedUserOperation } from "modulekit/external/ERC4337.sol";
 import { SignatureCheckerLib } from "solady/utils/SignatureCheckerLib.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
+/**
+ * @notice NOT FOR USE IN PRODUCTION
+ */
 contract OwnableValidator is ERC7579ValidatorBase {
     using SignatureCheckerLib for address;
 
@@ -32,7 +35,6 @@ contract OwnableValidator is ERC7579ValidatorBase {
      */
     function onUninstall(bytes calldata) external override {
         delete owners[msg.sender];
-        // delete authorized[msg.sender][authorizedAccount];
     }
 
     function isInitialized(address smartAccount) external view returns (bool) {
@@ -72,6 +74,19 @@ contract OwnableValidator is ERC7579ValidatorBase {
         return SignatureCheckerLib.isValidSignatureNowCalldata(owner, hash, data)
             ? EIP1271_SUCCESS
             : EIP1271_FAILED;
+    }
+
+    function validateSignatureWithData(
+        bytes32 hash,
+        bytes calldata signature,
+        bytes calldata data
+    )
+        external
+        view
+        override
+        returns (bool)
+    {
+        return false;
     }
 
     function changeOwner(address newOwner) external {

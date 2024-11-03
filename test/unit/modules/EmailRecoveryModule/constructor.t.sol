@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISafe } from "src/interfaces/ISafe.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
     function setUp() public override {
@@ -23,55 +20,65 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             invalidValidator,
             functionSelector
         );
     }
 
     function test_Constructor_When_SafeAddOwnerSelector() public {
-        _skipIfNotSafeAccountType();
+        skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.addOwnerWithThreshold.selector
         );
     }
 
     function test_Constructor_When_SafeRemoveOwnerSelector() public {
-        _skipIfNotSafeAccountType();
+        skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.removeOwner.selector
         );
     }
 
     function test_Constructor_When_SafeSwapOwnerSelector() public {
-        _skipIfNotSafeAccountType();
+        skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.swapOwner.selector
         );
     }
 
     function test_Constructor_When_SafeChangeThresholdSelector() public {
-        _skipIfNotSafeAccountType();
+        skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             ISafe.changeThreshold.selector
         );
@@ -87,7 +94,9 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             IModule.onInstall.selector
         );
@@ -103,7 +112,9 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             IModule.onUninstall.selector
         );
@@ -117,7 +128,9 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             bytes4(0)
         );
@@ -128,21 +141,14 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer,
             validatorAddress,
             functionSelector
         );
 
         assertEq(validatorAddress, emailRecoveryModule.validator());
         assertEq(functionSelector, emailRecoveryModule.selector());
-    }
-
-    function _skipIfNotSafeAccountType() private {
-        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
-        if (Strings.equal(currentAccountType, "SAFE")) {
-            vm.skip(false);
-        } else {
-            vm.skip(true);
-        }
     }
 }

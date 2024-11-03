@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
@@ -12,16 +9,26 @@ contract EmailRecoveryManager_getRecoveryRequest_Test is UnitBase {
     }
 
     function test_GetRecoveryRequest_Succeeds() public {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         vm.warp(12 seconds);
-        handleRecovery(recoveryDataHash, accountSalt1);
+        handleRecovery(accountAddress1, guardians1[0], recoveryDataHash, emailRecoveryModuleAddress);
 
-        IEmailRecoveryManager.RecoveryRequest memory recoveryRequest =
-            emailRecoveryModule.getRecoveryRequest(accountAddress);
-        assertEq(recoveryRequest.executeAfter, 0);
-        assertEq(recoveryRequest.executeBefore, block.timestamp + expiry);
-        assertEq(recoveryRequest.currentWeight, 1);
-        assertEq(recoveryRequest.recoveryDataHash, recoveryDataHash);
+        (
+            uint256 executeAfter,
+            uint256 executeBefore,
+            uint256 currentWeight,
+            bytes32 _recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(executeAfter, 0);
+        assertEq(executeBefore, block.timestamp + expiry);
+        assertEq(currentWeight, 1);
+        assertEq(_recoveryDataHash, recoveryDataHash);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, false);
     }
 }

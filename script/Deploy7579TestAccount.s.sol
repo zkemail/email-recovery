@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console, gas-custom-errors, max-states-count */
+
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAccountRecovery } from
-    "ether-email-auth/packages/contracts/src/EmailAccountRecovery.sol";
+    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { RhinestoneModuleKit } from "modulekit/ModuleKit.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
@@ -27,27 +29,29 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
     using Strings for uint256;
     using Strings for address;
 
-    uint256 privKey;
-    address deployer;
-    MSABasic msaBasicImpl;
-    MSAFactory msaFactory;
-    Bootstrap bootstrap;
-    MockHook hook;
-    MockTarget mockTarget;
+    uint256 public privKey;
+    address public deployer;
+    MSABasic public msaBasicImpl;
+    MSAFactory public msaFactory;
+    Bootstrap public bootstrap;
+    MockHook public hook;
+    MockTarget public mockTarget;
 
-    bytes32 accountSalt;
-    address validatorAddr;
-    address recoveryModuleAddr;
-    address[] guardians = new address[](0);
-    uint256[] guardianWeights = new uint256[](0);
+    bytes32 public accountSalt;
+    address public validatorAddr;
+    address public recoveryModuleAddr;
+    address[] public guardians = new address[](0);
+    uint256[] public guardianWeights = new uint256[](0);
 
-    address account;
-    bytes initCode;
-    bytes userOpCalldata;
-    PackedUserOperation userOp;
-    bytes32 userOpHash;
+    address public account;
+    bytes public initCode;
+    bytes public userOpCalldata;
+    PackedUserOperation public userOp;
+    bytes32 public userOpHash;
 
-    bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+    bytes4 public functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
+
+    uint256 public salt = vm.envOr("CREATE2_SALT", uint256(0));
 
     function run() public {
         privKey = vm.envUint("PRIVATE_KEY");
@@ -59,45 +63,44 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
 
         address msaBasicImplAddr = vm.envOr("MSA_BASIC_IMPL", address(0));
         if (msaBasicImplAddr == address(0)) {
-            msaBasicImplAddr = address(new MSABasic());
+            msaBasicImplAddr = address(new MSABasic{ salt: bytes32(salt) }());
             console.log("Deployed MSABasic at", msaBasicImplAddr);
         }
         msaBasicImpl = MSABasic(payable(msaBasicImplAddr));
 
         address msaFactoryAddr = vm.envOr("MSA_FACTORY", address(0));
         if (msaFactoryAddr == address(0)) {
-            msaFactoryAddr = address(new MSAFactory(msaBasicImplAddr));
+            msaFactoryAddr = address(new MSAFactory{ salt: bytes32(salt) }(msaBasicImplAddr));
             console.log("Deployed MSAFactory at", msaFactoryAddr);
         }
         msaFactory = MSAFactory(msaFactoryAddr);
 
         address bootstrapAddr = vm.envOr("BOOTSTRAP", address(0));
         if (bootstrapAddr == address(0)) {
-            bootstrapAddr = address(new Bootstrap());
+            bootstrapAddr = address(new Bootstrap{ salt: bytes32(salt) }());
             console.log("Deployed Bootstrap at", bootstrapAddr);
         }
         bootstrap = Bootstrap(payable(bootstrapAddr));
 
         address hookAddr = vm.envOr("HOOK", address(0));
         if (hookAddr == address(0)) {
-            hookAddr = address(new MockHook());
+            hookAddr = address(new MockHook{ salt: bytes32(salt) }());
             console.log("Deployed MockHook at", hookAddr);
         }
         hook = MockHook(hookAddr);
 
         address mockTargetAddr = vm.envOr("MOCK_TARGET", address(0));
         if (mockTargetAddr == address(0)) {
-            mockTargetAddr = address(new MockTarget());
+            mockTargetAddr = address(new MockTarget{ salt: bytes32(salt) }());
             console.log("Deployed MockTarget at", mockTargetAddr);
         }
         mockTarget = MockTarget(mockTargetAddr);
 
         validatorAddr = vm.envOr("VALIDATOR", address(0));
         if (validatorAddr == address(0)) {
-            validatorAddr = address(new OwnableValidator());
+            validatorAddr = address(new OwnableValidator{ salt: bytes32(salt) }());
             console.log("Deployed Ownable Validator at", validatorAddr);
         }
-        OwnableValidator validator = OwnableValidator(validatorAddr);
 
         // Create initcode to be sent to Factory
         BootstrapConfig[] memory validators = new BootstrapConfig[](1);
@@ -223,8 +226,15 @@ contract Deploy7579TestAccountScript is RhinestoneModuleKit, Script {
         vm.stopBroadcast();
     }
 
-    function getNonce(address account, address validator) internal returns (uint256 nonce) {
+    function getNonce(
+        address smartAccount,
+        address validator
+    )
+        internal
+        view
+        returns (uint256 nonce)
+    {
         uint192 key = uint192(bytes24(bytes20(address(validator))));
-        nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(account), key);
+        nonce = IEntryPoint(ENTRYPOINT_ADDR).getNonce(address(smartAccount), key);
     }
 }

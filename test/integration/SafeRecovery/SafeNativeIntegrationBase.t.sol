@@ -1,56 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
-
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
-import { EmailAuthMsg, EmailProof } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { SubjectUtils } from "ether-email-auth/packages/contracts/src/libraries/SubjectUtils.sol";
+import { EmailAuthMsg, EmailProof } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 import { SafeProxy } from "@safe-global/safe-contracts/contracts/proxies/SafeProxy.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
-import { AccountHidingRecoverySubjectHandler } from
-    "src/handlers/AccountHidingRecoverySubjectHandler.sol";
-import { IntegrationBase } from "../IntegrationBase.t.sol";
+import { SafeEmailRecoveryModuleHarness } from "test/unit/SafeEmailRecoveryModuleHarness.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
+import { BaseTest, CommandHandlerType } from "../../Base.t.sol";
+import { IEmailRecoveryModule } from "../../Base.t.sol";
 
-abstract contract SafeNativeIntegrationBase is IntegrationBase {
+abstract contract SafeNativeIntegrationBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
     using Strings for address;
 
-    SafeEmailRecoveryModule emailRecoveryModule;
-    address emailRecoveryModuleAddress;
+    SafeEmailRecoveryModuleHarness public emailRecoveryModule;
+    address public emailRecoveryModuleAddress;
     Safe public safeSingleton;
     Safe public safe;
-    address public safeAddress;
-    address public owner;
-    bytes isInstalledContext;
-    bytes4 functionSelector;
-    uint256 nullifierCount;
-    address subjectHandler;
-
-    /**
-     * Helper function to return if current account type is safe or not
-     */
-    function isAccountTypeSafe() public returns (bool) {
-        string memory currentAccountType = vm.envOr("ACCOUNT_TYPE", string(""));
-        if (Strings.equal(currentAccountType, "SAFE")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function skipIfNotSafeAccountType() public {
-        if (isAccountTypeSafe()) {
-            vm.skip(false);
-        } else {
-            vm.skip(true);
-        }
-    }
+    address public commandHandlerAddress;
 
     function setUp() public virtual override {
         if (!isAccountTypeSafe()) {
@@ -58,69 +32,62 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         }
         super.setUp();
 
-        subjectHandler = address(new AccountHidingRecoverySubjectHandler());
-        emailRecoveryModule = new SafeEmailRecoveryModule(
-            address(verifier),
-            address(dkimRegistry),
-            address(emailAuthImpl),
-            address(subjectHandler)
-        );
-        emailRecoveryModuleAddress = address(emailRecoveryModule);
-
         safeSingleton = new Safe();
         SafeProxy safeProxy = new SafeProxy(address(safeSingleton));
         safe = Safe(payable(address(safeProxy)));
-        safeAddress = address(safe);
+        accountAddress1 = address(safe);
 
-        isInstalledContext = bytes("0");
-        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
+                accountAddress1
+            );
+        }
 
-        // Compute guardian addresses
-        guardians1 = new address[](3);
-        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt1);
-        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt2);
-        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(safeAddress, accountSalt3);
+        // Overwrite the default values
+        guardians1[0] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt1);
+        guardians1[1] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt2);
+        guardians1[2] = emailRecoveryModule.computeEmailAuthAddress(accountAddress1, accountSalt3);
 
         address[] memory owners = new address[](1);
-        owner = owner1;
-        owners[0] = owner;
+        owners[0] = owner1;
 
         safe.setup(
             owners, 1, address(0), bytes("0"), address(0), address(0), 0, payable(address(0))
         );
 
-        vm.startPrank(safeAddress);
+        vm.startPrank(accountAddress1);
         safe.enableModule(address(emailRecoveryModule));
         vm.stopPrank();
     }
 
-    function generateMockEmailProof(
-        string memory subject,
-        bytes32 nullifier,
+    function computeEmailAuthAddress(
+        address account,
         bytes32 accountSalt
     )
         public
         view
-        returns (EmailProof memory)
+        override
+        returns (address)
     {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.publicKeyHash = bytes32(
-            vm.parseUint(
-                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
-            )
-        );
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedSubject = subject;
-        emailProof.emailNullifier = nullifier;
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-        emailProof.proof = bytes("0");
-
-        return emailProof;
+        return emailRecoveryModule.computeEmailAuthAddress(account, accountSalt);
     }
 
-    function getAccountSaltForGuardian(address guardian) public returns (bytes32) {
+    function deployModule(bytes memory handlerBytecode) public override {
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
+
+        emailRecoveryModule = new SafeEmailRecoveryModuleHarness(
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer
+        );
+        emailRecoveryModuleAddress = address(emailRecoveryModule);
+    }
+
+    function getAccountSaltForGuardian(address guardian) public view returns (bytes32) {
         if (guardian == guardians1[0]) {
             return accountSalt1;
         }
@@ -131,44 +98,61 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
             return accountSalt3;
         }
 
+        /* solhint-disable-next-line gas-custom-errors, custom-errors  */
         revert("Invalid guardian address");
     }
 
-    function generateNewNullifier() public returns (bytes32) {
-        return keccak256(abi.encode(nullifierCount++));
-    }
-
-    function acceptGuardian(address account, address guardian) public {
-        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(account, guardian);
-        emailRecoveryModule.handleAcceptance(emailAuthMsg, templateIdx);
-    }
-
-    function getAcceptanceEmailAuthMessage(
+    function getAcceptanceEmailAuthMessageWithAccountSalt(
         address account,
-        address guardian
+        address guardian,
+        address _emailRecoveryModule,
+        bytes32 optionalAccountSalt
     )
         public
+        override
         returns (EmailAuthMsg memory)
     {
-        bytes32 accountHash = keccak256(abi.encodePacked(account));
-        string memory accountHashString = uint256(accountHash).toHexString(32);
-        string memory subject = string.concat("Accept guardian request for ", accountHashString);
+        string memory command;
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(32);
+            command = string.concat("Accept guardian request for ", accountHashString);
+            commandParamsForAcceptance[0] = abi.encode(accountHashString);
+        } else {
+            string memory accountString = CommandUtils.addressToChecksumHexString(account);
+            command = string.concat("Accept guardian request for ", accountString);
+            commandParamsForAcceptance[0] = abi.encode(account);
+        }
+
         bytes32 nullifier = generateNewNullifier();
-        bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        bytes32 accountSalt;
+        if (optionalAccountSalt == bytes32(0)) {
+            accountSalt = getAccountSaltForGuardian(account, guardian);
+        } else {
+            accountSalt = optionalAccountSalt;
+        }
 
-        bytes[] memory subjectParamsForAcceptance = new bytes[](1);
-        subjectParamsForAcceptance[0] = abi.encode(accountHashString);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
+
         return EmailAuthMsg({
-            templateId: emailRecoveryModule.computeAcceptanceTemplateId(templateIdx),
-            subjectParams: subjectParamsForAcceptance,
-            skipedSubjectPrefix: 0,
+            templateId: IEmailRecoveryModule(_emailRecoveryModule).computeAcceptanceTemplateId(
+                templateIdx
+            ),
+            commandParams: commandParamsForAcceptance,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
     }
 
-    function handleRecovery(address account, bytes32 recoveryDataHash, address guardian) public {
+    function handleRecoveryForSafe(
+        address account,
+        bytes32 recoveryDataHash,
+        address guardian
+    )
+        public
+    {
         EmailAuthMsg memory emailAuthMsg =
             getRecoveryEmailAuthMessage(account, recoveryDataHash, guardian);
         emailRecoveryModule.handleRecovery(emailAuthMsg, templateIdx);
@@ -182,26 +166,51 @@ abstract contract SafeNativeIntegrationBase is IntegrationBase {
         public
         returns (EmailAuthMsg memory)
     {
-        bytes32 accountHash = keccak256(abi.encodePacked(account));
-        string memory accountHashString = uint256(accountHash).toHexString(32);
-        string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
-        string memory subjectPart1 = string.concat("Recover account ", accountHashString);
-        string memory subjectPart2 = string.concat(" using recovery hash ", recoveryDataHashString);
-        string memory subject = string.concat(subjectPart1, subjectPart2);
+        string memory command;
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
+        if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(32);
+            string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+            string memory commandPart1 = string.concat("Recover account ", accountHashString);
+            string memory commandPart2 =
+                string.concat(" using recovery hash ", recoveryDataHashString);
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(accountHashString);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
+        if (getCommandHandlerType() == CommandHandlerType.EmailRecoveryCommandHandler) {
+            string memory accountString = CommandUtils.addressToChecksumHexString(account);
+            string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
+            string memory commandPart1 = string.concat("Recover account ", accountString);
+            string memory commandPart2 =
+                string.concat(" using recovery hash ", recoveryDataHashString);
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(account);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
 
         bytes32 nullifier = generateNewNullifier();
         bytes32 accountSalt = getAccountSaltForGuardian(guardian);
 
-        EmailProof memory emailProof = generateMockEmailProof(subject, nullifier, accountSalt);
+        EmailProof memory emailProof = generateMockEmailProof(command, nullifier, accountSalt);
 
-        bytes[] memory subjectParamsForRecovery = new bytes[](2);
-        subjectParamsForRecovery[0] = abi.encode(accountHashString);
-        subjectParamsForRecovery[1] = abi.encode(recoveryDataHashString);
         return EmailAuthMsg({
             templateId: emailRecoveryModule.computeRecoveryTemplateId(templateIdx),
-            subjectParams: subjectParamsForRecovery,
-            skipedSubjectPrefix: 0,
+            commandParams: commandParamsForRecovery,
+            skippedCommandPrefix: 0,
             proof: emailProof
         });
+    }
+
+    function setRecoveryData() public override {
+        functionSelector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+        recoveryCalldata = abi.encodeWithSelector(functionSelector, address(1), owner1, newOwner1);
+        recoveryData = abi.encode(accountAddress1, recoveryCalldata);
+        recoveryDataHash = keccak256(recoveryData);
     }
 }

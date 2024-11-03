@@ -1,36 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
-import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailRecoveryManager_getGuardianConfig_Test is UnitBase {
-    address newGuardian = address(1);
-    uint256 newGuardianWeight = 1;
+    address public newGuardian = address(1);
+    uint256 public newGuardianWeight = 1;
 
-    uint256 expectedGuardianCount;
-    uint256 expectedTotalWeight;
-    uint256 expectedAcceptedWeight;
-    uint256 expectedThreshold;
+    uint256 public expectedGuardianCount;
+    uint256 public expectedTotalWeight;
+    uint256 public expectedAcceptedWeight;
+    uint256 public expectedThreshold;
 
     function setUp() public override {
         super.setUp();
 
-        expectedGuardianCount = guardians.length + 1;
+        expectedGuardianCount = guardians1.length + 1;
         expectedTotalWeight = totalWeight + newGuardianWeight;
         expectedAcceptedWeight = 0; // no guardians accepted
         expectedThreshold = threshold;
 
-        vm.startPrank(accountAddress);
+        vm.startPrank(accountAddress1);
         emailRecoveryModule.addGuardian(newGuardian, newGuardianWeight);
         vm.stopPrank();
     }
 
-    function test_GetGuardianConfig_Succeeds() public {
+    function test_GetGuardianConfig_Succeeds() public view {
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         assertEq(guardianConfig.guardianCount, expectedGuardianCount);
         assertEq(guardianConfig.totalWeight, expectedTotalWeight);
         assertEq(guardianConfig.acceptedWeight, expectedAcceptedWeight);

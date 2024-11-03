@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract EmailRecoveryModuleHarness is EmailRecoveryModule {
@@ -13,11 +11,22 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler,
+        address commandHandler,
+        uint256 minimumDelay,
+        address killSwitchAuthorizer,
         address validator,
         bytes4 selector
     )
-        EmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler, validator, selector)
+        EmailRecoveryModule(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay,
+            killSwitchAuthorizer,
+            validator,
+            selector
+        )
     { }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {

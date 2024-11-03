@@ -1,21 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { SentinelListLib } from "sentinellist/SentinelList.sol";
-import { EnumerableGuardianMap, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor(
         address verifier,
         address dkimRegistry,
         address emailAuthImpl,
-        address subjectHandler
+        address commandHandler,
+        uint256 minimumDelay,
+        address killSwitchAuthorizer
     )
-        UniversalEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+        UniversalEmailRecoveryModule(
+            verifier,
+            dkimRegistry,
+            emailAuthImpl,
+            commandHandler,
+            minimumDelay,
+            killSwitchAuthorizer
+        )
     { }
 
     function exposed_configureRecovery(
@@ -33,23 +43,23 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     function exposed_acceptGuardian(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        acceptGuardian(guardian, templateIdx, subjectParams, nullifier);
+        acceptGuardian(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_processRecovery(
         address guardian,
         uint256 templateIdx,
-        bytes[] memory subjectParams,
+        bytes[] memory commandParams,
         bytes32 nullifier
     )
         external
     {
-        processRecovery(guardian, templateIdx, subjectParams, nullifier);
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {
@@ -100,6 +110,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address validator
     )
         external
+        view
         returns (bool)
     {
         return validators[account].contains(validator);
@@ -114,5 +125,13 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         returns (bytes4)
     {
         return allowedSelectors[validator][account];
+    }
+
+    function exposed_clearRecoveryRequest(address account) external {
+        return clearRecoveryRequest(account);
+    }
+
+    function workaround_getVoteCount(address account) external view returns (uint256) {
+        return recoveryRequests[account].guardianVoted.values().length;
     }
 }

@@ -1,64 +1,68 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { Script } from "forge-std/Script.sol";
-import { console } from "forge-std/console.sol";
-import { Verifier } from "ether-email-auth/packages/contracts/src/utils/Verifier.sol";
-import { ECDSAOwnedDKIMRegistry } from
-    "ether-email-auth/packages/contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { EmailAuth } from "ether-email-auth/packages/contracts/src/EmailAuth.sol";
-import { SafeRecoverySubjectHandler } from "src/handlers/SafeRecoverySubjectHandler.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+/* solhint-disable no-console, gas-custom-errors */
 
-contract DeploySafeNativeRecovery_Script is Script {
-    function run() public {
+import { console } from "forge-std/console.sol";
+import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
+import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
+import { BaseDeployScript } from "./BaseDeployScript.s.sol";
+
+contract DeploySafeNativeRecovery_Script is BaseDeployScript {
+    function run() public override {
+        super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        address verifier = vm.envOr("VERIFIER", address(0));
-        address dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
-        address dkimRegistrySigner = vm.envOr("SIGNER", address(0));
+        address verifier = vm.envOr("ZK_VERIFIER", address(0));
+        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        address subjectHandler = vm.envOr("SUBJECT_HANDLER", address(0));
+        address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
+        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
+        address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
+        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
+
+        console.log("verifier %s", verifier);
+
+        UserOverrideableDKIMRegistry dkim;
+
         if (verifier == address(0)) {
-            Verifier verifierImpl = new Verifier();
-            console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-            ERC1967Proxy verifierProxy = new ERC1967Proxy(
-                address(verifierImpl), abi.encodeCall(verifierImpl.initialize, (initialOwner))
-            );
-            verifier = address(Verifier(address(verifierProxy)));
-            vm.setEnv("VERIFIER", vm.toString(address(verifier)));
-            console.log("Deployed Verifier at", verifier);
+            verifier = deployVerifier(initialOwner, salt);
         }
 
-        if (dkimRegistry == address(0)) {
-            require(dkimRegistrySigner != address(0), "DKIM_REGISTRY_SIGNER is required");
-
-            ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-            console.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-            ERC1967Proxy dkimProxy = new ERC1967Proxy(
-                address(dkimImpl),
-                abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
+        // Deploy Useroverridable DKIM registry
+        dkim = UserOverrideableDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
+        uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
+        if (address(dkim) == address(0)) {
+            dkim = UserOverrideableDKIMRegistry(
+                deployUserOverrideableDKIMRegistry(
+                    initialOwner, dkimRegistrySigner, setTimeDelay, salt
+                )
             );
-            dkimRegistry = address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-            vm.setEnv("ECDSA_DKIM", vm.toString(address(dkimRegistry)));
-            console.log("Deployed DKIM Registry at", dkimRegistry);
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
-        if (subjectHandler == address(0)) {
-            subjectHandler = address(new SafeRecoverySubjectHandler());
-            console.log("Deployed Subject Handler at", subjectHandler);
+        if (commandHandler == address(0)) {
+            commandHandler = address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
+            console.log("Deployed Command Handler at", commandHandler);
         }
 
         address module = address(
-            new SafeEmailRecoveryModule(verifier, dkimRegistry, emailAuthImpl, subjectHandler)
+            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
+                verifier,
+                address(dkim),
+                emailAuthImpl,
+                commandHandler,
+                minimumDelay,
+                killSwitchAuthorizer
+            )
         );
 
         console.log("Deployed Email Recovery Module at  ", vm.toString(module));

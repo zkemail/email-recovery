@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
@@ -18,7 +17,9 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             invalidVerifier,
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler)
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -26,7 +27,12 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         address invalidDkim = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), invalidDkim, address(emailAuthImpl), address(emailRecoveryHandler)
+            address(verifier),
+            invalidDkim,
+            address(emailAuthImpl),
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -37,15 +43,22 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(verifier),
             address(dkimRegistry),
             invalidEmailAuth,
-            address(emailRecoveryHandler)
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
-    function test_Constructor_RevertWhen_InvalidSubjectHandler() public {
+    function test_Constructor_RevertWhen_InvalidCommandHandler() public {
         address invalidHandler = address(0);
-        vm.expectRevert(IEmailRecoveryManager.InvalidSubjectHandler.selector);
+        vm.expectRevert(IEmailRecoveryManager.InvalidCommandHandler.selector);
         new UniversalEmailRecoveryModule(
-            address(verifier), address(dkimRegistry), address(emailAuthImpl), invalidHandler
+            address(verifier),
+            address(dkimRegistry),
+            address(emailAuthImpl),
+            invalidHandler,
+            minimumDelay,
+            killSwitchAuthorizer
         );
     }
 
@@ -54,12 +67,16 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
             address(verifier),
             address(dkimRegistry),
             address(emailAuthImpl),
-            address(emailRecoveryHandler)
+            commandHandlerAddress,
+            minimumDelay,
+            killSwitchAuthorizer
         );
 
         assertEq(address(verifier), emailRecoveryModule.verifier());
         assertEq(address(dkimRegistry), emailRecoveryModule.dkim());
         assertEq(address(emailAuthImpl), emailRecoveryModule.emailAuthImplementation());
-        assertEq(address(emailRecoveryHandler), emailRecoveryModule.subjectHandler());
+        assertEq(commandHandlerAddress, emailRecoveryModule.commandHandler());
+        assertEq(minimumDelay, emailRecoveryModule.minimumDelay());
+        assertEq(killSwitchAuthorizer, emailRecoveryModule.owner());
     }
 }

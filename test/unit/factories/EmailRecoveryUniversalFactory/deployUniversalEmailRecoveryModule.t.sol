@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
-import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import { EmailRecoverySubjectHandler } from "src/handlers/EmailRecoverySubjectHandler.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test is UnitBase {
@@ -16,12 +14,12 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
 
     function test_DeployUniversalEmailRecoveryModule_Succeeds() public {
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
-        bytes32 subjectHandlerSalt = bytes32(uint256(0));
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
 
-        bytes memory subjectHandlerBytecode = type(EmailRecoverySubjectHandler).creationCode;
-        address expectedSubjectHandler = Create2.computeAddress(
-            subjectHandlerSalt,
-            keccak256(subjectHandlerBytecode),
+        bytes memory commandHandlerBytecode = type(EmailRecoveryCommandHandler).creationCode;
+        address expectedCommandHandler = Create2.computeAddress(
+            commandHandlerSalt,
+            keccak256(commandHandlerBytecode),
             address(emailRecoveryUniversalFactory)
         );
 
@@ -31,7 +29,9 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
                 address(verifier),
                 address(dkimRegistry),
                 address(emailAuthImpl),
-                expectedSubjectHandler
+                expectedCommandHandler,
+                minimumDelay,
+                killSwitchAuthorizer
             )
         );
         address expectedModule = Create2.computeAddress(
@@ -42,14 +42,19 @@ contract EmailRecoveryUniversalFactory_deployUniversalEmailRecoveryModule_Test i
 
         vm.expectEmit();
         emit EmailRecoveryUniversalFactory.UniversalEmailRecoveryModuleDeployed(
-            expectedModule, expectedSubjectHandler
+            expectedModule, expectedCommandHandler
         );
-        (address emailRecoveryModule, address subjectHandler) = emailRecoveryUniversalFactory
+        (address emailRecoveryModule, address commandHandler) = emailRecoveryUniversalFactory
             .deployUniversalEmailRecoveryModule(
-            subjectHandlerSalt, recoveryModuleSalt, subjectHandlerBytecode, address(dkimRegistry)
+            commandHandlerSalt,
+            recoveryModuleSalt,
+            commandHandlerBytecode,
+            minimumDelay,
+            killSwitchAuthorizer,
+            address(dkimRegistry)
         );
 
         assertEq(emailRecoveryModule, expectedModule);
-        assertEq(subjectHandler, expectedSubjectHandler);
+        assertEq(commandHandler, expectedCommandHandler);
     }
 }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import {
     EnumerableGuardianMap,
@@ -20,7 +19,7 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
     }
 
     function test_Keys_StartsEmpty() public view {
-        address[] memory keys = guardiansStorage[accountAddress].keys();
+        address[] memory keys = guardiansStorage[accountAddress1].keys();
         assertEq(keys.length, 0);
     }
 
@@ -28,13 +27,13 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
         bool result;
 
         for (uint256 i = 1; i <= 3; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
-        address[] memory keys = guardiansStorage[accountAddress].keys();
+        address[] memory keys = guardiansStorage[accountAddress1].keys();
         assertEq(keys.length, 3);
         for (uint256 i = 0; i < 3; i++) {
             assertEq(keys[i], vm.addr(i + 1));
@@ -45,13 +44,13 @@ contract EnumerableGuardianMap_keys_Test is UnitBase {
         bool result;
 
         for (uint256 i = 1; i <= EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
-            result = guardiansStorage[accountAddress].set({
+            result = guardiansStorage[accountAddress1].set({
                 key: vm.addr(i),
                 value: GuardianStorage(GuardianStatus.REQUESTED, guardianWeights[1])
             });
             assertEq(result, true);
         }
-        address[] memory keys = guardiansStorage[accountAddress].keys();
+        address[] memory keys = guardiansStorage[accountAddress1].keys();
         assertEq(keys.length, EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS);
         for (uint256 i = 0; i < EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS; i++) {
             assertEq(keys[i], vm.addr(i + 1));

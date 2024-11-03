@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {
-    EnumerableGuardianMap,
-    GuardianStorage,
-    GuardianStatus
-} from "../libraries/EnumerableGuardianMap.sol";
+import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 
 interface IGuardianManager {
     /**
@@ -32,6 +28,7 @@ interface IGuardianManager {
     event ChangedThreshold(address indexed account, uint256 threshold);
 
     error RecoveryInProcess();
+    error KillSwitchEnabled();
     error IncorrectNumberOfWeights(uint256 guardianCount, uint256 weightCount);
     error ThresholdCannotBeZero();
     error InvalidGuardianAddress(address guardian);
@@ -57,4 +54,6 @@ interface IGuardianManager {
     function removeGuardian(address guardian) external;
 
     function changeThreshold(uint256 threshold) external;
+
+    function getAllGuardians(address account) external returns (address[] memory);
 }

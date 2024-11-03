@@ -1,24 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { console2 } from "forge-std/console2.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { UnitBase } from "../../UnitBase.t.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
+    using ModuleKitHelpers for *;
+
     function setUp() public override {
         super.setUp();
     }
 
-    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public {
+    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdIsZero() public {
+        instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
         bool canStartRecoveryRequest =
-            emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
+
+        // Threshold is zero
+        assertFalse(canStartRecoveryRequest);
+        assertFalse(
+            guardianConfig.threshold > 0
+                && guardianConfig.acceptedWeight >= guardianConfig.threshold
+        );
+    }
+
+    function test_CanStartRecoveryRequest_ReturnsFalse_WhenThresholdCannotBeMet() public view {
+        bool canStartRecoveryRequest =
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
+
+        IGuardianManager.GuardianConfig memory guardianConfig =
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =
-            emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
+            emailRecoveryModule.workaround_validatorsContains(accountAddress1, validatorAddress);
 
         // No guardians have accepted
         assertFalse(canStartRecoveryRequest);
@@ -28,17 +46,16 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
 
     function test_CanStartRecoveryRequest_ReturnsFalse_WhenValidatorNotAdded() public {
         address invalidValidatorAddress = address(1);
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         bool canStartRecoveryRequest =
-            emailRecoveryModule.canStartRecoveryRequest(accountAddress, invalidValidatorAddress);
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, invalidValidatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains = emailRecoveryModule.workaround_validatorsContains(
-            accountAddress, invalidValidatorAddress
+            accountAddress1, invalidValidatorAddress
         );
 
         // Enough guardians have accepted but invalid guardian address
@@ -47,22 +64,21 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
         assertFalse(contains);
     }
 
-    function test_CanStartRecoveryRequest_ReturnsTrue_WhenThresholdIsHigherThanWeightAndValidatorAdded(
+    function test_CanStartRecoveryRequest_ReturnsTrue_WhenWeightIsHigherThanThresholdAndValidatorAdded(
     )
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
-        acceptGuardian(accountSalt3);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
         bool canStartRecoveryRequest =
-            emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =
-            emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
+            emailRecoveryModule.workaround_validatorsContains(accountAddress1, validatorAddress);
 
         // Enough guardians have accepted so that accepted weight is higher than the threshold
         assertTrue(canStartRecoveryRequest);
@@ -74,17 +90,16 @@ contract UniversalEmailRecoveryModule_canStartRecoveryRequest_Test is UnitBase {
     )
         public
     {
-        acceptGuardian(accountSalt1);
-        acceptGuardian(accountSalt2);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         bool canStartRecoveryRequest =
-            emailRecoveryModule.canStartRecoveryRequest(accountAddress, validatorAddress);
+            emailRecoveryModule.canStartRecoveryRequest(accountAddress1, validatorAddress);
 
-        // Checking accepted weight and sentinel list storage are what we expect for this test case
         IGuardianManager.GuardianConfig memory guardianConfig =
-            emailRecoveryModule.getGuardianConfig(accountAddress);
+            emailRecoveryModule.getGuardianConfig(accountAddress1);
         bool contains =
-            emailRecoveryModule.workaround_validatorsContains(accountAddress, validatorAddress);
+            emailRecoveryModule.workaround_validatorsContains(accountAddress1, validatorAddress);
 
         // Enough guardians have accepted so that accepted weight is equal to the threshold
         assertTrue(canStartRecoveryRequest);

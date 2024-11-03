@@ -32,8 +32,22 @@ abstract contract GuardianManager is IGuardianManager {
      * @notice Modifier to check recovery status. Reverts if recovery is in process for the account
      */
     modifier onlyWhenNotRecovering() {
-        if (IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender).currentWeight > 0) {
+        (,, uint256 currentWeight,) =
+            IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender);
+        if (currentWeight > 0) {
             revert RecoveryInProcess();
+        }
+        _;
+    }
+
+    /**
+     * @notice Modifier to check if the kill switch has been enabled
+     * @dev This impacts EmailRecoveryManager & GuardianManager
+     */
+    modifier onlyWhenActive() {
+        bool killSwitchEnabled = IEmailRecoveryManager(address(this)).killSwitchEnabled();
+        if (killSwitchEnabled) {
+            revert KillSwitchEnabled();
         }
         _;
     }
@@ -118,7 +132,14 @@ abstract contract GuardianManager is IGuardianManager {
      * @param guardian The address of the guardian to be added
      * @param weight The weight assigned to the guardian
      */
-    function addGuardian(address guardian, uint256 weight) public onlyWhenNotRecovering {
+    function addGuardian(
+        address guardian,
+        uint256 weight
+    )
+        public
+        onlyWhenNotRecovering
+        onlyWhenActive
+    {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
         if (guardianConfigs[msg.sender].threshold == 0) {
@@ -163,7 +184,7 @@ abstract contract GuardianManager is IGuardianManager {
      * no recovery is in process
      * @param guardian The address of the guardian to be removed
      */
-    function removeGuardian(address guardian) external onlyWhenNotRecovering {
+    function removeGuardian(address guardian) external onlyWhenNotRecovering onlyWhenActive {
         GuardianConfig memory guardianConfig = guardianConfigs[msg.sender];
         GuardianStorage memory guardianStorage = guardiansStorage[msg.sender].get(guardian);
 
@@ -195,7 +216,7 @@ abstract contract GuardianManager is IGuardianManager {
      * only if no recovery is in process
      * @param threshold The new threshold for guardian approvals
      */
-    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering {
+    function changeThreshold(uint256 threshold) external onlyWhenNotRecovering onlyWhenActive {
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function should be called first
         if (guardianConfigs[msg.sender].threshold == 0) {
@@ -207,7 +228,6 @@ abstract contract GuardianManager is IGuardianManager {
             revert ThresholdExceedsTotalWeight(threshold, guardianConfigs[msg.sender].totalWeight);
         }
 
-        // Guardian weight should be at least 1
         if (threshold == 0) {
             revert ThresholdCannotBeZero();
         }
@@ -249,5 +269,17 @@ abstract contract GuardianManager is IGuardianManager {
      */
     function removeAllGuardians(address account) internal {
         guardiansStorage[account].removeAll(guardiansStorage[account].keys());
+    }
+
+    /**
+     * @notice Gets all guardians associated with an account
+     * @dev Return an array containing all the keys. O(n) where n <= 32
+     *
+     * WARNING: This operation will copy the entire storage to memory, which could
+     * be quite expensive.
+     * @param account The address of the account associated with the guardians
+     */
+    function getAllGuardians(address account) external view returns (address[] memory) {
+        return guardiansStorage[account].keys();
     }
 }
