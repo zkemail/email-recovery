@@ -1,0 +1,32 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  build:
+    uses: "./.github/workflows/forge-build.yaml"
+    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
+
+  test-multi-account:
+    needs: ["build"]
+    uses: "./.github/workflows/forge-test-multi-account.yaml"
+    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
+    with:
+      foundry-fuzz-runs: 5000
+      foundry-profile: "test"
+      match-path: "test/**/*.sol"
+
+  test-simulate:
+    needs: ["build"]
+    uses: "./.github/workflows/forge-test-simulate.yaml"
+    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-simulate.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
+
+    with:
+      foundry-fuzz-runs: 5000
+      foundry-profile: "test"
+      match-path: "test/**/*.sol"
