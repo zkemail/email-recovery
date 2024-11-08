@@ -75,6 +75,7 @@ on:
 jobs:
   forge-test:
     runs-on: "ubuntu-latest"
+    timeout-minutes: 20
     steps:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
