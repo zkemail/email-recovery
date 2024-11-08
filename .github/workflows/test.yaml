@@ -9,13 +9,13 @@ env:
 
 jobs:
   build:
-    # uses: "./.github/workflows/forge-build.yaml"
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
+    uses: "./.github/workflows/forge-build.yaml"
+    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
 
   test-multi-account:
     needs: ["build"]
-    # uses: "./.github/workflows/forge-test-multi-account.yaml"
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@main"
+    uses: "./.github/workflows/forge-test-multi-account.yaml"
+    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@main"
     with:
       foundry-fuzz-runs: 5000
       foundry-profile: "test"
