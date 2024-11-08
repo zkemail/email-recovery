@@ -57,7 +57,7 @@ on:
         type: "string"
 
       foundry-memory-limit:
-        default: 18446744073709551615
+        default: 4294967295
         required: false
         type: "number"
 
