@@ -9,11 +9,11 @@ env:
 
 jobs:
   build:
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
 
   test-multi-account:
     needs: ["build"]
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@main"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
     with:
       foundry-fuzz-runs: 5000
       foundry-profile: "test"
@@ -21,7 +21,7 @@ jobs:
 
   test-simulate:
     needs: ["build"]
-    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-simulate.yaml@main"
+    uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-simulate.yaml@1ca4b1421cf2ea68db76c2d4fae4e39c6ec59650"
 
     with:
       foundry-fuzz-runs: 5000
