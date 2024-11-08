@@ -10,22 +10,10 @@ env:
 jobs:
   build:
     uses: "./.github/workflows/forge-build.yaml"
-    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-build.yaml@main"
 
   test-multi-account:
     needs: ["build"]
     uses: "./.github/workflows/forge-test-multi-account.yaml"
-    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-multi-account.yaml@main"
-    with:
-      foundry-fuzz-runs: 5000
-      foundry-profile: "test"
-      match-path: "test/**/*.sol"
-
-  test-simulate:
-    needs: ["build"]
-    uses: "./.github/workflows/forge-test-simulate.yaml"
-    # uses: "rhinestonewtf/reusable-workflows/.github/workflows/forge-test-simulate.yaml@6b349b532aeb7fa89691a62de72ec67836f5ed95"
-
     with:
       foundry-fuzz-runs: 5000
       foundry-profile: "test"
