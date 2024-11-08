@@ -33,10 +33,10 @@
   "dependencies": {
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "5.0.1",
-    "@rhinestone/modulekit": "0.4.16",
+    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit#67a5c02dec798b25a3b2581d485d75e116b14af8",
     "@zk-email/contracts": "6.3.2",
     "@zk-email/ether-email-auth-contracts": "1.0.2",
-    "erc7579-implementation": "github:erc7579/erc7579-implementation",
+    "erc7579-implementation": "github:erc7579/erc7579-implementation#b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
   "files": [
