@@ -15,7 +15,7 @@ importers:
         specifier: 5.0.1
         version: 5.0.1(@openzeppelin/contracts@5.1.0)
       '@rhinestone/modulekit':
-        specifier: ^0.4.16
+        specifier: 0.4.16
         version: 0.4.16(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
       '@zk-email/contracts':
         specifier: 6.3.2
