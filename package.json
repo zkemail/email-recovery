@@ -1,6 +1,6 @@
 {
   "name": "@zk-email/email-recovery",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Smart account module and related contracts to enable email recovery for validators",
   "license": "MIT",
   "author": {
@@ -33,9 +33,9 @@
   "dependencies": {
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "5.0.1",
-    "@rhinestone/modulekit": "github:rhinestonewtf/modulekit",
-    "@zk-email/contracts": "^6.3.1",
-    "@zk-email/ether-email-auth-contracts": "1.0.0",
+    "@rhinestone/modulekit": "0.4.16",
+    "@zk-email/contracts": "6.3.2",
+    "@zk-email/ether-email-auth-contracts": "1.0.2",
     "erc7579-implementation": "github:erc7579/erc7579-implementation",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },

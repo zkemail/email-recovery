@@ -1,0 +1,145 @@
+name: "Simulate modules using the modulekit"
+
+on:
+  workflow_call:
+    inputs:
+      cache-path:
+        default: |
+          cache
+          node_modules
+          out
+          out-optimized
+        required: false
+        type: "string"
+
+      foundry-fuzz-runs:
+        default: 1000
+        required: false
+        type: "number"
+
+      foundry-invariant-depth:
+        default: 20
+        required: false
+        type: "number"
+
+      foundry-invariant-runs:
+        default: 20
+        required: false
+        type: "number"
+
+      foundry-profile:
+        default: "default"
+        required: false
+        type: "string"
+
+      fuzz-seed:
+        default: false
+        required: false
+        type: boolean
+
+      match-path:
+        required: true
+        type: "string"
+
+      name:
+        default: "Forge"
+        required: false
+        type: "string"
+
+      restore-cache:
+        default: true
+        required: false
+        type: boolean
+
+      foundry-gas-limit:
+        default: "18446744073709551615"
+        required: false
+        type: "string"
+
+      foundry-memory-limit:
+        default: 4294967295
+        required: false
+        type: "number"
+
+      foundry-verbosity:
+        default: 3
+        required: false
+        type: "number"
+
+    secrets:
+      MAINNET_RPC_URL:
+        required: false
+      TESTNET_RPC_URL:
+        required: false
+
+jobs:
+  forge-test:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check out the repo"
+        uses: "actions/checkout@v4"
+
+      - name: "Install Foundry"
+        uses: "foundry-rs/foundry-toolchain@v1.2.0"
+
+      - name: "Install NodeJS"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.6
+          run_install: false
+
+      - name: "Restore the cached build and the node modules"
+        if: ${{ inputs.restore-cache }}
+        uses: "actions/cache/restore@v4"
+        with:
+          key: "build-and-modules-${{ github.sha }}"
+          path: ${{ inputs.cache-path }}
+
+      - name: "Install the Node.js dependencies"
+        run: "pnpm install"
+
+      - name: "Test account: default"
+        run: 'ACCOUNT_TYPE=DEFAULT forge test --threads 1 --match-path "${{ inputs.match-path }}"'
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+          FOUNDRY_VERBOSITY: ${{ inputs.foundry-verbosity }}
+          FOUNDRY_GAS_LIMIT: ${{ inputs.foundry-gas-limit }}
+          FOUNDRY_MEMORY_LIMIT: ${{ inputs.foundry-memory-limit }}
+
+      - name: "Test account: Safe"
+        run: 'ACCOUNT_TYPE=SAFE forge test --threads 1 --match-path "${{ inputs.match-path }}"'
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+          FOUNDRY_VERBOSITY: ${{ inputs.foundry-verbosity }}
+          FOUNDRY_GAS_LIMIT: ${{ inputs.foundry-gas-limit }}
+          FOUNDRY_MEMORY_LIMIT: ${{ inputs.foundry-memory-limit }}
+
+      - name: "Test account: Kernel"
+        run: 'ACCOUNT_TYPE=KERNEL forge test --threads 1 --match-path "${{ inputs.match-path }}"'
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+          FOUNDRY_VERBOSITY: ${{ inputs.foundry-verbosity }}
+          FOUNDRY_GAS_LIMIT: ${{ inputs.foundry-gas-limit }}
+          FOUNDRY_MEMORY_LIMIT: ${{ inputs.foundry-memory-limit }}
+
+      - name: "Test account: NEXUS"
+        run: 'ACCOUNT_TYPE=NEXUS forge test --threads 1 --match-path "${{ inputs.match-path }}"'
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+          FOUNDRY_VERBOSITY: ${{ inputs.foundry-verbosity }}
+          FOUNDRY_GAS_LIMIT: ${{ inputs.foundry-gas-limit }}
+          FOUNDRY_MEMORY_LIMIT: ${{ inputs.foundry-memory-limit }}
+
+      - name: "Add summary"
+        run: |
+          echo "## Coverage result" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Uploaded to Codecov" >> $GITHUB_STEP_SUMMARY

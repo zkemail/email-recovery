@@ -42,12 +42,6 @@ pnpm test:script
 
 # ZK Email Recovery
 
-## High level contracts diagram (TODO: (merge-ok) out of date - needs updating to show module and manager are single contract)
-
-<img src="docs/email-recovery-diagram.drawio.png">
-
-Note: `EmailAccountRecovery.sol` & `EmailAuth.sol` can be found in the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo
-
 ### EmailRecoveryManager.sol
 
 `EmailRecoveryManager.sol` is an abstract contract that defines the main logic for email-based recovery. It is designed to provide the core logic for email based account recovery that can be used across different modular account implementations. For the end user, the core `EmailRecoveryManager` contract aims to provide a robust and simple mechanism to recover accounts via email guardians.
@@ -55,6 +49,8 @@ Note: `EmailAccountRecovery.sol` & `EmailAuth.sol` can be found in the [ether-em
 It inherits from a ZK Email contract called `EmailAccountRecovery.sol` which defines some basic recovery logic that interacts with lower level ZK Email contracts. `EmailAccountRecovery.sol` holds the logic that interacts with the lower level ZK Email contracts `EmailAuth.sol`, verifier, dkim registry etc. More info on the underlying `EmailAccountRecovery.sol` contract can be found [here](https://github.com/zkemail/ether-email-auth/tree/main/packages/contracts#emailaccountrecovery-contract).
 
 The guardians are represented onchain by `EmailAuth.sol` instances. `EmailAuth.sol` is designed to authenticate that a user is a correct holder of the specific email address and authorize anything described in the email. The guardians privacy is protected onchain, for more info on ZK Email privacy and EmailAuth - see the [ZK Email docs](https://zkemail.gitbook.io/zk-email).
+
+Note: `EmailAccountRecovery.sol` & `EmailAuth.sol` can be found in the [ether-email-auth](https://github.com/zkemail/ether-email-auth) repo
 
 `EmailRecoveryManager` relies on a dedicated recovery module to execute a recovery attempt - the recovery module inherits from the email recovery manager contract. The `EmailRecoveryManager` contract defines "what a valid recovery attempt is for an account", and the recovery module defines “how that recovery attempt is executed on the account”. One motivation for having the 7579 recovery module and the core `EmailRecoveryManager` contract being seperated is to allow the core recovery logic to be used across different account implementations and module standards. The core `EmailRecoveryManager.sol` contract is designed to be account implementation agnostic. For example, we have a native Safe module as well as two 7579 modules that use the same underlying manager. It's functionality can be extended by creating new command handler contracts such as `EmailRecoveryCommandHandler.sol`.
 
