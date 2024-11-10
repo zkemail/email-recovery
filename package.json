@@ -38,6 +38,11 @@
     "@zk-email/ether-email-auth-contracts": "1.0.2",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
+  "pnpm": {
+    "overrides": {
+      "erc7579": "github:erc7579/erc7579-implementation#b3f8bcb2df3aae3217213ffa8b7a87c1eb42ec56"
+    }
+  },
   "files": [
     "src",
     "test",
