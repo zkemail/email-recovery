@@ -12,7 +12,6 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         super.setUp();
     }
 
-
     function test_DeInitRecoveryModule_RevertWhen_RecoveryInProcess() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
@@ -88,7 +87,6 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         isActivated = emailRecoveryModule.isActivated(accountAddress1);
         assertFalse(isActivated);
     }
-
 
     function test_DeInitRecoveryModule_SucceedsWhen_KillSwitchEnabled() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);

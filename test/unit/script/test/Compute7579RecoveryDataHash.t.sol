@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { Compute7579RecoveryDataHash } from "../Compute7579RecoveryDataHash.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { Compute7579RecoveryDataHash } from "script/test/Compute7579RecoveryDataHash.s.sol";
+import { BaseDeployTest } from "../BaseDeployTest.sol";
 
 contract Compute7579RecoveryDataHashTest is BaseDeployTest {
     function setUp() public override {

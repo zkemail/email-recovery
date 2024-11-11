@@ -18,7 +18,7 @@ contract AccountHidingRecoveryCommandHandler_extractRecoveredAccountFromRecovery
         accountHidingRecoveryCommandHandler = new AccountHidingRecoveryCommandHandler();
     }
 
-    function test_ExtractRecoveredAccountFromRecoveryCommand_FailsWhenHashNotStored() public {
+    function test_ExtractRecoveredAccountFromRecoveryCommand_FailsWhenHashNotStored() public view {
         bytes32 accountHash = keccak256(abi.encodePacked(accountAddress1));
         string memory accountHashString = uint256(accountHash).toHexString(32);
         string memory recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);

@@ -25,7 +25,7 @@ contract BaseDeployScript is Script {
             abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
         );
         address verifier = address(Verifier(address(verifierProxy)));
-        console.log("Deployed Verifier at", verifier);
+        console.log("Verifier proxy deployed at", verifier);
         return verifier;
     }
 
@@ -35,7 +35,7 @@ contract BaseDeployScript is Script {
     function deployUserOverrideableDKIMRegistry(
         address initialOwner,
         address dkimRegistrySigner,
-        uint256 setTimeDelay,
+        uint256 dkimDelay,
         uint256 salt
     )
         public
@@ -51,11 +51,11 @@ contract BaseDeployScript is Script {
         ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
             address(overrideableDkimImpl),
             abi.encodeCall(
-                overrideableDkimImpl.initialize, (initialOwner, dkimRegistrySigner, setTimeDelay)
+                overrideableDkimImpl.initialize, (initialOwner, dkimRegistrySigner, dkimDelay)
             )
         );
         address dkim = address(dkimProxy);
-        console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", dkim);
+        console.log("UserOverrideableDKIMRegistry proxy deployed at: %s", dkim);
         return dkim;
     }
 }

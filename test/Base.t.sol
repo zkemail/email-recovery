@@ -127,12 +127,12 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         killSwitchAuthorizer = vm.addr(2);
 
         vm.startPrank(zkEmailDeployer);
-        uint256 setTimeDelay = 0;
+        uint256 dkimDelay = 0;
         UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
             address(overrideableDkimImpl),
             abi.encodeCall(
-                overrideableDkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer, setTimeDelay)
+                overrideableDkimImpl.initialize, (zkEmailDeployer, zkEmailDeployer, dkimDelay)
             )
         );
         dkimRegistry = UserOverrideableDKIMRegistry(address(dkimProxy));
