@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { DeploySafeRecovery_Script } from "../DeploySafeRecovery.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { DeploySafeRecovery_Script } from "script/Safe7579/DeploySafeRecovery.s.sol";
+import { BaseDeployTest } from "../BaseDeployTest.sol";
 
 contract DeploySafeRecovery_Test is BaseDeployTest {
     /**

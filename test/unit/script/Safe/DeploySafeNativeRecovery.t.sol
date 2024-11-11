@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { DeploySafeNativeRecovery_Script } from "../DeploySafeNativeRecovery.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { DeploySafeNativeRecovery_Script } from "script/Safe/DeploySafeNativeRecovery.s.sol";
+import { BaseDeployTest } from "../BaseDeployTest.sol";
 
 contract DeploySafeNativeRecovery_Test is BaseDeployTest {
     /**
@@ -26,7 +26,7 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
         BaseDeployTest.setUp();
 
         // Disable the VERIFIER environment variable
-        vm.setEnv("ZK_VERIFIER", vm.toString(address(0)));
+        vm.setEnv("VERIFIER", vm.toString(address(0)));
 
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();

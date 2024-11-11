@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { DeployEmailRecoveryModuleScript } from "../DeployEmailRecoveryModule.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { DeployEmailRecoveryModuleScript } from
+    "script/7579/EmailRecoveryModule/DeployEmailRecoveryModule.s.sol";
+import { BaseDeployTest } from "../../BaseDeployTest.sol";
 
 /**
  * @title DeployEmailRecoveryModule_Test

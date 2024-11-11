@@ -2,8 +2,8 @@
 pragma solidity ^0.8.12;
 
 import { DeployUniversalEmailRecoveryModuleScript } from
-    "../DeployUniversalEmailRecoveryModule.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+    "script/7579/UniversalEmailRecoveryModule/DeployUniversalEmailRecoveryModule.s.sol";
+import { BaseDeployTest } from "../../BaseDeployTest.sol";
 
 /// @title DeployUniversalEmailRecoveryModule_Test
 /// @notice Contains tests for deploying the Universal Email Recovery Module
