@@ -15,7 +15,7 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
     function run() public override {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        address verifier = vm.envOr("ZK_VERIFIER", address(0));
+        address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
@@ -51,7 +51,8 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
         }
 
         if (commandHandler == address(0)) {
-            commandHandler = address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
+            commandHandler =
+                address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
             console.log("Deployed Command Handler at", commandHandler);
         }
 
