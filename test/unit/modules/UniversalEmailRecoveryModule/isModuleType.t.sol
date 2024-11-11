@@ -9,7 +9,7 @@ contract UniversalEmailRecoveryModule_isModuleType_Test is UnitBase {
         super.setUp();
     }
 
-    function test_IsModuleType_ReturnsModuleType() public {
+    function test_IsModuleType_ReturnsModuleType() public view {
         // Verify that the module type is correct
         bool isExecutor = emailRecoveryModule.isModuleType(MODULE_TYPE_EXECUTOR);
         assertTrue(isExecutor, "Should be an executor module");

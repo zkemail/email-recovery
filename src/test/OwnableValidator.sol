@@ -77,12 +77,12 @@ contract OwnableValidator is ERC7579ValidatorBase {
     }
 
     function validateSignatureWithData(
-        bytes32 hash,
-        bytes calldata signature,
-        bytes calldata data
+        bytes32, /*hash*/
+        bytes calldata, /*signature*/
+        bytes calldata /*data*/
     )
         external
-        view
+        pure
         override
         returns (bool)
     {

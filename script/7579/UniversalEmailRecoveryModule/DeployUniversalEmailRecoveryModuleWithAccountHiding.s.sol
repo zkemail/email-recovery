@@ -6,23 +6,22 @@ pragma solidity ^0.8.25;
 import { console } from "forge-std/console.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
-import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { BaseDeployScript } from "../../BaseDeployScript.s.sol";
 
 contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
-    address verifier;
-    address dkim;
-    address emailAuthImpl;
-    address commandHandler;
-    uint256 minimumDelay;
-    address killSwitchAuthorizer;
+    address public verifier;
+    address public dkim;
+    address public emailAuthImpl;
+    uint256 public minimumDelay;
+    address public killSwitchAuthorizer;
+    address public factory;
 
-    address initialOwner;
-    address dkimRegistrySigner;
-    uint256 dkimDelay;
-    uint256 salt;
+    address public initialOwner;
+    address public dkimRegistrySigner;
+    uint256 public dkimDelay;
+    uint256 public salt;
 
     function run() public override {
         super.run();
@@ -30,9 +29,9 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         verifier = vm.envOr("VERIFIER", address(0));
         dkim = vm.envOr("DKIM_REGISTRY", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        factory = vm.envOr("RECOVERY_FACTORY", address(0));
 
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
@@ -54,16 +53,17 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
             console.log("EmailAuth implemenation deployed at", emailAuthImpl);
         }
 
-        address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
-        if (_factory == address(0)) {
-            _factory = address(
+        if (factory == address(0)) {
+            factory = address(
                 new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl)
             );
-            console.log("EmailRecoveryUniversalFactory deployed at", _factory);
+            console.log("EmailRecoveryUniversalFactory deployed at", factory);
         }
 
-        EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
-        (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
+        EmailRecoveryUniversalFactory emailRecoveryUniversalFactory =
+            EmailRecoveryUniversalFactory(factory);
+        (address module, address commandHandler) = emailRecoveryUniversalFactory
+            .deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(AccountHidingRecoveryCommandHandler).creationCode,

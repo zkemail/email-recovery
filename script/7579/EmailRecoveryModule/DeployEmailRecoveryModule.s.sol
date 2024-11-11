@@ -5,25 +5,24 @@ pragma solidity ^0.8.25;
 
 import { console } from "forge-std/console.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { BaseDeployScript } from "../../BaseDeployScript.s.sol";
 
 contract DeployEmailRecoveryModuleScript is BaseDeployScript {
-    address verifier;
-    address dkim;
-    address emailAuthImpl;
-    address commandHandler;
-    uint256 minimumDelay;
-    address killSwitchAuthorizer;
-    address validatorAddr;
+    address public verifier;
+    address public dkim;
+    address public emailAuthImpl;
+    uint256 public minimumDelay;
+    address public killSwitchAuthorizer;
+    address public validatorAddr;
+    address public factory;
 
-    address initialOwner;
-    address dkimRegistrySigner;
-    uint256 dkimDelay;
-    uint256 salt;
+    address public initialOwner;
+    address public dkimRegistrySigner;
+    uint256 public dkimDelay;
+    uint256 public salt;
 
     function run() public override {
         super.run();
@@ -31,10 +30,10 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         verifier = vm.envOr("VERIFIER", address(0));
         dkim = vm.envOr("DKIM_REGISTRY", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
         validatorAddr = vm.envOr("VALIDATOR", address(0));
+        factory = vm.envOr("RECOVERY_FACTORY", address(0));
 
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
@@ -62,15 +61,14 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
             console.log("OwnableValidator deployed at", validatorAddr);
         }
 
-        address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
-        if (_factory == address(0)) {
-            _factory =
+        if (factory == address(0)) {
+            factory =
                 address(new EmailRecoveryFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl));
-            console.log("EmailRecoveryFactory deployed at", _factory);
+            console.log("EmailRecoveryFactory deployed at", factory);
         }
 
-        EmailRecoveryFactory factory = EmailRecoveryFactory(_factory);
-        (address module, address commandHandler) = factory.deployEmailRecoveryModule(
+        EmailRecoveryFactory emailRecoveryFactory = EmailRecoveryFactory(factory);
+        (address module, address commandHandler) = emailRecoveryFactory.deployEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(EmailRecoveryCommandHandler).creationCode,

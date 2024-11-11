@@ -4,24 +4,23 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console, gas-custom-errors */
 
 import { console } from "forge-std/console.sol";
-import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { BaseDeployScript } from "../BaseDeployScript.s.sol";
 
 contract DeploySafeNativeRecovery_Script is BaseDeployScript {
-    address verifier;
-    address dkim;
-    address emailAuthImpl;
-    address commandHandler;
-    uint256 minimumDelay;
-    address killSwitchAuthorizer;
+    address public verifier;
+    address public dkim;
+    address public emailAuthImpl;
+    address public commandHandler;
+    uint256 public minimumDelay;
+    address public killSwitchAuthorizer;
 
-    address initialOwner;
-    address dkimRegistrySigner;
-    uint256 dkimDelay;
-    uint256 salt;
+    address public initialOwner;
+    address public dkimRegistrySigner;
+    uint256 public dkimDelay;
+    uint256 public salt;
 
     function run() public override {
         super.run();

@@ -15,17 +15,17 @@ import { BaseDeployScript } from "../BaseDeployScript.s.sol";
 // script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHiding_Script
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
-    address verifier;
-    address dkim;
-    address emailAuthImpl;
-    address commandHandler;
-    uint256 minimumDelay;
-    address killSwitchAuthorizer;
+    address public verifier;
+    address public dkim;
+    address public emailAuthImpl;
+    uint256 public minimumDelay;
+    address public killSwitchAuthorizer;
+    address public factory;
 
-    address initialOwner;
-    address dkimRegistrySigner;
-    uint256 dkimDelay;
-    uint256 salt;
+    address public initialOwner;
+    address public dkimRegistrySigner;
+    uint256 public dkimDelay;
+    uint256 public salt;
 
     function run() public override {
         super.run();
@@ -34,9 +34,9 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
         verifier = vm.envOr("VERIFIER", address(0));
         dkim = vm.envOr("DKIM_REGISTRY", address(0));
         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+        factory = vm.envOr("RECOVERY_FACTORY", address(0));
 
         initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
         dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
@@ -58,9 +58,17 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
             console.log("EmailAuth implemenation deployed at", emailAuthImpl);
         }
 
-        EmailRecoveryUniversalFactory factory =
-            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl);
-        (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
+        if (factory == address(0)) {
+            factory = address(
+                new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl)
+            );
+            console.log("EmailRecoveryUniversalFactory deployed at", factory);
+        }
+
+        EmailRecoveryUniversalFactory emailRecoveryUniversalFactory =
+            EmailRecoveryUniversalFactory(factory);
+        (address module, address commandHandler) = emailRecoveryUniversalFactory
+            .deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),
             type(AccountHidingRecoveryCommandHandler).creationCode,
