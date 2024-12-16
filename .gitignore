@@ -2,6 +2,7 @@
 cache/
 out/
 broadcast
+artifacts/
 
 # Dotenv file
 .env
