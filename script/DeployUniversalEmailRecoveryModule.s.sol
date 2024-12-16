@@ -15,62 +15,56 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { Script } from "forge-std/Script.sol";
 
 contract DeployUniversalEmailRecoveryModuleScript is Script {
-    function run() public {
-        // Get environment variables
-        address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
-        address verifier = vm.envOr("VERIFIER", address(0));
-        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
-        address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
-        address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+    uint256 deployer = vm.envUint("DEPLOYER");
+    address initialOwner = vm.envAddress("INITIAL_OWNER");
+    address verifier = vm.envOr("VERIFIER", address(0));
+    address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
+    address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+    uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
+    function run() public {
         // Deploy verifier if not provided
         if (verifier == address(0)) {
-            verifier = deployVerifierContracts(initialOwner);
+            verifier = deployVerifierContracts();
         }
 
         // Deploy DKIM registry if not provided
         UserOverrideableDKIMRegistry dkim =
             UserOverrideableDKIMRegistry(vm.envOr("DKIM_REGISTRY", address(0)));
         if (address(dkim) == address(0)) {
-            dkim = deployDKIMRegistry(initialOwner, dkimRegistrySigner);
+            dkim = deployDKIMRegistry();
         }
 
         // Deploy EmailAuth if not provided
         if (emailAuthImpl == address(0)) {
             emailAuthImpl = SafeSingletonDeployer.broadcastDeploy(
-                initialOwner,
-                type(EmailAuth).creationCode,
-                abi.encode(),
-                keccak256("EMAIL_AUTH_IMPL")
+                deployer, type(EmailAuth).creationCode, abi.encode(), keccak256("EMAIL_AUTH_IMPL")
             );
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         // Deploy and configure factory
-        address factory = deployAndConfigureFactory(
-            initialOwner, verifier, emailAuthImpl, minimumDelay, killSwitchAuthorizer, address(dkim)
-        );
+        address factory = deployAndConfigureFactory(address(dkim));
 
         // Deploy recovery module and handler
-        deployRecoveryContracts(factory, minimumDelay, killSwitchAuthorizer, address(dkim));
+        deployRecoveryContracts(factory, address(dkim));
     }
 
-    function deployVerifierContracts(address initialOwner) private returns (address) {
+    function deployVerifierContracts() private returns (address) {
         address verifierImpl = SafeSingletonDeployer.broadcastDeploy(
-            initialOwner, type(Verifier).creationCode, abi.encode(), keccak256("VERIFIER")
+            deployer, type(Verifier).creationCode, abi.encode(), keccak256("VERIFIER")
         );
         console.log("Verifier implementation deployed at: %s", address(verifierImpl));
 
         address groth16Verifier = SafeSingletonDeployer.broadcastDeploy(
-            initialOwner,
+            deployer,
             type(Groth16Verifier).creationCode,
             abi.encode(),
             keccak256("GROTH16_VERIFIER")
         );
 
         address verifierProxy = SafeSingletonDeployer.broadcastDeploy(
-            initialOwner,
+            deployer,
             type(ERC1967Proxy).creationCode,
             abi.encode(
                 address(verifierImpl),
@@ -84,17 +78,11 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         return verifier;
     }
 
-    function deployDKIMRegistry(
-        address initialOwner,
-        address dkimRegistrySigner
-    )
-        private
-        returns (UserOverrideableDKIMRegistry)
-    {
+    function deployDKIMRegistry() private returns (UserOverrideableDKIMRegistry) {
         uint256 setTimeDelay = vm.envOr("DKIM_DELAY", uint256(0));
 
         address impl = SafeSingletonDeployer.broadcastDeploy(
-            initialOwner,
+            deployer,
             type(UserOverrideableDKIMRegistry).creationCode,
             abi.encode(),
             keccak256("USER_OVERRIDEABLE_DKIM_IMPL")
@@ -102,7 +90,7 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         console.log("UserOverrideableDKIMRegistry implementation deployed at: %s", address(impl));
 
         address proxy = SafeSingletonDeployer.broadcastDeploy(
-            initialOwner,
+            deployer,
             type(ERC1967Proxy).creationCode,
             abi.encode(
                 address(impl),
@@ -119,21 +107,11 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         return dkim;
     }
 
-    function deployAndConfigureFactory(
-        address initialOwner,
-        address verifier,
-        address emailAuthImpl,
-        uint256 minimumDelay,
-        address killSwitchAuthorizer,
-        address dkim
-    )
-        private
-        returns (address)
-    {
+    function deployAndConfigureFactory(address dkim) private returns (address) {
         address factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (factory == address(0)) {
             factory = SafeSingletonDeployer.broadcastDeploy(
-                initialOwner,
+                deployer,
                 type(EmailRecoveryUniversalFactory).creationCode,
                 abi.encode(verifier, emailAuthImpl),
                 keccak256("EMAIL_RECOVERY_FACTORY")
@@ -143,14 +121,7 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
         return factory;
     }
 
-    function deployRecoveryContracts(
-        address factory,
-        uint256 minimumDelay,
-        address killSwitchAuthorizer,
-        address dkim
-    )
-        private
-    {
+    function deployRecoveryContracts(address factory, address dkim) private {
         EmailRecoveryUniversalFactory recoveryFactory = EmailRecoveryUniversalFactory(factory);
         (address module, address commandHandler) = recoveryFactory
             .deployUniversalEmailRecoveryModule(
@@ -158,7 +129,7 @@ contract DeployUniversalEmailRecoveryModuleScript is Script {
             bytes32(uint256(0)),
             type(EmailRecoveryCommandHandler).creationCode,
             minimumDelay,
-            killSwitchAuthorizer,
+            initialOwner,
             dkim
         );
 
