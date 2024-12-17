@@ -83,6 +83,7 @@ contract OwnableValidator is ERC7579ValidatorBase {
     )
         external
         view
+        override
         returns (bool)
     {
         return false;
