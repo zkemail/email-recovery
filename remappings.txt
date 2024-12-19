@@ -24,3 +24,4 @@ solidity-stringutils/=node_modules/solidity-stringutils/
 @matterlabs/zksync-contracts/l2/contracts/=src/libraries/
 kernel/=node_modules/@zerodev/kernel/src/
 ExcessivelySafeCall/=node_modules/excessively-safe-call/src/
+safe-singleton-deployer/=lib/safe-singleton-deployer-sol/src/

@@ -26,7 +26,7 @@
     "test:safe-recovery-command-handler": "ACCOUNT_TYPE=SAFE COMMAND_HANDLER_TYPE=2 forge test --match-path \"test/**/*.sol\"",
     "test:all": "pnpm test:email-recovery-command-handler && pnpm test:address-hiding-command-handler && pnpm test:safe-recovery-command-handler",
     "test:all-safe": "pnpm test:safe-email-recovery-command-handler && pnpm test:safe-address-hiding-command-handler && pnpm test:safe-recovery-command-handler",
-    "test:script": "forge test --match-path script/test/**/*.sol --threads 1",
+    "test:script": "forge test --match-path script/test/**/*.sol --threads 1 --fork-url https://sepolia.base.org",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
     "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
   },
