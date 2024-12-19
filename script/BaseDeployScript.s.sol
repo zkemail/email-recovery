@@ -10,23 +10,35 @@ import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+import { SafeSingletonDeployer } from "safe-singleton-deployer/SafeSingletonDeployer.sol";
+
 contract BaseDeployScript is Script {
     function run() public virtual { }
 
     /**
      * Helper function to deploy a Verifier
      */
-    function deployVerifier(address initialOwner, uint256 salt) public returns (address) {
-        Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
-        console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-        Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
-        ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
-            address(verifierImpl),
-            abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
+    function deployVerifier(address initialOwner, uint256) public returns (address) {
+        address verifierImpl = SafeSingletonDeployer.deploy(
+            type(Verifier).creationCode, abi.encode(), keccak256("VERIFIER")
         );
-        address verifier = address(Verifier(address(verifierProxy)));
-        console.log("Deployed Verifier at", verifier);
-        return verifier;
+        console.log("Verifier implementation deployed at: %s", address(verifierImpl));
+
+        address groth16Verifier = SafeSingletonDeployer.deploy(
+            type(Groth16Verifier).creationCode, abi.encode(), keccak256("GROTH16_VERIFIER")
+        );
+
+        address verifierProxy = SafeSingletonDeployer.deploy(
+            type(ERC1967Proxy).creationCode,
+            abi.encode(
+                address(verifierImpl),
+                abi.encodeCall(Verifier(verifierImpl).initialize, (initialOwner, groth16Verifier))
+            ),
+            keccak256("VERIFIER_PROXY")
+        );
+
+        console.log("Deployed Verifier at", verifierProxy);
+        return verifierProxy;
     }
 
     /**
@@ -36,26 +48,33 @@ contract BaseDeployScript is Script {
         address initialOwner,
         address dkimRegistrySigner,
         uint256 setTimeDelay,
-        uint256 salt
+        uint256
     )
         public
         returns (address)
     {
         require(dkimRegistrySigner != address(0), "DKIM_SIGNER is required");
-        UserOverrideableDKIMRegistry overrideableDkimImpl =
-            new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
-        console.log(
-            "UserOverrideableDKIMRegistry implementation deployed at: %s",
-            address(overrideableDkimImpl)
+
+        address impl = SafeSingletonDeployer.deploy(
+            type(UserOverrideableDKIMRegistry).creationCode,
+            abi.encode(),
+            keccak256("USER_OVERRIDEABLE_DKIM_IMPL")
         );
-        ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
-            address(overrideableDkimImpl),
-            abi.encodeCall(
-                overrideableDkimImpl.initialize, (initialOwner, dkimRegistrySigner, setTimeDelay)
-            )
+        console.log("UserOverrideableDKIMRegistry implementation deployed at: %s", address(impl));
+
+        address proxy = SafeSingletonDeployer.deploy(
+            type(ERC1967Proxy).creationCode,
+            abi.encode(
+                address(impl),
+                abi.encodeCall(
+                    UserOverrideableDKIMRegistry(impl).initialize,
+                    (initialOwner, dkimRegistrySigner, setTimeDelay)
+                )
+            ),
+            keccak256("USER_OVERRIDEABLE_DKIM_PROXY")
         );
-        address dkim = address(dkimProxy);
-        console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", dkim);
-        return dkim;
+
+        console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", proxy);
+        return proxy;
     }
 }
