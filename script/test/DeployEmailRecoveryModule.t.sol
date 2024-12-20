@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
+import { Test } from "forge-std/Test.sol";
+import { VmSafe } from "forge-std/Vm.sol";
 import { DeployEmailRecoveryModuleScript } from "../DeployEmailRecoveryModule.s.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
-import { EmailRecoveryModule } from "src/EmailRecoveryModule.sol";
-import { Verifier } from "src/Verifier.sol";
-import { UserOverrideableDKIMRegistry } from "src/UserOverrideableDKIMRegistry.sol";
+import { EmailRecoveryModule } from "../../src/modules/EmailRecoveryModule.sol";
+import { EmailRecoveryManager } from "../../src/EmailRecoveryManager.sol";
 
 /**
  * @title DeployEmailRecoveryModule_Test
@@ -38,11 +39,11 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
         
         EmailRecoveryModule moduleContract = EmailRecoveryModule(module);
         assertEq(moduleContract.verifier(), initialVerifier, "Module verifier mismatch");
-        assertEq(moduleContract.dkimRegistry(), initialDKIMRegistry, "Module DKIM registry mismatch");
+        assertEq(moduleContract.dkimAddr(), initialDKIMRegistry, "Module DKIM registry mismatch");
         assertEq(
-            moduleContract.killSwitchAuthorizer(),
+            moduleContract.owner(),
             vm.envAddress("KILL_SWITCH_AUTHORIZER"),
-            "Module kill switch mismatch"
+            "Module kill switch authorizer mismatch"
         );
         
         vm.revertTo(snapshot);
@@ -100,7 +101,7 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
         // Verify module uses new registry
         address module = vm.envAddress("RECOVERY_MODULE");
         assertEq(
-            EmailRecoveryModule(module).dkimRegistry(),
+            EmailRecoveryModule(module).dkimAddr(),
             newRegistry,
             "Module not using new registry"
         );

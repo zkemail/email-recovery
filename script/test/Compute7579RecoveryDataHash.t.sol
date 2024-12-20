@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
+import { Test } from "forge-std/Test.sol";
+import { VmSafe } from "forge-std/Vm.sol";
 import { Compute7579RecoveryDataHash } from "../Compute7579RecoveryDataHash.s.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 
 contract Compute7579RecoveryDataHashTest is BaseDeployTest {
-    Compute7579RecoveryDataHash target;
+    Compute7579RecoveryDataHash hasher;
     bytes4 constant CHANGE_OWNER_SELECTOR = bytes4(keccak256(bytes("changeOwner(address)")));
 
     function setUp() public override {
         super.setUp();
-        target = new Compute7579RecoveryDataHash();
+        hasher = new Compute7579RecoveryDataHash();
         
         // Set required environment variables if not set in BaseDeployTest
         if (vm.envAddress("NEW_OWNER") == address(0)) {
@@ -34,10 +36,10 @@ contract Compute7579RecoveryDataHashTest is BaseDeployTest {
         uint256 preLogsLength = vm.getRecordedLogs().length;
         
         // Run script
-        target.run();
+        hasher.run();
         
         // Get and verify logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        VmSafe.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length - preLogsLength, 2, "Incorrect number of logs emitted");
         
         string memory recoveryDataLog = abi.decode(logs[preLogsLength].data, (string));
@@ -55,20 +57,20 @@ contract Compute7579RecoveryDataHashTest is BaseDeployTest {
         bytes memory expectedRecoveryData = abi.encode(vm.envAddress("VALIDATOR"), expectedCalldata);
         bytes32 expectedHash = keccak256(expectedRecoveryData);
         
-        target.run();
+        hasher.run();
         
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        VmSafe.Log[] memory logs = vm.getRecordedLogs();
         string memory recoveryHashLog = abi.decode(logs[logs.length - 1].data, (string));
         assertEq(recoveryHashLog, vm.toString(expectedHash), "Hash mismatch with different owner");
     }
 
     function testFail_ComputeWithZeroAddressOwner() public {
         vm.setEnv("NEW_OWNER", vm.toString(address(0)));
-        target.run();
+        hasher.run();
     }
 
     function testFail_ComputeWithZeroAddressValidator() public {
         vm.setEnv("VALIDATOR", vm.toString(address(0)));
-        target.run();
+        hasher.run();
     }
 }
