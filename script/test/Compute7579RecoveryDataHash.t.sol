@@ -12,5 +12,7 @@ contract Compute7579RecoveryDataHashTest is BaseDeployTest {
     function testRun() public {
         Compute7579RecoveryDataHash target = new Compute7579RecoveryDataHash();
         target.run();
+        assertNotEq(target.recoveryDataHash() , bytes32(0));
+        assertNotEq(target.newOwner() , address(0));
     }
 }

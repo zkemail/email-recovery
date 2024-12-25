@@ -11,23 +11,35 @@ import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol
 import { BaseDeployScript } from "./BaseDeployScript.s.sol";
 
 contract DeploySafeNativeRecovery_Script is BaseDeployScript {
+    address public verifier;
+    address public dkimRegistrySigner;
+    address public emailAuthImpl;
+    address public validatorAddr;
+    uint256 public minimumDelay;
+    address public killSwitchAuthorizer;
+    address commandHandler;
+
+    address public initialOwner;
+    uint256 public salt;
+
+    UserOverrideableDKIMRegistry public dkim;
     function run() public override {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
-        address verifier = vm.envOr("ZK_VERIFIER", address(0));
-        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
-        address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
-        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
-        address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
+       verifier = vm.envOr("ZK_VERIFIER", address(0));
+        dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
+         emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
+        minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
+         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
-        address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
 
-        uint256 salt = vm.envOr("CREATE2_SALT", uint256(0));
+         salt = vm.envOr("CREATE2_SALT", uint256(0));
 
         console.log("verifier %s", verifier);
 
-        UserOverrideableDKIMRegistry dkim;
+        
 
         if (verifier == address(0)) {
             verifier = deployVerifier(initialOwner, salt);

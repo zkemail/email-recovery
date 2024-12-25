@@ -12,6 +12,9 @@ contract DeploySafeRecovery_Test is BaseDeployTest {
         BaseDeployTest.setUp();
         DeploySafeRecovery_Script target = new DeploySafeRecovery_Script();
         target.run();
+        assertEq(target.initialOwner(), vm.addr(vm.envUint("PRIVATE_KEY")));
+        assertEq(target.salt(), vm.envUint("CREATE2_SALT"));
+        assertNotEq(target.verifier(), address(0));
     }
 
     /**
@@ -22,6 +25,8 @@ contract DeploySafeRecovery_Test is BaseDeployTest {
         vm.setEnv("VERIFIER", vm.toString(address(0)));
         DeploySafeRecovery_Script target = new DeploySafeRecovery_Script();
         target.run();
+        assertNotEq(target.verifier(), address(0));
+        assertNotEq(target.verifier().code.length, 0);
     }
 
     /**
@@ -32,5 +37,7 @@ contract DeploySafeRecovery_Test is BaseDeployTest {
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
         DeploySafeRecovery_Script target = new DeploySafeRecovery_Script();
         target.run();
+        assertNotEq(address(target.dkim()), address(0));
+        assertNotEq(address(target.dkim()).code.length, 0);// it is a contract
     }
 }

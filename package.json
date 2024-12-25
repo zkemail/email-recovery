@@ -33,7 +33,7 @@
   "dependencies": {
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
     "@openzeppelin/contracts-upgradeable": "5.0.1",
-    "@rhinestone/modulekit": "0.4.13",
+    "@rhinestone/modulekit": "0.4.15",
     "@zk-email/contracts": "6.3.2",
     "@zk-email/ether-email-auth-contracts": "1.0.2",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"

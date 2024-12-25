@@ -15,6 +15,9 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+       assertNotEq(target.verifier(), address(0));
+       assertNotEq(target.initialOwner(), address(0));
+       
     }
 
     /**
@@ -31,6 +34,9 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+        assertNotEq(target.verifier(), address(0));
+        assertNotEq(target.verifier().code.length, 0);
+        
     }
 
     /**
@@ -47,6 +53,8 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+        assertNotEq(address(target.dkim()),address(0));
+        assertNotEq(address(target.dkim()).code.length, 0);
     }
 
     /**
@@ -63,6 +71,8 @@ contract DeploySafeNativeRecovery_Test is BaseDeployTest {
         // Instantiate the script and run it
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+        assertNotEq(address(target.dkimRegistrySigner()) , address(0));
+        assertNotEq(target.dkimRegistrySigner().code.length , 0);
     }
 }
 
@@ -81,6 +91,7 @@ contract DeploySafeNativeRecovery_TestFail is BaseDeployTest {
 
         // Instantiate the script and attempt to run it, expecting failure
         DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
+        vm.expectRevert();
         target.run();
     }
 }

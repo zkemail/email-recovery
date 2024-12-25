@@ -22,6 +22,7 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
     function test_run() public {
         DeployEmailRecoveryModuleScript target = new DeployEmailRecoveryModuleScript();
         target.run();
+        assertNotEq(target.verifier(), address(0));
     }
 
     /**
@@ -30,7 +31,11 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
     function test_run_no_verifier() public {
         vm.setEnv("VERIFIER", vm.toString(address(0)));
         DeployEmailRecoveryModuleScript target = new DeployEmailRecoveryModuleScript();
+        // according to script  if verifier env is unset i.e address(0) then deployVerifier is called which makes verifier address non zero
+       
         target.run();
+         assertNotEq(target.verifier() , address(0));
+        assertNotEq(target.verifier().code.length, 0);
     }
 
     /**
@@ -39,7 +44,11 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
     function test_run_no_dkim_registry() public {
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
         DeployEmailRecoveryModuleScript target = new DeployEmailRecoveryModuleScript();
+        
         target.run();
+        assertNotEq(address(target.dkim()), address(0));
+        assertNotEq(address(target.dkim()).code.length, 0);
+        assertNotEq(target.dkim().owner(), address(0));
     }
 }
 
@@ -64,6 +73,8 @@ contract DeployEmailRecoveryModule_TestFail is BaseDeployTest {
         vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
         vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
         DeployEmailRecoveryModuleScript target = new DeployEmailRecoveryModuleScript();
+        vm.expectRevert();
         target.run();
+       
     }
 }
