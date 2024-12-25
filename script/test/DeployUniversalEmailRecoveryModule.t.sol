@@ -14,6 +14,8 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
         DeployUniversalEmailRecoveryModuleScript target =
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
+        assertNotEq(target.initialOwner(), address(0));
+        assertNotEq(target.verifier() , address(0));
     }
 
     /// @notice Tests the deployment run without a verifier
@@ -23,6 +25,8 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
         DeployUniversalEmailRecoveryModuleScript target =
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
+        assertNotEq(target.verifier(), address(0));
+        assertNotEq(target.verifier().code.length, 0);
     }
 
     /// @notice Tests the deployment run without a DKIM registry
@@ -32,6 +36,8 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
         DeployUniversalEmailRecoveryModuleScript target =
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
+        assertNotEq(address(target.dkim()), address(0));
+        assertNotEq(address(target.dkim()).code.length, 0);
     }
 }
 
@@ -45,6 +51,7 @@ contract DeployUniversalEmailRecoveryModule_TestFail is BaseDeployTest {
         vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
         DeployUniversalEmailRecoveryModuleScript target =
             new DeployUniversalEmailRecoveryModuleScript();
+            vm.expectRevert();
         target.run();
     }
 }
