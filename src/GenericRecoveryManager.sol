@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { GenericAccountRecovery } from "./GenericAccountRecovery.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
+import { IGenericRecoveryManager } from "./interfaces/IGenericRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
-import { GuardianManager } from "./GuardianManager.sol";
-import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
+import { GenericGuardianManager } from "./GenericGuardianManager.sol";
+import { GuardianStorage, GuardianStatus, GuardianType } from "./libraries/EnumerableGenericGuardianMap.sol";
 
 /**
- * @title EmailRecoveryManager
+ * @title GenericRecoveryManager
  * @notice Provides a mechanism for account recovery using email guardians
  * @dev The underlying EmailAccountRecovery contract provides some base logic for deploying
  * guardian contracts and handling email verification.
@@ -21,17 +20,17 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
  * account implementations. The core logic is agnostic to the account implementation and could be
  * implemented as part of a smart account module, or on a smart account itself.
  *
- * EmailRecoveryManager defines "what a valid recovery attempt is for an account", and leaves
+ * GenericRecoveryManager defines "what a valid recovery attempt is for an account", and leaves
  * defining "how that recovery attempt is executed on the account" to contracts implementing
- * EmailRecoveryManager. A specific email command handler is also accociated with a recovery
+ * GenericRecoveryManager. A specific email command handler is also accociated with a recovery
  * manager. A command handler defines and validates the recovery email commands. Developers can
  * write their own command handlers to make specifc commands
  */
-abstract contract EmailRecoveryManager is
-    EmailAccountRecovery,
-    GuardianManager,
+abstract contract GenericRecoveryManager is
+    GenericAccountRecovery,
+    GenericGuardianManager,
     Ownable,
-    IEmailRecoveryManager
+    IGenericRecoveryManager
 {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
@@ -279,6 +278,7 @@ abstract contract EmailRecoveryManager is
     function configureRecovery(
         address[] memory guardians,
         uint256[] memory weights,
+        GuardianType[] memory guardianTypes,
         uint256 threshold,
         uint256 delay,
         uint256 expiry
@@ -295,7 +295,7 @@ abstract contract EmailRecoveryManager is
         }
 
         (uint256 guardianCount, uint256 totalWeight) =
-            setupGuardians(account, guardians, weights,threshold);
+            setupGuardians(account, guardians, weights, guardianTypes, threshold);
 
         RecoveryConfig memory recoveryConfig = RecoveryConfig(delay, expiry);
         updateRecoveryConfig(recoveryConfig);
@@ -356,15 +356,19 @@ abstract contract EmailRecoveryManager is
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
-        bytes32 /* nullifier */
+        bytes32 /* nullifier */,
+        GuardianType guardianType,
+        address account
     )
         internal
         override
         onlyWhenActive
     {
-        address account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
-            templateIdx, commandParams
-        );
+        if(guardianType == GuardianType.EMAIL) {
+            account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
+                templateIdx, commandParams
+            );
+        }
 
         if (recoveryRequests[account].currentWeight > 0) {
             revert RecoveryInProcess();
@@ -377,7 +381,7 @@ abstract contract EmailRecoveryManager is
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in the email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
-        if (guardianStorage.status != GuardianStatus.REQUESTED) {
+        if (guardianStorage.status != GuardianStatus.REQUESTED || guardianStorage.weight == 0) {
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
         }
 
@@ -405,15 +409,23 @@ abstract contract EmailRecoveryManager is
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
-        bytes32 /* nullifier */
+        bytes32 /* nullifier */,        
+        GuardianType guardianType,
+        address account
     )
         internal
         override
         onlyWhenActive
     {
-        address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
-            templateIdx, commandParams
-        );
+        if(guardianType == GuardianType.EMAIL) {
+            account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
+                templateIdx, commandParams
+            );
+        } 
+
+        if(!checkGuardian(account, guardian)) {
+            revert InvalidGuardian();
+        }
 
         if (!isActivated(account)) {
             revert RecoveryIsNotActivated();
@@ -434,8 +446,6 @@ abstract contract EmailRecoveryManager is
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
-        (bytes32 recoveryDataHash, ) = IEmailRecoveryCommandHandler(commandHandler)
-            .parseRecoveryDataHash(templateIdx, commandParams);
 
         if (hasGuardianVoted(account, guardian)) {
             revert GuardianAlreadyVoted();
@@ -455,6 +465,9 @@ abstract contract EmailRecoveryManager is
         ) {
             revert GuardianMustWaitForCooldown(guardian);
         }
+
+        (bytes32 recoveryDataHash, ) = IEmailRecoveryCommandHandler(commandHandler)
+        .parseRecoveryDataHash(templateIdx, commandParams);
 
         // If recoveryDataHash is 0, this is the first guardian and the request is initialized
         if (recoveryRequest.recoveryDataHash == bytes32(0)) {
@@ -541,6 +554,17 @@ abstract contract EmailRecoveryManager is
         recover(account, recoveryData);
 
         emit RecoveryCompleted(account);
+    }
+
+    function generateRecoveryData(address account, address prevOwner, address newOwner) public view returns (bytes memory ) {
+        bytes[] memory commandParams = new bytes[](3);
+
+        commandParams[0] = abi.encode(account);
+        commandParams[1] = abi.encode(prevOwner);
+        commandParams[2] = abi.encode(newOwner);
+
+        (,bytes memory data ) = IEmailRecoveryCommandHandler(commandHandler).parseRecoveryDataHash(0, commandParams);
+        return data;
     }
 
     /**

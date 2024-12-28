@@ -43,5 +43,5 @@ interface IEmailRecoveryCommandHandler {
     )
         external
         view
-        returns (bytes32);
+        returns (bytes32, bytes memory);
 }

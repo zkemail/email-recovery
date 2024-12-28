@@ -4,22 +4,23 @@ pragma solidity ^0.8.25;
 import {
     EnumerableGuardianMap,
     GuardianStorage,
-    GuardianStatus
-} from "./libraries/EnumerableGuardianMap.sol";
-import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
-import { IGuardianManager } from "./interfaces/IGuardianManager.sol";
+    GuardianStatus,
+    GuardianType
+} from "./libraries/EnumerableGenericGuardianMap.sol";
+import { IGenericRecoveryManager } from "./interfaces/IGenericRecoveryManager.sol";
+import { IGenericGuardianManager } from "./interfaces/IGenericGuardianManager.sol";
 
 /**
- * @title GuardianManager
+ * @title GenericGuardianManager
  * @notice A contract to manage guardians
  */
-abstract contract GuardianManager is IGuardianManager {
+abstract contract GenericGuardianManager is IGenericGuardianManager {
     using EnumerableGuardianMap for EnumerableGuardianMap.AddressToGuardianMap;
 
     /**
      * Account to guardian config
      */
-    mapping(address account => GuardianManager.GuardianConfig guardianConfig) internal
+    mapping(address account => GenericGuardianManager.GuardianConfig guardianConfig) internal
         guardianConfigs;
 
     /**
@@ -33,7 +34,7 @@ abstract contract GuardianManager is IGuardianManager {
      */
     modifier onlyWhenNotRecovering() {
         (,, uint256 currentWeight,) =
-            IEmailRecoveryManager(address(this)).getRecoveryRequest(msg.sender);
+            IGenericRecoveryManager(address(this)).getRecoveryRequest(msg.sender);
         if (currentWeight > 0) {
             revert RecoveryInProcess();
         }
@@ -45,7 +46,7 @@ abstract contract GuardianManager is IGuardianManager {
      * @dev This impacts EmailRecoveryManager & GuardianManager
      */
     modifier onlyWhenActive() {
-        bool killSwitchEnabled = IEmailRecoveryManager(address(this)).killSwitchEnabled();
+        bool killSwitchEnabled = IGenericRecoveryManager(address(this)).killSwitchEnabled();
         if (killSwitchEnabled) {
             revert KillSwitchEnabled();
         }
@@ -83,6 +84,10 @@ abstract contract GuardianManager is IGuardianManager {
         return guardiansStorage[account].get(guardian);
     }
 
+    function checkGuardian(address account, address guardian) public view returns (bool) {
+        return guardiansStorage[account].get(guardian).weight == 0 || guardiansStorage[account].get(guardian).status != GuardianStatus.ACCEPTED ? false : true;
+    }
+
     /**
      * @notice Sets up guardians for a given account with specified weights and threshold
      * @dev This function can only be called once and ensures the guardians, weights, and threshold
@@ -96,6 +101,7 @@ abstract contract GuardianManager is IGuardianManager {
         address account,
         address[] memory guardians,
         uint256[] memory weights,
+        GuardianType[] memory guardianTypes,
         uint256 threshold
     )
         internal
@@ -112,7 +118,7 @@ abstract contract GuardianManager is IGuardianManager {
         }
 
         for (uint256 i = 0; i < guardianCount; i++) {
-            _addGuardian(account, guardians[i], weights[i]);
+            _addGuardian(account, guardians[i], weights[i], guardianTypes[i]);
         }
 
         uint256 totalWeight = guardianConfigs[account].totalWeight;
@@ -134,7 +140,8 @@ abstract contract GuardianManager is IGuardianManager {
      */
     function addGuardian(
         address guardian,
-        uint256 weight
+        uint256 weight,
+        GuardianType guardianType
     )
         public
         onlyWhenNotRecovering
@@ -146,7 +153,7 @@ abstract contract GuardianManager is IGuardianManager {
             revert SetupNotCalled();
         }
 
-        _addGuardian(msg.sender, guardian, weight);
+        _addGuardian(msg.sender, guardian, weight, guardianType);
     }
 
     /**
@@ -155,7 +162,7 @@ abstract contract GuardianManager is IGuardianManager {
      * @param guardian The address of the guardian to be added
      * @param weight The weight assigned to the guardian
      */
-    function _addGuardian(address account, address guardian, uint256 weight) internal {
+    function _addGuardian(address account, address guardian, uint256 weight, GuardianType guardianType) internal {
         if (guardian == address(0) || guardian == account) {
             revert InvalidGuardianAddress(guardian);
         }
@@ -166,7 +173,7 @@ abstract contract GuardianManager is IGuardianManager {
 
         bool success = guardiansStorage[account].set({
             key: guardian,
-            value: GuardianStorage(GuardianStatus.REQUESTED, weight)
+            value: GuardianStorage(GuardianStatus.REQUESTED, weight, guardianType)
         });
         if (!success) {
             revert AddressAlreadyGuardian();
@@ -256,7 +263,7 @@ abstract contract GuardianManager is IGuardianManager {
 
         guardiansStorage[account].set({
             key: guardian,
-            value: GuardianStorage(newStatus, guardianStorage.weight)
+            value: GuardianStorage(newStatus, guardianStorage.weight, guardianStorage.guardianType)
         });
         emit GuardianStatusUpdated(account, guardian, newStatus);
     }

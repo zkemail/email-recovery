@@ -168,12 +168,12 @@ contract AccountHidingRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     )
         external
         pure
-        returns (bytes32)
+        returns (bytes32, bytes memory)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
         }
-        return StringUtils.hexToBytes32(abi.decode(commandParams[1], (string)));
+        return (StringUtils.hexToBytes32(abi.decode(commandParams[1], (string))), abi.encode(address(0)));
     }
 
     /**
