@@ -75,7 +75,7 @@ contract ERC7579GenericRecoveryEOAWithECDSA is ERC7579GenericRecoveryBase {
         return digest;
     }
 
-    function test_RecoveryECDSA1() public {
+    function test_RecoveryEOAWithECDSA1() public {
         assert(validator.owners(accountAddress1) == owner1);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardians1[0], mockAcceptGuardianDigest(accountAddress1, 0));
