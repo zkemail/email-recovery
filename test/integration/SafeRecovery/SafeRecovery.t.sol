@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { Safe } from "@safe-global/safe-contracts/contracts/Safe.sol";
 
 import { SafeIntegrationBase } from "./SafeIntegrationBase.t.sol";
@@ -10,7 +10,6 @@ import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardia
 
 contract SafeRecovery_Integration_Test is SafeIntegrationBase {
     using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
 
     function setUp() public override {
         super.setUp();

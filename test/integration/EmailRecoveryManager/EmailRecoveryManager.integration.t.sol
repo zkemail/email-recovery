@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
+
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -18,7 +19,6 @@ contract EmailRecoveryManager_Integration_Test is
     OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base
 {
     using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
 
     function setUp() public override {
         super.setUp();

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import {
+    MODULE_TYPE_EXECUTOR,
+    MODULE_TYPE_VALIDATOR
+} from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
@@ -15,7 +18,6 @@ import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniver
 
 abstract contract UnitBase is BaseTest {
     using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
     using Strings for uint256;
 
     EmailRecoveryFactory public emailRecoveryFactory;
