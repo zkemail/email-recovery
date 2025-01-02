@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 
 contract EmailRecoveryModule_isInitialized_Test is EmailRecoveryModuleBase {
     using ModuleKitHelpers for *;

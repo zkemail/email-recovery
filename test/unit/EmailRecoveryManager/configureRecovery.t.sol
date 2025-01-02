@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";

@@ -2,7 +2,10 @@
 pragma solidity ^0.8.25;
 
 import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
+import {
+    MODULE_TYPE_EXECUTOR,
+    MODULE_TYPE_VALIDATOR
+} from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 import { EmailRecoveryModuleBase } from "./EmailRecoveryModuleBase.t.sol";

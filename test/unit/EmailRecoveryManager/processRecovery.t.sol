@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ModuleKitHelpers, ModuleKitUserOp } from "modulekit/ModuleKit.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { ModuleKitHelpers } from "modulekit/ModuleKit.sol";
+import { MODULE_TYPE_EXECUTOR } from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 import { CommandHandlerType } from "../../Base.t.sol";
@@ -13,7 +13,6 @@ import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
-    using ModuleKitUserOp for *;
     using Strings for uint256;
 
     string public recoveryDataHashString;
