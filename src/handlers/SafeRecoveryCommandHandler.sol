@@ -177,7 +177,7 @@ contract SafeRecoveryCommandHandler is IEmailRecoveryCommandHandler {
     )
         external
         view
-        returns (bytes32)
+        returns (bytes32, bytes memory)
     {
         if (templateIdx != 0) {
             revert InvalidTemplateIndex(templateIdx, 0);
@@ -192,7 +192,7 @@ contract SafeRecoveryCommandHandler is IEmailRecoveryCommandHandler {
         bytes memory swapOwnerCalldata = abi.encodeWithSelector(
             selector, previousOwnerInLinkedList, oldOwnerInEmail, newOwnerInEmail
         );
-        return keccak256(abi.encode(accountInEmail, swapOwnerCalldata));
+        return (keccak256(abi.encode(accountInEmail, swapOwnerCalldata)), abi.encode(accountInEmail, swapOwnerCalldata));
     }
 
     /**
