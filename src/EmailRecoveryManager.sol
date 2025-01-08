@@ -426,6 +426,9 @@ abstract contract EmailRecoveryManager is
             );
         }
 
+        /// [TODO]: Implement the EOA-TX-builder module based verification here.
+        
+
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in the email is a valid account
         GuardianStorage memory guardianStorage = getGuardian(account, guardian);
