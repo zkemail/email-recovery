@@ -10,6 +10,8 @@ import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommand
 import { GuardianManager } from "./GuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
 
+import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol" /// @dev - This file is originally implemented in the EOA-TX-builder module.
+
 /**
  * @title EmailRecoveryManager
  * @notice Provides a mechanism for account recovery using email guardians
@@ -37,6 +39,8 @@ abstract contract EmailRecoveryManager is
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    IVerifier public verifier;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -111,6 +115,8 @@ abstract contract EmailRecoveryManager is
         emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
+
+        verifier = verifierAddr;  /// @dev - Store the verifier contract address (verifierAddr) into the Verifier contract
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -405,7 +411,9 @@ abstract contract EmailRecoveryManager is
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
-        bytes32 /* nullifier */
+        bytes32 /* nullifier */,
+        EoaProof memory proof,            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+        uint256[34] calldata pubSignals.  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
     )
         internal
         override
@@ -427,7 +435,10 @@ abstract contract EmailRecoveryManager is
         }
 
         /// [TODO]: Implement the EOA-TX-builder module based verification here.
-        
+        require(
+            verifier.verifyEoaProof(proof, pubSignals) == true, /// @dev - Verifier# verifyEoaProof()
+            "invalid EOA proof"
+        );
 
         // This check ensures GuardianStatus is correct and also implicitly that the
         // account in the email is a valid account
