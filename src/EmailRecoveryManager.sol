@@ -40,7 +40,7 @@ abstract contract EmailRecoveryManager is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    IVerifier public verifier;
+    IVerifier public eoaVerifier;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -87,6 +87,7 @@ abstract contract EmailRecoveryManager is
 
     constructor(
         address _verifier,
+        address _eoaVerifier, /// @dev - eoaVerifier (IVerifier)
         address _dkimRegistry,
         address _emailAuthImpl,
         address _commandHandler,
@@ -111,12 +112,11 @@ abstract contract EmailRecoveryManager is
             revert InvalidKillSwitchAuthorizer();
         }
         verifierAddr = _verifier;
+        eoaVerifier = _eoaVerifier; /// @dev - eoaVerifier (IVerifier)
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
-
-        verifier = verifierAddr;  /// @dev - Store the verifier contract address (verifierAddr) into the Verifier contract
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -436,7 +436,7 @@ abstract contract EmailRecoveryManager is
 
         /// [TODO]: Implement the EOA-TX-builder module based verification here.
         require(
-            verifier.verifyEoaProof(proof, pubSignals) == true, /// @dev - Verifier# verifyEoaProof()
+            eoaVerifier.verifyEoaProof(proof, pubSignals) == true, /// @dev - Verifier# verifyEoaProof() of EOA-TX-builder module.
             "invalid EOA proof"
         );
 
