@@ -24,8 +24,8 @@ abstract contract UnitBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
 
-    EoaProof memory proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
-    uint256[34] calldata pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+    EoaProof public proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+    uint256[34] public pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
 
     EmailRecoveryFactory public emailRecoveryFactory;
     EmailRecoveryUniversalFactory public emailRecoveryUniversalFactory;
