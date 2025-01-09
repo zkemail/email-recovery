@@ -16,9 +16,16 @@ import { UniversalEmailRecoveryModuleHarness } from "./UniversalEmailRecoveryMod
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+import { IVerifier, EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol"
+
+
 abstract contract UnitBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
+
+    EoaProof memory proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+    uint256[34] calldata pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
 
     EmailRecoveryFactory public emailRecoveryFactory;
     EmailRecoveryUniversalFactory public emailRecoveryUniversalFactory;
@@ -56,6 +63,10 @@ abstract contract UnitBase is BaseTest {
                 expiry
             )
         });
+
+        /// @dev - [TODO]: Set the values for passing the IVerifier# verifyEoaProof()
+        proof = _proof;
+        pubSignals = _pubSignals;
     }
 
     // Helper functions

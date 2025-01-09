@@ -11,16 +11,9 @@ import { IEmailRecoveryCommandHandler } from "src/interfaces/IEmailRecoveryComma
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
-/// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { IVerifier, EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol"
-
-
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using Strings for uint256;
-
-    EoaProof memory proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
-    uint256[34] calldata pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
 
     string public recoveryDataHashString;
     bytes[] public commandParams;
@@ -50,10 +43,6 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         }
 
         nullifier = keccak256(abi.encode("nullifier 1"));
-
-        /// @dev - [TODO]: Set the values for passing the IVerifier# verifyEoaProof()
-        proof = _proof;
-        pubSignals = _pubSignals;
     }
 
     function test_ProcessRecovery_RevertWhen_KillSwitchEnabled() public {
