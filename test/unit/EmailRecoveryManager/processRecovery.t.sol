@@ -11,9 +11,16 @@ import { IEmailRecoveryCommandHandler } from "src/interfaces/IEmailRecoveryComma
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+import { IVerifier, EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol"
+
+
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     using ModuleKitHelpers for *;
     using Strings for uint256;
+
+    EoaProof memory proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+    uint256[34] calldata pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
 
     string public recoveryDataHashString;
     bytes[] public commandParams;
@@ -43,6 +50,10 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         }
 
         nullifier = keccak256(abi.encode("nullifier 1"));
+
+        /// @dev - [TODO]: Set the values for passing the IVerifier# verifyEoaProof()
+        proof = _proof;
+        pubSignals = _pubSignals;
     }
 
     function test_ProcessRecovery_RevertWhen_KillSwitchEnabled() public {
@@ -52,7 +63,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -71,7 +83,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            invalidGuardian, templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //invalidGuardian, templateIdx, commandParams, nullifier
         );
     }
 
@@ -89,7 +102,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -98,7 +112,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -134,7 +149,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[1], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[1], templateIdx, commandParams, nullifier
         );
     }
 
@@ -143,12 +159,14 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.expectRevert(IEmailRecoveryManager.GuardianAlreadyVoted.selector);
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -157,7 +175,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         bytes32 invalidRecoveryDataHash;
@@ -181,7 +200,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[1], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[1], templateIdx, commandParams, nullifier
         );
     }
 
@@ -190,7 +210,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -202,7 +223,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -221,7 +243,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(guardianCount, 2);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -233,7 +256,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -245,7 +269,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -262,7 +287,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             )
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
@@ -271,7 +297,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -283,7 +310,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         );
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         (
@@ -312,7 +340,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -322,7 +351,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         vm.warp(block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN());
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         (
@@ -359,7 +389,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(guardianCount, 1);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[1], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[1], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);
@@ -367,7 +398,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
 
         // guardian count is 1, so processRecovery can be executed subsequently by the same guardian
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[1], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[1], templateIdx, commandParams, nullifier
         );
 
         (
@@ -403,7 +435,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             accountAddress1, guardians1[0], block.timestamp + expiry, recoveryDataHash
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         (
@@ -441,7 +474,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             accountAddress1, guardians1[0], guardian1Weight, guardian1Weight
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         // Call processRecovery with guardians2 which increases currentWeight to >= threshold
@@ -454,7 +488,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
             recoveryDataHash
         );
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[1], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
+            //guardians1[1], templateIdx, commandParams, nullifier
         );
 
         (

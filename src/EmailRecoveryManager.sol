@@ -10,7 +10,9 @@ import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommand
 import { GuardianManager } from "./GuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
 
-import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol" /// @dev - This file is originally implemented in the EOA-TX-builder module.
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol"
+
 
 /**
  * @title EmailRecoveryManager
