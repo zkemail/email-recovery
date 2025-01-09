@@ -415,7 +415,7 @@ abstract contract EmailRecoveryManager is
         bytes[] memory commandParams,
         bytes32 /* nullifier */,
         EoaProof memory proof,            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
-        uint256[34] calldata pubSignals.  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
+        uint256[34] calldata pubSignals   /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
     )
         internal
         override
