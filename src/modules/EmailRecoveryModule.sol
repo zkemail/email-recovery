@@ -8,6 +8,10 @@ import { ISafe } from "../interfaces/ISafe.sol";
 import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol"
+
+
 /**
  * @title EmailRecoveryModule
  * @notice This contract provides a simple mechanism for recovering modular smart accounts by
@@ -41,6 +45,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
 
     constructor(
         address verifier,
+        address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
@@ -51,6 +56,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     )
         EmailRecoveryManager(
             verifier,
+            _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             dkimRegistry,
             emailAuthImpl,
             commandHandler,

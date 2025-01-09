@@ -42,7 +42,7 @@ abstract contract EmailRecoveryManager is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    IVerifier public eoaVerifier;
+    IVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -89,7 +89,7 @@ abstract contract EmailRecoveryManager is
 
     constructor(
         address _verifier,
-        address _eoaVerifier, /// @dev - eoaVerifier (IVerifier)
+        address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _dkimRegistry,
         address _emailAuthImpl,
         address _commandHandler,
