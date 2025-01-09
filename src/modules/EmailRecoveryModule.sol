@@ -9,7 +9,7 @@ import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
 import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol"
+//import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol"
 
 
 /**
@@ -45,7 +45,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
 
     constructor(
         address verifier,
-        address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+        address eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address dkimRegistry,
         address emailAuthImpl,
         address commandHandler,
@@ -56,7 +56,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     )
         EmailRecoveryManager(
             verifier,
-            _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+            eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             dkimRegistry,
             emailAuthImpl,
             commandHandler,
