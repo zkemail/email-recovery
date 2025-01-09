@@ -16,16 +16,9 @@ import { UniversalEmailRecoveryModuleHarness } from "./UniversalEmailRecoveryMod
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
-/// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { IVerifier, EoaProof } from "../../src/interfaces/circuits/IVerifier.sol";
-
-
 abstract contract UnitBase is BaseTest {
     using ModuleKitHelpers for *;
     using Strings for uint256;
-
-    EoaProof public proof;            /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
-    uint256[34] public pubSignals;  /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
 
     EmailRecoveryFactory public emailRecoveryFactory;
     EmailRecoveryUniversalFactory public emailRecoveryUniversalFactory;
@@ -63,10 +56,6 @@ abstract contract UnitBase is BaseTest {
                 expiry
             )
         });
-
-        /// @dev - [TODO]: Set the values for passing the IVerifier# verifyEoaProof()
-        proof = _proof;
-        pubSignals = _pubSignals;
     }
 
     // Helper functions
@@ -84,15 +73,19 @@ abstract contract UnitBase is BaseTest {
     }
 
     function deployModule(bytes memory handlerBytecode) public override {
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl), address(eoaVerifier), address(eoaAuthImpl));
+        //emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
         emailRecoveryUniversalFactory =
-            new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
+          new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl), address(eoaVerifier), address(eoaAuthImpl));
+        //emailRecoveryUniversalFactory =
+        //  new EmailRecoveryUniversalFactory(address(verifier), address(emailAuthImpl));
 
         bytes32 commandHandlerSalt = bytes32(uint256(0));
         commandHandlerAddress = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
             address(verifier),
+            address (eoaVerifier), /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             address(dkimRegistry),
             address(emailAuthImpl),
             commandHandlerAddress,
