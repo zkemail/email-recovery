@@ -245,87 +245,118 @@ abstract contract SimpleRecoveryModuleManager is SimpleRecoveryVerifier, EmailAc
  /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
 /*                     HANDLE ACCEPTANCE                      */
 /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´`*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
 /**
- * @notice Handles the acceptance of a recovery request by a guardian, validating the request 
- * and updating the guardian's status.
+* @notice Handles the acceptance of an EOA (Externally Owned Account) guardian.
  * 
- * This function verifies whether the guardian is an EOA or email-verified guardian:
- *  - If EOA, it verifies the signature.
- *  - If email-verified, it computes the email-auth address and deploys the proxy if needed.
- *    It also initializes the DKIM registry and verifier and inserts the acceptance/recovery templates.
+ * @dev This function:
+ *  - Extracts the account associated with the acceptance command.
+ *  - Verifies the EOA guardian signature using `verifyEOAGuardian()`.
+ *  - Calls `acceptGuardian()` to complete the guardian acceptance process.
  * 
- * @param emailAuthMsg The email authentication message containing the command parameters and proof.
- * @param templateIdx The index of the command template used in the acceptance process.
- * @param signature The signature of the guardian to validate the acceptance command.
+ * @param templateIdx The index of the acceptance command template.
+ * @param commandParams The command parameters used for verification.
+ * @param signature The EOA guardian's signature for verification.
  */
-function handleAcceptanceV2(
-    EmailAuthMsg memory emailAuthMsg,
+function handleEOAAcceptance(
     uint templateIdx,
+    bytes[] memory commandParams,
     bytes memory signature
+) external {
+    address recoveredAccount = extractRecoveredAccountFromAcceptanceCommand(
+        commandParams,
+        templateIdx
+    );
+
+    // Verify EOA guardian
+    address guardian = verifyEOAGuardian(
+        recoveredAccount,
+        templateIdx,
+        commandParams,
+        signature
+    );
+
+    acceptGuardian(guardian, templateIdx, commandParams, bytes32(0));
+}
+
+/*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+/*                HANDLE EMAIL AUTH GUARDIAN ACCEPTANCE        */
+/*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+/**
+ * @notice Handles the acceptance of an email-based guardian.
+ * 
+ * @dev This function:
+ *  - Extracts the account associated with the acceptance command.
+ *  - Validates the email authentication message, ensuring `accountSalt` is present.
+ *  - Deploys a new `EmailAuth` proxy contract if it doesn't already exist.
+ *  - Initializes the deployed `EmailAuth` contract with necessary templates.
+ *  - Verifies that the existing `EmailAuth` proxy controller matches the expected contract.
+ *  - Calls `authEmail()` to authenticate the email-based guardian.
+ *  - Calls `acceptGuardian()` to complete the guardian acceptance process.
+ * 
+ * @param emailAuthMsg The email authentication message containing the command and proof.
+ * @param templateIdx The index of the acceptance command template.
+ */
+function handleEmailAuthAcceptance(
+    EmailAuthMsg memory emailAuthMsg,
+    uint templateIdx
 ) external {
     address recoveredAccount = extractRecoveredAccountFromAcceptanceCommand(
         emailAuthMsg.commandParams,
         templateIdx
     );
-    
-    bool isEOAGuardian = emailAuthMsg.proof.accountSalt == bytes32(0);
-    address guardian;
-    if (isEOAGuardian) {
-        guardian = verifyEOAGuardian(
-            recoveredAccount,
-            templateIdx,
-            emailAuthMsg.commandParams,
-            signature
-        );
-    } else {
-        guardian = computeEmailAuthAddress(
+
+    require(
+        emailAuthMsg.proof.accountSalt != bytes32(0),
+        "Invalid email auth: missing accountSalt for email guardian"
+    );
+
+    address guardian = computeEmailAuthAddress(
+        recoveredAccount,
+        emailAuthMsg.proof.accountSalt
+    );
+
+    EmailAuth guardianEmailAuth;
+    if (guardian.code.length == 0) {
+        // Deploy a new proxy if it doesn't exist
+        address proxyAddress = deployEmailAuthProxy(
             recoveredAccount,
             emailAuthMsg.proof.accountSalt
         );
-              
-        EmailAuth guardianEmailAuth;
-        if (guardian.code.length == 0) {
-            address proxyAddress = deployEmailAuthProxy(
-                recoveredAccount,
-                emailAuthMsg.proof.accountSalt
-            );
-            guardianEmailAuth = EmailAuth(proxyAddress);
-            guardianEmailAuth.initDKIMRegistry(dkim());
-            guardianEmailAuth.initVerifier(verifier());
-            for (
-                uint idx = 0;
-                idx < acceptanceCommandTemplates().length;
-                idx++
-            ) {
-                guardianEmailAuth.insertCommandTemplate(
-                    computeAcceptanceTemplateId(idx),
-                    acceptanceCommandTemplates()[idx]
-                );
-            }
-            for (uint idx = 0; idx < recoveryCommandTemplates().length; idx++) {
-                guardianEmailAuth.insertCommandTemplate(
-                    computeRecoveryTemplateId(idx),
-                    recoveryCommandTemplates()[idx]
-                );
-            }
-        } else {
-            guardianEmailAuth = EmailAuth(payable(address(guardian)));
-            require(
-                guardianEmailAuth.controller() == address(this),
-                "invalid controller"
+        guardianEmailAuth = EmailAuth(proxyAddress);
+        guardianEmailAuth.initDKIMRegistry(dkim());
+        guardianEmailAuth.initVerifier(verifier());
+
+        // Add acceptance and recovery templates
+        for (uint idx = 0; idx < acceptanceCommandTemplates().length; idx++) {
+            guardianEmailAuth.insertCommandTemplate(
+                computeAcceptanceTemplateId(idx),
+                acceptanceCommandTemplates()[idx]
             );
         }
-
-        guardianEmailAuth.authEmail(emailAuthMsg);
+        for (uint idx = 0; idx < recoveryCommandTemplates().length; idx++) {
+            guardianEmailAuth.insertCommandTemplate(
+                computeRecoveryTemplateId(idx),
+                recoveryCommandTemplates()[idx]
+            );
+        }
+    } else {
+        // If proxy already exists, verify the controller
+        guardianEmailAuth = EmailAuth(payable(address(guardian)));
+        require(
+            guardianEmailAuth.controller() == address(this),
+            "Invalid controller"
+        );
     }
-    GuardianStorage memory guardianStorage = getGuardian(recoveredAccount, guardian);
-    updateGuardianStatus(recoveredAccount, guardian, GuardianStatus.ACCEPTED);
-    guardianConfigs[recoveredAccount].acceptedWeight += guardianStorage.weight;
 
-    emit GuardianAccepted(recoveredAccount, guardian);
+    // Perform email-based authentication
+    guardianEmailAuth.authEmail(emailAuthMsg);
+    acceptGuardian(
+        guardian, 
+        templateIdx, 
+        emailAuthMsg.commandParams, 
+        emailAuthMsg.proof.emailNullifier
+    );
 }
-
 /**
  * @notice Accepts a guardian for the specified account. This is the second core function
  * that must be called during the end-to-end recovery flow

@@ -76,21 +76,10 @@ contract RecoveryTest is BaseTest {
         acceptanceParams[0] = abi.encode(owner1);
       
         {
-             EmailProof memory proof = generateMockEmailProof(
-            "Accept guardian request for",
-            nullifier,
-            bytes32(0) 
-        );
-              EmailAuthMsg memory emailAuthMsg = EmailAuthMsg({
-                templateId: templateId,
-                commandParams: acceptanceParams,
-                skippedCommandPrefix: 0,
-                proof: proof
-            });
              uint256 privateKey1 = uint256(
             keccak256(abi.encodePacked("eoaGuardian1"))
         );
-            bytes memory encodedParams = abi.encode(emailAuthMsg.commandParams);
+            bytes memory encodedParams = abi.encode(acceptanceParams);
            
             bytes32 commandParamsHash = keccak256(encodedParams);
             
@@ -118,15 +107,16 @@ contract RecoveryTest is BaseTest {
     bytes memory signature = abi.encodePacked(r, s, v);
 
             vm.prank(eoaGuardian1);
-            recoveryModule.handleAcceptanceV2(emailAuthMsg, 0, signature);
+            recoveryModule.handleEOAAcceptance(templateIdx,acceptanceParams, signature);
         }
+         
+        {
         string memory exactCommand = string(
             abi.encodePacked(
                 "Accept guardian request for ",
                 Strings.toHexString(uint160(owner1))
             )
-        );        
-        {
+        ); 
               EmailProof memory proof1 = generateMockEmailProof(
              exactCommand,
       
@@ -140,9 +130,8 @@ contract RecoveryTest is BaseTest {
                 skippedCommandPrefix: 0,
                 proof: proof1
             });
-          
             vm.prank(emailGuardian1);
-            recoveryModule.handleAcceptanceV2(emailAuthMsg1, 0, "");
+            recoveryModule.handleEmailAuthAcceptance(emailAuthMsg1, 0);
         }
 
         vm.prank(eoaGuardian1);
