@@ -10,8 +10,8 @@ import {
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { EoaAuth } from "../../src/interfaces/circuits/IEoaAuth.sol";
-import { EoaProof } from "../../src/interfaces/circuits/IVerifier.sol";
+import { IEoaAuth } from "../src/interfaces/circuits/IEoaAuth.sol";
+import { EoaProof } from "../src/interfaces/circuits/IVerifier.sol";
 
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
@@ -54,7 +54,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     MockGroth16Verifier public verifier;
     MockGroth16EoaVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
     EmailAuth public emailAuthImpl;
-    EoaAuth public eoaAuthImpl;                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+    IEoaAuth public eoaAuthImpl;                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
 
     OwnableValidator public validator;
     address public validatorAddress;
