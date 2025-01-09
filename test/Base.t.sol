@@ -8,6 +8,11 @@ import {
     EmailAuthMsg,
     EmailProof
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+import { EoaAuth } from "../../src/interfaces/circuits/IEoaAuth.sol";
+import { EoaProof } from "../../src/interfaces/circuits/IVerifier.sol";
+
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -47,7 +52,9 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     address public zkEmailDeployer;
     UserOverrideableDKIMRegistry public dkimRegistry;
     MockGroth16Verifier public verifier;
+    MockGroth16EoaVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
     EmailAuth public emailAuthImpl;
+    EoaAuth public eoaAuthImpl;                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
 
     OwnableValidator public validator;
     address public validatorAddress;
@@ -140,7 +147,9 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         dkimRegistry.setDKIMPublicKeyHash(domainName, publicKeyHash, zkEmailDeployer, new bytes(0));
 
         verifier = new MockGroth16Verifier();
+        eoaVerifier = new MockGroth16EoaVerifier(); /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         emailAuthImpl = new EmailAuth();
+        eoaAuthImpl = new EoaAuth();                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         vm.stopPrank();
 
         // Deploy validator to be recovered
