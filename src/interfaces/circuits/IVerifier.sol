@@ -8,9 +8,8 @@ struct EoaProof {
     bytes proof; // @dev - ZK Proof of EOA, which is specified as a "Guardian"
 }
 
+/// @notice - EOA Verifier contract
 interface IVerifier {
-    // function commandBytes() external view returns (uint256);
-
     function verifyEoaProof(
         EoaProof memory proof,
         uint256[34] calldata pubSignals

@@ -19,6 +19,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { MockGroth16Verifier } from "src/test/MockGroth16Verifier.sol";
+import { MockGroth16EoaVerifier } from "src/test/circuits/MockGroth16EoaVerifier.sol"; /// @dev - This file is originally implemented in the EOA-TX-builder module.
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { AccountHidingRecoveryCommandHandler } from
