@@ -55,7 +55,8 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     MockGroth16Verifier public verifier;
     MockGroth16EoaVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
     EmailAuth public emailAuthImpl;
-    IEoaAuth public eoaAuthImpl;                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+    IEoaAuth public eoaAuthImpl;               /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+    address _eoaAuthAddr;                       /// @dev - [TODO]: Store the deployed-address on Testnet of the EoaAuth.sol 
 
     OwnableValidator public validator;
     address public validatorAddress;
@@ -150,7 +151,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         verifier = new MockGroth16Verifier();
         eoaVerifier = new MockGroth16EoaVerifier(); /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         emailAuthImpl = new EmailAuth();
-        eoaAuthImpl = new EoaAuth();                /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+        eoaAuthImpl = new IEoaAuth(_eoaAuthAddr);   /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         vm.stopPrank();
 
         // Deploy validator to be recovered
