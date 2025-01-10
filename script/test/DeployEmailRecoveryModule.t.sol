@@ -49,8 +49,16 @@ contract DeployEmailRecoveryModule_Test is BaseDeployTest {
 }
 
 contract DeployEmailRecoveryModule_TestFail is BaseDeployTest {
+    address expectedAddress;
+    
     function setUp() public override {
         super.setUp();
+
+        // Initialize deployer and deployerNonce
+        address deployer = address(this);
+        uint256 deployerNonce = vm.getNonce(deployer);
+
+        expectedAddress = super.computeExpectedAddress(deployer, deployerNonce);
     }
 
     function testFail_run_no_dkim_registry_no_signer() public {
@@ -60,5 +68,8 @@ contract DeployEmailRecoveryModule_TestFail is BaseDeployTest {
 
         // Expect the run to fail due to missing configuration
         target.run();
+
+        // Assert branch logic and deployment state
+        require(address(target) == expectedAddress, "Deployed address mismatch");
     }
 }
