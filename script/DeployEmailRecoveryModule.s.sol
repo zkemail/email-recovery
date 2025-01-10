@@ -15,6 +15,8 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
     address public verifier;
     address public dkimRegistrySigner;
     address public emailAuthImpl;
+    address public eoaVerifier; /// @dev - This is originally come from the EOA-TX-builder module.
+    address public eoaAuthImpl; /// @dev - This is originally come from the EOA-TX-builder module.
     address public validatorAddr;
     uint256 public minimumDelay;
     address public killSwitchAuthorizer;
@@ -65,7 +67,8 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory =
-                address(new EmailRecoveryFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl));
+                address(new EmailRecoveryFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl, eoaVerifier, eoaAuthImpl));
+                //address(new EmailRecoveryFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl));
             console.log("Deployed Email Recovery Factory at", _factory);
         }
         {
