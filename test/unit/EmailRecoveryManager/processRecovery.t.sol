@@ -13,7 +13,7 @@ import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
 //import { IEoaAuth } from "../../../src/interfaces/circuits/IEoaAuth.sol";
-import { EoaProof } from "../../..src/interfaces/circuits/IVerifier.sol";
+import { EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol";
 
 
 contract EmailRecoveryManager_processRecovery_Test is UnitBase {
@@ -24,7 +24,8 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     bytes[] public commandParams;
     bytes32 public nullifier;
 
-    EoaProof public proof; /// [TODO]: Store some value into here.
+    EoaProof public proof;            /// [TODO]: Store some value into here.
+    uint256[34] calldata pubSignals   /// [TODO]: Store some value into here.
 
     function setUp() public override {
         super.setUp();
@@ -58,7 +59,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         vm.stopPrank();
 
         vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecovery( /// @dev - UniversalEmailRecoveryModuleHarness# exposed_processRecovery()
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );

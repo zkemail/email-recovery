@@ -6,6 +6,11 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 import { GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
+/// @dev - This file is originally implemented in the EOA-TX-builder module.
+//import { IEoaAuth } from "../../../src/interfaces/circuits/IEoaAuth.sol";
+import { EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol";
+
+
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     using SentinelListLib for SentinelListLib.SentinelList;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -55,11 +60,13 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
-        bytes32 nullifier
+        bytes32 nullifier,
+        EoaProof memory proof,
+        uint256[34] calldata pubSignals
     )
         external
     {
-        processRecovery(guardian, templateIdx, commandParams, nullifier);
+        processRecovery(guardian, templateIdx, commandParams, nullifier, proof, pubSignals);
     }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {
