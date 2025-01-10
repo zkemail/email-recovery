@@ -409,7 +409,7 @@ abstract contract EmailRecoveryManager is
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
      * but it is not required in this implementation
      */
-    function processRecovery(
+    function processRecovery( /// @dev - [TODO]: Add the onlyGardianOrAccountOwner() modifier to here.
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
@@ -437,6 +437,7 @@ abstract contract EmailRecoveryManager is
         }
 
         /// [TODO]: Implement the EOA-TX-builder module based verification here.
+        /// @dev - If this caller (msg.sender) would be a gardian, the following validation should be applied.
         require(
             eoaVerifier.verifyEoaProof(proof, pubSignals) == true, /// @dev - Verifier# verifyEoaProof() of EOA-TX-builder module.
             "invalid EOA proof"
