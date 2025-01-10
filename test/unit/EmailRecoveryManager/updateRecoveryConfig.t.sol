@@ -140,8 +140,10 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
 
         UniversalEmailRecoveryModule newEmailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             address(4),
             newMinimumDelay,
             killSwitchAuthorizer

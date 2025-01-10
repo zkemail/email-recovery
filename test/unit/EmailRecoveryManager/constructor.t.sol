@@ -12,11 +12,14 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
 
     function test_Constructor_RevertWhen_InvalidVerifier() public {
         address invalidVerifier = address(0);
+        address invalidEoaVerifier = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidVerifier.selector);
         new UniversalEmailRecoveryModule(
             invalidVerifier,
+            invalidEoaVerifier,
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer
@@ -28,8 +31,10 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         vm.expectRevert(IEmailRecoveryManager.InvalidDkimRegistry.selector);
         new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             invalidDkim,
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer
@@ -38,11 +43,14 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
 
     function test_Constructor_RevertWhen_InvalidEmailAuthImpl() public {
         address invalidEmailAuth = address(0);
+        address invalidEoaAuth = address(0);
         vm.expectRevert(IEmailRecoveryManager.InvalidEmailAuthImpl.selector);
         new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             invalidEmailAuth,
+            invalidEoaAuth,
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer
@@ -54,8 +62,10 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
         vm.expectRevert(IEmailRecoveryManager.InvalidCommandHandler.selector);
         new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             invalidHandler,
             minimumDelay,
             killSwitchAuthorizer
@@ -65,8 +75,10 @@ contract EmailRecoveryManager_constructor_Test is UnitBase {
     function test_Constructor() public {
         UniversalEmailRecoveryModule emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer

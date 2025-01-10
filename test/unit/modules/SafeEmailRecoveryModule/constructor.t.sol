@@ -15,8 +15,10 @@ contract SafeEmailRecoveryModule_constructor_Test is SafeNativeIntegrationBase {
         skipIfNotSafeAccountType();
         new SafeEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer

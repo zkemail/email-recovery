@@ -6,16 +6,20 @@ import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol
 contract SafeEmailRecoveryModuleHarness is SafeEmailRecoveryModule {
     constructor(
         address verifier,
+        address eoaVerifier,
         address dkimRegistry,
         address emailAuthImpl,
+        address eoaAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer
     )
         SafeEmailRecoveryModule(
             verifier,
+            eoaVerifier,
             dkimRegistry,
             emailAuthImpl,
+            eoaAuthImpl,
             commandHandler,
             minimumDelay,
             killSwitchAuthorizer

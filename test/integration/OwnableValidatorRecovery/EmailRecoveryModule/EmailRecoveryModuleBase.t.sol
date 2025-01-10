@@ -103,7 +103,7 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest 
     }
 
     function deployModule(bytes memory handlerBytecode) public override {
-        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl));
+        emailRecoveryFactory = new EmailRecoveryFactory(address(verifier), address(emailAuthImpl), address(eoaVerifier), address(eoaAuthImpl));
 
         bytes32 commandHandlerSalt = bytes32(uint256(0));
         bytes32 recoveryModuleSalt = bytes32(uint256(0));

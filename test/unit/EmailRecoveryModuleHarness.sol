@@ -9,8 +9,10 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
 
     constructor(
         address verifier,
+        address eoaVerifier,
         address dkimRegistry,
         address emailAuthImpl,
+        address eoaAuthImpl,
         address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
@@ -19,8 +21,10 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
     )
         EmailRecoveryModule(
             verifier,
+            eoaVerifier,
             dkimRegistry,
             emailAuthImpl,
+            eoaAuthImpl,
             commandHandler,
             minimumDelay,
             killSwitchAuthorizer,

@@ -62,8 +62,10 @@ abstract contract SafeIntegrationBase is BaseTest {
 
         emailRecoveryModule = new UniversalEmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer

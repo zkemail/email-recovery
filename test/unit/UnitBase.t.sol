@@ -88,6 +88,7 @@ abstract contract UnitBase is BaseTest {
             address (eoaVerifier), /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),  /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer

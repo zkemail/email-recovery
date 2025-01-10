@@ -18,8 +18,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -32,8 +34,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -46,8 +50,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -60,8 +66,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -74,8 +82,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         skipIfNotSafeAccountType();
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -92,8 +102,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -110,8 +122,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -126,8 +140,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
         );
         new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
@@ -139,8 +155,10 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
     function test_Constructor() public {
         EmailRecoveryModule emailRecoveryModule = new EmailRecoveryModule(
             address(verifier),
+            address(eoaVerifier),
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer,
