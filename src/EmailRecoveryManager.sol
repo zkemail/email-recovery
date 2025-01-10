@@ -42,7 +42,10 @@ abstract contract EmailRecoveryManager is
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    IVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+    /// @dev - The following variables are originally implemented in the EOA-TX-builder module.
+    IVerifier public eoaVerifier;
+    address public eoaVerifierAddr;
+    address public eoaAuthImplementationAddr;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -92,6 +95,7 @@ abstract contract EmailRecoveryManager is
         address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _dkimRegistry,
         address _emailAuthImpl,
+        address _eoaAuthImpl,
         address _commandHandler,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer
@@ -114,9 +118,10 @@ abstract contract EmailRecoveryManager is
             revert InvalidKillSwitchAuthorizer();
         }
         verifierAddr = _verifier;
-        eoaVerifier = _eoaVerifier; /// @dev - eoaVerifier (IVerifier)
+        eoaVerifierAddr = _eoaVerifier; /// @dev - eoaVerifier (IVerifier)
         dkimAddr = _dkimRegistry;
         emailAuthImplementationAddr = _emailAuthImpl;
+        eoaAuthImplementationAddr = _eoaAuthImpl; /// @dev - eoaAuthImpl (IVerifier)
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
     }
