@@ -32,7 +32,7 @@ import { IVerifier, EoaProof } from "./interfaces/circuits/IVerifier.sol";
  * write their own command handlers to make specifc commands
  */
 abstract contract EmailRecoveryManager is
-    EmailAccountRecovery,
+    EmailAccountRecovery, /// @dev - [NOTE]: @zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol
     GuardianManager,
     Ownable,
     IEmailRecoveryManager
@@ -409,7 +409,98 @@ abstract contract EmailRecoveryManager is
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
      * but it is not required in this implementation
      */
-    function processRecovery( /// @dev - [TODO]: Add the onlyGardianOrAccountOwner() modifier to here.
+    function processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 /* nullifier */
+    )
+        internal
+        override
+        onlyWhenActive
+    {
+        address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
+            templateIdx, commandParams
+        );
+
+        if (!isActivated(account)) {
+            revert RecoveryIsNotActivated();
+        }
+
+        GuardianConfig memory guardianConfig = guardianConfigs[account];
+        if (guardianConfig.threshold > guardianConfig.acceptedWeight) {
+            revert ThresholdExceedsAcceptedWeight(
+                guardianConfig.threshold, guardianConfig.acceptedWeight
+            );
+        }
+
+        // This check ensures GuardianStatus is correct and also implicitly that the
+        // account in the email is a valid account
+        GuardianStorage memory guardianStorage = getGuardian(account, guardian);
+        if (guardianStorage.status != GuardianStatus.ACCEPTED) {
+            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.ACCEPTED);
+        }
+
+        RecoveryRequest storage recoveryRequest = recoveryRequests[account];
+        bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
+            .parseRecoveryDataHash(templateIdx, commandParams);
+
+        if (hasGuardianVoted(account, guardian)) {
+            revert GuardianAlreadyVoted();
+        }
+
+        // A malicious guardian can submit an invalid recovery hash that the
+        // other guardians do not agree with, and also re-submit the same invalid hash once
+        // the expired recovery attempt has been cancelled, thereby threatening the
+        // liveness of the recovery attempt. Adding a cooldown period in this scenario gives other
+        // guardians time to react before the malicious guardian adds another recovery hash
+        uint256 guardianCount = guardianConfigs[account].guardianCount;
+        bool cooldownNotExpired =
+            previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
+        if (
+            previousRecoveryRequests[account].previousGuardianInitiated == guardian
+                && cooldownNotExpired && guardianCount > 1
+        ) {
+            revert GuardianMustWaitForCooldown(guardian);
+        }
+
+        // If recoveryDataHash is 0, this is the first guardian and the request is initialized
+        if (recoveryRequest.recoveryDataHash == bytes32(0)) {
+            recoveryRequest.recoveryDataHash = recoveryDataHash;
+            previousRecoveryRequests[account].previousGuardianInitiated = guardian;
+            uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
+            recoveryRequest.executeBefore = executeBefore;
+            emit RecoveryRequestStarted(account, guardian, executeBefore, recoveryDataHash);
+        }
+
+        if (recoveryRequest.recoveryDataHash != recoveryDataHash) {
+            revert InvalidRecoveryDataHash(recoveryDataHash, recoveryRequest.recoveryDataHash);
+        }
+
+        recoveryRequest.currentWeight += guardianStorage.weight;
+        recoveryRequest.guardianVoted.add(guardian);
+        emit GuardianVoted(account, guardian, recoveryRequest.currentWeight, guardianStorage.weight);
+        if (recoveryRequest.currentWeight >= guardianConfig.threshold) {
+            uint256 executeAfter = block.timestamp + recoveryConfigs[account].delay;
+            recoveryRequest.executeAfter = executeAfter;
+
+            emit RecoveryRequestComplete(
+                account, guardian, executeAfter, recoveryRequest.executeBefore, recoveryDataHash
+            );
+        }
+    }
+
+    /**
+     * @notice Processes a recovery request /w EoaAuth (for a given gardian) for a given account. This is the third core function
+     * that must be called during the end-to-end recovery flow
+     * @dev Called once per guardian until the threshold is reached
+     * @param guardian The address of the guardian initiating/voting on the recovery request
+     * @param templateIdx The index of the template used for the recovery request
+     * @param commandParams An array of bytes containing the command parameters
+     * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
+     * but it is not required in this implementation
+     */
+    function processRecoveryWithEoaAuth( /// @dev - [TODO]: Add the onlyGardianOrAccountOwner() modifier to here.
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
@@ -498,6 +589,7 @@ abstract contract EmailRecoveryManager is
             );
         }
     }
+
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                     COMPLETE RECOVERY                      */
