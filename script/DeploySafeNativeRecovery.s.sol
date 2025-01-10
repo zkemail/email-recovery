@@ -15,8 +15,10 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("ZK_VERIFIER", address(0));
+        address eoaVerifier; /// [TODO]: Store value here later.
         address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        address eoaAuthImpl; /// [TODO]: Store value here later.
         address commandHandler = vm.envOr("COMMAND_HANDLER", address(0));
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
@@ -57,8 +59,10 @@ contract DeploySafeNativeRecovery_Script is BaseDeployScript {
         address module = address(
             new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
                 verifier,
+                eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
                 address(dkim),
                 emailAuthImpl,
+                eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
                 commandHandler,
                 minimumDelay,
                 killSwitchAuthorizer

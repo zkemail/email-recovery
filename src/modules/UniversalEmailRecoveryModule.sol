@@ -101,16 +101,20 @@ contract UniversalEmailRecoveryModule is
 
     constructor(
         address verifier,
+        address eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address dkimRegistry,
         address emailAuthImpl,
+        address eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer
     )
         EmailRecoveryManager(
             verifier,
+            eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             dkimRegistry,
             emailAuthImpl,
+            eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             commandHandler,
             minimumDelay,
             killSwitchAuthorizer

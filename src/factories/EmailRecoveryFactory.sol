@@ -99,6 +99,7 @@ contract EmailRecoveryFactory {
                 eoaVerifier, /// @dev - EOA Verifier, which is originally come from the EOA-TX-builder module.
                 dkimRegistry,
                 emailAuthImpl,
+                eoaAuthImpl, /// @dev - EOA Verifier, which is originally come from the EOA-TX-builder module.
                 commandHandler,
                 minimumDelay,
                 killSwitchAuthorizer,
