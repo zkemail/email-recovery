@@ -25,7 +25,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
     bytes32 public nullifier;
 
     EoaProof public proof;            /// [TODO]: Store some value into here.
-    uint256[34] calldata pubSignals   /// [TODO]: Store some value into here.
+    uint256[34] public pubSignals;    /// [TODO]: Store some value into here.
 
     function setUp() public override {
         super.setUp();

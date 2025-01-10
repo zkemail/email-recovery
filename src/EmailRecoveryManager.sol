@@ -418,7 +418,7 @@ abstract contract EmailRecoveryManager is
         uint256[34] calldata pubSignals   /// @dev - This parameter for passing the IVerifier# verifyEoaProof()
     )
         internal
-        override
+        //override
         onlyWhenActive
     {
         address account = IEmailRecoveryCommandHandler(commandHandler).validateRecoveryCommand(
