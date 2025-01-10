@@ -10,8 +10,8 @@ import {
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { IEoaAuth } from "../src/interfaces/circuits/IEoaAuth.sol";
-import { EoaProof } from "../src/interfaces/circuits/IVerifier.sol";
+import { IEoaAuth } from "../src/eoa-auth/interfaces/circuits/IEoaAuth.sol";
+import { EoaProof } from "../src/eoa-auth/interfaces/circuits/IVerifier.sol";
 
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";

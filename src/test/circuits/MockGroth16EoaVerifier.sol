@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import {
     IVerifier,
     EoaProof
-} from "../../interfaces/circuits/IVerifier.sol";
+} from "../../eoa-auth/interfaces/circuits/IVerifier.sol";
 
 /**
  * @notice Mock snarkjs Groth16 EOA Solidity verifier

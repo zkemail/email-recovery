@@ -8,7 +8,7 @@ import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecovery
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
 //import { IEoaAuth } from "../../../src/interfaces/circuits/IEoaAuth.sol";
-import { EoaProof } from "../../../src/interfaces/circuits/IVerifier.sol";
+import { EoaProof } from "../../../src/eoa-auth/interfaces/circuits/IVerifier.sol";
 
 
 contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
