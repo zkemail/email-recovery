@@ -17,16 +17,20 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
 
     constructor(
         address verifier,
+        address eoaVerifier,   /// @dev - EOA-TX-builder
         address dkimRegistry,
         address emailAuthImpl,
+        address eoaAuthImpl,   /// @dev - EOA-TX-builder
         address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer
     )
         UniversalEmailRecoveryModule(
             verifier,
+            eoaVerifier, /// @dev - EOA-TX-builder
             dkimRegistry,
             emailAuthImpl,
+            eoaAuthImpl, /// @dev - EOA-TX-builder
             commandHandler,
             minimumDelay,
             killSwitchAuthorizer
@@ -66,7 +70,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
     )
         external
     {
-        processRecovery(guardian, templateIdx, commandParams, nullifier, proof, pubSignals);
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 
     function exposed_recover(address account, bytes calldata recoveryData) external {

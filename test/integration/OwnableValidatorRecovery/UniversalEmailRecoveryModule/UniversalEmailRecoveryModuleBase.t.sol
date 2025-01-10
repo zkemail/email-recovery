@@ -135,8 +135,10 @@ abstract contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Base is 
 
         emailRecoveryModule = new UniversalEmailRecoveryModuleHarness(
             address(verifier),
+            address(eoaVerifier),  /// @dev - EOA-TX-builder
             address(dkimRegistry),
             address(emailAuthImpl),
+            address(eoaAuthImpl),  /// @dev - EOA-TX-builder
             commandHandlerAddress,
             minimumDelay,
             killSwitchAuthorizer
