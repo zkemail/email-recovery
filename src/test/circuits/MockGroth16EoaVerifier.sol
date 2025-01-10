@@ -10,7 +10,10 @@ import {
  * @notice Mock snarkjs Groth16 EOA Solidity verifier
  */
 contract MockGroth16EoaVerifier is IVerifier {
-    function verifyEoaProof(EoaProof memory proof) public pure returns (bool) {
+    function verifyEoaProof(
+        EoaProof memory proof,
+        uint256[34] calldata pubSignals
+    ) public view returns (bool) {
         proof;
 
         return true;
