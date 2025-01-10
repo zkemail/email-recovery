@@ -94,8 +94,8 @@ abstract contract EmailRecoveryManager is
         address _verifier,
         address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _dkimRegistry,
-        address _emailAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
-        address _eoaAuthImpl, 
+        address _emailAuthImpl,
+        address _eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _commandHandler,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer

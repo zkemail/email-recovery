@@ -38,7 +38,7 @@ contract EmailRecoveryUniversalFactory {
     error InvalidVerifier();
     error InvalidEmailAuthImpl();
 
-    constructor(address _verifier, address _emailAuthImpl) {
+    constructor(address _verifier, address _emailAuthImpl, address _eoaVerifier, address _eoaAuthImpl) {
         if (_verifier == address(0)) {
             revert InvalidVerifier();
         }

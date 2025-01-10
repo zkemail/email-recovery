@@ -18,9 +18,10 @@ contract DeploySafeRecovery_Script is BaseDeployScript {
     address public verifier;
     address public dkimRegistrySigner;
     address public emailAuthImpl;
+    address public eoaVerifier; /// @dev - This is originally come from the EOA-TX-builder module.
+    address public eoaAuthImpl; /// @dev - This is originally come from the EOA-TX-builder module.
     uint256 public minimumDelay;
     address public killSwitchAuthorizer;
-
     address public initialOwner;
     uint256 public salt;
 
@@ -59,7 +60,7 @@ contract DeploySafeRecovery_Script is BaseDeployScript {
         }
 
         EmailRecoveryUniversalFactory factory =
-            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl);
+            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl, eoaVerifier, eoaAuthImpl);
         (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(salt),
             bytes32(salt),

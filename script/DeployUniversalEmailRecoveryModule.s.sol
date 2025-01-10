@@ -15,8 +15,10 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         super.run();
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         address verifier = vm.envOr("VERIFIER", address(0));
+        address eoaVerifier; /// @dev - [TODO]: Store the value into here.
         address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
+        address eoaAuthImpl; /// @dev - [TODO]: Store the value into here.
         uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
         address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
@@ -47,7 +49,7 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         address _factory = vm.envOr("RECOVERY_FACTORY", address(0));
         if (_factory == address(0)) {
             _factory = address(
-                new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl)
+                new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl, eoaVerifier, eoaAuthImpl)
             );
             console.log("Deployed Email Recovery Factory at", _factory);
         }

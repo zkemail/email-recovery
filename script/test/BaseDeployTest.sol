@@ -25,6 +25,9 @@ abstract contract BaseDeployTest is Test {
         // Deploy Verifier and set up proxy
         address verifier = deployVerifier(initialOwner);
 
+        // Deploy EOA Verifier and set up proxy
+        address eoaVerifier; /// [TODO]: Store the deployment function into here.
+
         // Set up additional environment variables
         setupEnvironmentVariables();
 
@@ -32,7 +35,7 @@ abstract contract BaseDeployTest is Test {
         new EmailRecoveryCommandHandler();
 
         // Deploy EmailRecoveryUniversalFactory and set up module
-        deployEmailRecoveryModule(verifier);
+        deployEmailRecoveryModule(verifier, eoaVerifier);
     }
 
     /**
@@ -97,9 +100,13 @@ abstract contract BaseDeployTest is Test {
      * @dev Deploys the EmailRecoveryUniversalFactory and sets up the recovery module.
      * @param verifier The address of the deployed Verifier contract.
      */
-    function deployEmailRecoveryModule(address verifier) internal {
+    function deployEmailRecoveryModule(address verifier, address eoaVerifier) internal {
+        address EMAIL_AUTH_IMPL; /// @dev - Temporary variable.
+        address EOA_AUTH_IMPL;   /// @dev - Temporary variable.
+
         address _factory =
-            address(new EmailRecoveryUniversalFactory(verifier, vm.envAddress("EMAIL_AUTH_IMPL")));
+            address(new EmailRecoveryUniversalFactory(verifier, EMAIL_AUTH_IMPL, eoaVerifier, EOA_AUTH_IMPL));
+            //address(new EmailRecoveryUniversalFactory(verifier, vm.envAddress("EMAIL_AUTH_IMPL")), eoaVerifier, vm.envAddress("EOA_AUTH_IMPL"));
         EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
         (address module,) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),

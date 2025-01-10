@@ -10,5 +10,5 @@ struct EoaAuthMsg {
 }
 
 interface IEoaAuth {
-    function authEoa(EoaAuthMsg memory eoaAuthMsg, uint256[34] calldata pubSignals) public; /// @dev - The "EoaAuthMsg" struct would include the "EoaProof proof" property, meaning that the proof (EmailProof) will be registered via this authEmail() function.
+    function authEoa(EoaAuthMsg memory eoaAuthMsg, uint256[34] calldata pubSignals) external; /// @dev - The "EoaAuthMsg" struct would include the "EoaProof proof" property, meaning that the proof (EmailProof) will be registered via this authEmail() function.
 }

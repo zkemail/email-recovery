@@ -17,9 +17,11 @@ import { BaseDeployScript } from "./BaseDeployScript.s.sol";
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
     address verifier;
+    address eoaVerifier; /// @dev - This is originally come from the EOA-TX-builder module.
     address dkim;
     address dkimRegistrySigner;
     address emailAuthImpl;
+    address eoaAuthImpl; /// @dev - This is originally come from the EOA-TX-builder module.
     uint256 minimumDelay;
     address killSwitchAuthorizer;
 
@@ -59,7 +61,7 @@ contract DeploySafeRecoveryWithAccountHiding_Script is BaseDeployScript {
         }
 
         EmailRecoveryUniversalFactory factory =
-            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl);
+            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl, eoaVerifier, eoaAuthImpl);
         (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),

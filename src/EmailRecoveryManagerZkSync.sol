@@ -16,8 +16,10 @@ import { EmailAccountRecoveryZKSync } from
 abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccountRecoveryZKSync {
     constructor(
         address _verifier,
+        address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _dkimRegistry,
         address _emailAuthImpl,
+        address _eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         address _commandHandler,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer,
@@ -26,8 +28,10 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
     )
         EmailRecoveryManager(
             _verifier,
+            _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             _dkimRegistry,
             _emailAuthImpl,
+            _eoaAuthImpl, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
             _commandHandler,
             _minimumDelay,
             _killSwitchAuthorizer
