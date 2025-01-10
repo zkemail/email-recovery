@@ -10,7 +10,8 @@ import {
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
-import { IEoaAuth } from "../src/eoa-auth/interfaces/circuits/IEoaAuth.sol";
+import { EoaAuth } from "../src/eoa-auth/EoaAuth.sol";
+//import { IEoaAuth } from "../src/eoa-auth/interfaces/circuits/IEoaAuth.sol";
 import { EoaProof } from "../src/eoa-auth/interfaces/circuits/IVerifier.sol";
 
 import { CommandUtils } from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
@@ -55,8 +56,9 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     MockGroth16Verifier public verifier;
     MockGroth16EoaVerifier public eoaVerifier; /// @dev - This interface is originally implemented in the EOA-TX-builder module.
     EmailAuth public emailAuthImpl;
-    IEoaAuth public eoaAuthImpl;               /// @dev - This interface is originally implemented in the EOA-TX-builder module.
-    address _eoaAuthAddr;                       /// @dev - [TODO]: Store the deployed-address on Testnet of the EoaAuth.sol 
+    EoaAuth public eoaAuthImpl;                /// @dev - EOA-TX-builder
+    //IEoaAuth public eoaAuthImpl;             /// @dev - EOA-TX-builder
+    address _eoaAuthAddr;                      /// @dev - [TODO]: Store the deployed-address on Testnet of the EoaAuth.sol 
 
     OwnableValidator public validator;
     address public validatorAddress;
@@ -151,7 +153,8 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         verifier = new MockGroth16Verifier();
         eoaVerifier = new MockGroth16EoaVerifier(); /// @dev - This interface is originally implemented in the EOA-TX-builder module.
         emailAuthImpl = new EmailAuth();
-        eoaAuthImpl = IEoaAuth(_eoaAuthAddr);   /// @dev - This interface is originally implemented in the EOA-TX-builder module.
+        eoaAuthImpl = new EoaAuth();              /// @dev - EOA-TX-builder module.
+        //eoaAuthImpl = IEoaAuth(_eoaAuthAddr);   /// @dev - EOA-TX-builder module.
         vm.stopPrank();
 
         // Deploy validator to be recovered
