@@ -15,6 +15,7 @@ import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 //import { IEoaAuth } from "../../../src/interfaces/circuits/IEoaAuth.sol";
 import { EoaProof } from "../../../src/eoa-auth/interfaces/circuits/IVerifier.sol";
 import { StructHelper } from "../../eoa-auth/helpers/StructHelper.sol";
+import { DeploymentHelper } from "../../eoa-auth/helpers/DeploymentHelper.sol";
 
 
 /****
@@ -31,7 +32,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
     EoaProof public proof;          /// @dev - EoaProof instance for test
     //uint256[34] public pubSignals;  /// @dev - pubSignals instance for test
 
-    function setUp() public override {
+    function setUp() public override(DeploymentHelper, UnitBase) {
         super.setUp();
 
         /// @dev - Create a "publicKeyHash" and "eoaNullifier"
