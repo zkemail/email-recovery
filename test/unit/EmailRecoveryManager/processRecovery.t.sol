@@ -221,8 +221,7 @@ contract EmailRecoveryManager_processRecovery_Test is UnitBase {
         assertEq(guardianCount, 2);
 
         emailRecoveryModule.exposed_processRecovery(
-            guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
-            //guardians1[0], templateIdx, commandParams, nullifier
+            guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.warp(block.timestamp + expiry);

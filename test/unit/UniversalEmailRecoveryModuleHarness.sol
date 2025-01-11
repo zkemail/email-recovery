@@ -64,9 +64,7 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
-        bytes32 nullifier,
-        EoaProof memory proof,
-        uint256[34] calldata pubSignals
+        bytes32 nullifier
     )
         external
     {
