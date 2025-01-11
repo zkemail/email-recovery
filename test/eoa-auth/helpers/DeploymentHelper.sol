@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {EoaAuth, EoaAuthMsg} from "../../src/EoaAuth.sol";
-import {Verifier, EoaProof} from "../../src/utils/Verifier.sol";
-import {Groth16Verifier} from "../../src/circuits/Groth16Verifier.sol";
-import {ECDSAOwnedDKIMRegistry} from "../../src/utils/ECDSAOwnedDKIMRegistry.sol";
+import {EoaAuth, EoaAuthMsg} from "../../../src/eoa-auth/EoaAuth.sol";
+import {Verifier, EoaProof} from "../../../src/eoa-auth/utils/Verifier.sol";
+import {Groth16Verifier} from "../../../src/eoa-auth/circuits/Groth16Verifier.sol";
+import {ECDSAOwnedDKIMRegistry} from "../../../src/eoa-auth/utils/ECDSAOwnedDKIMRegistry.sol";
 import {UserOverrideableDKIMRegistry} from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
