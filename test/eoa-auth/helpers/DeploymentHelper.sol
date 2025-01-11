@@ -19,7 +19,7 @@ contract DeploymentHelper is Test {
 
     EoaAuth eoaAuth;
     //Verifier verifier;
-    Verifier eoaVerifier;
+    Verifier eoaVerifierContract;
     ECDSAOwnedDKIMRegistry dkim;
     UserOverrideableDKIMRegistry overrideableDkimImpl;
 
@@ -106,7 +106,7 @@ contract DeploymentHelper is Test {
                     (msg.sender, address(groth16Verifier))
                 )
             );
-            eoaVerifier = Verifier(address(verifierProxy));
+            eoaVerifierContract = Verifier(address(verifierProxy));
             //verifier = Verifier(address(verifierProxy));
         }
         accountSalt = 0x2c3abbf3d1171bfefee99c13bf9c47f1e8447576afd89096652a34f27b297971;
