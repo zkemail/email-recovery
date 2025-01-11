@@ -28,29 +28,30 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
     bytes[] public commandParams;
     bytes32 public nullifier;
 
-    EoaProof public proof;          /// @dev - EoaProof instance for test
-    uint256[34] public pubSignals;  /// @dev - pubSignals instance for test
+    //EoaProof public proof;          /// @dev - EoaProof instance for test
+    //uint256[34] public pubSignals;  /// @dev - pubSignals instance for test
 
     function setUp() public override {
         super.setUp();
 
         /// @dev - Create a "publicKeyHash" and "eoaNullifier"
-        bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
-        bytes32 eoaNullifier = 0x00a83fce3d4b1c9ef0f600644c1ecc6c8115b57b1596e0e3295e2c5105fbfd8a;
+        //bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+        //bytes32 eoaNullifier = 0x00a83fce3d4b1c9ef0f600644c1ecc6c8115b57b1596e0e3295e2c5105fbfd8a;
 
         /// @dev - Create a mockProof
-        bytes memory mockProof = abi.encodePacked(bytes1(0x01));
+        //bytes memory mockProof = abi.encodePacked(bytes1(0x01));
 
         /// @dev - Create a new EoaProof for test
-        proof = EoaProof({
-            publicKeyHash: publicKeyHash,
-            timestamp: 1694989812,
-            eoaNullifier: eoaNullifier,
-            proof: mockProof /// @dev - Using mockProof
-        });
+        proof = buildEoaAuthMsg().proof; /// @dev - This came from the buildEoaAuthMsg() in the StructHelper.sol
+        //proof = EoaProof({
+        //    publicKeyHash: publicKeyHash,
+        //    timestamp: 1694989812,
+        //    eoaNullifier: eoaNullifier,
+        //    proof: mockProof /// @dev - Using mockProof
+        //});
 
         /// @dev - Create a new pubSignals for test
-        pubSignals = [uint256(1390849295786071768276380950238675083608645509734)];
+        //pubSignals = [uint256(1390849295786071768276380950238675083608645509734)];
 
         if (getCommandHandlerType() == CommandHandlerType.EmailRecoveryCommandHandler) {
             recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
