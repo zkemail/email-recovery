@@ -5,8 +5,6 @@ import { DeployUniversalEmailRecoveryModuleScript } from "../DeployUniversalEmai
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { console } from "forge-std/console.sol";
 
-/// @title DeployUniversalEmailRecoveryModule_Test
-/// @notice Contains tests for deploying the Universal Email Recovery Module
 contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
     address expectedAddress;
 
@@ -29,8 +27,8 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
 
-        // Verify the deployed address
-        require(address(target) == expectedAddress, "Deployed address mismatch");
+        // Assert state
+        assertState(target);
     }
 
     /// @notice Tests the deployment run without a verifier
@@ -42,8 +40,8 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
 
-        // Verify the deployed address
-        require(address(target) == expectedAddress, "Deployed address mismatch");
+        // Assert state
+        assertState(target);
     }
 
     /// @notice Tests the deployment run without a DKIM registry
@@ -55,24 +53,21 @@ contract DeployUniversalEmailRecoveryModule_Test is BaseDeployTest {
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
 
-        // Verify the deployed address
-        require(address(target) == expectedAddress, "Deployed address mismatch");
+        // Assert state
+        assertState(target);
     }
-}
 
-/// @title DeployUniversalEmailRecoveryModule_TestFail
-/// @notice Contains failing tests for deploying the Universal Email Recovery Module
-contract DeployUniversalEmailRecoveryModule_TestFail is BaseDeployTest {
-    address expectedAddress;
+    /// @notice Tests the deployment run without a DKIM signer
+    function test_run_no_signer() public {
+        setUp();
+        vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
 
-    function setUp() public override {
-        super.setUp();
+        DeployUniversalEmailRecoveryModuleScript target =
+            new DeployUniversalEmailRecoveryModuleScript();
+        target.run();
 
-        // Initialize deployer and deployerNonce
-        address deployer = address(this);
-        uint256 deployerNonce = vm.getNonce(deployer);
-
-        expectedAddress = computeExpectedAddress(deployer, deployerNonce);
+        // Assert state
+        assertState(target);
     }
 
     /// @notice Tests the deployment run failure without DKIM registry and signer
@@ -85,7 +80,19 @@ contract DeployUniversalEmailRecoveryModule_TestFail is BaseDeployTest {
             new DeployUniversalEmailRecoveryModuleScript();
         target.run();
 
+        // Assert state
+        assertState(target);
+    }
+
+    /// @notice Helper to assert state after deployment
+    function assertState(DeployUniversalEmailRecoveryModuleScript target) internal view {
+
         // Verify the deployed address
         require(address(target) == expectedAddress, "Deployed address mismatch");
+        require(target.verifier() != address(0), "Verifier not deployed correctly");
+        require(address(target.dkim()) != address(0), "DKIM Registry not deployed correctly");
+        require(target.emailAuthImpl() != address(0), "Email Auth not deployed correctly");
+        require(target.minimumDelay() >= 0, "Minimum delay not set correctly");
+        require(target.killSwitchAuthorizer() != address(0), "Kill Switch Authorizer not set correctly");
     }
 }
