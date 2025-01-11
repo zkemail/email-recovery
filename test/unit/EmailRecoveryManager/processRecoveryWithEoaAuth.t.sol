@@ -28,7 +28,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
     bytes[] public commandParams;
     bytes32 public nullifier;
 
-    //EoaProof public proof;          /// @dev - EoaProof instance for test
+    EoaProof public proof;          /// @dev - EoaProof instance for test
     //uint256[34] public pubSignals;  /// @dev - pubSignals instance for test
 
     function setUp() public override {
