@@ -18,7 +18,8 @@ contract StructHelper is DeploymentHelper {
         );
 
         EoaProof memory eoaProof = EoaProof({
-            publicKeyHash: publicKeyHash,
+            //publicKeyHash: publicKeyHash,
+            publicKeyHash: _publicKeyHash,
             timestamp: 1694989812,
             eoaNullifier: eoaNullifier,
             proof: mockProof /// @dev - [NOTE]: bytes mockProof = abi.encodePacked(bytes1(0x01));
