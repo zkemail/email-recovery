@@ -14,11 +14,13 @@ import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 /// @dev - This file is originally implemented in the EOA-TX-builder module.
 //import { IEoaAuth } from "../../../src/interfaces/circuits/IEoaAuth.sol";
 import { EoaProof } from "../../../src/eoa-auth/interfaces/circuits/IVerifier.sol";
+import { StructHelper } from "../../eoa-auth/helpers/StructHelper.sol";
+
 
 /****
  * @notice - This is the test that utilize the EmailRecoveryManager#processRecoveryWithEoaAuth(), which the EoaAuth.sol is used.
  ***/
-contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
+contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, UnitBase {
     using ModuleKitHelpers for *;
     using Strings for uint256;
 
