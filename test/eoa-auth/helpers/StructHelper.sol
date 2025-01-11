@@ -30,7 +30,8 @@ contract StructHelper is DeploymentHelper {
         });
 
         vm.mockCall(
-            address(verifier),
+            address(eoaVerifier),
+            //address(verifier),
             abi.encodeCall(Verifier.verifyEoaProof, (eoaProof, pubSignals)),
             abi.encode(true)
         );
