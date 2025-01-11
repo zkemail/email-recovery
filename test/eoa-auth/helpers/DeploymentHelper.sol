@@ -38,9 +38,9 @@ contract DeploymentHelper is Test {
     bytes mockProof = abi.encodePacked(bytes1(0x01));
 
     string selector = "12345";
-    string domainName = "gmail.com";
-    bytes32 publicKeyHash =
-        0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+    //string domainName = "gmail.com";
+    //bytes32 publicKeyHash =
+    //    0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
     bytes32 eoaNullifier =
         0x00a83fce3d4b1c9ef0f600644c1ecc6c8115b57b1596e0e3295e2c5105fbfd8a;
     uint256 setTimestampDelay = 3 days;
