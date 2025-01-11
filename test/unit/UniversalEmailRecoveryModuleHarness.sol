@@ -73,6 +73,20 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 
+    /// @notice - processRecovery by using the EmailRecoveryManager#processRecoveryWithEoaAuth(), which the EoaAuth.sol is used.
+    function exposed_processRecoveryWithEoaAuth(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier,
+        EoaProof memory proof,
+        uint256[34] calldata pubSignals
+    )
+        external
+    {
+        processRecoveryWithEoaAuth(guardian, templateIdx, commandParams, nullifier, proof, pubSignals);
+    }
+
     function exposed_recover(address account, bytes calldata recoveryData) external {
         recover(account, recoveryData);
     }
