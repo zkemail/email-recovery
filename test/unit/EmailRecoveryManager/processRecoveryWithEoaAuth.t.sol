@@ -26,8 +26,8 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
     bytes[] public commandParams;
     bytes32 public nullifier;
 
-    EoaProof public proof;            /// [TODO]: Store some value into here.
-    uint256[34] public pubSignals;    /// [TODO]: Store some value into here.
+    EoaProof public proof;            /// [TODO]: Store some value of a proof-generated for the test into here.
+    uint256[34] public pubSignals;    /// [TODO]: Store some value of a public signals for the test into here.
 
     function setUp() public override {
         super.setUp();
