@@ -61,13 +61,13 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         vm.stopPrank();
 
         vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
-        emailRecoveryModule.exposed_processRecovery( /// @dev - UniversalEmailRecoveryModuleHarness# exposed_processRecovery()
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth( /// @dev - UniversalEmailRecoveryModuleHarness# exposed_processRecovery()
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianStatusIsNONE() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianStatusIsNONE() public {
         address invalidGuardian = address(1);
 
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
@@ -81,13 +81,13 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //invalidGuardian, templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianStatusIsREQUESTED() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianStatusIsREQUESTED() public {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
@@ -100,23 +100,23 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 uint256(GuardianStatus.ACCEPTED)
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_RecoveryModuleNotInstalled() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_RecoveryModuleNotInstalled() public {
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         vm.expectRevert(IEmailRecoveryManager.RecoveryIsNotActivated.selector);
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_ThresholdExceedsAcceptedWeight() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_ThresholdExceedsAcceptedWeight() public {
         // total weight = 4
         // threshold = 3
         // useable weight from accepted guardians = 0
@@ -147,33 +147,33 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 IEmailRecoveryManager.ThresholdExceedsAcceptedWeight.selector, newThreshold, 3
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[1], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianAlreadyVoted() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianAlreadyVoted() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
 
         vm.expectRevert(IEmailRecoveryManager.GuardianAlreadyVoted.selector);
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_InvalidRecoveryDataHash() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_InvalidRecoveryDataHash() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -198,17 +198,17 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 recoveryDataHash
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[1], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown() public {
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianMustWaitForCooldown() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -221,13 +221,13 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown_GuardianCountIsTwo()
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianMustWaitForCooldown_GuardianCountIsTwo()
         public
     {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
@@ -241,7 +241,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         uint256 guardianCount = emailRecoveryModule.getGuardianConfig(accountAddress1).guardianCount;
         assertEq(guardianCount, 2);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -254,20 +254,20 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_RevertWhen_GuardianMustWaitForCooldown_CooldownOneSecondRemaining(
+    function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianMustWaitForCooldown_CooldownOneSecondRemaining(
     )
         public
     {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -285,17 +285,17 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
                 IEmailRecoveryManager.GuardianMustWaitForCooldown.selector, guardians1[0]
             )
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
     }
 
-    function test_ProcessRecovery_PreviousGuardianInitiatedButCooldownOver() public {
+    function test_ProcessRecoveryWithEoaAuth_PreviousGuardianInitiatedButCooldownOver() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -308,7 +308,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
             block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN() + 1 seconds
         );
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -332,13 +332,13 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         assertEq(hasGuardian1Voted, true);
     }
 
-    function test_ProcessRecovery_PreviousGuardianInitiatedButCooldownOver_CooldownIsEqual()
+    function test_ProcessRecoveryWithEoaAuth_PreviousGuardianInitiatedButCooldownOver_CooldownIsEqual()
         public
     {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -349,7 +349,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         // warp to after cooldown has expired - cooldown end is equal to timestamp
         vm.warp(block.timestamp + emailRecoveryModule.CANCEL_EXPIRED_RECOVERY_COOLDOWN());
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -373,7 +373,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         assertEq(hasGuardian1Voted, true);
     }
 
-    function test_ProcessRecovery_PreviousGuardianInitiatedButGuardianCountIsOne() public {
+    function test_ProcessRecoveryWithEoaAuth_PreviousGuardianInitiatedButGuardianCountIsOne() public {
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
 
@@ -387,7 +387,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         uint256 guardianCount = emailRecoveryModule.getGuardianConfig(accountAddress1).guardianCount;
         assertEq(guardianCount, 1);
 
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[1], templateIdx, commandParams, nullifier
         );
@@ -396,7 +396,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         emailRecoveryModule.cancelExpiredRecovery(accountAddress1);
 
         // guardian count is 1, so processRecovery can be executed subsequently by the same guardian
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[1], templateIdx, commandParams, nullifier
         );
@@ -423,7 +423,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         assertEq(hasGuardian2Voted, true);
     }
 
-    function test_ProcessRecovery_IncreasesTotalWeight() public {
+    function test_ProcessRecoveryWithEoaAuth_IncreasesTotalWeight() public {
         uint256 guardian1Weight = guardianWeights[0];
 
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
@@ -433,7 +433,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         emit IEmailRecoveryManager.RecoveryRequestStarted(
             accountAddress1, guardians1[0], block.timestamp + expiry, recoveryDataHash
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -459,7 +459,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         assertEq(hasGuardian2Voted, false);
     }
 
-    function test_ProcessRecovery_InitiatesRecovery() public {
+    function test_ProcessRecoveryWithEoaAuth_InitiatesRecovery() public {
         uint256 guardian1Weight = guardianWeights[0];
         uint256 guardian2Weight = guardianWeights[1];
 
@@ -472,7 +472,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
         emit IEmailRecoveryManager.GuardianVoted(
             accountAddress1, guardians1[0], guardian1Weight, guardian1Weight
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[0], templateIdx, commandParams, nullifier
         );
@@ -486,7 +486,7 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is UnitBase {
             block.timestamp + expiry,
             recoveryDataHash
         );
-        emailRecoveryModule.exposed_processRecovery(
+        emailRecoveryModule.exposed_processRecoveryWithEoaAuth(
             guardians1[0], templateIdx, commandParams, nullifier, proof, pubSignals /// @dev - "proof" and "pubSignals" are added to the parameters.
             //guardians1[1], templateIdx, commandParams, nullifier
         );
