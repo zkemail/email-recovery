@@ -160,7 +160,7 @@ contract RecoveryTest is BaseTest {
             recoveryCallData 
         );
 
-        vm.prank(owner1); 
+        vm.prank(address(0x123));
         recoveryModule.completeRecovery(owner1, recoveryData1);
 
         address newOwnerAccount = validator.owners(owner1);

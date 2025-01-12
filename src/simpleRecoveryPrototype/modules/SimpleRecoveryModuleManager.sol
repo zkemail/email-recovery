@@ -502,8 +502,8 @@ function completeRecovery(
     }
 
     recover(account, recoveryData);
-    exitandclearRecovery(account);
     emit RecoveryCompleted(account);
+    exitandclearRecovery(account);
 }
 /**
  * @notice Called during completeRecovery to finalize recovery. Contains implementation-specific
@@ -586,9 +586,6 @@ function cancelExpiredRecovery(address account) external onlyWhenActive {
  * @param account The address of the account for which the recovery process is being cleared.
  */
 function exitandclearRecovery(address account) public {
-    if (recoveryRequests[msg.sender].currentWeight == 0) {
-        revert NoRecoveryInProcess();
-    }
     RecoveryRequest storage recoveryRequest = recoveryRequests[account];
     address[] memory guardiansVoted = recoveryRequest.guardianVoted.values();
     uint256 voteCount = guardiansVoted.length;
