@@ -17,7 +17,7 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         address verifier = vm.envOr("VERIFIER", address(0));
         address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
         address emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        uint256 minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
+        uint256 minimumDelay = 6 * 60 * 60; // 6 hours
         address killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
         address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
@@ -54,8 +54,8 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         {
             EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
             (address module, address commandHandler) = factory.deployUniversalEmailRecoveryModule(
-                bytes32(uint256(0)),
-                bytes32(uint256(0)),
+                bytes32(salt),
+                bytes32(salt),
                 type(EmailRecoveryCommandHandler).creationCode,
                 minimumDelay,
                 killSwitchAuthorizer,
