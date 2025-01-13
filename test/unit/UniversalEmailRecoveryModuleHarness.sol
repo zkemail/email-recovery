@@ -60,6 +60,28 @@ contract UniversalEmailRecoveryModuleHarness is UniversalEmailRecoveryModule {
         acceptGuardian(guardian, templateIdx, commandParams, nullifier);
     }
 
+    function exposed_acceptGuardianWithEoa(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier,
+        EoaProof calldata proof
+    )
+        external
+    {
+        acceptGuardianWithEoa(guardian, templateIdx, commandParams, nullifier, proof);
+    }
+
+    function exposed_getAcceptGuardianWithEoa(
+        address account,
+        address guardian
+    )
+        external
+        returns (EoaProof memory proof)
+    {
+        return getAcceptGuardianWithEoa(account, guardian);
+    }
+
     function exposed_processRecovery(
         address guardian,
         uint256 templateIdx,

@@ -116,11 +116,13 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
     }
 
     function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianStatusIsREQUESTED() public {
+        //emailRecoveryModule.exposed_acceptGuardianWithEoa(accountAddress1, guardians1[1], emailRecoveryModuleAddress, nullifier, proof);
+        //emailRecoveryModule.exposed_acceptGuardianWithEoa(accountAddress1, guardians1[2], emailRecoveryModuleAddress, nullifier, proof);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
         /// @dev - Check a proof
-        //EoaProof memory _proof = emailRecoveryModule.getAcceptGuardianWithEoa(accountAddress1, guardians1[1]);
+        //EoaProof memory _proof = emailRecoveryModule.exposed_getAcceptGuardianWithEoa(accountAddress1, guardians1[1]);
         //assertEq(_proof.proof, proof.proof);
 
         // Valid guardian but we haven't called acceptGuardian(), so the guardian
