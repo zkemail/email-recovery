@@ -90,6 +90,12 @@ abstract contract EmailRecoveryManager is
     mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
         previousRecoveryRequests;
 
+    /**
+     *  Guardian address, which is associated with (EOA) proof
+     */
+    mapping (address account => mapping(address guardian => EoaProof proof)) internal proofAssociatedWithGuardians;
+
+
     constructor(
         address _verifier,
         address _eoaVerifier, /// @dev - This interface is originally implemented in the EOA-TX-builder module.
@@ -394,11 +400,54 @@ abstract contract EmailRecoveryManager is
             revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
         }
 
-        updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED);
+        updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED); /// @dev - State change - from "REQUESTED" to "ACCEPTED"
         guardianConfigs[account].acceptedWeight += guardianStorage.weight;
 
         emit GuardianAccepted(account, guardian);
     }
+
+    /**
+     * @notice Accepts a guardian for the specified account /w EOA
+     */
+    function acceptGuardianWithEoa( /// @dev - [NOTE]: Before calling this function, the status must be "REQUESTED" by calling the GuardianManager# addGuardian()
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32, /* nullifier */
+        EoaProof calldata proof
+    )
+        internal
+        //override
+        onlyWhenActive
+    {
+        address account = IEmailRecoveryCommandHandler(commandHandler).validateAcceptanceCommand(
+            templateIdx, commandParams
+        );
+
+        if (recoveryRequests[account].currentWeight > 0) {
+            revert RecoveryInProcess();
+        }
+
+        if (!isActivated(account)) {
+            revert RecoveryIsNotActivated();
+        }
+
+        /// @dev - Store a EOA proof, which is associated with a given guardian address, into the storage.
+        proofAssociatedWithGuardians[account][guardian] = proof;
+
+        // This check ensures GuardianStatus is correct and also implicitly that the
+        // account in the email is a valid account
+        GuardianStorage memory guardianStorage = getGuardian(account, guardian);
+        if (guardianStorage.status != GuardianStatus.REQUESTED) {
+            revert InvalidGuardianStatus(guardianStorage.status, GuardianStatus.REQUESTED);
+        }
+
+        updateGuardianStatus(account, guardian, GuardianStatus.ACCEPTED); /// @dev - State change - from "REQUESTED" to "ACCEPTED"
+        guardianConfigs[account].acceptedWeight += guardianStorage.weight;
+
+        emit GuardianAccepted(account, guardian);
+    }
+
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                      HANDLE RECOVERY                       */
