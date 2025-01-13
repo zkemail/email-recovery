@@ -54,6 +54,10 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
         /// @dev - Create a new pubSignals for test
         //pubSignals = [uint256(1390849295786071768276380950238675083608645509734)];
 
+
+        /// @dev - [TODO]: Add a EOA as a Guardian
+
+
         if (getCommandHandlerType() == CommandHandlerType.EmailRecoveryCommandHandler) {
             recoveryDataHashString = uint256(recoveryDataHash).toHexString(32);
             commandParams = new bytes[](2);

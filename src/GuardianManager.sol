@@ -166,7 +166,7 @@ abstract contract GuardianManager is IGuardianManager {
 
         bool success = guardiansStorage[account].set({
             key: guardian,
-            value: GuardianStorage(GuardianStatus.REQUESTED, weight)
+            value: GuardianStorage(GuardianStatus.REQUESTED, weight) /// @dev - [2 step process]: Status is changed to "Requested" -> This must be accepted via the EmailRecoveryManager# acceptGuardian() 
         });
         if (!success) {
             revert AddressAlreadyGuardian();

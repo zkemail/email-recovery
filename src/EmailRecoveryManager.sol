@@ -365,7 +365,7 @@ abstract contract EmailRecoveryManager is
      * @param {nullifier} Unused parameter. The nullifier acts as a unique identifier for an email,
      * but it is not required in this implementation
      */
-    function acceptGuardian(
+    function acceptGuardian( /// @dev - [NOTE]: Before calling this function, the status must be "REQUESTED" by calling the GuardianManager# addGuardian()
         address guardian,
         uint256 templateIdx,
         bytes[] memory commandParams,
