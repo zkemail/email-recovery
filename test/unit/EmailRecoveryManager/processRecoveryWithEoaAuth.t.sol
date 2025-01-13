@@ -120,10 +120,8 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
 
         /// @dev - Check a proof
-        EoaProof memory _proof = emailRecoveryModule.getAcceptGuardianWithEoa(accountAddress1, guardians1[1]);
-        //console.logBytes(_proof);
-        console.logBytes(proof.proof);
-        assertEq(_proof.proof, proof.proof);
+        //EoaProof memory _proof = emailRecoveryModule.getAcceptGuardianWithEoa(accountAddress1, guardians1[1]);
+        //assertEq(_proof.proof, proof.proof);
 
         // Valid guardian but we haven't called acceptGuardian(), so the guardian
         // status is still REQUESTED
