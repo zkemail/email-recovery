@@ -448,6 +448,19 @@ abstract contract EmailRecoveryManager is
         emit GuardianAccepted(account, guardian);
     }
 
+    function getAcceptGuardianWithEoa( /// @dev - [NOTE]: Before calling this function, the status must be "REQUESTED" by calling the GuardianManager# addGuardian()
+        address account,
+        address guardian
+    )
+        public
+        view
+        returns (EoaProof memory proof)
+    {
+        /// @dev - Store a EOA proof, which is associated with a given guardian address, into the storage.
+        return proofAssociatedWithGuardians[account][guardian];
+    }
+
+
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                      HANDLE RECOVERY                       */

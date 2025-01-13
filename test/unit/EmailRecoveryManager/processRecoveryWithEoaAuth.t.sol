@@ -17,6 +17,8 @@ import { EoaProof } from "../../../src/eoa-auth/interfaces/circuits/IVerifier.so
 import { StructHelper } from "../../eoa-auth/helpers/StructHelper.sol";
 import { DeploymentHelper } from "../../eoa-auth/helpers/DeploymentHelper.sol";
 
+import { console } from "forge-std/console.sol";
+
 
 /****
  * @notice - This is the test that utilize the EmailRecoveryManager#processRecoveryWithEoaAuth(), which the EoaAuth.sol is used.
@@ -116,6 +118,12 @@ contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test is StructHelper, U
     function test_ProcessRecoveryWithEoaAuth_RevertWhen_GuardianStatusIsREQUESTED() public {
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[2], emailRecoveryModuleAddress);
+
+        /// @dev - Check a proof
+        EoaProof memory _proof = emailRecoveryModule.getAcceptGuardianWithEoa(accountAddress1, guardians1[1]);
+        //console.logBytes(_proof);
+        console.logBytes(proof.proof);
+        assertEq(_proof.proof, proof.proof);
 
         // Valid guardian but we haven't called acceptGuardian(), so the guardian
         // status is still REQUESTED
