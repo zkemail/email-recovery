@@ -22,3 +22,7 @@ Here is the overview (workflow) of my approach:
   - `EOA proof` is sent to the **EOA (guardian) Verifier** smart contract.  (This is the new implementation this time by myself)
 
 - 5/ If the both of the response (of the step 4/) in the EmailRecoveryManager#`processRecoveryWithEoaAuth()` is **true**, the account will be recovered.
+
+<br>
+
+# Integration Details
