@@ -67,5 +67,5 @@ forge test -vv --match-contract EmailRecoveryManager_processRecoveryWithEoaAuth_
 <br>
 
 ## References
-- EOA-auth SDK (`EOA-TX-builder`)：https://github.com/masaun/eoa-tx-builder/tree/develop
+- EOA-auth SDK (`EOA-TX-builder`)：https://github.com/masaun/eoa-tx-builder
 - Email-auth SDK (`email-tx-builder`)：https://github.com/zkemail/email-tx-builder
