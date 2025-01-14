@@ -25,4 +25,47 @@ Here is the overview (workflow) of my approach:
 
 <br>
 
-# Integration Details
+## Integration with the [`EOA-TX-buider`]() (and Email-TX-buider)
+
+- The **Ether EOA-auth SDK (EOA TX Buider)** would be assumed that it work with the [**Ether Email-auth SDK (Email TX Builder)**](https://github.com/zkemail/email-tx-builder) in the [**ZK Email Recovery**](https://github.com/zkemail/email-recovery)
+   
+   - The architecture of the proof generation with the **Email-auth** (which generate and verify a `Email proof`)and **EOA-auth** (which generate and verify a `EOA proof`)
+      ![architecture_proof-generation_with_Email-Auth_and_EOA-auth](https://github.com/user-attachments/assets/ce1f6ec1-3f7f-41e0-a275-8e6668caf3e0)
+
+   - The architecture of the account recovery flow including both the **Email-auth** (which generate and verify a `Email proof`)and **EOA-auth** (which generate and verify a `EOA proof`)
+     ![architecture_of_account-recovery-flow_including_EOA-auth](https://github.com/user-attachments/assets/665ad240-0971-4db6-8c7c-4ca6325ef31f)
+
+<br>
+
+## Installation
+
+- 1/ Install modules
+```shell
+pnpm install
+```
+or
+```shell
+forge install
+```
+
+- 2/ Compile smart contracts
+```shell
+pnpm build
+```
+or
+```shell
+forge build
+```
+
+- 3/ Run the test (NOTE: Running the test file, which is called the `processRecoveryWithEoaAuth.t.sol`)
+```shell
+forge test -vv --match-contract EmailRecoveryManager_processRecoveryWithEoaAuth_Test
+```
+
+
+
+<br>
+
+## References
+- EOA-auth SDK (`EOA-TX-builder`)：https://github.com/masaun/eoa-tx-builder/tree/develop
+- Email-auth SDK (`email-tx-builder`)：https://github.com/zkemail/email-tx-builder
