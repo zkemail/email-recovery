@@ -24,6 +24,8 @@ contract SimpleRecoveryVerifier {
         uint256 templateIdx,
         bytes32 commandParamsHash
     );
+ 
+    mapping(address => mapping(address => uint256)) private nonces;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                 EIP-712 DOMAIN PARAMETERS                  */
@@ -37,7 +39,7 @@ contract SimpleRecoveryVerifier {
     );
 
     bytes32 private constant _GUARDIAN_TYPEHASH = keccak256(
-        "GuardianAcceptance(address recoveredAccount,uint256 templateIdx,bytes32 commandParamsHash)"
+        "GuardianAcceptance(address recoveredAccount,uint256 templateIdx,bytes32 commandParamsHash, uint256 nonce)"
     );
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -68,7 +70,8 @@ contract SimpleRecoveryVerifier {
                 _GUARDIAN_TYPEHASH,
                 recoveredAccount,
                 templateIdx,
-                commandParamsHash
+                commandParamsHash,
+                nonces[msg.sender][recoveredAccount]++
             )
         );
 
@@ -137,4 +140,9 @@ contract SimpleRecoveryVerifier {
     function getDomainSeparator() public view returns (bytes32) {
         return _domainSeparatorV4();
     }
+
+    function getNonce(address account, address guardian) public view returns (uint256) {
+    return nonces[account][guardian];
+}
+
 }

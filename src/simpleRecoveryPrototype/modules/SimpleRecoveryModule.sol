@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
 import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
 import { ISimpleRecoveryModuleManager } from "../interfaces/ISimpleRecoveryModuleManager.sol";
-import { SimpleRecoveryModuleManager } from "./SimpleRecoveryModuleManager.sol";
+import { SimpleRecoveryModuleManager } from "../SimpleRecoveryManager.sol";
 import { ISimpleGuardianManager } from "../interfaces/ISimpleGuardianManager.sol";
 
 contract SimpleRecoveryModule is SimpleRecoveryModuleManager, ERC7579ExecutorBase {

@@ -71,6 +71,7 @@ interface ISimpleGuardianManager {
     error AddressNotGuardianForAccount();
     error InvalidCommandParams(uint256 paramsLength, uint256 expectedParamsLength);
     error ThresholdExceedsAcceptedWeight(uint256 threshold, uint256 acceptedWeight);
+    error IncorrectNumberOfGuardianTypes(uint256 guardianCount, uint256 guardianTypes);
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          FUNCTIONS                         */
@@ -83,6 +84,8 @@ interface ISimpleGuardianManager {
         address guardian
     ) external view returns (GuardianStorage memory);
 
+    function getGuardianType(address account, address guardian) external view returns (GuardianType) ;
+    
     function addGuardian(
         address guardian, 
         uint256 weight, 

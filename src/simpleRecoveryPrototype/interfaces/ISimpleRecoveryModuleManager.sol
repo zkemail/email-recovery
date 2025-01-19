@@ -24,6 +24,22 @@ interface ISimpleRecoveryModuleManager {
         // the recovery request.
     }
 
+    struct PreviousRecoveryRequest {
+        address previousGuardianInitiated; // the address of the guardian who initiated the previous
+            // recovery request. Used to prevent a malicious guardian threatening the liveness of
+            // the recovery attempt. For example, a guardian could initiate a recovery request with
+            // a recovery data hash for calldata that recovers the account to their own
+            // private key. Recording the previous guardian to initiate the request can be used
+            // in combination with a cooldown to stop the guardian blocking recovery with an
+            // invalid hash which is replaced by another invalid recovery hash after the request
+            // is cancelled
+        uint256 cancelRecoveryCooldown; // Used in conjunction with previousGuardianInitiated to
+            // stop a guardian blocking subsequent recovery requests with an invalid hash each time.
+            // Other guardians can react in time before the cooldown expires to start a valid
+            // recovery request with a valid hash
+    }
+
+
     /**
      * A struct representing the values required for a recovery request.
      * The request state should be maintained over a single recovery attempt unless
@@ -100,6 +116,7 @@ interface ISimpleRecoveryModuleManager {
     error AccountNotConfigured();
     error DelayNotPassed(uint256 blockTimestamp, uint256 executeAfter);
     error RecoveryHasNotExpired(address account, uint256 blockTimestamp, uint256 executeBefore);
+    error GuardianMustWaitForCooldown(address guardian);
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          FUNCTIONS                          */

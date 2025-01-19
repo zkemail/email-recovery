@@ -75,6 +75,10 @@ abstract contract SimpleGuardianManager is ISimpleGuardianManager {
         return guardiansStorage[account].get(guardian);
     }
 
+    function getGuardianType(address account, address guardian) public view returns (GuardianType) {
+        return guardianTypes[account][guardian];
+    }
+
     /**
      * @notice Sets up guardians for an account with specified weights and threshold.
      * @param account The account address.
@@ -94,6 +98,10 @@ abstract contract SimpleGuardianManager is ISimpleGuardianManager {
 
         if (guardianCount != weights.length) {
             revert IncorrectNumberOfWeights(guardianCount, weights.length);
+        }
+
+        if (guardianCount != guardiantypes.length) {
+            revert IncorrectNumberOfGuardianTypes(guardianCount, guardiantypes.length);
         }
 
         if (threshold == 0) {

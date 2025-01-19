@@ -23,7 +23,7 @@ contract RecoveryTest is BaseTest {
     /// @dev Sample typed struct typehash:
     /// keccak256("GuardianAcceptance(address recoveredAccount,uint256 templateIdx,bytes32 commandParamsHash)")
     bytes32 private constant GUARDIAN_TYPEHASH = keccak256(
-        "GuardianAcceptance(address recoveredAccount,uint256 templateIdx,bytes32 commandParamsHash)"
+        "GuardianAcceptance(address recoveredAccount,uint256 templateIdx,bytes32 commandParamsHash, uint256 nonce)"
     );
 
     string public recoveryDataHashString;
@@ -90,10 +90,11 @@ contract RecoveryTest is BaseTest {
                     GUARDIAN_TYPEHASH,
                       owner1, 
                     templateIdx,
-                    commandParamsHash
+                    commandParamsHash,
+                    recoveryModule.getNonce(eoaGuardian1, owner1)
                 )
             );
-           
+                       
               bytes32 domainSeparator = recoveryModule.getDomainSeparator(); 
    
             bytes32 digest = keccak256(

@@ -4,16 +4,16 @@ pragma solidity ^0.8.25;
 import { EmailAccountRecovery } from
     "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
 import { SimpleRecoveryVerifier } from
-    "../EOA712Verifier.sol";
+    "./EOA712Verifier.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { IEmailRecoveryCommandHandler } from "../../interfaces/IEmailRecoveryCommandHandler.sol";
+import { IEmailRecoveryCommandHandler } from "../interfaces/IEmailRecoveryCommandHandler.sol";
 import "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { SimpleGuardianManager } from "../SimpleGuardianManager.sol";
-import { GuardianStorage, GuardianStatus } from "../../libraries/EnumerableGuardianMap.sol";
+import { SimpleGuardianManager } from "./SimpleGuardianManager.sol";
+import { GuardianStorage, GuardianStatus } from "../libraries/EnumerableGuardianMap.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@zk-email/ether-email-auth-contracts/src/libraries/StringUtils.sol";
-import { ISimpleRecoveryModuleManager } from "../interfaces/ISimpleRecoveryModuleManager.sol";
+import { ISimpleRecoveryModuleManager } from "./interfaces/ISimpleRecoveryModuleManager.sol";
 
 /**
  * @title SimpleRecoveryModuleManager
@@ -26,14 +26,18 @@ abstract contract SimpleRecoveryModuleManager is SimpleRecoveryVerifier, EmailAc
 
     using EnumerableSet for EnumerableSet.AddressSet;
     uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
+    uint256 public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
+
     uint256 public immutable minimumDelay;
 
     address public immutable commandHandler;
-    uint public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
+    // uint public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
 
     bool public killSwitchEnabled;
     mapping(address account => RecoveryConfig recoveryConfig) internal recoveryConfigs;
     mapping(address account => RecoveryRequest recoveryRequest) internal recoveryRequests;
+    mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
+        previousRecoveryRequests;
 
     constructor(
         address _verifier,
@@ -105,6 +109,23 @@ abstract contract SimpleRecoveryModuleManager is SimpleRecoveryVerifier, EmailAc
             recoveryRequests[account].currentWeight,
             recoveryRequests[account].recoveryDataHash
         );
+    }
+
+    /**
+     * @notice Retrieves the previous recovery request details for a given account
+     * @dev the previous recovery request is stored as this helps prevent guardians threatening the
+     * liveness of recovery attempts by submitting malicious recovery hashes before honest guardians
+     * correctly submit theirs. See `processRecovery` and `cancelExpiredRecovery` for more details
+     * @param account The address of the account for which the previous recovery request details are
+     * being retrieved
+     * @return PreviousRecoveryRequest The previous recovery request for the specified account
+     */
+    function getPreviousRecoveryRequest(address account)
+        external
+        view
+        returns (PreviousRecoveryRequest memory)
+    {
+        return previousRecoveryRequests[account];
     }
 
     /**
@@ -266,7 +287,7 @@ function handleEOAAcceptance(
         commandParams,
         templateIdx
     );
-
+        require(recoveredAccount != address(0), "invalid account");
     // Verify EOA guardian
     address guardian = verifyEOAGuardian(
         recoveredAccount,
@@ -314,6 +335,10 @@ function handleEmailAuthAcceptance(
         recoveredAccount,
         emailAuthMsg.proof.accountSalt
     );
+    uint templateId = computeAcceptanceTemplateId(templateIdx);
+    require(templateId == emailAuthMsg.templateId, "invalid template id");
+    require(emailAuthMsg.proof.isCodeExist == true, "isCodeExist is false");
+
 
     EmailAuth guardianEmailAuth;
     if (guardian.code.length == 0) {
@@ -347,7 +372,7 @@ function handleEmailAuthAcceptance(
             "Invalid controller"
         );
     }
-
+     
     // Perform email-based authentication
     guardianEmailAuth.authEmail(emailAuthMsg);
     acceptGuardian(
@@ -414,7 +439,12 @@ function processRecovery(
         templateIdx,
         commandParams
     );
-
+    GuardianType guardianType = getGuardianType(account, guardian);
+    if(guardianType == GuardianType.EmailVerified) {
+           // Check if the guardian is deployed
+        require(address(guardian).code.length > 0, "guardian is not deployed");
+ 
+    }
     if (!isActivated(account)) {
         revert RecoveryIsNotActivated();
     }
@@ -438,8 +468,24 @@ function processRecovery(
         revert GuardianAlreadyVoted();
     }
 
+    // A malicious guardian can submit an invalid recovery hash that the
+    // other guardians do not agree with, and also re-submit the same invalid hash once
+    // the expired recovery attempt has been cancelled, thereby threatening the
+    // liveness of the recovery attempt. Adding a cooldown period in this scenario gives other
+    // guardians time to react before the malicious guardian adds another recovery hash
+    uint256 guardianCount = guardianConfigs[account].guardianCount;
+    bool cooldownNotExpired =
+        previousRecoveryRequests[account].cancelRecoveryCooldown > block.timestamp;
+    if (
+        previousRecoveryRequests[account].previousGuardianInitiated == guardian
+            && cooldownNotExpired && guardianCount > 1
+    ) {
+        revert GuardianMustWaitForCooldown(guardian);
+    }
+
     if (recoveryRequest.recoveryDataHash == bytes32(0)) {
         recoveryRequest.recoveryDataHash = recoveryDataHash;
+        previousRecoveryRequests[account].previousGuardianInitiated = guardian;
         uint256 executeBefore = block.timestamp + recoveryConfigs[account].expiry;
         recoveryRequest.executeBefore = executeBefore;
         emit RecoveryRequestStarted(account, guardian, executeBefore, recoveryDataHash);
@@ -548,6 +594,7 @@ function deInitRecoveryModule(
     delete recoveryConfigs[account];
     exitandclearRecovery(account);
     delete guardianConfigs[account];
+    delete previousRecoveryRequests[account];
 
     emit RecoveryDeInitialized(account);
 }
@@ -569,7 +616,8 @@ function cancelExpiredRecovery(address account) external onlyWhenActive {
             recoveryRequests[account].executeBefore
         );
     }
-    
+    previousRecoveryRequests[account].cancelRecoveryCooldown =
+    block.timestamp + CANCEL_EXPIRED_RECOVERY_COOLDOWN; 
     exitandclearRecovery(account);
     emit RecoveryCancelled(account);
 }
@@ -585,7 +633,7 @@ function cancelExpiredRecovery(address account) external onlyWhenActive {
  * 
  * @param account The address of the account for which the recovery process is being cleared.
  */
-function exitandclearRecovery(address account) public {
+function exitandclearRecovery(address account) public onlyWhenActive {
     RecoveryRequest storage recoveryRequest = recoveryRequests[account];
     address[] memory guardiansVoted = recoveryRequest.guardianVoted.values();
     uint256 voteCount = guardiansVoted.length;
@@ -595,8 +643,7 @@ function exitandclearRecovery(address account) public {
     }
     
     delete recoveryRequests[account];
-    emit RecoveryCancelled(account);
-}
+  }
 
 /**
  * @notice Toggles the kill switch on the manager
@@ -605,4 +652,15 @@ function exitandclearRecovery(address account) public {
 function toggleKillSwitch() external onlyOwner {
     killSwitchEnabled = !killSwitchEnabled;
 }
+/**
+     * @notice Cancels the recovery request for the caller's account
+     * @dev Deletes the current recovery request associated with the caller's account
+     */
+    function cancelRecovery() external onlyWhenActive {
+        if (recoveryRequests[msg.sender].currentWeight == 0) {
+            revert NoRecoveryInProcess();
+        }
+        exitandclearRecovery(msg.sender);
+        emit RecoveryCancelled(msg.sender);
+    }
 }
