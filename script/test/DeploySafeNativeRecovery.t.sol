@@ -5,6 +5,9 @@ import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 contract DeploySafeNativeRecoveryTest is BaseDeployTest {
     DeploySafeNativeRecoveryScript private target;
@@ -32,72 +35,44 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
 
     function test_RevertIf_NoPrivateKeyEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("PRIVATE_KEY", "");
-        vm.expectRevert(
-            "vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix (\"0x\") for hex string"
-        );
-        target.run();
+        commonTest_RevertIf_NoPrivateKeyEnv(target);
     }
 
     function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
-        vm.expectRevert(
-            "vm.envAddress: failed parsing $KILL_SWITCH_AUTHORIZER as type `address`: parser error:\n$KILL_SWITCH_AUTHORIZER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
-        );
-        target.run();
+        commonTest_RevertIf_NoKillSwitchAuthorizerEnv(target);
     }
 
     function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
         setAllEnvVars();
-
-        vm.setEnv("DKIM_REGISTRY", "");
-        vm.setEnv("DKIM_SIGNER", "");
-
-        vm.expectRevert("DKIM_REGISTRY or DKIM_SIGNER is required");
-        target.run();
+        commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(target);
     }
 
     function test_NoZkVerifierEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("ZK_VERIFIER", "");
-
-        target.run();
-
-        require(target.zkVerifier() != address(0), "zk verifier not deployed");
+        commonTest_NoZkVerifierEnv(target);
     }
 
     function test_NoDkimRegistryEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("DKIM_REGISTRY", "");
-
-        target.run();
-
-        require(address(target.dkimRegistry()) != address(0), "dkim registry not deployed");
+        commonTest_NoDkimRegistryEnv(target);
     }
 
     function test_NoEmailAuthImplEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("EMAIL_AUTH_IMPL", "");
-
-        target.run();
-
-        require(target.emailAuthImpl() != address(0), "email auth implementation not deployed");
+        commonTest_NoEmailAuthImplEnv(target);
     }
 
     function test_NoCommandHandlerEnv() public {
         setAllEnvVars();
-
         vm.setEnv("COMMAND_HANDLER", "");
 
-        target.run();
+        address handler =
+            computeAddress(envCreate2Salt, type(SafeRecoveryCommandHandler).creationCode, "");
 
-        require(target.commandHandler() != address(0), "command handler not deployed");
+        require(!isContractDeployed(handler), "handler should not be deployed yet");
+        target.run();
+        require(isContractDeployed(handler), "handler should be deployed");
     }
 
     function test_Deployment() public {
@@ -116,8 +91,10 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
             )
         );
 
+        require(!isContractDeployed(expectedModuleAddress), "module should not be deployed yet");
         target.run();
-
-        require(target.module() == expectedModuleAddress, "module not deployed to expected address");
+        require(isContractDeployed(expectedModuleAddress), "module should be deployed");
+        // also checking returned address
+        require(target.module() == expectedModuleAddress, "module address mismatch");
     }
 }

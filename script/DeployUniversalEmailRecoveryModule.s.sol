@@ -17,10 +17,10 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
     address private killSwitchAuthorizer;
     address private dkimSigner;
 
-    address public verifier;
-    address public dkimRegistry;
-    address public emailAuthImpl;
-    address public recoveryFactory;
+    address private verifier;
+    address private dkimRegistry;
+    address private emailAuthImpl;
+    address private recoveryFactory;
 
     address public emailRecoveryModule;
     address public emailRecoveryHandler;

@@ -20,9 +20,9 @@ contract DeploySafeRecoveryScript is BaseDeployScript {
     address private killSwitchAuthorizer;
     address private dkimSigner;
 
-    address public verifier;
-    address public dkimRegistry;
-    address public emailAuthImpl;
+    address private verifier;
+    address private dkimRegistry;
+    address private emailAuthImpl;
 
     address public emailRecoveryModule;
     address public emailRecoveryHandler;

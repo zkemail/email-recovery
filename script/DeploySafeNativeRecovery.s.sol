@@ -17,10 +17,10 @@ contract DeploySafeNativeRecoveryScript is BaseDeployScript {
     address private killSwitchAuthorizer;
     address private dkimSigner;
 
-    address public zkVerifier;
-    address public dkimRegistry;
-    address public emailAuthImpl;
-    address public commandHandler;
+    address private zkVerifier;
+    address private dkimRegistry;
+    address private emailAuthImpl;
+    address private commandHandler;
 
     address public module;
 
