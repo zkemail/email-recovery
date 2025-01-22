@@ -3,77 +3,109 @@ pragma solidity ^0.8.12;
 
 /* solhint-disable no-console */
 
-import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
-import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
+import { Test } from "forge-std/Test.sol";
+import { Vm } from "forge-std/Vm.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 abstract contract BaseDeployTest is Test {
+    uint256 private envPrivateKey;
+    address private envInitialOwner;
+    address private envVerifier;
+    address private envDkimSigner;
+    address private envDkimRegistry;
+    uint256 private envMinimumDelay;
+    address private envKillSwitchAuthorizer;
+    address private envEmailAuthImpl;
+    address private envNewOwner;
+    address private envValidator;
+    uint256 private envCreate2Salt;
+    address private envRecoveryFactory;
+
+    /**
+     * @dev Deploys needed contracts and sets environment vars.
+     * @notice deploys the following contracts:
+     * - verifier
+     * - DKIM registry
+     * - email auth implementation
+     *
+     */
     function setUp() public virtual {
-        // Set environment variables
-        vm.setEnv(
-            "PRIVATE_KEY", "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-        );
-        address initialOwner = vm.addr(vm.envUint("PRIVATE_KEY"));
+        envPrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        envInitialOwner = vm.addr(envPrivateKey);
+        envVerifier = deployVerifier(envInitialOwner);
+        envDkimSigner = vm.addr(5);
+        envDkimRegistry = deployDKIMRegistry(envDkimSigner, envInitialOwner);
+        envMinimumDelay = uint256(0);
+        envKillSwitchAuthorizer = vm.addr(1);
+        envEmailAuthImpl = address(new EmailAuth());
+        envNewOwner = vm.addr(8);
+        envValidator = vm.addr(9);
+        envCreate2Salt = uint256(2);
 
-        // Deploy Verifier and set up proxy
-        address verifier = deployVerifier(initialOwner);
+        setAllEnvVars();
+    }
 
-        // Set up additional environment variables
-        setupEnvironmentVariables();
+    /**
+     * @dev Helper function, sets all environment variables.
+     * @notice Manual environment variable setting is performed at the beginning of each test:
+     * If an environment variable is set using vm.setEnv() inside a test case, it sets the variable
+     * for all test cases. Unfortunately, the setUp() function does not reset the environment
+     * variables before each test case (despite having vm.setEnv() calls). Therefore, if a test case
+     * modifies an environment variable, subsequent test cases will use the  modified value instead
+     * of the one set in the setUp() function. For more details, see the closed GitHub issue:
+     * https://github.com/foundry-rs/foundry/issues/2349
+     */
+    function setAllEnvVars() internal {
+        vm.setEnv("PRIVATE_KEY", vm.toString(envPrivateKey));
+        vm.setEnv("VERIFIER", vm.toString(envVerifier));
+        vm.setEnv("DKIM_SIGNER", vm.toString(envDkimSigner));
+        vm.setEnv("DKIM_REGISTRY", vm.toString(envDkimRegistry));
+        vm.setEnv("MINIMUM_DELAY", vm.toString(envMinimumDelay));
+        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(envKillSwitchAuthorizer));
+        vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(envEmailAuthImpl));
+        vm.setEnv("NEW_OWNER", vm.toString(envNewOwner));
+        vm.setEnv("VALIDATOR", vm.toString(envValidator));
+        vm.setEnv("CREATE2_SALT", vm.toString(envCreate2Salt));
+        vm.setEnv("RECOVERY_FACTORY", vm.toString(envRecoveryFactory));
+    }
 
-        // Deploy EmailRecoveryCommandHandler
-        new EmailRecoveryCommandHandler();
-
-        // Deploy EmailRecoveryUniversalFactory and set up module
-        deployEmailRecoveryModule(verifier);
+    /**
+     * @dev Helper function, finds the event with the given signature hash in the logs array.
+     * @param logs The array of Vm.Log structs.
+     * @param eventSigHash The event signature hash (e.g. `keccak256("Event(address, uint256)"))`).
+     * @return True if the event is found in the logs array; otherwise, false.
+     */
+    function findEvent(Vm.Log[] memory logs, bytes32 eventSigHash) internal pure returns (bool) {
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == eventSigHash) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * @dev Deploys the Verifier contract and sets up its proxy.
      * @param initialOwner The address of the initial owner.
-     * @return The address of the deployed Verifier contract.
+     * @return verifier The address of the deployed Verifier contract.
      */
-    function deployVerifier(address initialOwner) internal returns (address) {
+    function deployVerifier(address initialOwner) internal returns (address verifier) {
         Verifier verifierImpl = new Verifier();
         Groth16Verifier groth16Verifier = new Groth16Verifier();
         ERC1967Proxy verifierProxy = new ERC1967Proxy(
             address(verifierImpl),
             abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
         );
-        address verifier = address(Verifier(address(verifierProxy)));
-        vm.setEnv("VERIFIER", vm.toString(address(verifierImpl)));
+        verifier = address(Verifier(address(verifierProxy)));
         return verifier;
-    }
-
-    /**
-     * @dev Sets up additional environment variables required for the deployment.
-     */
-    function setupEnvironmentVariables() internal {
-        vm.setEnv("DKIM_SIGNER", vm.toString(vm.addr(5)));
-        address dkimRegistrySigner = vm.envOr("DKIM_SIGNER", address(0));
-
-        // Deploy DKIM Registry and set up proxy
-        address dkimRegistry = deployDKIMRegistry(dkimRegistrySigner);
-        vm.setEnv("DKIM_REGISTRY", vm.toString(address(dkimRegistry)));
-
-        vm.setEnv("MINIMUM_DELAY", vm.toString(uint256(0)));
-        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(vm.addr(1)));
-
-        // Set EmailAuth implementation address
-        address emailAuthImpl = address(new EmailAuth());
-        vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(emailAuthImpl));
-
-        // Set additional environment variables
-        vm.setEnv("NEW_OWNER", vm.toString(vm.addr(8)));
-        vm.setEnv("VALIDATOR", vm.toString(vm.addr(9)));
-        vm.setEnv("ACCOUNT_SALT", vm.toString(bytes32(uint256(1))));
     }
 
     /**
@@ -81,34 +113,19 @@ abstract contract BaseDeployTest is Test {
      * @param dkimRegistrySigner The address of the DKIM registry signer.
      * @return The address of the deployed DKIM Registry contract.
      */
-    function deployDKIMRegistry(address dkimRegistrySigner) internal returns (address) {
+    function deployDKIMRegistry(
+        address dkimRegistrySigner,
+        address initialOwner
+    )
+        internal
+        returns (address)
+    {
         ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
         console2.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
             address(dkimImpl),
-            abi.encodeCall(
-                dkimImpl.initialize, (vm.addr(vm.envUint("PRIVATE_KEY")), dkimRegistrySigner)
-            )
+            abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
         );
         return address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-    }
-
-    /**
-     * @dev Deploys the EmailRecoveryUniversalFactory and sets up the recovery module.
-     * @param verifier The address of the deployed Verifier contract.
-     */
-    function deployEmailRecoveryModule(address verifier) internal {
-        address _factory =
-            address(new EmailRecoveryUniversalFactory(verifier, vm.envAddress("EMAIL_AUTH_IMPL")));
-        EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(_factory);
-        (address module,) = factory.deployUniversalEmailRecoveryModule(
-            bytes32(uint256(0)),
-            bytes32(uint256(0)),
-            type(EmailRecoveryCommandHandler).creationCode,
-            vm.envUint("MINIMUM_DELAY"),
-            vm.envAddress("KILL_SWITCH_AUTHORIZER"),
-            vm.envAddress("DKIM_REGISTRY")
-        );
-        vm.setEnv("RECOVERY_MODULE", vm.toString(module));
     }
 }

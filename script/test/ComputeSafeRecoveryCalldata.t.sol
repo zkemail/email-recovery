@@ -2,13 +2,14 @@
 pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
-import { Compute7579RecoveryDataHashScript } from "../Compute7579RecoveryDataHash.s.sol";
+import { ComputeSafeRecoveryCalldataScript } from "../ComputeSafeRecoveryCalldata.s.sol";
+import { BaseDeployTest } from "./BaseDeployTest.sol";
 
-contract Compute7579RecoveryDataHashTest is Test {
-    Compute7579RecoveryDataHashScript private target;
+contract ComputeSafeRecoveryCalldataTest is Test {
+    ComputeSafeRecoveryCalldataScript private target;
 
     function setUp() public {
-        target = new Compute7579RecoveryDataHashScript();
+        target = new ComputeSafeRecoveryCalldataScript();
     }
 
     /**
@@ -21,18 +22,18 @@ contract Compute7579RecoveryDataHashTest is Test {
      * of the one set in the setUp() function. For more details, see the closed GitHub issue:
      * https://github.com/foundry-rs/foundry/issues/2349
      */
-    function setEnvVars() private {
-        vm.setEnv("VALIDATOR", vm.toString(vm.addr(1234)));
+    function setEnvVars() public {
+        vm.setEnv("OLD_OWNER", vm.toString(vm.addr(1234)));
         vm.setEnv("NEW_OWNER", vm.toString(vm.addr(5678)));
     }
 
-    function test_RevertIf_NoValidatorEnv() public {
+    function test_RevertIf_NoOldOwnerEnv() public {
         setEnvVars();
 
-        vm.setEnv("VALIDATOR", "");
+        vm.setEnv("OLD_OWNER", "");
 
         vm.expectRevert(
-            "vm.envAddress: failed parsing $VALIDATOR as type `address`: parser error:\n$VALIDATOR\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            "vm.envAddress: failed parsing $OLD_OWNER as type `address`: parser error:\n$OLD_OWNER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
         );
         target.run();
     }
@@ -53,10 +54,8 @@ contract Compute7579RecoveryDataHashTest is Test {
 
         target.run();
 
-        bytes memory recoveryData = target.recoveryData();
-        bytes32 recoveryDataHash = target.recoveryDataHash();
+        bytes memory recoveryCalldata = target.recoveryCalldata();
 
-        require(recoveryData.length > 0, "recoveryData should not be empty");
-        require(recoveryDataHash != 0, "recoveryDataHash should not be 0");
+        require(recoveryCalldata.length > 0, "recoveryCalldata should not be empty");
     }
 }

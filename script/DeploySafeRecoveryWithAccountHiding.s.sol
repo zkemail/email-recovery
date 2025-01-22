@@ -16,7 +16,7 @@ import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniver
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHidingScript is BaseDeployScript {
     uint256 private privateKey;
-    uint256 private salt;
+    uint256 private create2Salt;
     uint256 private dkimDelay;
     uint256 private minimumDelay;
     address private killSwitchAuthorizer;
@@ -35,7 +35,7 @@ contract DeploySafeRecoveryWithAccountHidingScript is BaseDeployScript {
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
         // default to uint256(0) if not set
-        salt = vm.envOr("CREATE2_SALT", uint256(0));
+        create2Salt = vm.envOr("CREATE2_SALT", uint256(0));
         dkimDelay = vm.envOr("DKIM_DELAY", uint256(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
@@ -60,21 +60,21 @@ contract DeploySafeRecoveryWithAccountHidingScript is BaseDeployScript {
         address initialOwner = vm.addr(privateKey);
 
         if (verifier == address(0)) {
-            verifier = deployVerifier(initialOwner, salt);
+            verifier = deployVerifier(initialOwner, create2Salt);
         }
 
         if (dkimRegistry == address(0)) {
             dkimRegistry =
-                deployUserOverrideableDKIMRegistry(initialOwner, dkimSigner, dkimDelay, salt);
+                deployUserOverrideableDKIMRegistry(initialOwner, dkimSigner, dkimDelay, create2Salt);
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(create2Salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         EmailRecoveryUniversalFactory factory =
-            new EmailRecoveryUniversalFactory{ salt: bytes32(salt) }(verifier, emailAuthImpl);
+            new EmailRecoveryUniversalFactory{ salt: bytes32(create2Salt) }(verifier, emailAuthImpl);
         (emailRecoveryModule, emailRecoveryHandler) = factory.deployUniversalEmailRecoveryModule(
             bytes32(uint256(0)),
             bytes32(uint256(0)),

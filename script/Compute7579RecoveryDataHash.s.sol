@@ -13,7 +13,7 @@ contract Compute7579RecoveryDataHashScript is Script {
     bytes public recoveryData;
     bytes32 public recoveryDataHash;
 
-    function loadEnvVars() public {
+    function loadEnvVars() private {
         // revert if these are not set
         newOwner = vm.envAddress("NEW_OWNER");
         validator = vm.envAddress("VALIDATOR");

@@ -12,7 +12,7 @@ contract ComputeSafeRecoveryCalldataScript is Script {
 
     bytes public recoveryCalldata;
 
-    function loadEnvVars() public {
+    function loadEnvVars() private {
         // revert if these are not set
         oldOwner = vm.envAddress("OLD_OWNER");
         newOwner = vm.envAddress("NEW_OWNER");

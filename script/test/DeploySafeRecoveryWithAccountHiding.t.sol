@@ -3,14 +3,15 @@ pragma solidity ^0.8.12;
 
 import { Vm } from "forge-std/Vm.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
-import { DeploySafeRecoveryScript } from "../DeploySafeRecovery.s.sol";
+import { DeploySafeRecoveryWithAccountHidingScript } from
+    "../DeploySafeRecoveryWithAccountHiding.s.sol";
 
-contract DeploySafeRecoveryTest is BaseDeployTest {
-    DeploySafeRecoveryScript private target;
+contract DeploySafeRecoveryWithAccountHidingTest is BaseDeployTest {
+    DeploySafeRecoveryWithAccountHidingScript private target;
 
     function setUp() public override {
         super.setUp();
-        target = new DeploySafeRecoveryScript();
+        target = new DeploySafeRecoveryWithAccountHidingScript();
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {

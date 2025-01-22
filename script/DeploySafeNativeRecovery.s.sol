@@ -11,7 +11,7 @@ import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHand
 
 contract DeploySafeNativeRecoveryScript is BaseDeployScript {
     uint256 private privateKey;
-    uint256 private salt;
+    uint256 private create2Salt;
     uint256 private dkimDelay;
     uint256 private minimumDelay;
     address private killSwitchAuthorizer;
@@ -30,7 +30,7 @@ contract DeploySafeNativeRecoveryScript is BaseDeployScript {
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
         // default to uint256(0) if not set
-        salt = vm.envOr("CREATE2_SALT", uint256(0));
+        create2Salt = vm.envOr("CREATE2_SALT", uint256(0));
         dkimDelay = vm.envOr("DKIM_DELAY", uint256(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
@@ -57,26 +57,27 @@ contract DeploySafeNativeRecoveryScript is BaseDeployScript {
 
         console.log("verifier %s", zkVerifier);
         if (zkVerifier == address(0)) {
-            zkVerifier = super.deployVerifier(initialOwner, salt);
+            zkVerifier = super.deployVerifier(initialOwner, create2Salt);
         }
 
         if (dkimRegistry == address(0)) {
-            dkimRegistry =
-                super.deployUserOverrideableDKIMRegistry(initialOwner, dkimSigner, dkimDelay, salt);
+            dkimRegistry = super.deployUserOverrideableDKIMRegistry(
+                initialOwner, dkimSigner, dkimDelay, create2Salt
+            );
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth{ salt: bytes32(salt) }());
+            emailAuthImpl = address(new EmailAuth{ salt: bytes32(create2Salt) }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         if (commandHandler == address(0)) {
-            commandHandler = address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
+            commandHandler = address(new SafeRecoveryCommandHandler{ salt: bytes32(create2Salt) }());
             console.log("Deployed Command Handler at", commandHandler);
         }
 
         module = address(
-            new SafeEmailRecoveryModule{ salt: bytes32(salt) }(
+            new SafeEmailRecoveryModule{ salt: bytes32(create2Salt) }(
                 zkVerifier,
                 dkimRegistry,
                 emailAuthImpl,

@@ -1,86 +1,92 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { DeploySafeNativeRecovery_Script } from "../DeploySafeNativeRecovery.s.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
 
-contract DeploySafeNativeRecovery_Test is BaseDeployTest {
-    /**
-     * @notice Tests the basic deployment and execution of the DeploySafeNativeRecovery script.
-     */
-    function test_run() public {
-        // Set up the base test environment
-        BaseDeployTest.setUp();
+contract DeploySafeNativeRecoveryTest is BaseDeployTest {
+    DeploySafeNativeRecoveryScript private target;
 
-        // Instantiate the script and run it
-        DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
+    function setUp() public override {
+        super.setUp();
+        target = new DeploySafeNativeRecoveryScript();
+    }
+
+    function test_RevertIf_NoPrivateKeyEnv() public {
+        super.setAllEnvVars();
+
+        vm.setEnv("PRIVATE_KEY", "");
+        vm.expectRevert(
+            "vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix (\"0x\") for hex string"
+        );
         target.run();
     }
 
-    /**
-     * @notice Tests the deployment and execution of the DeploySafeNativeRecovery script
-     *         without a verifier configured.
-     */
-    function test_run_no_verifier() public {
-        // Set up the base test environment
-        BaseDeployTest.setUp();
+    function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
+        super.setAllEnvVars();
 
-        // Disable the VERIFIER environment variable
-        vm.setEnv("ZK_VERIFIER", vm.toString(address(0)));
-
-        // Instantiate the script and run it
-        DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
+        vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
+        vm.expectRevert(
+            "vm.envAddress: failed parsing $KILL_SWITCH_AUTHORIZER as type `address`: parser error:\n$KILL_SWITCH_AUTHORIZER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+        );
         target.run();
     }
 
-    /**
-     * @notice Tests the deployment and execution of the DeploySafeNativeRecovery script
-     *         without a DKIM registry configured.
-     */
-    function test_run_no_dkim_registry() public {
-        // Set up the base test environment
-        BaseDeployTest.setUp();
+    function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
+        super.setAllEnvVars();
 
-        // Disable the DKIM_REGISTRY environment variable
-        vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
+        vm.setEnv("DKIM_REGISTRY", "");
+        vm.setEnv("DKIM_SIGNER", "");
 
-        // Instantiate the script and run it
-        DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
+        vm.expectRevert("DKIM_REGISTRY or DKIM_SIGNER is required");
         target.run();
     }
 
-    /**
-     * @notice Tests the deployment and execution of the DeploySafeNativeRecovery script
-     *         without a DKIM_SIGNER configured.
-     */
-    function test_run_no_signer() public {
-        // Set up the base test environment
-        BaseDeployTest.setUp();
+    function test_NoZkVerifierEnv() public {
+        super.setAllEnvVars();
 
-        // Disable the DKIM_SIGNER environment variable
-        vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
+        vm.setEnv("ZK_VERIFIER", "");
 
-        // Instantiate the script and run it
-        DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+
+        require(target.zkVerifier() != address(0), "zk verifier not deployed");
     }
-}
 
-contract DeploySafeNativeRecovery_TestFail is BaseDeployTest {
-    /**
-     * @notice Tests that the DeploySafeNativeRecovery script fails to run
-     *         when both DKIM registry and signer are not configured.
-     */
-    function testFail_run_no_dkim_registry_no_signer() public {
-        // Set up the base test environment
-        BaseDeployTest.setUp();
+    function test_NoDkimRegistryEnv() public {
+        super.setAllEnvVars();
 
-        // Disable the DKIM_REGISTRY and DKIM_SIGNER environment variables
-        vm.setEnv("DKIM_REGISTRY", vm.toString(address(0)));
-        vm.setEnv("DKIM_SIGNER", vm.toString(address(0)));
+        vm.setEnv("DKIM_REGISTRY", "");
 
-        // Instantiate the script and attempt to run it, expecting failure
-        DeploySafeNativeRecovery_Script target = new DeploySafeNativeRecovery_Script();
         target.run();
+
+        require(address(target.dkimRegistry()) != address(0), "dkim registry not deployed");
+    }
+
+    function test_NoEmailAuthImplEnv() public {
+        super.setAllEnvVars();
+
+        vm.setEnv("EMAIL_AUTH_IMPL", "");
+
+        target.run();
+
+        require(target.emailAuthImpl() != address(0), "email auth implementation not deployed");
+    }
+
+    function test_NoCommandHandlerEnv() public {
+        super.setAllEnvVars();
+
+        vm.setEnv("COMMAND_HANDLER", "");
+
+        target.run();
+
+        require(target.commandHandler() != address(0), "command handler not deployed");
+    }
+
+    function test_Deployment() public {
+        super.setAllEnvVars();
+
+        target.run();
+
+        require(target.module() != address(0), "module not deployed");
     }
 }
