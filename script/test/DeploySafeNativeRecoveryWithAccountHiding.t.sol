@@ -4,17 +4,36 @@ pragma solidity ^0.8.12;
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeNativeRecoveryWithAccountHidingScript } from
     "../DeploySafeNativeRecoveryWithAccountHiding.s.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
+import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     DeploySafeNativeRecoveryWithAccountHidingScript private target;
+    address private envZkVerifier;
+    address private envCommandHandler;
 
     function setUp() public override {
         super.setUp();
+        envZkVerifier = super.deployVerifier(envInitialOwner);
+        envCommandHandler = deployAccountHidingRecoveryCommandHandler(envCreate2Salt);
+
         target = new DeploySafeNativeRecoveryWithAccountHidingScript();
     }
 
-    function test_RevertIf_NoPrivateKeyEnv() public {
+    function setAllEnvVars() internal override {
         super.setAllEnvVars();
+
+        vm.setEnv("ZK_VERIFIER", vm.toString(envZkVerifier));
+        vm.setEnv("COMMAND_HANDLER", vm.toString(envCommandHandler));
+    }
+
+    function deployAccountHidingRecoveryCommandHandler(uint256 salt) internal returns (address) {
+        return address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
+    }
+
+    function test_RevertIf_NoPrivateKeyEnv() public {
+        setAllEnvVars();
 
         vm.setEnv("PRIVATE_KEY", "");
         vm.expectRevert(
@@ -24,7 +43,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
@@ -34,7 +53,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
@@ -44,7 +63,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_NoVerifierEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("VERIFIER", "");
 
@@ -54,7 +73,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_NoDkimRegistryEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("DKIM_REGISTRY", "");
 
@@ -64,7 +83,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_NoEmailAuthImplEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 
@@ -74,7 +93,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_NoCommandHandlerEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("COMMAND_HANDLER", "");
 
@@ -84,10 +103,23 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     }
 
     function test_Deployment() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
+
+        address expectedModuleAddress = computeAddress(
+            envCreate2Salt,
+            type(SafeEmailRecoveryModule).creationCode,
+            abi.encode(
+                envZkVerifier,
+                envDkimRegistry,
+                envEmailAuthImpl,
+                envCommandHandler,
+                envMinimumDelay,
+                envKillSwitchAuthorizer
+            )
+        );
 
         target.run();
 
-        require(target.module() != address(0), "module not deployed");
+        require(target.module() == expectedModuleAddress, "module not deployed to expected address");
     }
 }

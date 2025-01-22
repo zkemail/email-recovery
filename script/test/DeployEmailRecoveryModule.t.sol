@@ -4,17 +4,21 @@ pragma solidity ^0.8.12;
 import { Vm } from "forge-std/Vm.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeployEmailRecoveryModuleScript } from "../DeployEmailRecoveryModule.s.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 
 contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     DeployEmailRecoveryModuleScript private target;
 
     function setUp() public override {
         super.setUp();
+        envRecoveryFactory = super.deployRecoveryFactory();
+
         target = new DeployEmailRecoveryModuleScript();
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("PRIVATE_KEY", "");
         vm.expectRevert(
@@ -24,7 +28,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
@@ -34,7 +38,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
@@ -44,7 +48,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_NoVerifierEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("VERIFIER", "");
 
@@ -54,7 +58,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_NoDkimRegistryEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("DKIM_REGISTRY", "");
 
@@ -64,7 +68,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_NoEmailAuthImplEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 
@@ -74,7 +78,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_NoValidatorEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("VALIDATOR", "");
 
@@ -84,7 +88,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     }
 
     function test_NoRecoveryFactoryEnv() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.setEnv("RECOVERY_FACTORY", "");
 
@@ -93,24 +97,54 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
         require(target.recoveryFactory() != address(0), "recovery factory not deployed");
     }
 
-    function test_Deployment() public {
-        super.setAllEnvVars();
-
-        vm.recordLogs();
-        target.run();
-
-        require(target.emailRecoveryModule() != address(0), "email recovery module not deployed");
-        require(target.emailRecoveryHandler() != address(0), "email recovery handler not deployed");
-    }
-
     function test_DeploymentEvent() public {
-        super.setAllEnvVars();
+        setAllEnvVars();
 
         vm.recordLogs();
         target.run();
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 sigHash = keccak256("EmailRecoveryModuleDeployed(address,address,address,bytes4)");
-        assertTrue(super.findEvent(entries, sigHash), "deploy event not emitted");
+        assertTrue(findEvent(entries, sigHash), "deploy event not emitted");
+    }
+
+    function test_Deployment() public {
+        setAllEnvVars();
+
+        uint256 commandHandlerSalt = 0;
+        address expectedCommandHandler = computeAddress(
+            commandHandlerSalt,
+            type(EmailRecoveryCommandHandler).creationCode,
+            "",
+            envRecoveryFactory
+        );
+
+        uint256 recoveryModuleSalt = 0;
+        address expectedRecoveryModule = computeAddress(
+            recoveryModuleSalt,
+            type(EmailRecoveryModule).creationCode,
+            abi.encode(
+                envVerifier,
+                envDkimRegistry,
+                envEmailAuthImpl,
+                expectedCommandHandler,
+                envMinimumDelay,
+                envKillSwitchAuthorizer,
+                envValidator,
+                bytes4(keccak256(bytes("changeOwner(address)")))
+            ),
+            envRecoveryFactory
+        );
+
+        target.run();
+
+        require(
+            target.emailRecoveryHandler() == expectedCommandHandler,
+            "email recovery handler not deployed to expected address"
+        );
+        require(
+            target.emailRecoveryModule() == expectedRecoveryModule,
+            "email recovery module not deployed to expected address"
+        );
     }
 }

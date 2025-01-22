@@ -6,28 +6,32 @@ pragma solidity ^0.8.12;
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
 import { Vm } from "forge-std/Vm.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 abstract contract BaseDeployTest is Test {
-    uint256 private envPrivateKey;
-    address private envInitialOwner;
-    address private envVerifier;
-    address private envDkimSigner;
-    address private envDkimRegistry;
-    uint256 private envMinimumDelay;
-    address private envKillSwitchAuthorizer;
-    address private envEmailAuthImpl;
-    address private envNewOwner;
-    address private envValidator;
-    uint256 private envCreate2Salt;
-    address private envRecoveryFactory;
+    address internal constant CREATE2_DEPLOYER_ADDRESS = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+
+    uint256 internal envPrivateKey;
+    address internal envInitialOwner;
+    address internal envVerifier;
+    address internal envDkimSigner;
+    address internal envDkimRegistry;
+    uint256 internal envMinimumDelay;
+    address internal envKillSwitchAuthorizer;
+    address internal envEmailAuthImpl;
+    address internal envNewOwner;
+    address internal envValidator;
+    uint256 internal envCreate2Salt;
+    address internal envRecoveryFactory;
 
     /**
      * @dev Deploys needed contracts and sets environment vars.
@@ -63,7 +67,7 @@ abstract contract BaseDeployTest is Test {
      * of the one set in the setUp() function. For more details, see the closed GitHub issue:
      * https://github.com/foundry-rs/foundry/issues/2349
      */
-    function setAllEnvVars() internal {
+    function setAllEnvVars() internal virtual {
         vm.setEnv("PRIVATE_KEY", vm.toString(envPrivateKey));
         vm.setEnv("VERIFIER", vm.toString(envVerifier));
         vm.setEnv("DKIM_SIGNER", vm.toString(envDkimSigner));
@@ -90,6 +94,32 @@ abstract contract BaseDeployTest is Test {
             }
         }
         return false;
+    }
+
+    function computeAddress(
+        uint256 salt,
+        bytes memory bytecode,
+        bytes memory constructorArgs,
+        address deployer
+    )
+        internal
+        pure
+        returns (address)
+    {
+        bytes memory fullBytecode = abi.encodePacked(bytecode, constructorArgs);
+        return Create2.computeAddress(bytes32(salt), keccak256(fullBytecode), deployer);
+    }
+
+    function computeAddress(
+        uint256 salt,
+        bytes memory bytecode,
+        bytes memory constructorArgs
+    )
+        internal
+        pure
+        returns (address)
+    {
+        return computeAddress(salt, bytecode, constructorArgs, CREATE2_DEPLOYER_ADDRESS);
     }
 
     /**
@@ -127,5 +157,18 @@ abstract contract BaseDeployTest is Test {
             abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
         );
         return address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
+    }
+
+    function deployRecoveryFactory() internal returns (address) {
+        EmailRecoveryFactory recoveryFactory =
+            new EmailRecoveryFactory{ salt: bytes32(envCreate2Salt) }(envVerifier, envEmailAuthImpl);
+        return address(recoveryFactory);
+    }
+
+    function deployRecoveryUniversalFactory() internal returns (address) {
+        EmailRecoveryUniversalFactory recoveryFactory = new EmailRecoveryUniversalFactory{
+            salt: bytes32(envCreate2Salt)
+        }(envVerifier, envEmailAuthImpl);
+        return address(recoveryFactory);
     }
 }
