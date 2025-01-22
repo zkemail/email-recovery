@@ -3,16 +3,26 @@ pragma solidity ^0.8.25;
 
 /* solhint-disable no-console */
 
-import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
+import { Script } from "forge-std/Script.sol";
 
 contract ComputeSafeRecoveryCalldataScript is Script {
-    function run() public view {
-        address oldOwner = vm.envAddress("OLD_OWNER");
-        address newOwner = vm.envAddress("NEW_OWNER");
-        address previousOwnerInLinkedList = address(1);
+    address private oldOwner;
+    address private newOwner;
 
-        bytes memory recoveryCalldata = abi.encodeWithSignature(
+    bytes public recoveryCalldata;
+
+    function loadEnvVars() public {
+        // revert if these are not set
+        oldOwner = vm.envAddress("OLD_OWNER");
+        newOwner = vm.envAddress("NEW_OWNER");
+    }
+
+    function run() public {
+        loadEnvVars();
+
+        address previousOwnerInLinkedList = address(1);
+        recoveryCalldata = abi.encodeWithSignature(
             "swapOwner(address,address,address)", previousOwnerInLinkedList, oldOwner, newOwner
         );
 

@@ -3,12 +3,12 @@ pragma solidity ^0.8.25;
 
 /* solhint-disable no-console, gas-custom-errors */
 
-import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
-import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { Script } from "forge-std/Script.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 contract BaseDeployScript is Script {
     function run() public virtual { }
@@ -55,7 +55,7 @@ contract BaseDeployScript is Script {
             )
         );
         address dkim = address(dkimProxy);
-        console.log("UseroverrideableDKIMRegistry proxy deployed at: %s", dkim);
+        console.log("UserOverrideableDKIMRegistry proxy deployed at: %s", dkim);
         return dkim;
     }
 }
