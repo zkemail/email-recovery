@@ -5,9 +5,15 @@ import { Test } from "forge-std/Test.sol";
 import { Compute7579RecoveryDataHashScript } from "../Compute7579RecoveryDataHash.s.sol";
 
 contract Compute7579RecoveryDataHashTest is Test {
+    address envNewOwner;
+    address envValidator;
+
     Compute7579RecoveryDataHashScript private target;
 
     function setUp() public {
+        envNewOwner = vm.addr(1234);
+        envValidator = vm.addr(5678);
+
         target = new Compute7579RecoveryDataHashScript();
     }
 
@@ -22,8 +28,8 @@ contract Compute7579RecoveryDataHashTest is Test {
      * https://github.com/foundry-rs/foundry/issues/2349
      */
     function setEnvVars() private {
-        vm.setEnv("VALIDATOR", vm.toString(vm.addr(1234)));
-        vm.setEnv("NEW_OWNER", vm.toString(vm.addr(5678)));
+        vm.setEnv("VALIDATOR", vm.toString(envValidator));
+        vm.setEnv("NEW_OWNER", vm.toString(envNewOwner));
     }
 
     function test_RevertIf_NoValidatorEnv() public {
@@ -51,12 +57,14 @@ contract Compute7579RecoveryDataHashTest is Test {
     function test_SuccessfulComputation() public {
         setEnvVars();
 
+        bytes memory changeOwnerCalldata =
+            abi.encodeWithSelector(bytes4(keccak256("changeOwner(address)")), envNewOwner);
+        bytes memory expectedData = abi.encode(envValidator, changeOwnerCalldata);
+        bytes32 expectedHash = keccak256(expectedData);
+
         target.run();
 
-        bytes memory recoveryData = target.recoveryData();
-        bytes32 recoveryDataHash = target.recoveryDataHash();
-
-        require(recoveryData.length > 0, "recoveryData should not be empty");
-        require(recoveryDataHash != 0, "recoveryDataHash should not be 0");
+        require(keccak256(target.recoveryData()) == expectedHash, "Unexpected recoveryData");
+        require(target.recoveryDataHash() == expectedHash, "Unexpected recoveryDataHash");
     }
 }

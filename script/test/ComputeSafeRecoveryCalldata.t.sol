@@ -6,9 +6,15 @@ import { ComputeSafeRecoveryCalldataScript } from "../ComputeSafeRecoveryCalldat
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 
 contract ComputeSafeRecoveryCalldataTest is Test {
+    address envOldOwner;
+    address envNewOwner;
+
     ComputeSafeRecoveryCalldataScript private target;
 
     function setUp() public {
+        envOldOwner = vm.addr(1234);
+        envNewOwner = vm.addr(5678);
+
         target = new ComputeSafeRecoveryCalldataScript();
     }
 
@@ -23,8 +29,8 @@ contract ComputeSafeRecoveryCalldataTest is Test {
      * https://github.com/foundry-rs/foundry/issues/2349
      */
     function setEnvVars() public {
-        vm.setEnv("OLD_OWNER", vm.toString(vm.addr(1234)));
-        vm.setEnv("NEW_OWNER", vm.toString(vm.addr(5678)));
+        vm.setEnv("OLD_OWNER", vm.toString(envOldOwner));
+        vm.setEnv("NEW_OWNER", vm.toString(envNewOwner));
     }
 
     function test_RevertIf_NoOldOwnerEnv() public {
@@ -52,10 +58,17 @@ contract ComputeSafeRecoveryCalldataTest is Test {
     function test_SuccessfulComputation() public {
         setEnvVars();
 
+        address previousOwnerInLinkedList = address(1);
+        bytes memory expectedCalldata = abi.encodeWithSignature(
+            "swapOwner(address,address,address)",
+            previousOwnerInLinkedList,
+            envOldOwner,
+            envNewOwner
+        );
+        bytes32 expectedHash = keccak256(expectedCalldata);
+
         target.run();
 
-        bytes memory recoveryCalldata = target.recoveryCalldata();
-
-        require(recoveryCalldata.length > 0, "recoveryCalldata should not be empty");
+        require(keccak256(target.recoveryCalldata()) == expectedHash, "Unexpected recoveryCalldata");
     }
 }
