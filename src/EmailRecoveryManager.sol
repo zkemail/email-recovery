@@ -359,6 +359,7 @@ abstract contract EmailRecoveryManager is
         bytes32 /* nullifier */
     )
         internal
+        virtual
         override
         onlyWhenActive
     {
@@ -408,6 +409,7 @@ abstract contract EmailRecoveryManager is
         bytes32 /* nullifier */
     )
         internal
+        virtual
         override
         onlyWhenActive
     {
