@@ -33,7 +33,32 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     bytes4 public immutable selector;
 
+    /**
+     * Deployment timestamp
+     */
+    uint256 public immutable deploymentTimestamp;
+
+    /**
+     * Account address to initiate transactions
+     */
+    mapping(address account => bool isInitiator) internal transactionInitiators;
+
     event RecoveryExecuted(address indexed account, address indexed validator);
+
+    /**
+     * @notice Modifier to check if the caller is an initiator
+     */
+    modifier isInitiator() {
+        bool isOpenToAll = transactionInitiators[address(0)]
+            || block.timestamp >= deploymentTimestamp + 6 * 30 days;
+
+        if (!isOpenToAll) {
+            require(
+                transactionInitiators[msg.sender], "Only allowed accounts can call this function"
+            );
+        }
+        _;
+    }
 
     error InvalidSelector(bytes4 selector);
     error InvalidOnInstallData();
@@ -125,6 +150,14 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     }
 
     /**
+     * @notice Sets the transaction initiator status for an account
+     * @dev Can only be called by the kill switch authorizer
+     */
+    function setTransactionInitiator(address account, bool canInitiate) external onlyOwner {
+        transactionInitiators[account] = canInitiate;
+    }
+
+    /**
      * @notice Check if the module is initialized
      * @param account The smart account to check
      * @return bool True if the module is initialized, false otherwise
@@ -200,5 +233,54 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      */
     function isModuleType(uint256 typeID) external pure returns (bool) {
         return typeID == TYPE_EXECUTOR;
+    }
+
+    /**
+     * @notice Accepts a guardian for the specified account. This is the second core function
+     * that must be called during the end-to-end recovery flow
+     * @dev Called once per guardian added. Although this adds an extra step to recovery, this
+     * acceptance flow is an important security feature to ensure that no typos are made when adding
+     * a guardian, and that the guardian is in control of the specified email address. Called as
+     * part of handleAcceptance in EmailAccountRecovery
+     * @param guardian The address of the guardian to be accepted
+     * @param templateIdx The index of the template used for acceptance
+     * @param commandParams An array of bytes containing the command parameters
+     * @param nullifier The unique identifier for an email (unused in this implementation)
+     */
+    function acceptGuardian(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier
+    )
+        internal
+        override(EmailRecoveryManager)
+        onlyWhenActive
+        isInitiator
+    {
+        super.acceptGuardian(guardian, templateIdx, commandParams, nullifier);
+    }
+
+    /**
+     * @notice Processes a recovery request for a given account. This is the third core function
+     * that must be called during the end-to-end recovery flow
+     * @dev Called once per guardian until the threshold is reached
+     * @param guardian The address of the guardian initiating/voting on the recovery request
+     * @param templateIdx The index of the template used for the recovery request
+     * @param commandParams An array of bytes containing the command parameters
+     * @param nullifier The unique identifier for an email (unused in this implementation)
+     */
+    function processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier
+    )
+        internal
+        override(EmailRecoveryManager)
+        onlyWhenActive
+        isInitiator
+    {
+        super.processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
 }
