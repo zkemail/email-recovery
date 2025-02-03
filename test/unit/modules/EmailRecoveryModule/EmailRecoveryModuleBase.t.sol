@@ -100,6 +100,9 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
         // vm.stopPrank();
         // vm.warp(block.timestamp + 15_768_000); // 6 months
 
+        // // 5- verify that only the killSwitchAuthorizer can set the transaction initiator
+        // emailRecoveryModule.setTransactionInitiator(address(this), true);
+
         if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
             AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
                 accountAddress1
