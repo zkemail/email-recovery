@@ -61,7 +61,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(guardianStorage2.weight, uint256(2));
 
         // Time travel so that EmailAuth timestamp is valid
-        vm.warp(12 seconds);
+        vm.warp(block.timestamp + 12 seconds);
         // handle recovery request for guardian 1
         handleRecovery(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
@@ -128,7 +128,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardianWithAccountSalt(
             accountAddress2, guardians1[1], emailRecoveryModuleAddress, accountSalt2
         );
-        vm.warp(12 seconds);
+        vm.warp(block.timestamp + 12 seconds);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
             accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
@@ -217,7 +217,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
-        vm.warp(12 seconds);
+        vm.warp(block.timestamp + 12 seconds);
 
         EmailAuthMsg memory emailAuthMsg = getRecoveryEmailAuthMessage(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
@@ -234,7 +234,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
-        vm.warp(12 seconds);
+        vm.warp(block.timestamp + 12 seconds);
         handleRecovery(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
         );
@@ -251,7 +251,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
         acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
-        vm.warp(12 seconds);
+        vm.warp(block.timestamp + 12 seconds);
         handleRecovery(
             accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
         );
