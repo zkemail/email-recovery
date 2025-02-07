@@ -105,6 +105,9 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
 
         validator = _validator;
         selector = _selector;
+
+
+        deploymentTimestamp = block.timestamp;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
