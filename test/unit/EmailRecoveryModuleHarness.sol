@@ -36,4 +36,15 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
     function exposed_acceptGuardian(address guardian, uint256 templateIdx, bytes[] memory commandParams, bytes32 nullifier) external {
         acceptGuardian(guardian, templateIdx, commandParams, nullifier);
     }
+
+    function exposed_processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier
+    )
+        external
+    {
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
+    }
 }
