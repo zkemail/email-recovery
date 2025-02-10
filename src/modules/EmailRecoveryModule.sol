@@ -256,7 +256,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     )
         internal
         override(EmailRecoveryManager)
-        onlyWhenActive
         isInitiator
     {
         super.acceptGuardian(guardian, templateIdx, commandParams, nullifier);
@@ -279,7 +278,6 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     )
         internal
         override(EmailRecoveryManager)
-        onlyWhenActive
         isInitiator
     {
         super.processRecovery(guardian, templateIdx, commandParams, nullifier);
