@@ -12,7 +12,7 @@ import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol"
 import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "src/libraries/EnumerableGuardianMap.sol";
 
-import { CommandHandlerType } from "../../../Base.t.sol";
+import { CommandHandlerType, IEmailRecoveryModule } from "../../../Base.t.sol";
 import { OwnableValidatorRecovery_EmailRecoveryModule_Base } from "./EmailRecoveryModuleBase.t.sol";
 
 contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
@@ -20,6 +20,10 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 {
     using ModuleKitHelpers for *;
     using Strings for uint256;
+
+    address owner = vm.addr(2);
+    address approvedAccount = address(0x2);
+    address unapprovedAccount = address(0x3);
 
     // Helper function
     function executeRecoveryFlowForAccount(
@@ -392,5 +396,275 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
             module: emailRecoveryModuleAddress,
             data: abi.encode(isInstalledContext, guardians1, guardianWeights, threshold, delay, expiry)
         });
+    }
+
+    function test_RevertsWhenUnapprovedAccountCannotStartRecovery() public {
+        vm.startPrank(unapprovedAccount);
+        // Using getAcceptanceEmailAuthMessage and handleAcceptance directly instead of
+        // acceptGuardian
+        // because we need to test the revert behavior
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
+            accountAddress1, guardians1[0], emailRecoveryModuleAddress
+        );
+        vm.expectRevert("Only allowed accounts can call this function");
+        IEmailRecoveryModule(emailRecoveryModuleAddress).handleAcceptance(emailAuthMsg, templateIdx);
+        vm.stopPrank();
+    }
+
+    function test_CanStartRecoveryAfter6Months() public {
+        vm.warp(emailRecoveryModule.deploymentTimestamp() + 6 * 30 days);
+        vm.startPrank(unapprovedAccount);
+
+        // Accept guardian 1
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+        GuardianStorage memory guardianStorage1 =
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[0]);
+        assertEq(uint256(guardianStorage1.status), uint256(GuardianStatus.ACCEPTED));
+        assertEq(guardianStorage1.weight, uint256(1));
+
+        // Accept guardian 2
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+        GuardianStorage memory guardianStorage2 =
+            emailRecoveryModule.getGuardian(accountAddress1, guardians1[1]);
+        assertEq(uint256(guardianStorage2.status), uint256(GuardianStatus.ACCEPTED));
+        assertEq(guardianStorage2.weight, uint256(2));
+
+        // Time travel so that EmailAuth timestamp is valid
+        vm.warp(block.timestamp + 12 seconds);
+
+        // handle recovery request for guardian 1
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        uint256 executeBefore = block.timestamp + expiry;
+        (
+            uint256 _executeAfter,
+            uint256 _executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 1);
+        assertEq(recoveryDataHash, recoveryDataHash1);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, false);
+
+        // handle recovery request for guardian 2
+        uint256 executeAfter = block.timestamp + delay;
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        (_executeAfter, _executeBefore, currentWeight, recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        assertEq(_executeAfter, executeAfter);
+        assertEq(_executeBefore, executeBefore);
+        assertEq(currentWeight, 3);
+        assertEq(recoveryDataHash, recoveryDataHash1);
+        assertEq(hasGuardian1Voted, true);
+        assertEq(hasGuardian2Voted, true);
+
+        // Time travel so that the recovery delay has passed
+        vm.warp(block.timestamp + delay);
+
+        // Complete recovery
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+
+        (_executeAfter, _executeBefore, currentWeight, recoveryDataHash) =
+            emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        hasGuardian1Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        hasGuardian2Voted = emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        address updatedOwner = validator.owners(accountAddress1);
+
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(updatedOwner, newOwner1);
+
+        vm.stopPrank();
+    }
+
+    function test_RevokedPermissionPreventsFurtherActions() public {
+        // Set approvedAccount as the transaction initiator
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
+
+        // Execute Accept guardian 1 and as the approvedAccount
+        vm.prank(approvedAccount);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+
+        // Disable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
+
+        // Fail to execute Accept guardian 2 as the approvedAccount
+        vm.startPrank(approvedAccount);
+        // Using getAcceptanceEmailAuthMessage and handleAcceptance directly instead of
+        // acceptGuardian
+        // because we need to test the revert behavior
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
+            accountAddress1, guardians1[1], emailRecoveryModuleAddress
+        );
+        vm.expectRevert("Only allowed accounts can call this function");
+        IEmailRecoveryModule(emailRecoveryModuleAddress).handleAcceptance(emailAuthMsg, templateIdx);
+        vm.stopPrank();
+
+        // Enable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
+
+        // Execute Accept guardian 2 as the approvedAccount
+        vm.prank(approvedAccount);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        // Execute handle recovery request for guardian 1 as the approvedAccount
+        vm.startPrank(approvedAccount);
+        // Time travel so that EmailAuth timestamp is valid
+        vm.warp(block.timestamp + 12 seconds);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        vm.stopPrank();
+
+        // Disable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
+
+        // Fail to execute handle recovery request for guardian 2 as the approvedAccount
+        vm.startPrank(approvedAccount);
+        // Using getRecoveryEmailAuthMessage and handleRecovery directly instead of handleRecovery
+        // because we need to test the revert behavior
+        emailAuthMsg = getRecoveryEmailAuthMessage(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        vm.expectRevert("Only allowed accounts can call this function");
+        IEmailRecoveryModule(emailRecoveryModuleAddress).handleRecovery(emailAuthMsg, templateIdx);
+        vm.stopPrank();
+
+        // Enable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
+
+        // Execute handle recovery request for guardian 2 as the approvedAccount
+        vm.startPrank(approvedAccount);
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+        vm.stopPrank();
+
+        // Time travel so that the recovery delay has passed
+        vm.warp(block.timestamp + delay);
+
+        // Complete recovery
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+
+        (
+            uint256 _executeAfter,
+            uint256 _executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        address updatedOwner = validator.owners(accountAddress1);
+
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(updatedOwner, newOwner1);
+
+        vm.stopPrank();
+    }
+
+    function test_RevokedPermissionPreventsFurtherActions_WithNewApprovedAccount() public {
+        // Set approvedAccount as the transaction initiator
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
+
+        // Execute Accept guardian 1 and as the approvedAccount
+        vm.prank(approvedAccount);
+        acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
+
+        // Disable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
+
+        // Fail to execute Accept guardian 2 as the approvedAccount
+        vm.startPrank(approvedAccount);
+        // Using getAcceptanceEmailAuthMessage and handleAcceptance directly instead of
+        // acceptGuardian
+        // because we need to test the revert behavior
+        EmailAuthMsg memory emailAuthMsg = getAcceptanceEmailAuthMessage(
+            accountAddress1, guardians1[1], emailRecoveryModuleAddress
+        );
+        vm.expectRevert("Only allowed accounts can call this function");
+        IEmailRecoveryModule(emailRecoveryModuleAddress).handleAcceptance(emailAuthMsg, templateIdx);
+        vm.stopPrank();
+
+        address aNewApprovedAccount = address(0x4);
+        // Enable the approvedAccount's permission
+        vm.prank(owner);
+        emailRecoveryModule.setTransactionInitiator(aNewApprovedAccount, true);
+
+        // Execute Accept guardian 2 as the approvedAccount
+        vm.prank(aNewApprovedAccount);
+        acceptGuardian(accountAddress1, guardians1[1], emailRecoveryModuleAddress);
+
+        // Time travel so that EmailAuth timestamp is valid
+        vm.warp(block.timestamp + 12 seconds);
+
+        // Execute handle recovery request for guardian 1 as the approvedAccount
+        vm.prank(aNewApprovedAccount);
+        handleRecovery(
+            accountAddress1, guardians1[0], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+
+        // Execute handle recovery request for guardian 2 as the approvedAccount
+        vm.prank(aNewApprovedAccount);
+        handleRecovery(
+            accountAddress1, guardians1[1], recoveryDataHash1, emailRecoveryModuleAddress
+        );
+
+        // Time travel so that the recovery delay has passed
+        vm.warp(block.timestamp + delay);
+
+        // Complete recovery
+        emailRecoveryModule.completeRecovery(accountAddress1, recoveryData1);
+
+        (
+            uint256 _executeAfter,
+            uint256 _executeBefore,
+            uint256 currentWeight,
+            bytes32 recoveryDataHash
+        ) = emailRecoveryModule.getRecoveryRequest(accountAddress1);
+        bool hasGuardian1Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[0]);
+        bool hasGuardian2Voted =
+            emailRecoveryModule.hasGuardianVoted(accountAddress1, guardians1[1]);
+        address updatedOwner = validator.owners(accountAddress1);
+
+        assertEq(_executeAfter, 0);
+        assertEq(_executeBefore, 0);
+        assertEq(currentWeight, 0);
+        assertEq(recoveryDataHash, bytes32(0));
+        assertEq(hasGuardian1Voted, false);
+        assertEq(hasGuardian2Voted, false);
+        assertEq(updatedOwner, newOwner1);
+
+        vm.stopPrank();
     }
 }
