@@ -75,37 +75,9 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 
-        // 0- verify that existing tests have failed
-        // (Expect 15 tests to fail under this condition.)
-
-        // // 1- verify that setting the transaction initiator flag to true works as expected.
-        // vm.startPrank(killSwitchAuthorizer);
-        // emailRecoveryModule.setTransactionInitiator(address(this), true);
-        // vm.stopPrank();
-
-        // // 2- confirm that the functionality works correctly after 6 months has passed.
-        // vm.warp(block.timestamp + 15_768_000); // 6 months
-
-        // // 3- test the scenario where the transaction initiator flag is initially set to true, then changed to false.
-        // // (Expect 15 tests to fail under this condition.)
-        // vm.startPrank(killSwitchAuthorizer);
-        // emailRecoveryModule.setTransactionInitiator(address(this), false);
-        // vm.stopPrank();
-
-        // // 4- validate the behavior when the transaction initiator flag is set to true first, then changed to false,
-        // // and the contract is working after a waiting period of 6 months.
-        // vm.startPrank(killSwitchAuthorizer);
-        // emailRecoveryModule.setTransactionInitiator(address(this), true);
-        // emailRecoveryModule.setTransactionInitiator(address(this), false);
-        // vm.stopPrank();
-        // vm.warp(block.timestamp + 15_768_000); // 6 months
-
-        // // 5- verify that only the killSwitchAuthorizer can set the transaction initiator
-        // emailRecoveryModule.setTransactionInitiator(address(this), true);
-
-        // // 6- confirm that it does not work before 6 months when the transaction initiator flag is not true
-        // // (Expect 15 tests to fail under this condition.)
-        // vm.warp(block.timestamp + 7_884_000); // 3 months
+        vm.startPrank(killSwitchAuthorizer);
+        emailRecoveryModule.setTransactionInitiator(address(this), true);
+        vm.stopPrank();
 
         if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
             AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
