@@ -9,7 +9,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 contract EmailRecoveryModule_setTransactionInitiator_Test is EmailRecoveryModuleBase {
     using ModuleKitHelpers for *;
 
-    address owner = vm.addr(2);
     address nonOwner = address(0x2);
     address testAccount = address(0x3);
 
@@ -22,32 +21,36 @@ contract EmailRecoveryModule_setTransactionInitiator_Test is EmailRecoveryModule
         vm.expectRevert(
             abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner)
         );
-        emailRecoveryModule.setTransactionInitiator(owner, true);
+        emailRecoveryModule.setTransactionInitiator(killSwitchAuthorizer, true);
     }
 
     function test_SetsNonZeroAddressToTrue() public {
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(testAccount, true);
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(testAccount), true);
     }
 
     function test_SetsNonZeroAddressToFalseAfterTrue() public {
-        vm.startPrank(owner);
+        vm.startPrank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(testAccount, true);
-
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(testAccount), true);
         emailRecoveryModule.setTransactionInitiator(testAccount, false);
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(testAccount), false);
         vm.stopPrank();
     }
 
     function test_SetsZeroAddressToTrue() public {
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(address(0), true);
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(address(0)), true);
     }
 
     function test_SetsZeroAddressToFalseAfterTrue() public {
-        vm.startPrank(owner);
+        vm.startPrank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(address(0), true);
-
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(address(0)), true);
         emailRecoveryModule.setTransactionInitiator(address(0), false);
+        vm.assertEq(emailRecoveryModule.exposed_getTransactionInitiator(address(0)), false);
         vm.stopPrank();
     }
 }

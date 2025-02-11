@@ -47,4 +47,8 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
     {
         processRecovery(guardian, templateIdx, commandParams, nullifier);
     }
+
+    function exposed_getTransactionInitiator(address account) external view returns (bool) {
+        return transactionInitiators[account];
+    }
 }
