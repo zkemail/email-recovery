@@ -55,6 +55,8 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
         vm.startBroadcast(privateKey);
 
         address initialOwner = vm.addr(privateKey);
+        bytes32 commandHandlerSalt = bytes32(create2Salt);
+        bytes32 recoveryModuleSalt = bytes32(create2Salt);
 
         if (verifier == address(0)) {
             verifier = deployVerifier(initialOwner, create2Salt);
@@ -81,8 +83,8 @@ contract DeployUniversalEmailRecoveryModuleScript is BaseDeployScript {
 
         EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(recoveryFactory);
         (emailRecoveryModule, emailRecoveryHandler) = factory.deployUniversalEmailRecoveryModule(
-            bytes32(uint256(0)),
-            bytes32(uint256(0)),
+            commandHandlerSalt,
+            recoveryModuleSalt,
             type(EmailRecoveryCommandHandler).creationCode,
             minimumDelay,
             killSwitchAuthorizer,

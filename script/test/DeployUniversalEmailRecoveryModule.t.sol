@@ -81,7 +81,7 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
     function test_Deployment() public {
         setAllEnvVars();
 
-        uint256 commandHandlerSalt = 0;
+        uint256 commandHandlerSalt = envCreate2Salt;
         address expectedCommandHandler = computeAddress(
             commandHandlerSalt,
             type(EmailRecoveryCommandHandler).creationCode,
@@ -89,7 +89,7 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
             envRecoveryFactory
         );
 
-        uint256 recoveryModuleSalt = 0;
+        uint256 recoveryModuleSalt = envCreate2Salt;
         address expectedRecoveryModule = computeAddress(
             recoveryModuleSalt,
             type(UniversalEmailRecoveryModule).creationCode,
