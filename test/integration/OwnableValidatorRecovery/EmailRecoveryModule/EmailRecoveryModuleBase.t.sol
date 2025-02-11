@@ -120,6 +120,10 @@ abstract contract OwnableValidatorRecovery_EmailRecoveryModule_Base is BaseTest 
         );
         emailRecoveryModule = EmailRecoveryModule(emailRecoveryModuleAddress);
 
+        vm.startPrank(killSwitchAuthorizer);
+        emailRecoveryModule.setTransactionInitiator(address(this), true);
+        vm.stopPrank();
+
         if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
             AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
                 accountAddress1

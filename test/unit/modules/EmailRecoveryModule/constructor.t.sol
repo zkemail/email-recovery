@@ -150,5 +150,6 @@ contract EmailRecoveryModule_constructor_Test is EmailRecoveryModuleBase {
 
         assertEq(validatorAddress, emailRecoveryModule.validator());
         assertEq(functionSelector, emailRecoveryModule.selector());
+        assertEq(block.timestamp, emailRecoveryModule.deploymentTimestamp());
     }
 }

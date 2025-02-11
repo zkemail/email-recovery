@@ -75,6 +75,10 @@ abstract contract EmailRecoveryModuleBase is BaseTest {
         );
         emailRecoveryModuleAddress = address(emailRecoveryModule);
 
+        vm.startPrank(killSwitchAuthorizer);
+        emailRecoveryModule.setTransactionInitiator(address(this), true);
+        vm.stopPrank();
+
         if (getCommandHandlerType() == CommandHandlerType.AccountHidingRecoveryCommandHandler) {
             AccountHidingRecoveryCommandHandler(commandHandlerAddress).storeAccountHash(
                 accountAddress1

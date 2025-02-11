@@ -32,4 +32,23 @@ contract EmailRecoveryModuleHarness is EmailRecoveryModule {
     function exposed_recover(address account, bytes calldata recoveryData) external {
         recover(account, recoveryData);
     }
+
+    function exposed_acceptGuardian(address guardian, uint256 templateIdx, bytes[] memory commandParams, bytes32 nullifier) external {
+        acceptGuardian(guardian, templateIdx, commandParams, nullifier);
+    }
+
+    function exposed_processRecovery(
+        address guardian,
+        uint256 templateIdx,
+        bytes[] memory commandParams,
+        bytes32 nullifier
+    )
+        external
+    {
+        processRecovery(guardian, templateIdx, commandParams, nullifier);
+    }
+
+    function exposed_getTransactionInitiator(address account) external view returns (bool) {
+        return transactionInitiators[account];
+    }
 }
