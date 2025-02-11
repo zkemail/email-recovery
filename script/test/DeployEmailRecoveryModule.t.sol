@@ -61,9 +61,9 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
 
         address validator = computeAddress(envCreate2Salt, type(OwnableValidator).creationCode, "");
 
-        require(!isContractDeployed(validator), "validator should not be deployed yet");
+        assert(!isContractDeployed(validator));
         target.run();
-        require(isContractDeployed(validator), "validator should be deployed");
+        assert(isContractDeployed(validator));
     }
 
     function test_NoRecoveryFactoryEnv() public {
@@ -76,9 +76,9 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
             abi.encode(envVerifier, envEmailAuthImpl)
         );
 
-        require(!isContractDeployed(recoveryFactory), "recovery factory should not be deployed yet");
+        assert(!isContractDeployed(recoveryFactory));
         target.run();
-        require(isContractDeployed(recoveryFactory), "recovery factory should be deployed");
+        assert(isContractDeployed(recoveryFactory));
     }
 
     function test_DeploymentEvent() public {
@@ -115,13 +115,13 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
             envRecoveryFactory
         );
 
-        require(!isContractDeployed(expectedCommandHandler), "handler should not be deployed yet");
-        require(!isContractDeployed(expectedRecoveryModule), "module should not be deployed yet");
+        assert(!isContractDeployed(expectedCommandHandler));
+        assert(!isContractDeployed(expectedRecoveryModule));
         target.run();
-        require(isContractDeployed(expectedCommandHandler), "handler should be deployed");
-        require(isContractDeployed(expectedRecoveryModule), "module should be deployed");
+        assert(isContractDeployed(expectedCommandHandler));
+        assert(isContractDeployed(expectedRecoveryModule));
         // also checking returned addresses
-        require(target.emailRecoveryHandler() == expectedCommandHandler, "handler address mismatch");
-        require(target.emailRecoveryModule() == expectedRecoveryModule, "module address mismatch");
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler);
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule);
     }
 }

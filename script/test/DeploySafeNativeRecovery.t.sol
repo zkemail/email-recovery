@@ -67,9 +67,9 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
         address handler =
             computeAddress(envCreate2Salt, type(SafeRecoveryCommandHandler).creationCode, "");
 
-        require(!isContractDeployed(handler), "handler should not be deployed yet");
+        assert(!isContractDeployed(handler));
         target.run();
-        require(isContractDeployed(handler), "handler should be deployed");
+        assert(isContractDeployed(handler));
     }
 
     function test_Deployment() public {
@@ -88,10 +88,10 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
             )
         );
 
-        require(!isContractDeployed(expectedModuleAddress), "module should not be deployed yet");
+        assert(!isContractDeployed(expectedModuleAddress));
         target.run();
-        require(isContractDeployed(expectedModuleAddress), "module should be deployed");
+        assert(isContractDeployed(expectedModuleAddress));
         // also checking returned address
-        require(target.module() == expectedModuleAddress, "module address mismatch");
+        assertEq(target.module(), expectedModuleAddress);
     }
 }

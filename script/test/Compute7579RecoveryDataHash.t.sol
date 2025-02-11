@@ -74,7 +74,7 @@ contract Compute7579RecoveryDataHashTest is Test {
 
         target.run();
 
-        require(keccak256(target.recoveryData()) == expectedHash, "Unexpected recoveryData");
-        require(target.recoveryDataHash() == expectedHash, "Unexpected recoveryDataHash");
+        assertEq(keccak256(target.recoveryData()), expectedHash);
+        assertEq(target.recoveryDataHash(), expectedHash);
     }
 }

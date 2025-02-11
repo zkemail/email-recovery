@@ -83,13 +83,13 @@ contract DeploySafeRecoveryTest is BaseDeployTest {
             expectedRecoveryFactory
         );
 
-        require(!isContractDeployed(expectedCommandHandler), "handler should not be deployed yet");
-        require(!isContractDeployed(expectedRecoveryModule), "module should not be deployed yet");
+        assert(!isContractDeployed(expectedCommandHandler));
+        assert(!isContractDeployed(expectedRecoveryModule));
         target.run();
-        require(isContractDeployed(expectedCommandHandler), "handler should be deployed");
-        require(isContractDeployed(expectedRecoveryModule), "module should be deployed");
+        assert(isContractDeployed(expectedCommandHandler));
+        assert(isContractDeployed(expectedRecoveryModule));
         // also checking returned addresses
-        require(target.emailRecoveryHandler() == expectedCommandHandler, "handler address mismatch");
-        require(target.emailRecoveryModule() == expectedRecoveryModule, "module address mismatch");
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler);
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule);
     }
 }

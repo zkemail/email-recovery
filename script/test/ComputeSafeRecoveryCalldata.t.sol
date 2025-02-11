@@ -78,6 +78,6 @@ contract ComputeSafeRecoveryCalldataTest is Test {
 
         target.run();
 
-        require(keccak256(target.recoveryCalldata()) == expectedHash, "Unexpected recoveryCalldata");
+        vm.assertEq(keccak256(target.recoveryCalldata()), expectedHash);
     }
 }

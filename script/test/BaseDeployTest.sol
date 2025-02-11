@@ -240,9 +240,9 @@ abstract contract BaseDeployTest is Test {
             )
         );
 
-        require(!isContractDeployed(proxy), "verifier should not be deployed yet");
+        assert(!isContractDeployed(proxy));
         target.run();
-        require(isContractDeployed(proxy), "verifier should be deployed");
+        assert(isContractDeployed(proxy));
     }
 
     function commonTest_NoZkVerifierEnv(BaseDeployScript target) public {
@@ -259,9 +259,9 @@ abstract contract BaseDeployTest is Test {
             )
         );
 
-        require(!isContractDeployed(proxy), "zk verifier should not be deployed yet");
+        assert(!isContractDeployed(proxy));
         target.run();
-        require(isContractDeployed(proxy), "zk verifier should be deployed");
+        assert(isContractDeployed(proxy));
     }
 
     function commonTest_NoDkimRegistryEnv(BaseDeployScript target) public {
@@ -281,9 +281,9 @@ abstract contract BaseDeployTest is Test {
             )
         );
 
-        require(!isContractDeployed(proxy), "dkim registry should not be deployed yet");
+        assert(!isContractDeployed(proxy));
         target.run();
-        require(isContractDeployed(proxy), "verifier should be deployed");
+        assert(isContractDeployed(proxy));
     }
 
     function commonTest_NoEmailAuthImplEnv(BaseDeployScript target) public {
@@ -291,8 +291,8 @@ abstract contract BaseDeployTest is Test {
 
         address emailAuthImpl = computeAddress(envCreate2Salt, type(EmailAuth).creationCode, "");
 
-        require(!isContractDeployed(emailAuthImpl), "email auth impl should not be deployed yet");
+        assert(!isContractDeployed(emailAuthImpl));
         target.run();
-        require(isContractDeployed(emailAuthImpl), "email auth impl should be deployed");
+        assert(isContractDeployed(emailAuthImpl));
     }
 }

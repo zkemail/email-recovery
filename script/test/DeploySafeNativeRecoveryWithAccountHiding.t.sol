@@ -70,9 +70,9 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
             envCreate2Salt, type(AccountHidingRecoveryCommandHandler).creationCode, ""
         );
 
-        require(!isContractDeployed(handler), "handler should not be deployed yet");
+        assert(!isContractDeployed(handler));
         target.run();
-        require(isContractDeployed(handler), "handler should be deployed");
+        assert(isContractDeployed(handler));
     }
 
     function test_Deployment() public {
@@ -91,10 +91,10 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
             )
         );
 
-        require(!isContractDeployed(expectedModuleAddress), "module should not be deployed yet");
+        assert(!isContractDeployed(expectedModuleAddress));
         target.run();
-        require(isContractDeployed(expectedModuleAddress), "module should be deployed");
-        // also checking returned address
-        require(target.module() == expectedModuleAddress, "module address mismatch");
+        assert(isContractDeployed(expectedModuleAddress));
+
+        assertEq(target.module(), expectedModuleAddress);
     }
 }

@@ -66,9 +66,9 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
             abi.encode(envVerifier, envEmailAuthImpl)
         );
 
-        require(!isContractDeployed(recoveryFactory), "recovery factory should not be deployed yet");
+        assert(!isContractDeployed(recoveryFactory));
         target.run();
-        require(isContractDeployed(recoveryFactory), "recovery factory should be deployed");
+        assert(isContractDeployed(recoveryFactory));
     }
 
     function test_DeploymentEvent() public {
@@ -103,13 +103,13 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
             envRecoveryFactory
         );
 
-        require(!isContractDeployed(expectedCommandHandler), "handler should not be deployed yet");
-        require(!isContractDeployed(expectedRecoveryModule), "module should not be deployed yet");
+        assert(!isContractDeployed(expectedCommandHandler)); // handler should not be deployed yet
+        assert(!isContractDeployed(expectedRecoveryModule)); // module should not be deployed yet
         target.run();
-        require(isContractDeployed(expectedCommandHandler), "handler should be deployed");
-        require(isContractDeployed(expectedRecoveryModule), "module should be deployed");
+        assert(isContractDeployed(expectedCommandHandler)); // handler should be deployed
+        assert(isContractDeployed(expectedRecoveryModule)); // module should be deployed
         // also checking returned addresses
-        require(target.emailRecoveryHandler() == expectedCommandHandler, "handler address mismatch");
-        require(target.emailRecoveryModule() == expectedRecoveryModule, "module address mismatch");
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler); // handler address mismatch
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule); // module address mismatch
     }
 }
