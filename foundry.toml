@@ -17,7 +17,6 @@ ignored_warnings_from = [
 threads = 1
 gas_limit = "18446744073709551615"
 memory_limit = 1844674407370955161
-allow_internal_expect_revert = true
 
 [rpc_endpoints]
 sepolia = "${BASE_SEPOLIA_RPC_URL}"
