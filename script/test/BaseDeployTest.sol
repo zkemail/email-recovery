@@ -209,7 +209,7 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
 
-        vm.expectRevert("DKIM_REGISTRY or DKIM_SIGNER is required");
+        vm.expectRevert("DKIM_SIGNER is required");
         target.run();
     }
 

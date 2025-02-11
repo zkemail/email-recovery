@@ -44,7 +44,8 @@ contract DeploySafeNativeRecoveryWithAccountHidingScript is BaseDeployScript {
 
         // other reverts
         if (dkimRegistry == address(0)) {
-            require(dkimSigner != address(0), "DKIM_REGISTRY or DKIM_SIGNER is required");
+            // if DKIM_REGISTRY is not set, DKIM_SIGNER is required
+            require(dkimSigner != address(0), "DKIM_SIGNER is required");
         }
     }
 
