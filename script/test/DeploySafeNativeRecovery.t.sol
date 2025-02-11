@@ -5,9 +5,6 @@ import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 contract DeploySafeNativeRecoveryTest is BaseDeployTest {
     DeploySafeNativeRecoveryScript private target;

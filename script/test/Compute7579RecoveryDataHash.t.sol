@@ -5,8 +5,8 @@ import { Test } from "forge-std/Test.sol";
 import { Compute7579RecoveryDataHashScript } from "../Compute7579RecoveryDataHash.s.sol";
 
 contract Compute7579RecoveryDataHashTest is Test {
-    address envNewOwner;
-    address envValidator;
+    address private envNewOwner;
+    address private envValidator;
 
     Compute7579RecoveryDataHashScript private target;
 
@@ -38,7 +38,12 @@ contract Compute7579RecoveryDataHashTest is Test {
         vm.setEnv("VALIDATOR", "");
 
         vm.expectRevert(
-            "vm.envAddress: failed parsing $VALIDATOR as type `address`: parser error:\n$VALIDATOR\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            abi.encodePacked(
+                "vm.envAddress: failed parsing $VALIDATOR as type `address`: parser error:\n",
+                "$VALIDATOR\n",
+                "^\n",
+                "expected hex digits or the `0x` prefix for an empty hex string"
+            )
         );
         target.run();
     }
@@ -49,7 +54,12 @@ contract Compute7579RecoveryDataHashTest is Test {
         vm.setEnv("NEW_OWNER", "");
 
         vm.expectRevert(
-            "vm.envAddress: failed parsing $NEW_OWNER as type `address`: parser error:\n$NEW_OWNER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            abi.encodePacked(
+                "vm.envAddress: failed parsing $NEW_OWNER as type `address`: parser error:\n",
+                "$NEW_OWNER\n",
+                "^\n",
+                "expected hex digits or the `0x` prefix for an empty hex string"
+            )
         );
         target.run();
     }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import { Vm } from "forge-std/Vm.sol";
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeRecoveryWithAccountHidingScript } from
     "../DeploySafeRecoveryWithAccountHiding.s.sol";

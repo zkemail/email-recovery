@@ -15,7 +15,6 @@ import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.so
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
-import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 
 abstract contract BaseDeployTest is Test {
     // Forge deterministic deployer address. See more details in the Foundry book:
@@ -177,6 +176,7 @@ abstract contract BaseDeployTest is Test {
      */
     function isContractDeployed(address addr) internal view returns (bool) {
         uint256 size;
+        /* solhint-disable-next-line no-inline-assembly */
         assembly {
             size := extcodesize(addr)
         }
@@ -195,7 +195,12 @@ abstract contract BaseDeployTest is Test {
     function commonTest_RevertIf_NoKillSwitchAuthorizerEnv(BaseDeployScript target) public {
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
-            "vm.envAddress: failed parsing $KILL_SWITCH_AUTHORIZER as type `address`: parser error:\n$KILL_SWITCH_AUTHORIZER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            abi.encodePacked(
+                "vm.envAddress: failed parsing $KILL_SWITCH_AUTHORIZER as type `address`: parser error:\n",
+                "$KILL_SWITCH_AUTHORIZER\n",
+                "^\n",
+                "expected hex digits or the `0x` prefix for an empty hex string"
+            )
         );
         target.run();
     }

@@ -3,11 +3,10 @@ pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
 import { ComputeSafeRecoveryCalldataScript } from "../ComputeSafeRecoveryCalldata.s.sol";
-import { BaseDeployTest } from "./BaseDeployTest.sol";
 
 contract ComputeSafeRecoveryCalldataTest is Test {
-    address envOldOwner;
-    address envNewOwner;
+    address private envOldOwner;
+    address private envNewOwner;
 
     ComputeSafeRecoveryCalldataScript private target;
 
@@ -39,7 +38,12 @@ contract ComputeSafeRecoveryCalldataTest is Test {
         vm.setEnv("OLD_OWNER", "");
 
         vm.expectRevert(
-            "vm.envAddress: failed parsing $OLD_OWNER as type `address`: parser error:\n$OLD_OWNER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            abi.encodePacked(
+                "vm.envAddress: failed parsing $OLD_OWNER as type `address`: parser error:\n",
+                "$OLD_OWNER\n",
+                "^\n",
+                "expected hex digits or the `0x` prefix for an empty hex string"
+            )
         );
         target.run();
     }
@@ -50,7 +54,12 @@ contract ComputeSafeRecoveryCalldataTest is Test {
         vm.setEnv("NEW_OWNER", "");
 
         vm.expectRevert(
-            "vm.envAddress: failed parsing $NEW_OWNER as type `address`: parser error:\n$NEW_OWNER\n^\nexpected hex digits or the `0x` prefix for an empty hex string"
+            abi.encodePacked(
+                "vm.envAddress: failed parsing $NEW_OWNER as type `address`: parser error:\n",
+                "$NEW_OWNER\n",
+                "^\n",
+                "expected hex digits or the `0x` prefix for an empty hex string"
+            )
         );
         target.run();
     }
