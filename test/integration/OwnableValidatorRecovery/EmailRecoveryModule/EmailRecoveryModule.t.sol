@@ -21,7 +21,6 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
     using ModuleKitHelpers for *;
     using Strings for uint256;
 
-    address owner = vm.addr(2);
     address approvedAccount = address(0x2);
     address unapprovedAccount = address(0x3);
 
@@ -495,7 +494,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
     function test_RevokedPermissionPreventsFurtherActions() public {
         // Set approvedAccount as the transaction initiator
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
 
         // Execute Accept guardian 1 and as the approvedAccount
@@ -503,7 +502,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
 
         // Disable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
 
         // Fail to execute Accept guardian 2 as the approvedAccount
@@ -519,7 +518,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         vm.stopPrank();
 
         // Enable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
 
         // Execute Accept guardian 2 as the approvedAccount
@@ -536,7 +535,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         vm.stopPrank();
 
         // Disable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
 
         // Fail to execute handle recovery request for guardian 2 as the approvedAccount
@@ -551,7 +550,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         vm.stopPrank();
 
         // Enable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
 
         // Execute handle recovery request for guardian 2 as the approvedAccount
@@ -592,7 +591,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
     function test_RevokedPermissionPreventsFurtherActions_WithNewApprovedAccount() public {
         // Set approvedAccount as the transaction initiator
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, true);
 
         // Execute Accept guardian 1 and as the approvedAccount
@@ -600,7 +599,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         acceptGuardian(accountAddress1, guardians1[0], emailRecoveryModuleAddress);
 
         // Disable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(approvedAccount, false);
 
         // Fail to execute Accept guardian 2 as the approvedAccount
@@ -617,7 +616,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
 
         address aNewApprovedAccount = address(0x4);
         // Enable the approvedAccount's permission
-        vm.prank(owner);
+        vm.prank(killSwitchAuthorizer);
         emailRecoveryModule.setTransactionInitiator(aNewApprovedAccount, true);
 
         // Execute Accept guardian 2 as the approvedAccount
