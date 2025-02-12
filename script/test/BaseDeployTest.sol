@@ -186,22 +186,13 @@ abstract contract BaseDeployTest is Test {
     // ### COMMON TEST FUNCTIONS ###
     function commonTest_RevertIf_NoPrivateKeyEnv(BaseDeployScript target) public {
         vm.setEnv("PRIVATE_KEY", "");
-        vm.expectRevert(
-            "vm.envUint: failed parsing $PRIVATE_KEY as type `uint256`: missing hex prefix (\"0x\") for hex string"
-        );
+        vm.expectRevert("PRIVATE_KEY is required");
         target.run();
     }
 
     function commonTest_RevertIf_NoKillSwitchAuthorizerEnv(BaseDeployScript target) public {
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
-        vm.expectRevert(
-            abi.encodePacked(
-                "vm.envAddress: failed parsing $KILL_SWITCH_AUTHORIZER as type `address`: parser error:\n",
-                "$KILL_SWITCH_AUTHORIZER\n",
-                "^\n",
-                "expected hex digits or the `0x` prefix for an empty hex string"
-            )
-        );
+        vm.expectRevert(abi.encodePacked("KILL_SWITCH_AUTHORIZER is required"));
         target.run();
     }
 
@@ -209,7 +200,7 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
 
-        vm.expectRevert("DKIM_SIGNER is required");
+        vm.expectRevert("DKIM_SIGNER or DKIM_REGISTRY is required");
         target.run();
     }
 
