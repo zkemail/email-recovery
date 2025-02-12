@@ -13,6 +13,9 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 contract BaseDeployUniversalScript is BaseDeployScript {
+    error MissingRequiredParameter(string param);
+    error InvalidCommandHandlerType();
+
     struct DeploymentConfig {
         bytes32 create2Salt;
         uint256 dkimDelay;
@@ -46,17 +49,17 @@ contract BaseDeployUniversalScript is BaseDeployScript {
         });
     }
 
-    function validateConfig() internal view {
+    function validateConfig() public view {
         if (config.privateKey == 0) {
-            revert("PRIVATE_KEY is required");
+            revert MissingRequiredParameter("PRIVATE_KEY");
         }
 
         if (config.killSwitchAuthorizer == address(0)) {
-            revert("KILL_SWITCH_AUTHORIZER is required");
+            revert MissingRequiredParameter("KILL_SWITCH_AUTHORIZER");
         }
 
         if (config.dkimRegistry == address(0) && config.dkimSigner == address(0)) {
-            revert("DKIM_SIGNER or DKIM_REGISTRY is required");
+            revert MissingRequiredParameter("DKIM_REGISTRY/DKIM_SIGNER");
         }
     }
 
@@ -67,7 +70,7 @@ contract BaseDeployUniversalScript is BaseDeployScript {
     }
 
     function getCommandHandlerBytecode(CommandHandlerType commandHandlerType)
-        internal
+        public
         pure
         returns (bytes memory)
     {
@@ -78,8 +81,7 @@ contract BaseDeployUniversalScript is BaseDeployScript {
         } else if (commandHandlerType == CommandHandlerType.SafeRecovery) {
             return type(SafeRecoveryCommandHandler).creationCode;
         } else {
-            console.log("Invalid CommandHandlerType");
-            revert("Invalid CommandHandlerType");
+            revert InvalidCommandHandlerType();
         }
     }
 

@@ -15,6 +15,7 @@ import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.so
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
+import { BaseDeployUniversalScript } from "../BaseDeployUniversal.s.sol";
 
 abstract contract BaseDeployTest is Test {
     // Forge deterministic deployer address. See more details in the Foundry book:
@@ -186,13 +187,22 @@ abstract contract BaseDeployTest is Test {
     // ### COMMON TEST FUNCTIONS ###
     function commonTest_RevertIf_NoPrivateKeyEnv(BaseDeployScript target) public {
         vm.setEnv("PRIVATE_KEY", "");
-        vm.expectRevert("PRIVATE_KEY is required");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                BaseDeployUniversalScript.MissingRequiredParameter.selector, "PRIVATE_KEY"
+            )
+        );
         target.run();
     }
 
     function commonTest_RevertIf_NoKillSwitchAuthorizerEnv(BaseDeployScript target) public {
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
-        vm.expectRevert(abi.encodePacked("KILL_SWITCH_AUTHORIZER is required"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                BaseDeployUniversalScript.MissingRequiredParameter.selector,
+                "KILL_SWITCH_AUTHORIZER"
+            )
+        );
         target.run();
     }
 
@@ -200,7 +210,12 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
 
-        vm.expectRevert("DKIM_SIGNER or DKIM_REGISTRY is required");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                BaseDeployUniversalScript.MissingRequiredParameter.selector,
+                "DKIM_REGISTRY/DKIM_SIGNER"
+            )
+        );
         target.run();
     }
 
