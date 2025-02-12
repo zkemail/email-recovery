@@ -13,52 +13,49 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 contract BaseDeployUniversalScript is BaseDeployScript {
-    bytes32 internal create2Salt;
+    struct DeploymentConfig {
+        bytes32 create2Salt;
+        uint256 dkimDelay;
+        uint256 minimumDelay;
+        uint256 privateKey;
+        address dkimRegistry;
+        address dkimSigner;
+        address emailAuthImpl;
+        address killSwitchAuthorizer;
+        address recoveryFactory;
+        address verifier;
+    }
 
-    uint256 internal dkimDelay;
-    uint256 internal minimumDelay;
-    uint256 internal privateKey;
-
-    address internal dkimRegistry;
-    address internal dkimSigner;
-    address internal emailAuthImpl;
-    address internal killSwitchAuthorizer;
-    address internal recoveryFactory;
-    address internal verifier;
-    address internal initialOwner;
+    DeploymentConfig public config;
 
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
 
-    // using defaults for all vars, checking required vars later
-    function loadEnvVars() internal {
-        create2Salt = bytes32(vm.envOr("CREATE2_SALT", uint256(0)));
-
-        dkimDelay = vm.envOr("DKIM_DELAY", uint256(0));
-        minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
-        privateKey = vm.envOr("PRIVATE_KEY", uint256(0));
-
-        dkimRegistry = vm.envOr("DKIM_REGISTRY", address(0));
-        dkimSigner = vm.envOr("DKIM_SIGNER", address(0));
-        emailAuthImpl = vm.envOr("EMAIL_AUTH_IMPL", address(0));
-        killSwitchAuthorizer = vm.envOr("KILL_SWITCH_AUTHORIZER", address(0));
-        recoveryFactory = vm.envOr("RECOVERY_FACTORY", address(0));
-        verifier = vm.envOr("VERIFIER", address(0));
+    function loadConfig() public {
+        config = DeploymentConfig({
+            create2Salt: bytes32(vm.envOr("CREATE2_SALT", uint256(0))),
+            dkimDelay: vm.envOr("DKIM_DELAY", uint256(0)),
+            minimumDelay: vm.envOr("MINIMUM_DELAY", uint256(0)),
+            privateKey: vm.envOr("PRIVATE_KEY", uint256(0)),
+            dkimRegistry: vm.envOr("DKIM_REGISTRY", address(0)),
+            dkimSigner: vm.envOr("DKIM_SIGNER", address(0)),
+            emailAuthImpl: vm.envOr("EMAIL_AUTH_IMPL", address(0)),
+            killSwitchAuthorizer: vm.envOr("KILL_SWITCH_AUTHORIZER", address(0)),
+            recoveryFactory: vm.envOr("RECOVERY_FACTORY", address(0)),
+            verifier: vm.envOr("VERIFIER", address(0))
+        });
     }
 
-    function checkRequiredVars() internal view {
-        if (privateKey == 0) {
-            console.log("PRIVATE_KEY is required");
+    function validateConfig() internal view {
+        if (config.privateKey == 0) {
             revert("PRIVATE_KEY is required");
         }
 
-        if (killSwitchAuthorizer == address(0)) {
-            console.log("KILL_SWITCH_AUTHORIZER is required");
+        if (config.killSwitchAuthorizer == address(0)) {
             revert("KILL_SWITCH_AUTHORIZER is required");
         }
 
-        if (dkimRegistry == address(0) && dkimSigner == address(0)) {
-            console.log("DKIM_SIGNER or DKIM_REGISTRY is required");
+        if (config.dkimRegistry == address(0) && config.dkimSigner == address(0)) {
             revert("DKIM_SIGNER or DKIM_REGISTRY is required");
         }
     }
@@ -86,38 +83,42 @@ contract BaseDeployUniversalScript is BaseDeployScript {
         }
     }
 
-    function deployUniversalEmailRecovery(CommandHandlerType commandHandlerType) internal {
-        if (verifier == address(0)) {
-            verifier = deployVerifier(initialOwner, create2Salt);
+    function deployUniversalEmailRecovery(CommandHandlerType commandHandlerType) public {
+        address initialOwner = vm.addr(config.privateKey);
+
+        if (config.verifier == address(0)) {
+            config.verifier = deployVerifier(initialOwner, config.create2Salt);
         }
 
-        if (dkimRegistry == address(0)) {
-            dkimRegistry =
-                deployUserOverrideableDKIMRegistry(initialOwner, dkimSigner, dkimDelay, create2Salt);
+        if (config.dkimRegistry == address(0)) {
+            config.dkimRegistry = deployUserOverrideableDKIMRegistry(
+                initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
+            );
         }
 
-        if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth{ salt: bytes32(create2Salt) }());
-            console.log("Deployed Email Auth at", emailAuthImpl);
+        if (config.emailAuthImpl == address(0)) {
+            config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
+            console.log("Deployed Email Auth at", config.emailAuthImpl);
         }
 
-        if (recoveryFactory == address(0)) {
-            recoveryFactory = address(
-                new EmailRecoveryUniversalFactory{ salt: bytes32(create2Salt) }(
-                    verifier, emailAuthImpl
+        if (config.recoveryFactory == address(0)) {
+            config.recoveryFactory = address(
+                new EmailRecoveryUniversalFactory{ salt: config.create2Salt }(
+                    config.verifier, config.emailAuthImpl
                 )
             );
-            console.log("Deployed Email Recovery Factory at", recoveryFactory);
+            console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
         }
 
-        EmailRecoveryUniversalFactory factory = EmailRecoveryUniversalFactory(recoveryFactory);
+        EmailRecoveryUniversalFactory factory =
+            EmailRecoveryUniversalFactory(config.recoveryFactory);
         (emailRecoveryModule, emailRecoveryHandler) = factory.deployUniversalEmailRecoveryModule(
-            create2Salt,
-            create2Salt,
+            config.create2Salt,
+            config.create2Salt,
             getCommandHandlerBytecode(commandHandlerType),
-            minimumDelay,
-            killSwitchAuthorizer,
-            dkimRegistry
+            config.minimumDelay,
+            config.killSwitchAuthorizer,
+            config.dkimRegistry
         );
 
         console.log("Deployed Email Recovery Module at", vm.toString(emailRecoveryModule));
@@ -127,8 +128,7 @@ contract BaseDeployUniversalScript is BaseDeployScript {
     function run() public virtual override {
         super.run();
 
-        loadEnvVars();
-        checkRequiredVars();
-        initialOwner = vm.addr(privateKey);
+        loadConfig();
+        validateConfig();
     }
 }
