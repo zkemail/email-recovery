@@ -103,13 +103,13 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
             envRecoveryFactory
         );
 
-        assert(!isContractDeployed(expectedCommandHandler)); // handler should not be deployed yet
-        assert(!isContractDeployed(expectedRecoveryModule)); // module should not be deployed yet
+        assert(!isContractDeployed(expectedCommandHandler));
+        assert(!isContractDeployed(expectedRecoveryModule));
         target.run();
-        assert(isContractDeployed(expectedCommandHandler)); // handler should be deployed
-        assert(isContractDeployed(expectedRecoveryModule)); // module should be deployed
+        assert(isContractDeployed(expectedCommandHandler));
+        assert(isContractDeployed(expectedRecoveryModule));
         // also checking returned addresses
-        assertEq(target.emailRecoveryHandler(), expectedCommandHandler); // handler address mismatch
-        assertEq(target.emailRecoveryModule(), expectedRecoveryModule); // module address mismatch
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler);
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule);
     }
 }
