@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeNativeRecoveryWithAccountHidingScript } from
@@ -10,13 +10,11 @@ import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol
 
 contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     DeploySafeNativeRecoveryWithAccountHidingScript private target;
-    address private envZkVerifier;
-    address private envCommandHandler;
 
     function setUp() public override {
         super.setUp();
-        envZkVerifier = super.deployVerifier(envInitialOwner);
-        envCommandHandler = deployAccountHidingRecoveryCommandHandler(envCreate2Salt);
+        config.zkVerifier = deployVerifier(vm.addr(config.privateKey));
+        config.commandHandler = deployAccountHidingRecoveryCommandHandler(config.create2Salt);
 
         target = new DeploySafeNativeRecoveryWithAccountHidingScript();
     }
@@ -24,11 +22,11 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
     function setAllEnvVars() internal override {
         super.setAllEnvVars();
 
-        vm.setEnv("ZK_VERIFIER", vm.toString(envZkVerifier));
-        vm.setEnv("COMMAND_HANDLER", vm.toString(envCommandHandler));
+        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
+        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
     }
 
-    function deployAccountHidingRecoveryCommandHandler(uint256 salt) internal returns (address) {
+    function deployAccountHidingRecoveryCommandHandler(bytes32 salt) internal returns (address) {
         return address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
     }
 
@@ -67,7 +65,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
         vm.setEnv("COMMAND_HANDLER", "");
 
         address handler = computeAddress(
-            envCreate2Salt, type(AccountHidingRecoveryCommandHandler).creationCode, ""
+            config.create2Salt, type(AccountHidingRecoveryCommandHandler).creationCode, ""
         );
 
         assert(!isContractDeployed(handler));
@@ -79,22 +77,22 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
         setAllEnvVars();
 
         address expectedModuleAddress = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(SafeEmailRecoveryModule).creationCode,
             abi.encode(
-                envZkVerifier,
-                envDkimRegistry,
-                envEmailAuthImpl,
-                envCommandHandler,
-                envMinimumDelay,
-                envKillSwitchAuthorizer
+                config.zkVerifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
+                config.commandHandler,
+                config.minimumDelay,
+                config.killSwitchAuthorizer
             )
         );
 
         assert(!isContractDeployed(expectedModuleAddress));
         target.run();
         assert(isContractDeployed(expectedModuleAddress));
-
-        assertEq(target.module(), expectedModuleAddress);
+        // also checking returned address
+        assertEq(target.emailRecoveryModule(), expectedModuleAddress);
     }
 }

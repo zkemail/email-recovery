@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
@@ -8,13 +8,11 @@ import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHand
 
 contract DeploySafeNativeRecoveryTest is BaseDeployTest {
     DeploySafeNativeRecoveryScript private target;
-    address private envZkVerifier;
-    address private envCommandHandler;
 
     function setUp() public override {
         super.setUp();
-        envZkVerifier = super.deployVerifier(envInitialOwner);
-        envCommandHandler = deploySafeRecoveryCommandHandler(envCreate2Salt);
+        config.zkVerifier = deployVerifier(vm.addr(config.privateKey));
+        config.commandHandler = deploySafeRecoveryCommandHandler(config.create2Salt);
 
         target = new DeploySafeNativeRecoveryScript();
     }
@@ -22,11 +20,11 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
     function setAllEnvVars() internal override {
         super.setAllEnvVars();
 
-        vm.setEnv("ZK_VERIFIER", vm.toString(envZkVerifier));
-        vm.setEnv("COMMAND_HANDLER", vm.toString(envCommandHandler));
+        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
+        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
     }
 
-    function deploySafeRecoveryCommandHandler(uint256 salt) internal returns (address) {
+    function deploySafeRecoveryCommandHandler(bytes32 salt) internal returns (address) {
         return address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
     }
 
@@ -65,7 +63,7 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
         vm.setEnv("COMMAND_HANDLER", "");
 
         address handler =
-            computeAddress(envCreate2Salt, type(SafeRecoveryCommandHandler).creationCode, "");
+            computeAddress(config.create2Salt, type(SafeRecoveryCommandHandler).creationCode, "");
 
         assert(!isContractDeployed(handler));
         target.run();
@@ -76,15 +74,15 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
         setAllEnvVars();
 
         address expectedModuleAddress = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(SafeEmailRecoveryModule).creationCode,
             abi.encode(
-                envZkVerifier,
-                envDkimRegistry,
-                envEmailAuthImpl,
-                envCommandHandler,
-                envMinimumDelay,
-                envKillSwitchAuthorizer
+                config.zkVerifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
+                config.commandHandler,
+                config.minimumDelay,
+                config.killSwitchAuthorizer
             )
         );
 
@@ -92,6 +90,6 @@ contract DeploySafeNativeRecoveryTest is BaseDeployTest {
         target.run();
         assert(isContractDeployed(expectedModuleAddress));
         // also checking returned address
-        assertEq(target.module(), expectedModuleAddress);
+        assertEq(target.emailRecoveryModule(), expectedModuleAddress);
     }
 }

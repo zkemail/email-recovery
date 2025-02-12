@@ -11,7 +11,69 @@ import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideab
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 contract BaseDeployScript is Script {
-    function run() public virtual { }
+    error MissingRequiredParameter(string param);
+    error InvalidCommandHandlerType();
+
+    enum CommandHandlerType {
+        AccountHidingRecovery,
+        EmailRecovery,
+        SafeRecovery
+    }
+
+    struct DeploymentConfig {
+        bytes32 create2Salt;
+        uint256 dkimDelay;
+        uint256 minimumDelay;
+        uint256 privateKey;
+        address dkimRegistry;
+        address dkimSigner;
+        address emailAuthImpl;
+        address killSwitchAuthorizer;
+        address recoveryFactory;
+        address verifier;
+        address zkVerifier;
+        address commandHandler;
+        address validator;
+    }
+
+    DeploymentConfig public config;
+
+    function run() public virtual {
+        loadConfig();
+        validateConfig();
+    }
+
+    function loadConfig() public {
+        config = DeploymentConfig({
+            create2Salt: bytes32(vm.envOr("CREATE2_SALT", uint256(0))),
+            dkimDelay: vm.envOr("DKIM_DELAY", uint256(0)),
+            minimumDelay: vm.envOr("MINIMUM_DELAY", uint256(0)),
+            privateKey: vm.envOr("PRIVATE_KEY", uint256(0)),
+            dkimRegistry: vm.envOr("DKIM_REGISTRY", address(0)),
+            dkimSigner: vm.envOr("DKIM_SIGNER", address(0)),
+            emailAuthImpl: vm.envOr("EMAIL_AUTH_IMPL", address(0)),
+            killSwitchAuthorizer: vm.envOr("KILL_SWITCH_AUTHORIZER", address(0)),
+            recoveryFactory: vm.envOr("RECOVERY_FACTORY", address(0)),
+            verifier: vm.envOr("VERIFIER", address(0)),
+            zkVerifier: vm.envOr("ZK_VERIFIER", address(0)),
+            commandHandler: vm.envOr("COMMAND_HANDLER", address(0)),
+            validator: vm.envOr("VALIDATOR", address(0))
+        });
+    }
+
+    function validateConfig() public view {
+        if (config.privateKey == 0) {
+            revert MissingRequiredParameter("PRIVATE_KEY");
+        }
+
+        if (config.killSwitchAuthorizer == address(0)) {
+            revert MissingRequiredParameter("KILL_SWITCH_AUTHORIZER");
+        }
+
+        if (config.dkimRegistry == address(0) && config.dkimSigner == address(0)) {
+            revert MissingRequiredParameter("DKIM_REGISTRY/DKIM_SIGNER");
+        }
+    }
 
     /**
      * Helper function to deploy a Verifier

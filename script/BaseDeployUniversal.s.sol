@@ -13,61 +13,8 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 contract BaseDeployUniversalScript is BaseDeployScript {
-    error MissingRequiredParameter(string param);
-    error InvalidCommandHandlerType();
-
-    struct DeploymentConfig {
-        bytes32 create2Salt;
-        uint256 dkimDelay;
-        uint256 minimumDelay;
-        uint256 privateKey;
-        address dkimRegistry;
-        address dkimSigner;
-        address emailAuthImpl;
-        address killSwitchAuthorizer;
-        address recoveryFactory;
-        address verifier;
-    }
-
-    DeploymentConfig public config;
-
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
-
-    function loadConfig() public {
-        config = DeploymentConfig({
-            create2Salt: bytes32(vm.envOr("CREATE2_SALT", uint256(0))),
-            dkimDelay: vm.envOr("DKIM_DELAY", uint256(0)),
-            minimumDelay: vm.envOr("MINIMUM_DELAY", uint256(0)),
-            privateKey: vm.envOr("PRIVATE_KEY", uint256(0)),
-            dkimRegistry: vm.envOr("DKIM_REGISTRY", address(0)),
-            dkimSigner: vm.envOr("DKIM_SIGNER", address(0)),
-            emailAuthImpl: vm.envOr("EMAIL_AUTH_IMPL", address(0)),
-            killSwitchAuthorizer: vm.envOr("KILL_SWITCH_AUTHORIZER", address(0)),
-            recoveryFactory: vm.envOr("RECOVERY_FACTORY", address(0)),
-            verifier: vm.envOr("VERIFIER", address(0))
-        });
-    }
-
-    function validateConfig() public view {
-        if (config.privateKey == 0) {
-            revert MissingRequiredParameter("PRIVATE_KEY");
-        }
-
-        if (config.killSwitchAuthorizer == address(0)) {
-            revert MissingRequiredParameter("KILL_SWITCH_AUTHORIZER");
-        }
-
-        if (config.dkimRegistry == address(0) && config.dkimSigner == address(0)) {
-            revert MissingRequiredParameter("DKIM_REGISTRY/DKIM_SIGNER");
-        }
-    }
-
-    enum CommandHandlerType {
-        AccountHidingRecovery,
-        EmailRecovery,
-        SafeRecovery
-    }
 
     function getCommandHandlerBytecode(CommandHandlerType commandHandlerType)
         public
@@ -125,12 +72,5 @@ contract BaseDeployUniversalScript is BaseDeployScript {
 
         console.log("Deployed Email Recovery Module at", vm.toString(emailRecoveryModule));
         console.log("Deployed Email Recovery Handler at", vm.toString(emailRecoveryHandler));
-    }
-
-    function run() public virtual override {
-        super.run();
-
-        loadConfig();
-        validateConfig();
     }
 }

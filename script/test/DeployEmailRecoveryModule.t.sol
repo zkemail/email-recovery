@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeployEmailRecoveryModuleScript } from "../DeployEmailRecoveryModule.s.sol";
@@ -13,14 +13,15 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
 
     function setUp() public override {
         super.setUp();
-        envRecoveryFactory = deployRecoveryFactory();
+        config.recoveryFactory = deployRecoveryFactory();
 
         target = new DeployEmailRecoveryModuleScript();
     }
 
     function deployRecoveryFactory() internal returns (address) {
-        EmailRecoveryFactory recoveryFactory =
-            new EmailRecoveryFactory{ salt: bytes32(envCreate2Salt) }(envVerifier, envEmailAuthImpl);
+        EmailRecoveryFactory recoveryFactory = new EmailRecoveryFactory{ salt: config.create2Salt }(
+            config.verifier, config.emailAuthImpl
+        );
         return address(recoveryFactory);
     }
 
@@ -59,7 +60,8 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
 
         vm.setEnv("VALIDATOR", "");
 
-        address validator = computeAddress(envCreate2Salt, type(OwnableValidator).creationCode, "");
+        address validator =
+            computeAddress(config.create2Salt, type(OwnableValidator).creationCode, "");
 
         assert(!isContractDeployed(validator));
         target.run();
@@ -71,9 +73,9 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
         vm.setEnv("RECOVERY_FACTORY", "");
 
         address recoveryFactory = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(EmailRecoveryFactory).creationCode,
-            abi.encode(envVerifier, envEmailAuthImpl)
+            abi.encode(config.verifier, config.emailAuthImpl)
         );
 
         assert(!isContractDeployed(recoveryFactory));
@@ -90,29 +92,27 @@ contract DeployEmailRecoveryModuleTest is BaseDeployTest {
     function test_Deployment() public {
         setAllEnvVars();
 
-        uint256 commandHandlerSalt = envCreate2Salt;
         address expectedCommandHandler = computeAddress(
-            commandHandlerSalt,
+            config.create2Salt,
             type(EmailRecoveryCommandHandler).creationCode,
             "",
-            envRecoveryFactory
+            config.recoveryFactory
         );
 
-        uint256 recoveryModuleSalt = envCreate2Salt;
         address expectedRecoveryModule = computeAddress(
-            recoveryModuleSalt,
+            config.create2Salt,
             type(EmailRecoveryModule).creationCode,
             abi.encode(
-                envVerifier,
-                envDkimRegistry,
-                envEmailAuthImpl,
+                config.verifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
                 expectedCommandHandler,
-                envMinimumDelay,
-                envKillSwitchAuthorizer,
-                envValidator,
+                config.minimumDelay,
+                config.killSwitchAuthorizer,
+                config.validator,
                 bytes4(keccak256(bytes("changeOwner(address)")))
             ),
-            envRecoveryFactory
+            config.recoveryFactory
         );
 
         assert(!isContractDeployed(expectedCommandHandler));

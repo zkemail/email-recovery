@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
 import { DeployUniversalEmailRecoveryModuleScript } from
@@ -13,15 +13,15 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
 
     function setUp() public override {
         super.setUp();
-        envRecoveryFactory = deployRecoveryUniversalFactory();
+        config.recoveryFactory = deployRecoveryUniversalFactory();
 
         target = new DeployUniversalEmailRecoveryModuleScript();
     }
 
     function deployRecoveryUniversalFactory() internal returns (address) {
         EmailRecoveryUniversalFactory recoveryFactory = new EmailRecoveryUniversalFactory{
-            salt: bytes32(envCreate2Salt)
-        }(envVerifier, envEmailAuthImpl);
+            salt: config.create2Salt
+        }(config.verifier, config.emailAuthImpl);
         return address(recoveryFactory);
     }
 
@@ -61,9 +61,9 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
         vm.setEnv("RECOVERY_FACTORY", "");
 
         address recoveryFactory = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(EmailRecoveryUniversalFactory).creationCode,
-            abi.encode(envVerifier, envEmailAuthImpl)
+            abi.encode(config.verifier, config.emailAuthImpl)
         );
 
         assert(!isContractDeployed(recoveryFactory));
@@ -80,27 +80,25 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
     function test_Deployment() public {
         setAllEnvVars();
 
-        uint256 commandHandlerSalt = envCreate2Salt;
         address expectedCommandHandler = computeAddress(
-            commandHandlerSalt,
+            config.create2Salt,
             type(EmailRecoveryCommandHandler).creationCode,
             "",
-            envRecoveryFactory
+            config.recoveryFactory
         );
 
-        uint256 recoveryModuleSalt = envCreate2Salt;
         address expectedRecoveryModule = computeAddress(
-            recoveryModuleSalt,
+            config.create2Salt,
             type(UniversalEmailRecoveryModule).creationCode,
             abi.encode(
-                envVerifier,
-                envDkimRegistry,
-                envEmailAuthImpl,
+                config.verifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
                 expectedCommandHandler,
-                envMinimumDelay,
-                envKillSwitchAuthorizer
+                config.minimumDelay,
+                config.killSwitchAuthorizer
             ),
-            envRecoveryFactory
+            config.recoveryFactory
         );
 
         assert(!isContractDeployed(expectedCommandHandler));

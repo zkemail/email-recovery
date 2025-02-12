@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 /* solhint-disable no-console */
 
@@ -15,26 +15,13 @@ import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.so
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
-import { BaseDeployUniversalScript } from "../BaseDeployUniversal.s.sol";
 
 abstract contract BaseDeployTest is Test {
     // Forge deterministic deployer address. See more details in the Foundry book:
     // https://book.getfoundry.sh/tutorials/create2-tutorial#introduction
     address internal constant CREATE2_DEPLOYER_ADDRESS = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
-    uint256 internal envPrivateKey;
-    address internal envInitialOwner;
-    address internal envVerifier;
-    address internal envDkimSigner;
-    address internal envDkimRegistry;
-    uint256 internal envDkimDelay;
-    uint256 internal envMinimumDelay;
-    address internal envKillSwitchAuthorizer;
-    address internal envEmailAuthImpl;
-    address internal envNewOwner;
-    address internal envValidator;
-    uint256 internal envCreate2Salt;
-    address internal envRecoveryFactory;
+    BaseDeployScript.DeploymentConfig public config;
 
     /**
      * @dev Deploys needed contracts and sets environment vars.
@@ -45,18 +32,25 @@ abstract contract BaseDeployTest is Test {
      *
      */
     function setUp() public virtual {
-        envPrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-        envInitialOwner = vm.addr(envPrivateKey);
-        envVerifier = deployVerifier(envInitialOwner);
-        envDkimSigner = vm.addr(5);
-        envDkimRegistry = deployDKIMRegistry(envDkimSigner, envInitialOwner);
-        envDkimDelay = 0;
-        envMinimumDelay = 0;
-        envKillSwitchAuthorizer = vm.addr(1);
-        envEmailAuthImpl = address(new EmailAuth());
-        envNewOwner = vm.addr(8);
-        envValidator = vm.addr(9);
-        envCreate2Salt = 2;
+        uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        address dkimSigner = vm.addr(5);
+        address initialOwner = vm.addr(privateKey);
+
+        config = BaseDeployScript.DeploymentConfig({
+            create2Salt: bytes32(uint256(2)),
+            dkimDelay: 0,
+            minimumDelay: 0,
+            privateKey: privateKey,
+            dkimRegistry: deployDKIMRegistry(dkimSigner, initialOwner),
+            dkimSigner: dkimSigner,
+            emailAuthImpl: address(new EmailAuth()),
+            killSwitchAuthorizer: vm.addr(1),
+            recoveryFactory: address(0),
+            verifier: deployVerifier(initialOwner),
+            zkVerifier: address(0),
+            commandHandler: address(0),
+            validator: vm.addr(9)
+        });
 
         setAllEnvVars();
     }
@@ -72,18 +66,17 @@ abstract contract BaseDeployTest is Test {
      * https://github.com/foundry-rs/foundry/issues/2349
      */
     function setAllEnvVars() internal virtual {
-        vm.setEnv("PRIVATE_KEY", vm.toString(envPrivateKey));
-        vm.setEnv("VERIFIER", vm.toString(envVerifier));
-        vm.setEnv("DKIM_SIGNER", vm.toString(envDkimSigner));
-        vm.setEnv("DKIM_REGISTRY", vm.toString(envDkimRegistry));
-        vm.setEnv("DKIM_DELAY", vm.toString(envDkimDelay));
-        vm.setEnv("MINIMUM_DELAY", vm.toString(envMinimumDelay));
-        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(envKillSwitchAuthorizer));
-        vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(envEmailAuthImpl));
-        vm.setEnv("NEW_OWNER", vm.toString(envNewOwner));
-        vm.setEnv("VALIDATOR", vm.toString(envValidator));
-        vm.setEnv("CREATE2_SALT", vm.toString(envCreate2Salt));
-        vm.setEnv("RECOVERY_FACTORY", vm.toString(envRecoveryFactory));
+        vm.setEnv("PRIVATE_KEY", vm.toString(config.privateKey));
+        vm.setEnv("VERIFIER", vm.toString(config.verifier));
+        vm.setEnv("DKIM_SIGNER", vm.toString(config.dkimSigner));
+        vm.setEnv("DKIM_REGISTRY", vm.toString(config.dkimRegistry));
+        vm.setEnv("DKIM_DELAY", vm.toString(config.dkimDelay));
+        vm.setEnv("MINIMUM_DELAY", vm.toString(config.minimumDelay));
+        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(config.killSwitchAuthorizer));
+        vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(config.emailAuthImpl));
+        vm.setEnv("VALIDATOR", vm.toString(config.validator));
+        vm.setEnv("CREATE2_SALT", vm.toString(config.create2Salt));
+        vm.setEnv("RECOVERY_FACTORY", vm.toString(config.recoveryFactory));
     }
 
     function deployVerifier(address initialOwner) internal returns (address verifier) {
@@ -138,7 +131,7 @@ abstract contract BaseDeployTest is Test {
      * @param deployer The address of the deployer.
      */
     function computeAddress(
-        uint256 create2Salt,
+        bytes32 create2Salt,
         bytes memory creationCode,
         bytes memory constructorArgs,
         address deployer
@@ -148,7 +141,7 @@ abstract contract BaseDeployTest is Test {
         returns (address)
     {
         bytes memory fullBytecode = abi.encodePacked(creationCode, constructorArgs);
-        return Create2.computeAddress(bytes32(create2Salt), keccak256(fullBytecode), deployer);
+        return Create2.computeAddress(create2Salt, keccak256(fullBytecode), deployer);
     }
 
     /**
@@ -159,7 +152,7 @@ abstract contract BaseDeployTest is Test {
      * @param constructorArgs The contract's constructor arguments. - `abi.encode(a1, a2, ...)`
      */
     function computeAddress(
-        uint256 create2Salt,
+        bytes32 create2Salt,
         bytes memory creationCode,
         bytes memory constructorArgs
     )
@@ -189,7 +182,7 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("PRIVATE_KEY", "");
         vm.expectRevert(
             abi.encodeWithSelector(
-                BaseDeployUniversalScript.MissingRequiredParameter.selector, "PRIVATE_KEY"
+                BaseDeployScript.MissingRequiredParameter.selector, "PRIVATE_KEY"
             )
         );
         target.run();
@@ -199,8 +192,7 @@ abstract contract BaseDeployTest is Test {
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
             abi.encodeWithSelector(
-                BaseDeployUniversalScript.MissingRequiredParameter.selector,
-                "KILL_SWITCH_AUTHORIZER"
+                BaseDeployScript.MissingRequiredParameter.selector, "KILL_SWITCH_AUTHORIZER"
             )
         );
         target.run();
@@ -212,8 +204,7 @@ abstract contract BaseDeployTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                BaseDeployUniversalScript.MissingRequiredParameter.selector,
-                "DKIM_REGISTRY/DKIM_SIGNER"
+                BaseDeployScript.MissingRequiredParameter.selector, "DKIM_REGISTRY/DKIM_SIGNER"
             )
         );
         target.run();
@@ -235,14 +226,16 @@ abstract contract BaseDeployTest is Test {
     function commonTest_NoVerifierEnv(BaseDeployScript target) public {
         vm.setEnv("VERIFIER", "");
 
-        address verifier = computeAddress(envCreate2Salt, type(Verifier).creationCode, "");
-        address groth16 = computeAddress(envCreate2Salt, type(Groth16Verifier).creationCode, "");
+        address initialOwner = vm.addr(config.privateKey);
+
+        address verifier = computeAddress(config.create2Salt, type(Verifier).creationCode, "");
+        address groth16 = computeAddress(config.create2Salt, type(Groth16Verifier).creationCode, "");
         address proxy = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(ERC1967Proxy).creationCode,
             abi.encode(
                 verifier,
-                abi.encodeCall(Verifier(verifier).initialize, (envInitialOwner, address(groth16)))
+                abi.encodeCall(Verifier(verifier).initialize, (initialOwner, address(groth16)))
             )
         );
 
@@ -254,14 +247,16 @@ abstract contract BaseDeployTest is Test {
     function commonTest_NoZkVerifierEnv(BaseDeployScript target) public {
         vm.setEnv("ZK_VERIFIER", "");
 
-        address zkVerifier = computeAddress(envCreate2Salt, type(Verifier).creationCode, "");
-        address groth16 = computeAddress(envCreate2Salt, type(Groth16Verifier).creationCode, "");
+        address initialOwner = vm.addr(config.privateKey);
+
+        address zkVerifier = computeAddress(config.create2Salt, type(Verifier).creationCode, "");
+        address groth16 = computeAddress(config.create2Salt, type(Groth16Verifier).creationCode, "");
         address proxy = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(ERC1967Proxy).creationCode,
             abi.encode(
                 zkVerifier,
-                abi.encodeCall(Verifier(zkVerifier).initialize, (envInitialOwner, address(groth16)))
+                abi.encodeCall(Verifier(zkVerifier).initialize, (initialOwner, address(groth16)))
             )
         );
 
@@ -273,16 +268,18 @@ abstract contract BaseDeployTest is Test {
     function commonTest_NoDkimRegistryEnv(BaseDeployScript target) public {
         vm.setEnv("DKIM_REGISTRY", "");
 
+        address initialOwner = vm.addr(config.privateKey);
+
         address dkim =
-            computeAddress(envCreate2Salt, type(UserOverrideableDKIMRegistry).creationCode, "");
+            computeAddress(config.create2Salt, type(UserOverrideableDKIMRegistry).creationCode, "");
         address proxy = computeAddress(
-            envCreate2Salt,
+            config.create2Salt,
             type(ERC1967Proxy).creationCode,
             abi.encode(
                 dkim,
                 abi.encodeCall(
                     UserOverrideableDKIMRegistry(dkim).initialize,
-                    (envInitialOwner, envDkimSigner, envDkimDelay)
+                    (initialOwner, config.dkimSigner, config.dkimDelay)
                 )
             )
         );
@@ -295,7 +292,7 @@ abstract contract BaseDeployTest is Test {
     function commonTest_NoEmailAuthImplEnv(BaseDeployScript target) public {
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 
-        address emailAuthImpl = computeAddress(envCreate2Salt, type(EmailAuth).creationCode, "");
+        address emailAuthImpl = computeAddress(config.create2Salt, type(EmailAuth).creationCode, "");
 
         assert(!isContractDeployed(emailAuthImpl));
         target.run();
