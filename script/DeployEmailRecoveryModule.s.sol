@@ -11,8 +11,9 @@ import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract DeployEmailRecoveryModuleScript is BaseDeployScript {
+    bytes32 private create2Salt;
+
     uint256 private privateKey;
-    uint256 private create2Salt;
     uint256 private dkimDelay;
     uint256 private minimumDelay;
     address private killSwitchAuthorizer;
@@ -33,7 +34,7 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         killSwitchAuthorizer = vm.envAddress("KILL_SWITCH_AUTHORIZER");
 
         // default to uint256(0) if not set
-        create2Salt = vm.envOr("CREATE2_SALT", uint256(0));
+        create2Salt = bytes32(vm.envOr("CREATE2_SALT", uint256(0)));
         dkimDelay = vm.envOr("DKIM_DELAY", uint256(0));
         minimumDelay = vm.envOr("MINIMUM_DELAY", uint256(0));
 
@@ -47,8 +48,7 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
 
         // other reverts
         if (dkimRegistry == address(0)) {
-            // if DKIM_REGISTRY is not set, DKIM_SIGNER is required
-            require(dkimSigner != address(0), "DKIM_SIGNER is required");
+            require(dkimSigner != address(0), "DKIM_SIGNER or DKIM_REGISTRY is required");
         }
     }
 
@@ -59,8 +59,6 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         vm.startBroadcast(privateKey);
 
         address initialOwner = vm.addr(privateKey);
-        bytes32 commandHandlerSalt = bytes32(create2Salt);
-        bytes32 recoveryModuleSalt = bytes32(create2Salt);
 
         if (verifier == address(0)) {
             verifier = super.deployVerifier(initialOwner, create2Salt);
@@ -73,26 +71,25 @@ contract DeployEmailRecoveryModuleScript is BaseDeployScript {
         }
 
         if (emailAuthImpl == address(0)) {
-            emailAuthImpl = address(new EmailAuth{ salt: bytes32(create2Salt) }());
+            emailAuthImpl = address(new EmailAuth{ salt: create2Salt }());
             console.log("Deployed Email Auth at", emailAuthImpl);
         }
 
         if (validator == address(0)) {
-            validator = address(new OwnableValidator{ salt: bytes32(create2Salt) }());
+            validator = address(new OwnableValidator{ salt: create2Salt }());
             console.log("Deployed Ownable Validator at", validator);
         }
 
         if (recoveryFactory == address(0)) {
-            recoveryFactory = address(
-                new EmailRecoveryFactory{ salt: bytes32(create2Salt) }(verifier, emailAuthImpl)
-            );
+            recoveryFactory =
+                address(new EmailRecoveryFactory{ salt: create2Salt }(verifier, emailAuthImpl));
             console.log("Deployed Email Recovery Factory at", recoveryFactory);
         }
 
         EmailRecoveryFactory factory = EmailRecoveryFactory(recoveryFactory);
         (emailRecoveryModule, emailRecoveryHandler) = factory.deployEmailRecoveryModule(
-            commandHandlerSalt,
-            recoveryModuleSalt,
+            create2Salt,
+            create2Salt,
             type(EmailRecoveryCommandHandler).creationCode,
             minimumDelay,
             killSwitchAuthorizer,

@@ -16,11 +16,11 @@ contract BaseDeployScript is Script {
     /**
      * Helper function to deploy a Verifier
      */
-    function deployVerifier(address initialOwner, uint256 salt) public returns (address) {
-        Verifier verifierImpl = new Verifier{ salt: bytes32(salt) }();
+    function deployVerifier(address initialOwner, bytes32 salt) public returns (address) {
+        Verifier verifierImpl = new Verifier{ salt: salt }();
         console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-        Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: bytes32(salt) }();
-        ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
+        Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: salt }();
+        ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: salt }(
             address(verifierImpl),
             abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
         );
@@ -36,19 +36,19 @@ contract BaseDeployScript is Script {
         address initialOwner,
         address dkimRegistrySigner,
         uint256 setTimeDelay,
-        uint256 salt
+        bytes32 salt
     )
         public
         returns (address)
     {
         require(dkimRegistrySigner != address(0), "DKIM_SIGNER is required");
         UserOverrideableDKIMRegistry overrideableDkimImpl =
-            new UserOverrideableDKIMRegistry{ salt: bytes32(salt) }();
+            new UserOverrideableDKIMRegistry{ salt: salt }();
         console.log(
             "UserOverrideableDKIMRegistry implementation deployed at: %s",
             address(overrideableDkimImpl)
         );
-        ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: bytes32(salt) }(
+        ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: salt }(
             address(overrideableDkimImpl),
             abi.encodeCall(
                 overrideableDkimImpl.initialize, (initialOwner, dkimRegistrySigner, setTimeDelay)
