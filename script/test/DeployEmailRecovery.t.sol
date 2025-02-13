@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployTest } from "./BaseDeployTest.sol";
-import { DeployUniversalEmailRecoveryScript } from "../DeployUniversalEmailRecovery.s.sol";
+import { BaseDeployTest } from "./base/BaseDeployTest.sol";
+import { DeployEmailRecoveryScript } from "../DeployEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
+import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
-    DeployUniversalEmailRecoveryScript private target;
+contract DeployEmailRecoveryModuleTest is BaseDeployTest {
+    DeployEmailRecoveryScript private target;
 
     function setUp() public override {
         super.setUp();
-        config.recoveryFactory = deployRecoveryUniversalFactory();
+        config.recoveryFactory = deployRecoveryFactory();
 
-        target = new DeployUniversalEmailRecoveryScript();
+        target = new DeployEmailRecoveryScript();
     }
 
-    function deployRecoveryUniversalFactory() internal returns (address) {
-        EmailRecoveryUniversalFactory recoveryFactory = new EmailRecoveryUniversalFactory{
-            salt: config.create2Salt
-        }(config.verifier, config.emailAuthImpl);
+    function deployRecoveryFactory() internal returns (address) {
+        EmailRecoveryFactory recoveryFactory = new EmailRecoveryFactory{ salt: config.create2Salt }(
+            config.verifier, config.emailAuthImpl
+        );
         return address(recoveryFactory);
     }
 
@@ -54,14 +55,26 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
         commonTest_NoEmailAuthImplEnv(target);
     }
 
-    function test_NoRecoveryFactoryEnv() public {
+    function test_NoValidatorEnv() public {
         setAllEnvVars();
 
+        vm.setEnv("VALIDATOR", "");
+
+        address validator =
+            computeAddress(config.create2Salt, type(OwnableValidator).creationCode, "");
+
+        assert(!isContractDeployed(validator));
+        target.run();
+        assert(isContractDeployed(validator));
+    }
+
+    function test_NoRecoveryFactoryEnv() public {
+        setAllEnvVars();
         vm.setEnv("RECOVERY_FACTORY", "");
 
         address recoveryFactory = computeAddress(
             config.create2Salt,
-            type(EmailRecoveryUniversalFactory).creationCode,
+            type(EmailRecoveryFactory).creationCode,
             abi.encode(config.verifier, config.emailAuthImpl)
         );
 
@@ -72,7 +85,7 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
 
     function test_DeploymentEvent() public {
         setAllEnvVars();
-        bytes memory eventSignature = "UniversalEmailRecoveryModuleDeployed(address,address)";
+        bytes memory eventSignature = "EmailRecoveryModuleDeployed(address,address,address,bytes4)";
         commonTest_DeploymentEvent(target, eventSignature);
     }
 
@@ -88,14 +101,16 @@ contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
 
         address expectedRecoveryModule = computeAddress(
             config.create2Salt,
-            type(UniversalEmailRecoveryModule).creationCode,
+            type(EmailRecoveryModule).creationCode,
             abi.encode(
                 config.verifier,
                 config.dkimRegistry,
                 config.emailAuthImpl,
                 expectedCommandHandler,
                 config.minimumDelay,
-                config.killSwitchAuthorizer
+                config.killSwitchAuthorizer,
+                config.validator,
+                bytes4(keccak256(bytes("changeOwner(address)")))
             ),
             config.recoveryFactory
         );

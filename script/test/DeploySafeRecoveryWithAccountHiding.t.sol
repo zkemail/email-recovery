@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployTest } from "./BaseDeployTest.sol";
+import { BaseDeployTest } from "./base/BaseDeployTest.sol";
 import { DeploySafeRecoveryWithAccountHidingScript } from
     "../DeploySafeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
