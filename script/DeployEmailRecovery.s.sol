@@ -8,7 +8,7 @@ contract DeployEmailRecoveryScript is BaseDeployEmailRecoveryScript {
         super.run();
 
         vm.startBroadcast(config.privateKey);
-        deployEmailRecoveryModule();
+        deploy();
         vm.stopBroadcast();
     }
 }

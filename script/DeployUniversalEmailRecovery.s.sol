@@ -8,8 +8,10 @@ contract DeployUniversalEmailRecoveryScript is BaseDeployUniversalEmailRecoveryS
     function run() public override {
         super.run();
 
+        commandHandlerType = CommandHandlerType.EmailRecovery;
+
         vm.startBroadcast(config.privateKey);
-        deployUniversalEmailRecovery(CommandHandlerType.EmailRecovery);
+        deploy();
         vm.stopBroadcast();
     }
 }

@@ -10,13 +10,13 @@ import { AccountHidingRecoveryCommandHandler } from
 contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRecoveryTest {
     function setUp() public override {
         super.setUp();
-        config.commandHandler = deployAccountHidingRecoveryCommandHandler(config.create2Salt);
 
         target = new DeploySafeNativeRecoveryWithAccountHidingScript();
     }
 
-    function deployAccountHidingRecoveryCommandHandler(bytes32 salt) internal returns (address) {
-        return address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
+    function deployCommandHandler() internal override {
+        config.commandHandler =
+            address(new AccountHidingRecoveryCommandHandler{ salt: config.create2Salt }());
     }
 
     function test_NoCommandHandlerEnv() public {

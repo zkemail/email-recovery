@@ -5,28 +5,18 @@ pragma solidity ^0.8.25;
 
 import { console } from "forge-std/console.sol";
 import { BaseDeployScript } from "./BaseDeploy.s.sol";
-import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 abstract contract BaseDeployEmailRecoveryScript is BaseDeployScript {
-    function deployEmailRecoveryModule() public {
+    function deploy() internal override {
+        super.deploy();
+
         address initialOwner = vm.addr(config.privateKey);
 
         if (config.verifier == address(0)) {
             config.verifier = deployVerifier(initialOwner, config.create2Salt);
-        }
-
-        if (config.dkimRegistry == address(0)) {
-            config.dkimRegistry = deployUserOverrideableDKIMRegistry(
-                initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
-            );
-        }
-
-        if (config.emailAuthImpl == address(0)) {
-            config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
-            console.log("Deployed Email Auth at", config.emailAuthImpl);
         }
 
         if (config.validator == address(0)) {

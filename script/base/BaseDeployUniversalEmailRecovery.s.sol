@@ -13,11 +13,9 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
-    function getCommandHandlerBytecode(CommandHandlerType commandHandlerType)
-        public
-        pure
-        returns (bytes memory)
-    {
+    CommandHandlerType public commandHandlerType = CommandHandlerType.Unset;
+
+    function getCommandHandlerBytecode() public view returns (bytes memory) {
         if (commandHandlerType == CommandHandlerType.AccountHidingRecovery) {
             return type(AccountHidingRecoveryCommandHandler).creationCode;
         } else if (commandHandlerType == CommandHandlerType.EmailRecovery) {
@@ -29,22 +27,13 @@ abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
         }
     }
 
-    function deployUniversalEmailRecovery(CommandHandlerType commandHandlerType) public {
+    function deploy() internal override {
+        super.deploy();
+
         address initialOwner = vm.addr(config.privateKey);
 
         if (config.verifier == address(0)) {
             config.verifier = deployVerifier(initialOwner, config.create2Salt);
-        }
-
-        if (config.dkimRegistry == address(0)) {
-            config.dkimRegistry = deployUserOverrideableDKIMRegistry(
-                initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
-            );
-        }
-
-        if (config.emailAuthImpl == address(0)) {
-            config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
-            console.log("Deployed Email Auth at", config.emailAuthImpl);
         }
 
         if (config.recoveryFactory == address(0)) {
@@ -61,7 +50,7 @@ abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
         ).deployUniversalEmailRecoveryModule(
             config.create2Salt,
             config.create2Salt,
-            getCommandHandlerBytecode(commandHandlerType),
+            getCommandHandlerBytecode(),
             config.minimumDelay,
             config.killSwitchAuthorizer,
             config.dkimRegistry

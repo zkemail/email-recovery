@@ -11,8 +11,10 @@ contract DeploySafeRecoveryScript is BaseDeployUniversalEmailRecoveryScript {
     function run() public override {
         super.run();
 
+        commandHandlerType = CommandHandlerType.SafeRecovery;
+
         vm.startBroadcast(config.privateKey);
-        deployUniversalEmailRecovery(CommandHandlerType.SafeRecovery);
+        deploy();
         vm.stopBroadcast();
     }
 }

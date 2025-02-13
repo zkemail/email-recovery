@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import { console } from "forge-std/console.sol";
+
 import { BaseDeploySafeNativeRecoveryTest } from "./base/BaseDeploySafeNativeRecovery.t.sol";
 import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
@@ -8,13 +10,13 @@ import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHand
 contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {
     function setUp() public override {
         super.setUp();
-        config.commandHandler = deploySafeRecoveryCommandHandler(config.create2Salt);
-
         target = new DeploySafeNativeRecoveryScript();
     }
 
-    function deploySafeRecoveryCommandHandler(bytes32 salt) internal returns (address) {
-        return address(new SafeRecoveryCommandHandler{ salt: bytes32(salt) }());
+    function deployCommandHandler() internal override {
+        config.commandHandler =
+            address(new SafeRecoveryCommandHandler{ salt: config.create2Salt }());
+        console.log("Deployed Command Handler at", config.commandHandler);
     }
 
     function test_NoCommandHandlerEnv() public {

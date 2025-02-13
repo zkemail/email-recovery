@@ -9,12 +9,14 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 contract BaseDeployScript is Script {
     error MissingRequiredParameter(string param);
     error InvalidCommandHandlerType();
 
     enum CommandHandlerType {
+        Unset,
         AccountHidingRecovery,
         EmailRecovery,
         SafeRecovery
@@ -122,5 +124,20 @@ contract BaseDeployScript is Script {
         address dkim = address(dkimProxy);
         console.log("UserOverrideableDKIMRegistry proxy deployed at: %s", dkim);
         return dkim;
+    }
+
+    function deploy() internal virtual {
+        address initialOwner = vm.addr(config.privateKey);
+
+        if (config.dkimRegistry == address(0)) {
+            config.dkimRegistry = deployUserOverrideableDKIMRegistry(
+                initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
+            );
+        }
+
+        if (config.emailAuthImpl == address(0)) {
+            config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
+            console.log("Deployed Email Auth at", config.emailAuthImpl);
+        }
     }
 }

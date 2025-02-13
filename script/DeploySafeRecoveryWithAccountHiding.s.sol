@@ -12,8 +12,10 @@ contract DeploySafeRecoveryWithAccountHidingScript is BaseDeployUniversalEmailRe
     function run() public override {
         super.run();
 
+        commandHandlerType = CommandHandlerType.AccountHidingRecovery;
+
         vm.startBroadcast(config.privateKey);
-        deployUniversalEmailRecovery(CommandHandlerType.AccountHidingRecovery);
+        deploy();
         vm.stopBroadcast();
     }
 }
