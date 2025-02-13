@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeploy.t.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
+import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
     function setUp() public virtual override {
@@ -16,6 +17,8 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
         }(config.verifier, config.emailAuthImpl);
         return address(recoveryFactory);
     }
+
+    function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
 
     function test_NoVerifierEnv() public {
         commonTest_NoVerifierEnv();
@@ -47,5 +50,36 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
     function test_DeploymentEvent() public {
         bytes memory eventSignature = "UniversalEmailRecoveryModuleDeployed(address,address)";
         commonTest_DeploymentEvent(eventSignature);
+    }
+
+    function test_Deployment() public {
+        setAllEnvVars();
+
+        address expectedCommandHandler = computeAddress(
+            config.create2Salt, getCommandHandlerBytecode(), "", config.recoveryFactory
+        );
+
+        address expectedRecoveryModule = computeAddress(
+            config.create2Salt,
+            type(UniversalEmailRecoveryModule).creationCode,
+            abi.encode(
+                config.verifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
+                expectedCommandHandler,
+                config.minimumDelay,
+                config.killSwitchAuthorizer
+            ),
+            config.recoveryFactory
+        );
+
+        assert(!isContractDeployed(expectedCommandHandler));
+        assert(!isContractDeployed(expectedRecoveryModule));
+        target.run();
+        assert(isContractDeployed(expectedCommandHandler));
+        assert(isContractDeployed(expectedRecoveryModule));
+        // also checking returned addresses
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler);
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule);
     }
 }
