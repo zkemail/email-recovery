@@ -14,7 +14,6 @@ import { ECDSAOwnedDKIMRegistry } from
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 
 abstract contract BaseTest is Test {
     // Forge deterministic deployer address. See more details in the Foundry book:
