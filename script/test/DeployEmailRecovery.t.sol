@@ -13,16 +13,7 @@ contract DeployEmailRecoveryModuleTest is BaseDeployEmailRecoveryTest {
 
     function setUp() public override {
         super.setUp();
-        config.recoveryFactory = deployRecoveryFactory();
-
         target = new DeployEmailRecoveryScript();
-    }
-
-    function deployRecoveryFactory() internal returns (address) {
-        EmailRecoveryFactory recoveryFactory = new EmailRecoveryFactory{ salt: config.create2Salt }(
-            config.verifier, config.emailAuthImpl
-        );
-        return address(recoveryFactory);
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {
@@ -57,36 +48,17 @@ contract DeployEmailRecoveryModuleTest is BaseDeployEmailRecoveryTest {
 
     function test_NoValidatorEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("VALIDATOR", "");
-
-        address validator =
-            computeAddress(config.create2Salt, type(OwnableValidator).creationCode, "");
-
-        assert(!isContractDeployed(validator));
-        target.run();
-        assert(isContractDeployed(validator));
+        commonTest_NoValidatorEnv(target);
     }
 
     function test_NoRecoveryFactoryEnv() public {
         setAllEnvVars();
-        vm.setEnv("RECOVERY_FACTORY", "");
-
-        address recoveryFactory = computeAddress(
-            config.create2Salt,
-            type(EmailRecoveryFactory).creationCode,
-            abi.encode(config.verifier, config.emailAuthImpl)
-        );
-
-        assert(!isContractDeployed(recoveryFactory));
-        target.run();
-        assert(isContractDeployed(recoveryFactory));
+        commonTest_NoRecoveryFactoryEnv(target);
     }
 
     function test_DeploymentEvent() public {
         setAllEnvVars();
-        bytes memory eventSignature = "EmailRecoveryModuleDeployed(address,address,address,bytes4)";
-        commonTest_DeploymentEvent(target, eventSignature);
+        commonTest_DeploymentEvent(target);
     }
 
     function test_Deployment() public {

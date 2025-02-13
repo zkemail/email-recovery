@@ -244,27 +244,6 @@ abstract contract BaseDeployTest is Test {
         assert(isContractDeployed(proxy));
     }
 
-    function commonTest_NoZkVerifierEnv(BaseDeployScript target) public {
-        vm.setEnv("ZK_VERIFIER", "");
-
-        address initialOwner = vm.addr(config.privateKey);
-
-        address zkVerifier = computeAddress(config.create2Salt, type(Verifier).creationCode, "");
-        address groth16 = computeAddress(config.create2Salt, type(Groth16Verifier).creationCode, "");
-        address proxy = computeAddress(
-            config.create2Salt,
-            type(ERC1967Proxy).creationCode,
-            abi.encode(
-                zkVerifier,
-                abi.encodeCall(Verifier(zkVerifier).initialize, (initialOwner, address(groth16)))
-            )
-        );
-
-        assert(!isContractDeployed(proxy));
-        target.run();
-        assert(isContractDeployed(proxy));
-    }
-
     function commonTest_NoDkimRegistryEnv(BaseDeployScript target) public {
         vm.setEnv("DKIM_REGISTRY", "");
 

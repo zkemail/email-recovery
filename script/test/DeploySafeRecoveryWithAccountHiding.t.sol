@@ -14,16 +14,7 @@ contract DeploySafeRecoveryWithAccountHidingTest is BaseDeployUniversalEmailReco
 
     function setUp() public override {
         super.setUp();
-        config.recoveryFactory = deployRecoveryUniversalFactory();
-
         target = new DeploySafeRecoveryWithAccountHidingScript();
-    }
-
-    function deployRecoveryUniversalFactory() internal returns (address) {
-        EmailRecoveryUniversalFactory recoveryFactory = new EmailRecoveryUniversalFactory{
-            salt: config.create2Salt
-        }(config.verifier, config.emailAuthImpl);
-        return address(recoveryFactory);
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {
@@ -58,24 +49,12 @@ contract DeploySafeRecoveryWithAccountHidingTest is BaseDeployUniversalEmailReco
 
     function test_NoRecoveryFactoryEnv() public {
         setAllEnvVars();
-
-        vm.setEnv("RECOVERY_FACTORY", "");
-
-        address recoveryFactory = computeAddress(
-            config.create2Salt,
-            type(EmailRecoveryUniversalFactory).creationCode,
-            abi.encode(config.verifier, config.emailAuthImpl)
-        );
-
-        assert(!isContractDeployed(recoveryFactory));
-        target.run();
-        assert(isContractDeployed(recoveryFactory));
+        commonTest_NoRecoveryFactoryEnv(target);
     }
 
     function test_DeploymentEvent() public {
         setAllEnvVars();
-        bytes memory eventSignature = "UniversalEmailRecoveryModuleDeployed(address,address)";
-        commonTest_DeploymentEvent(target, eventSignature);
+        commonTest_DeploymentEvent(target);
     }
 
     function test_Deployment() public {
