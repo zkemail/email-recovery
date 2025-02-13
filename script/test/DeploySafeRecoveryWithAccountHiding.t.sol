@@ -6,7 +6,6 @@ import { DeploySafeRecoveryWithAccountHidingScript } from
     "../DeploySafeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
-import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract DeploySafeRecoveryWithAccountHidingTest is BaseDeployUniversalEmailRecoveryTest {

@@ -4,7 +4,6 @@ pragma solidity ^0.8.25;
 import { BaseDeployUniversalEmailRecoveryTest } from "./base/BaseDeployUniversalEmailRecovery.t.sol";
 import { DeployUniversalEmailRecoveryScript } from "../DeployUniversalEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract DeployUniversalEmailRecoveryModuleTest is BaseDeployUniversalEmailRecoveryTest {
