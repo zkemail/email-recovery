@@ -11,7 +11,7 @@ import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideab
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
-contract BaseDeployScript is Script {
+abstract contract BaseDeployScript is Script {
     error MissingRequiredParameter(string param);
     error InvalidCommandHandlerType();
 
@@ -126,18 +126,25 @@ contract BaseDeployScript is Script {
         return dkim;
     }
 
-    function deploy() internal virtual {
+    function deployDKIMRegistry() internal {
         address initialOwner = vm.addr(config.privateKey);
+        config.dkimRegistry = deployUserOverrideableDKIMRegistry(
+            initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
+        );
+    }
 
-        if (config.dkimRegistry == address(0)) {
-            config.dkimRegistry = deployUserOverrideableDKIMRegistry(
-                initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
-            );
-        }
+    function deployEmailAuth() internal {
+        config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
+        console.log("Deployed Email Auth at", config.emailAuthImpl);
+    }
 
-        if (config.emailAuthImpl == address(0)) {
-            config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
-            console.log("Deployed Email Auth at", config.emailAuthImpl);
-        }
+    function deployVerifier() internal {
+        address initialOwner = vm.addr(config.privateKey);
+        config.verifier = deployVerifier(initialOwner, config.create2Salt);
+    }
+
+    function deploy() internal virtual {
+        if (config.dkimRegistry == address(0)) deployDKIMRegistry();
+        if (config.emailAuthImpl == address(0)) deployEmailAuth();
     }
 }

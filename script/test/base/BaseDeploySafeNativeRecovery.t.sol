@@ -39,14 +39,6 @@ abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
         assert(isContractDeployed(proxy));
     }
 
-    function test_NoDkimRegistryEnv() public {
-        commonTest_NoDkimRegistryEnv();
-    }
-
-    function test_NoEmailAuthImplEnv() public {
-        commonTest_NoEmailAuthImplEnv();
-    }
-
     function test_NoCommandHandlerEnv() public {
         setAllEnvVars();
         vm.setEnv("COMMAND_HANDLER", "");

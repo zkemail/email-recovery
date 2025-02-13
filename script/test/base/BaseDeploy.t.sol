@@ -54,7 +54,6 @@ abstract contract BaseDeployTest is Test {
         });
 
         setAllEnvVars();
-        target = new BaseDeployScript();
     }
 
     /**
@@ -249,7 +248,7 @@ abstract contract BaseDeployTest is Test {
         assert(isContractDeployed(proxy));
     }
 
-    function commonTest_NoDkimRegistryEnv() public {
+    function test_NoDkimRegistryEnv() public {
         setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
 
@@ -274,7 +273,7 @@ abstract contract BaseDeployTest is Test {
         assert(isContractDeployed(proxy));
     }
 
-    function commonTest_NoEmailAuthImplEnv() public {
+    function test_NoEmailAuthImplEnv() public {
         setAllEnvVars();
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 

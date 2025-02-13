@@ -10,23 +10,20 @@ import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniver
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
     function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
 
+    function deployEmailRecoveryUniversalFactory() internal {
+        config.recoveryFactory = address(
+            new EmailRecoveryUniversalFactory{ salt: config.create2Salt }(
+                config.verifier, config.emailAuthImpl
+            )
+        );
+        console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
+    }
+
     function deploy() internal override {
         super.deploy();
 
-        address initialOwner = vm.addr(config.privateKey);
-
-        if (config.verifier == address(0)) {
-            config.verifier = deployVerifier(initialOwner, config.create2Salt);
-        }
-
-        if (config.recoveryFactory == address(0)) {
-            config.recoveryFactory = address(
-                new EmailRecoveryUniversalFactory{ salt: config.create2Salt }(
-                    config.verifier, config.emailAuthImpl
-                )
-            );
-            console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
-        }
+        if (config.verifier == address(0)) deployVerifier();
+        if (config.recoveryFactory == address(0)) deployEmailRecoveryUniversalFactory();
 
         (emailRecoveryModule, emailRecoveryHandler) = EmailRecoveryUniversalFactory(
             config.recoveryFactory

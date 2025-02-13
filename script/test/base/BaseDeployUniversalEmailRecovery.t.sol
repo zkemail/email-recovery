@@ -24,14 +24,6 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
         commonTest_NoVerifierEnv();
     }
 
-    function test_NoDkimRegistryEnv() public {
-        commonTest_NoDkimRegistryEnv();
-    }
-
-    function test_NoEmailAuthImplEnv() public {
-        commonTest_NoEmailAuthImplEnv();
-    }
-
     function test_NoRecoveryFactoryEnv() public {
         setAllEnvVars();
         vm.setEnv("RECOVERY_FACTORY", "");
