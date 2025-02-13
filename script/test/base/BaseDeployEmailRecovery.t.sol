@@ -20,6 +20,8 @@ abstract contract BaseDeployEmailRecoveryTest is BaseDeployTest {
         return address(recoveryFactory);
     }
 
+    // ### TEST CASES ###
+
     function test_NoVerifierEnv() public {
         commonTest_NoVerifierEnv();
     }

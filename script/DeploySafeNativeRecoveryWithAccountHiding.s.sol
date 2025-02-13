@@ -11,19 +11,19 @@ import { AccountHidingRecoveryCommandHandler } from
 contract DeploySafeNativeRecoveryWithAccountHidingScript is BaseDeploySafeNativeRecoveryScript {
     address public module;
 
-    function deployCommandHandlerIfNotDeployed() internal {
-        if (config.commandHandler == address(0)) {
-            config.commandHandler =
-                address(new AccountHidingRecoveryCommandHandler{ salt: config.create2Salt }());
-            console.log("Deployed Command Handler at", config.commandHandler);
-        }
+    function deployCommandHandler() private returns (address commandHandler) {
+        commandHandler =
+            address(new AccountHidingRecoveryCommandHandler{ salt: config.create2Salt }());
+        console.log("Deployed Command Handler at", commandHandler);
     }
 
     function run() public override {
         super.run();
 
         vm.startBroadcast(config.privateKey);
-        deployCommandHandlerIfNotDeployed();
+
+        if (config.commandHandler == address(0)) config.commandHandler = deployCommandHandler();
+
         deploy();
         vm.stopBroadcast();
     }

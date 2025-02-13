@@ -20,6 +20,8 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
 
     function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
 
+    // ### TEST CASES ###
+
     function test_NoVerifierEnv() public {
         commonTest_NoVerifierEnv();
     }

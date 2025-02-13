@@ -17,6 +17,8 @@ abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
 
     function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
 
+    // ### TEST CASES ###
+
     function test_NoZkVerifierEnv() public {
         setAllEnvVars();
         vm.setEnv("ZK_VERIFIER", "");

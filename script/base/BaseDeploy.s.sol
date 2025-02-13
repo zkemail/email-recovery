@@ -13,14 +13,6 @@ import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.so
 
 abstract contract BaseDeployScript is Script {
     error MissingRequiredParameter(string param);
-    error InvalidCommandHandlerType();
-
-    enum CommandHandlerType {
-        Unset,
-        AccountHidingRecovery,
-        EmailRecovery,
-        SafeRecovery
-    }
 
     struct DeploymentConfig {
         bytes32 create2Salt;
@@ -38,17 +30,17 @@ abstract contract BaseDeployScript is Script {
         address zkVerifier;
     }
 
-    DeploymentConfig public config;
+    DeploymentConfig internal config;
 
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
 
-    function run() public virtual {
-        loadConfig();
-        validateConfig();
-    }
+    // ### PRIVATE HELPER FUNCTIONS ###
 
-    function loadConfig() public {
+    /**
+     * @dev Loads the deployment configuration from the environment variables.
+     */
+    function loadConfig() private {
         config = DeploymentConfig({
             create2Salt: bytes32(vm.envOr("CREATE2_SALT", uint256(0))),
             dkimDelay: vm.envOr("DKIM_DELAY", uint256(0)),
@@ -66,7 +58,10 @@ abstract contract BaseDeployScript is Script {
         });
     }
 
-    function validateConfig() public view {
+    /**
+     * @dev Validates the deployment configuration, reverting if any required parameter is missing.
+     */
+    function validateConfig() private view {
         if (config.privateKey == 0) {
             revert MissingRequiredParameter("PRIVATE_KEY");
         }
@@ -81,70 +76,70 @@ abstract contract BaseDeployScript is Script {
     }
 
     /**
-     * Helper function to deploy a Verifier
+     * @dev Helper function, deploys a UserOverrideableDKIMRegistry contract and then deploys a
+     * proxy contract for it.
+     * @return proxy The address of the UserOverrideableDKIMRegistry proxy contract.
      */
-    function deployVerifier(address initialOwner, bytes32 salt) public returns (address) {
-        Verifier verifierImpl = new Verifier{ salt: salt }();
-        console.log("Verifier implementation deployed at: %s", address(verifierImpl));
-        Groth16Verifier groth16Verifier = new Groth16Verifier{ salt: salt }();
-        ERC1967Proxy verifierProxy = new ERC1967Proxy{ salt: salt }(
-            address(verifierImpl),
-            abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
+    function deployDkimRegistry() private returns (address proxy) {
+        address initialOwner = vm.addr(config.privateKey);
+
+        address dkim = address(new UserOverrideableDKIMRegistry{ salt: config.create2Salt }());
+        console.log("UserOverrideableDKIMRegistry implementation deployed at: %s", dkim);
+
+        proxy = address(
+            new ERC1967Proxy{ salt: config.create2Salt }(
+                address(dkim),
+                abi.encodeCall(
+                    UserOverrideableDKIMRegistry(dkim).initialize,
+                    (initialOwner, config.dkimSigner, config.dkimDelay)
+                )
+            )
         );
-        address verifier = address(Verifier(address(verifierProxy)));
-        console.log("Deployed Verifier at", verifier);
-        return verifier;
+        console.log("UserOverrideableDKIMRegistry proxy deployed at: %s", proxy);
     }
 
     /**
-     * Helper function to deploy a UserOverrideableDKIMRegistry
+     * @dev Helper function, deploys an EmailAuth contract.
+     * @return emailAuthImpl The address of the EmailAuth contract.
      */
-    function deployUserOverrideableDKIMRegistry(
-        address initialOwner,
-        address dkimRegistrySigner,
-        uint256 setTimeDelay,
-        bytes32 salt
-    )
-        public
-        returns (address)
-    {
-        require(dkimRegistrySigner != address(0), "DKIM_SIGNER is required");
-        UserOverrideableDKIMRegistry overrideableDkimImpl =
-            new UserOverrideableDKIMRegistry{ salt: salt }();
-        console.log(
-            "UserOverrideableDKIMRegistry implementation deployed at: %s",
-            address(overrideableDkimImpl)
-        );
-        ERC1967Proxy dkimProxy = new ERC1967Proxy{ salt: salt }(
-            address(overrideableDkimImpl),
-            abi.encodeCall(
-                overrideableDkimImpl.initialize, (initialOwner, dkimRegistrySigner, setTimeDelay)
+    function deployEmailAuthImpl() private returns (address emailAuthImpl) {
+        emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
+        console.log("Deployed Email Auth at", emailAuthImpl);
+    }
+
+    // ### INTERNAL HELPER FUNCTIONS ###
+
+    /**
+     * @dev Helper function, deploys a Verifier contract and a Groth16Verifier contract, and then
+     * deploys a proxy contract for it.
+     * @return proxy The address of the Verifier proxy contract.
+     */
+    function deployVerifier() internal returns (address proxy) {
+        address initialOwner = vm.addr(config.privateKey);
+
+        address verifier = address(new Verifier{ salt: config.create2Salt }());
+        console.log("Deployed Verifier implementation at: %s", address(verifier));
+
+        address groth16 = address(new Groth16Verifier{ salt: config.create2Salt }());
+        console.log("Deployed Groth16Verifier implementation at: %s", groth16);
+
+        proxy = address(
+            new ERC1967Proxy{ salt: config.create2Salt }(
+                verifier, abi.encodeCall(Verifier(verifier).initialize, (initialOwner, groth16))
             )
         );
-        address dkim = address(dkimProxy);
-        console.log("UserOverrideableDKIMRegistry proxy deployed at: %s", dkim);
-        return dkim;
+        console.log("Deployed Verifier proxy at: %s", proxy);
     }
 
-    function deployDKIMRegistry() internal {
-        address initialOwner = vm.addr(config.privateKey);
-        config.dkimRegistry = deployUserOverrideableDKIMRegistry(
-            initialOwner, config.dkimSigner, config.dkimDelay, config.create2Salt
-        );
-    }
-
-    function deployEmailAuth() internal {
-        config.emailAuthImpl = address(new EmailAuth{ salt: config.create2Salt }());
-        console.log("Deployed Email Auth at", config.emailAuthImpl);
-    }
-
-    function deployVerifier() internal {
-        address initialOwner = vm.addr(config.privateKey);
-        config.verifier = deployVerifier(initialOwner, config.create2Salt);
-    }
+    // ### VIRTUAL FUNCTIONS ###
 
     function deploy() internal virtual {
-        if (config.dkimRegistry == address(0)) deployDKIMRegistry();
-        if (config.emailAuthImpl == address(0)) deployEmailAuth();
+        if (config.dkimRegistry == address(0)) config.dkimRegistry = deployDkimRegistry();
+        if (config.emailAuthImpl == address(0)) config.emailAuthImpl = deployEmailAuthImpl();
+    }
+
+    function run() public virtual {
+        loadConfig();
+        validateConfig();
     }
 }

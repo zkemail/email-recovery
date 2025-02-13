@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console */
 
 import { console2 } from "forge-std/console2.sol";
-import { Test } from "forge-std/Test.sol";
+import { BaseTest } from "./Base.t.sol";
 import { Vm } from "forge-std/Vm.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -16,169 +16,14 @@ import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 
-abstract contract BaseDeployTest is Test {
-    // Forge deterministic deployer address. See more details in the Foundry book:
-    // https://book.getfoundry.sh/tutorials/create2-tutorial#introduction
-    address internal constant CREATE2_DEPLOYER_ADDRESS = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-
-    BaseDeployScript.DeploymentConfig public config;
+abstract contract BaseDeployTest is BaseTest {
     BaseDeployScript internal target;
-    /**
-     * @dev Deploys needed contracts and sets environment vars.
-     * @notice deploys the following contracts:
-     * - verifier
-     * - DKIM registry
-     * - email auth implementation
-     *
-     */
 
-    function setUp() public virtual {
-        uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-        address dkimSigner = vm.addr(5);
-        address initialOwner = vm.addr(privateKey);
-
-        config = BaseDeployScript.DeploymentConfig({
-            create2Salt: bytes32(uint256(2)),
-            dkimDelay: 0,
-            minimumDelay: 0,
-            privateKey: privateKey,
-            dkimRegistry: deployDKIMRegistry(dkimSigner, initialOwner),
-            dkimSigner: dkimSigner,
-            emailAuthImpl: address(new EmailAuth()),
-            killSwitchAuthorizer: vm.addr(1),
-            recoveryFactory: address(0),
-            verifier: deployVerifier(initialOwner),
-            zkVerifier: deployVerifier(initialOwner),
-            commandHandler: address(0),
-            validator: vm.addr(9)
-        });
-
-        setAllEnvVars();
+    function setUp() public virtual override {
+        super.setUp();
     }
 
-    /**
-     * @dev Function that sets all environment variables from the contract state.
-     * @notice Manual environment variable setting is performed at the beginning of each test:
-     * If an environment variable is set using vm.setEnv() inside a test case, it sets the variable
-     * for all test cases. Unfortunately, the setUp() function does not reset the environment
-     * variables before each test case (despite having vm.setEnv() calls). Therefore, if a test case
-     * modifies an environment variable, subsequent test cases will use the  modified value instead
-     * of the one set in the setUp() function. For more details, see the closed GitHub issue:
-     * https://github.com/foundry-rs/foundry/issues/2349
-     */
-    function setAllEnvVars() internal virtual {
-        vm.setEnv("CREATE2_SALT", vm.toString(config.create2Salt));
-        vm.setEnv("DKIM_DELAY", vm.toString(config.dkimDelay));
-        vm.setEnv("MINIMUM_DELAY", vm.toString(config.minimumDelay));
-        vm.setEnv("PRIVATE_KEY", vm.toString(config.privateKey));
-        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
-        vm.setEnv("DKIM_REGISTRY", vm.toString(config.dkimRegistry));
-        vm.setEnv("DKIM_SIGNER", vm.toString(config.dkimSigner));
-        vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(config.emailAuthImpl));
-        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(config.killSwitchAuthorizer));
-        vm.setEnv("RECOVERY_FACTORY", vm.toString(config.recoveryFactory));
-        vm.setEnv("VALIDATOR", vm.toString(config.validator));
-        vm.setEnv("VERIFIER", vm.toString(config.verifier));
-        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
-    }
-
-    function deployVerifier(address initialOwner) internal returns (address verifier) {
-        Verifier verifierImpl = new Verifier();
-        Groth16Verifier groth16Verifier = new Groth16Verifier();
-        ERC1967Proxy verifierProxy = new ERC1967Proxy(
-            address(verifierImpl),
-            abi.encodeCall(verifierImpl.initialize, (initialOwner, address(groth16Verifier)))
-        );
-        verifier = address(Verifier(address(verifierProxy)));
-        return verifier;
-    }
-
-    function deployDKIMRegistry(
-        address dkimRegistrySigner,
-        address initialOwner
-    )
-        internal
-        returns (address)
-    {
-        ECDSAOwnedDKIMRegistry dkimImpl = new ECDSAOwnedDKIMRegistry();
-        console2.log("ECDSAOwnedDKIMRegistry implementation deployed at: %s", address(dkimImpl));
-        ERC1967Proxy dkimProxy = new ERC1967Proxy(
-            address(dkimImpl),
-            abi.encodeCall(dkimImpl.initialize, (initialOwner, dkimRegistrySigner))
-        );
-        return address(ECDSAOwnedDKIMRegistry(address(dkimProxy)));
-    }
-
-    // ### HELPER FUNCTIONS ###
-    /**
-     * @dev Helper function, finds the event with the given signature hash in the logs array.
-     * @param logs The array of Vm.Log structs.
-     * @param eventSigHash The event signature hash (e.g. `keccak256("Event(address, uint256)"))`).
-     * @return True if the event is found in the logs array; otherwise, false.
-     */
-    function findEvent(Vm.Log[] memory logs, bytes32 eventSigHash) internal pure returns (bool) {
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == eventSigHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @dev Helper function, computes the address of a contract deployed using a custom CREATE2
-     * deployer.
-     * @param create2Salt The salt used in the CREATE2 deployment.
-     * @param creationCode The contract's creation code. - `type(Contract).creationCode`
-     * @param constructorArgs The contract's constructor arguments. - `abi.encode(a1, a2, ...)`
-     * @param deployer The address of the deployer.
-     */
-    function computeAddress(
-        bytes32 create2Salt,
-        bytes memory creationCode,
-        bytes memory constructorArgs,
-        address deployer
-    )
-        internal
-        pure
-        returns (address)
-    {
-        bytes memory fullBytecode = abi.encodePacked(creationCode, constructorArgs);
-        return Create2.computeAddress(create2Salt, keccak256(fullBytecode), deployer);
-    }
-
-    /**
-     * @dev Helper function, computes the address of a contract deployed using the default CREATE2
-     * deployer.
-     * @param create2Salt The salt used in the CREATE2 deployment.
-     * @param creationCode The contract's creation code. - `type(Contract).creationCode`
-     * @param constructorArgs The contract's constructor arguments. - `abi.encode(a1, a2, ...)`
-     */
-    function computeAddress(
-        bytes32 create2Salt,
-        bytes memory creationCode,
-        bytes memory constructorArgs
-    )
-        internal
-        pure
-        returns (address)
-    {
-        return computeAddress(create2Salt, creationCode, constructorArgs, CREATE2_DEPLOYER_ADDRESS);
-    }
-
-    /**
-     * @dev Helper function, checks if a contract is deployed at the given address.
-     * @param addr The address to check.
-     * @return True if a contract is deployed at the given address; otherwise, false.
-     */
-    function isContractDeployed(address addr) internal view returns (bool) {
-        uint256 size;
-        /* solhint-disable-next-line no-inline-assembly */
-        assembly {
-            size := extcodesize(addr)
-        }
-        return size > 0;
-    }
+    // ### TEST CASES ###
 
     function test_RevertIf_NoPrivateKeyEnv() public {
         setAllEnvVars();
@@ -215,39 +60,6 @@ abstract contract BaseDeployTest is Test {
         target.run();
     }
 
-    // ### COMMON TEST FUNCTIONS ###
-
-    function commonTest_DeploymentEvent(bytes memory eventSignature) public {
-        setAllEnvVars();
-        vm.recordLogs();
-        target.run();
-
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        assertTrue(findEvent(entries, keccak256(eventSignature)), "deploy event not emitted");
-    }
-
-    function commonTest_NoVerifierEnv() public {
-        setAllEnvVars();
-        vm.setEnv("VERIFIER", "");
-
-        address initialOwner = vm.addr(config.privateKey);
-
-        address verifier = computeAddress(config.create2Salt, type(Verifier).creationCode, "");
-        address groth16 = computeAddress(config.create2Salt, type(Groth16Verifier).creationCode, "");
-        address proxy = computeAddress(
-            config.create2Salt,
-            type(ERC1967Proxy).creationCode,
-            abi.encode(
-                verifier,
-                abi.encodeCall(Verifier(verifier).initialize, (initialOwner, address(groth16)))
-            )
-        );
-
-        assert(!isContractDeployed(proxy));
-        target.run();
-        assert(isContractDeployed(proxy));
-    }
-
     function test_NoDkimRegistryEnv() public {
         setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
@@ -282,5 +94,38 @@ abstract contract BaseDeployTest is Test {
         assert(!isContractDeployed(emailAuthImpl));
         target.run();
         assert(isContractDeployed(emailAuthImpl));
+    }
+
+    // ### COMMON TEST FUNCTIONS ###
+
+    function commonTest_DeploymentEvent(bytes memory eventSignature) internal {
+        setAllEnvVars();
+        vm.recordLogs();
+        target.run();
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertTrue(findEvent(entries, keccak256(eventSignature)), "deploy event not emitted");
+    }
+
+    function commonTest_NoVerifierEnv() internal {
+        setAllEnvVars();
+        vm.setEnv("VERIFIER", "");
+
+        address initialOwner = vm.addr(config.privateKey);
+
+        address verifier = computeAddress(config.create2Salt, type(Verifier).creationCode, "");
+        address groth16 = computeAddress(config.create2Salt, type(Groth16Verifier).creationCode, "");
+        address proxy = computeAddress(
+            config.create2Salt,
+            type(ERC1967Proxy).creationCode,
+            abi.encode(
+                verifier,
+                abi.encodeCall(Verifier(verifier).initialize, (initialOwner, address(groth16)))
+            )
+        );
+
+        assert(!isContractDeployed(proxy));
+        target.run();
+        assert(isContractDeployed(proxy));
     }
 }

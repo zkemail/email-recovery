@@ -10,26 +10,26 @@ import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 abstract contract BaseDeployEmailRecoveryScript is BaseDeployScript {
-    function deployValidator() internal {
-        config.validator = address(new OwnableValidator{ salt: config.create2Salt }());
-        console.log("Deployed Ownable Validator at", config.validator);
+    function deployValidator() private returns (address validator) {
+        validator = address(new OwnableValidator{ salt: config.create2Salt }());
+        console.log("Deployed Ownable Validator at", validator);
     }
 
-    function deployEmailRecoveryFactory() internal {
-        config.recoveryFactory = address(
+    function deployRecoveryFactory() private returns (address recoveryFactory) {
+        recoveryFactory = address(
             new EmailRecoveryFactory{ salt: config.create2Salt }(
                 config.verifier, config.emailAuthImpl
             )
         );
-        console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
+        console.log("Deployed Email Recovery Factory at", recoveryFactory);
     }
 
     function deploy() internal override {
         super.deploy();
 
-        if (config.verifier == address(0)) deployVerifier();
-        if (config.validator == address(0)) deployValidator();
-        if (config.recoveryFactory == address(0)) deployEmailRecoveryFactory();
+        if (config.verifier == address(0)) config.verifier = deployVerifier();
+        if (config.validator == address(0)) config.validator = deployValidator();
+        if (config.recoveryFactory == address(0)) config.recoveryFactory = deployRecoveryFactory();
 
         (emailRecoveryModule, emailRecoveryHandler) = EmailRecoveryFactory(config.recoveryFactory)
             .deployEmailRecoveryModule(
