@@ -20,15 +20,7 @@ contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {
         console.log("Deployed Command Handler at", config.commandHandler);
     }
 
-    function test_NoCommandHandlerEnv() public {
-        setAllEnvVars();
-        vm.setEnv("COMMAND_HANDLER", "");
-
-        address handler =
-            computeAddress(config.create2Salt, type(SafeRecoveryCommandHandler).creationCode, "");
-
-        assert(!isContractDeployed(handler));
-        target.run();
-        assert(isContractDeployed(handler));
+    function getCommandHandlerBytecode() internal pure override returns (bytes memory) {
+        return type(SafeRecoveryCommandHandler).creationCode;
     }
 }

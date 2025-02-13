@@ -15,6 +15,8 @@ abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
 
     function deployCommandHandler() internal virtual;
 
+    function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
+
     function test_NoZkVerifierEnv() public {
         setAllEnvVars();
         vm.setEnv("ZK_VERIFIER", "");
@@ -43,6 +45,17 @@ abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
 
     function test_NoEmailAuthImplEnv() public {
         commonTest_NoEmailAuthImplEnv();
+    }
+
+    function test_NoCommandHandlerEnv() public {
+        setAllEnvVars();
+        vm.setEnv("COMMAND_HANDLER", "");
+
+        address handler = computeAddress(config.create2Salt, getCommandHandlerBytecode(), "");
+
+        assert(!isContractDeployed(handler));
+        target.run();
+        assert(isContractDeployed(handler));
     }
 
     function test_Deployment() public {

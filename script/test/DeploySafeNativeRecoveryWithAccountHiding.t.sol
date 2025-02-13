@@ -19,16 +19,7 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRe
             address(new AccountHidingRecoveryCommandHandler{ salt: config.create2Salt }());
     }
 
-    function test_NoCommandHandlerEnv() public {
-        setAllEnvVars();
-        vm.setEnv("COMMAND_HANDLER", "");
-
-        address handler = computeAddress(
-            config.create2Salt, type(AccountHidingRecoveryCommandHandler).creationCode, ""
-        );
-
-        assert(!isContractDeployed(handler));
-        target.run();
-        assert(isContractDeployed(handler));
+    function getCommandHandlerBytecode() internal pure override returns (bytes memory) {
+        return type(AccountHidingRecoveryCommandHandler).creationCode;
     }
 }
