@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployUniversalEmailRecoveryTest } from
-    "test/script/base/BaseDeployUniversalEmailRecovery.t.sol";
+    "script/test/base/BaseDeployUniversalEmailRecovery.t.sol";
 import { DeployUniversalEmailRecoveryScript } from "script/DeployUniversalEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 

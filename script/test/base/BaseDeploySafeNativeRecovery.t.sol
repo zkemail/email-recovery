@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import { BaseDeployTest } from "test/script/base/BaseDeploy.t.sol";
+import { BaseDeployTest } from "script/test/base/BaseDeploy.t.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
