@@ -5,8 +5,6 @@ pragma solidity ^0.8.25;
 
 import { console } from "forge-std/console.sol";
 import { BaseDeployScript } from "./BaseDeploy.s.sol";
-import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 abstract contract BaseDeploySafeNativeRecoveryScript is BaseDeployScript {

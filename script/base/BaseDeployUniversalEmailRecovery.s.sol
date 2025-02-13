@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-/* solhint-disable no-console, gas-custom-errors */
+/* solhint-disable no-console */
 
 import { console } from "forge-std/console.sol";
 import { BaseDeployScript } from "./BaseDeploy.s.sol";
-import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
