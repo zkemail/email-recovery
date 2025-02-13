@@ -3,12 +3,15 @@ pragma solidity ^0.8.25;
 
 import { BaseDeployUniversalEmailRecoveryScript } from
     "./base/BaseDeployUniversalEmailRecovery.s.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 
 contract DeployUniversalEmailRecoveryScript is BaseDeployUniversalEmailRecoveryScript {
+    function getCommandHandlerBytecode() internal pure override returns (bytes memory) {
+        return type(EmailRecoveryCommandHandler).creationCode;
+    }
+
     function run() public override {
         super.run();
-
-        commandHandlerType = CommandHandlerType.EmailRecovery;
 
         vm.startBroadcast(config.privateKey);
         deploy();

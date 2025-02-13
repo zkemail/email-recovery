@@ -6,26 +6,10 @@ pragma solidity ^0.8.25;
 import { console } from "forge-std/console.sol";
 import { BaseDeployScript } from "./BaseDeploy.s.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
-import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
-import { AccountHidingRecoveryCommandHandler } from
-    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
-    CommandHandlerType public commandHandlerType = CommandHandlerType.Unset;
-
-    function getCommandHandlerBytecode() public view returns (bytes memory) {
-        if (commandHandlerType == CommandHandlerType.AccountHidingRecovery) {
-            return type(AccountHidingRecoveryCommandHandler).creationCode;
-        } else if (commandHandlerType == CommandHandlerType.EmailRecovery) {
-            return type(EmailRecoveryCommandHandler).creationCode;
-        } else if (commandHandlerType == CommandHandlerType.SafeRecovery) {
-            return type(SafeRecoveryCommandHandler).creationCode;
-        } else {
-            revert InvalidCommandHandlerType();
-        }
-    }
+    function getCommandHandlerBytecode() internal pure virtual returns (bytes memory);
 
     function deploy() internal override {
         super.deploy();
