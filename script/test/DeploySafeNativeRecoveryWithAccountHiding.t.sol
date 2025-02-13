@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployTest } from "./base/BaseDeployTest.sol";
+import { BaseDeploySafeNativeRecoveryTest } from "./base/BaseDeploySafeNativeRecovery.t.sol";
 import { DeploySafeNativeRecoveryWithAccountHidingScript } from
     "../DeploySafeNativeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
-contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeployTest {
+contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRecoveryTest {
     DeploySafeNativeRecoveryWithAccountHidingScript private target;
 
     function setUp() public override {
