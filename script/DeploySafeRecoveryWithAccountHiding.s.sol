@@ -6,7 +6,7 @@ import { BaseDeployUniversalEmailRecoveryScript } from
 
 // 1. `source .env`
 // 2. `forge script
-// script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHiding_Script
+// script/DeploySafeRecoveryWithAccountHiding.s.sol:DeploySafeRecoveryWithAccountHidingScript
 // --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv`
 contract DeploySafeRecoveryWithAccountHidingScript is BaseDeployUniversalEmailRecoveryScript {
     function run() public override {

@@ -59,9 +59,9 @@ contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
             console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
         }
 
-        EmailRecoveryUniversalFactory factory =
-            EmailRecoveryUniversalFactory(config.recoveryFactory);
-        (emailRecoveryModule, emailRecoveryHandler) = factory.deployUniversalEmailRecoveryModule(
+        (emailRecoveryModule, emailRecoveryHandler) = EmailRecoveryUniversalFactory(
+            config.recoveryFactory
+        ).deployUniversalEmailRecoveryModule(
             config.create2Salt,
             config.create2Salt,
             getCommandHandlerBytecode(commandHandlerType),
