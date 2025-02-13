@@ -67,6 +67,7 @@ contract EnumerableGuardianMap_removeAll_Test is UnitBase {
         }
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function test_RemoveAll_RevertWhen_TooManyValuesToRemove() public {
         address[] memory addresses =
             new address[](EnumerableGuardianMap.MAX_NUMBER_OF_GUARDIANS + 1);
