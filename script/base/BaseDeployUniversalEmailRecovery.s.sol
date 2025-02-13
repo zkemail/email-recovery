@@ -13,9 +13,6 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
-    address public emailRecoveryModule;
-    address public emailRecoveryHandler;
-
     function getCommandHandlerBytecode(CommandHandlerType commandHandlerType)
         public
         pure

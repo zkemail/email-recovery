@@ -2,8 +2,6 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeploy.t.sol";
-import { BaseDeployUniversalEmailRecoveryScript } from
-    "../../base/BaseDeployUniversalEmailRecovery.s.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
@@ -19,9 +17,19 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
         return address(recoveryFactory);
     }
 
-    function commonTest_NoRecoveryFactoryEnv(BaseDeployUniversalEmailRecoveryScript target)
-        public
-    {
+    function test_NoVerifierEnv() public {
+        commonTest_NoVerifierEnv();
+    }
+
+    function test_NoDkimRegistryEnv() public {
+        commonTest_NoDkimRegistryEnv();
+    }
+
+    function test_NoEmailAuthImplEnv() public {
+        commonTest_NoEmailAuthImplEnv();
+    }
+
+    function test_NoRecoveryFactoryEnv() public {
         setAllEnvVars();
         vm.setEnv("RECOVERY_FACTORY", "");
 
@@ -36,8 +44,8 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
         assert(isContractDeployed(recoveryFactory));
     }
 
-    function commonTest_DeploymentEvent(BaseDeployUniversalEmailRecoveryScript target) public {
+    function test_DeploymentEvent() public {
         bytes memory eventSignature = "UniversalEmailRecoveryModuleDeployed(address,address)";
-        commonTest_DeploymentEvent(target, eventSignature);
+        commonTest_DeploymentEvent(eventSignature);
     }
 }

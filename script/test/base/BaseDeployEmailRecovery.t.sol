@@ -2,9 +2,10 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeploy.t.sol";
-import { BaseDeployEmailRecoveryScript } from "../../base/BaseDeployEmailRecovery.s.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
+import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
+import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 
 abstract contract BaseDeployEmailRecoveryTest is BaseDeployTest {
     function setUp() public virtual override {
@@ -19,7 +20,19 @@ abstract contract BaseDeployEmailRecoveryTest is BaseDeployTest {
         return address(recoveryFactory);
     }
 
-    function commonTest_NoValidatorEnv(BaseDeployEmailRecoveryScript target) public {
+    function test_NoVerifierEnv() public {
+        commonTest_NoVerifierEnv();
+    }
+
+    function test_NoDkimRegistryEnv() public {
+        commonTest_NoDkimRegistryEnv();
+    }
+
+    function test_NoEmailAuthImplEnv() public {
+        commonTest_NoEmailAuthImplEnv();
+    }
+
+    function test_NoValidatorEnv() public {
         setAllEnvVars();
 
         vm.setEnv("VALIDATOR", "");
@@ -32,7 +45,7 @@ abstract contract BaseDeployEmailRecoveryTest is BaseDeployTest {
         assert(isContractDeployed(validator));
     }
 
-    function commonTest_NoRecoveryFactoryEnv(BaseDeployEmailRecoveryScript target) public {
+    function test_NoRecoveryFactoryEnv() public {
         setAllEnvVars();
         vm.setEnv("RECOVERY_FACTORY", "");
 
@@ -47,8 +60,44 @@ abstract contract BaseDeployEmailRecoveryTest is BaseDeployTest {
         assert(isContractDeployed(recoveryFactory));
     }
 
-    function commonTest_DeploymentEvent(BaseDeployEmailRecoveryScript target) public {
+    function test_DeploymentEvent() public {
         bytes memory eventSignature = "EmailRecoveryModuleDeployed(address,address,address,bytes4)";
-        commonTest_DeploymentEvent(target, eventSignature);
+        commonTest_DeploymentEvent(eventSignature);
+    }
+
+    function test_Deployment() public {
+        setAllEnvVars();
+
+        address expectedCommandHandler = computeAddress(
+            config.create2Salt,
+            type(EmailRecoveryCommandHandler).creationCode,
+            "",
+            config.recoveryFactory
+        );
+
+        address expectedRecoveryModule = computeAddress(
+            config.create2Salt,
+            type(EmailRecoveryModule).creationCode,
+            abi.encode(
+                config.verifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
+                expectedCommandHandler,
+                config.minimumDelay,
+                config.killSwitchAuthorizer,
+                config.validator,
+                bytes4(keccak256(bytes("changeOwner(address)")))
+            ),
+            config.recoveryFactory
+        );
+
+        assert(!isContractDeployed(expectedCommandHandler));
+        assert(!isContractDeployed(expectedRecoveryModule));
+        target.run();
+        assert(isContractDeployed(expectedCommandHandler));
+        assert(isContractDeployed(expectedRecoveryModule));
+        // also checking returned addresses
+        assertEq(target.emailRecoveryHandler(), expectedCommandHandler);
+        assertEq(target.emailRecoveryModule(), expectedRecoveryModule);
     }
 }

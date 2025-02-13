@@ -11,9 +11,6 @@ import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 abstract contract BaseDeployEmailRecoveryScript is BaseDeployScript {
-    address public emailRecoveryModule;
-    address public emailRecoveryHandler;
-
     function deployEmailRecoveryModule() public {
         address initialOwner = vm.addr(config.privateKey);
 

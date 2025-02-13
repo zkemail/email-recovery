@@ -10,7 +10,7 @@ import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
-abstract contract BaseDeployScript is Script {
+contract BaseDeployScript is Script {
     error MissingRequiredParameter(string param);
     error InvalidCommandHandlerType();
 
@@ -37,6 +37,9 @@ abstract contract BaseDeployScript is Script {
     }
 
     DeploymentConfig public config;
+
+    address public emailRecoveryModule;
+    address public emailRecoveryHandler;
 
     function run() public virtual {
         loadConfig();

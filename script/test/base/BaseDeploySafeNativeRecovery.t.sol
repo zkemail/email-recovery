@@ -2,13 +2,13 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeploy.t.sol";
-import { BaseDeploySafeNativeRecoveryScript } from "../../base/BaseDeploySafeNativeRecovery.s.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
-    function commonTest_NoZkVerifierEnv(BaseDeploySafeNativeRecoveryScript target) public {
+    function test_NoZkVerifierEnv() public {
         setAllEnvVars();
         vm.setEnv("ZK_VERIFIER", "");
 
@@ -28,5 +28,36 @@ abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
         assert(!isContractDeployed(proxy));
         target.run();
         assert(isContractDeployed(proxy));
+    }
+
+    function test_NoDkimRegistryEnv() public {
+        commonTest_NoDkimRegistryEnv();
+    }
+
+    function test_NoEmailAuthImplEnv() public {
+        commonTest_NoEmailAuthImplEnv();
+    }
+
+    function test_Deployment() public {
+        setAllEnvVars();
+
+        address expectedModuleAddress = computeAddress(
+            config.create2Salt,
+            type(SafeEmailRecoveryModule).creationCode,
+            abi.encode(
+                config.zkVerifier,
+                config.dkimRegistry,
+                config.emailAuthImpl,
+                config.commandHandler,
+                config.minimumDelay,
+                config.killSwitchAuthorizer
+            )
+        );
+
+        assert(!isContractDeployed(expectedModuleAddress));
+        target.run();
+        assert(isContractDeployed(expectedModuleAddress));
+        // also checking returned address
+        assertEq(target.emailRecoveryModule(), expectedModuleAddress);
     }
 }

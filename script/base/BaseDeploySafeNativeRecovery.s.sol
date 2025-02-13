@@ -12,8 +12,6 @@ import { AccountHidingRecoveryCommandHandler } from
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 abstract contract BaseDeploySafeNativeRecoveryScript is BaseDeployScript {
-    address public emailRecoveryModule;
-
     function deploySafeNativeRecovery(CommandHandlerType commandHandlerType) public {
         address initialOwner = vm.addr(config.privateKey);
 

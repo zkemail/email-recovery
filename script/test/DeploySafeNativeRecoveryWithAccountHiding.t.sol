@@ -6,11 +6,8 @@ import { DeploySafeNativeRecoveryWithAccountHidingScript } from
     "../DeploySafeNativeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
-import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
 contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRecoveryTest {
-    DeploySafeNativeRecoveryWithAccountHidingScript private target;
-
     function setUp() public override {
         super.setUp();
         config.commandHandler = deployAccountHidingRecoveryCommandHandler(config.create2Salt);
@@ -20,30 +17,6 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRe
 
     function deployAccountHidingRecoveryCommandHandler(bytes32 salt) internal returns (address) {
         return address(new AccountHidingRecoveryCommandHandler{ salt: bytes32(salt) }());
-    }
-
-    function test_RevertIf_NoPrivateKeyEnv() public {
-        commonTest_RevertIf_NoPrivateKeyEnv(target);
-    }
-
-    function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        commonTest_RevertIf_NoKillSwitchAuthorizerEnv(target);
-    }
-
-    function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(target);
-    }
-
-    function test_NoZkVerifierEnv() public {
-        commonTest_NoZkVerifierEnv(target);
-    }
-
-    function test_NoDkimRegistryEnv() public {
-        commonTest_NoDkimRegistryEnv(target);
-    }
-
-    function test_NoEmailAuthImplEnv() public {
-        commonTest_NoEmailAuthImplEnv(target);
     }
 
     function test_NoCommandHandlerEnv() public {
@@ -57,28 +30,5 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRe
         assert(!isContractDeployed(handler));
         target.run();
         assert(isContractDeployed(handler));
-    }
-
-    function test_Deployment() public {
-        setAllEnvVars();
-
-        address expectedModuleAddress = computeAddress(
-            config.create2Salt,
-            type(SafeEmailRecoveryModule).creationCode,
-            abi.encode(
-                config.zkVerifier,
-                config.dkimRegistry,
-                config.emailAuthImpl,
-                config.commandHandler,
-                config.minimumDelay,
-                config.killSwitchAuthorizer
-            )
-        );
-
-        assert(!isContractDeployed(expectedModuleAddress));
-        target.run();
-        assert(isContractDeployed(expectedModuleAddress));
-        // also checking returned address
-        assertEq(target.emailRecoveryModule(), expectedModuleAddress);
     }
 }

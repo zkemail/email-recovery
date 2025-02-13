@@ -9,43 +9,9 @@ import { AccountHidingRecoveryCommandHandler } from
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract DeploySafeRecoveryWithAccountHidingTest is BaseDeployUniversalEmailRecoveryTest {
-    DeploySafeRecoveryWithAccountHidingScript private target;
-
     function setUp() public override {
         super.setUp();
         target = new DeploySafeRecoveryWithAccountHidingScript();
-    }
-
-    function test_RevertIf_NoPrivateKeyEnv() public {
-        commonTest_RevertIf_NoPrivateKeyEnv(target);
-    }
-
-    function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        commonTest_RevertIf_NoKillSwitchAuthorizerEnv(target);
-    }
-
-    function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(target);
-    }
-
-    function test_NoVerifierEnv() public {
-        commonTest_NoVerifierEnv(target);
-    }
-
-    function test_NoDkimRegistryEnv() public {
-        commonTest_NoDkimRegistryEnv(target);
-    }
-
-    function test_NoEmailAuthImplEnv() public {
-        commonTest_NoEmailAuthImplEnv(target);
-    }
-
-    function test_NoRecoveryFactoryEnv() public {
-        commonTest_NoRecoveryFactoryEnv(target);
-    }
-
-    function test_DeploymentEvent() public {
-        commonTest_DeploymentEvent(target);
     }
 
     function test_Deployment() public {

@@ -22,7 +22,7 @@ abstract contract BaseDeployTest is Test {
     address internal constant CREATE2_DEPLOYER_ADDRESS = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
     BaseDeployScript.DeploymentConfig public config;
-
+    BaseDeployScript internal target;
     /**
      * @dev Deploys needed contracts and sets environment vars.
      * @notice deploys the following contracts:
@@ -31,6 +31,7 @@ abstract contract BaseDeployTest is Test {
      * - email auth implementation
      *
      */
+
     function setUp() public virtual {
         uint256 privateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
         address dkimSigner = vm.addr(5);
@@ -53,6 +54,7 @@ abstract contract BaseDeployTest is Test {
         });
 
         setAllEnvVars();
+        target = new BaseDeployScript();
     }
 
     /**
@@ -179,8 +181,7 @@ abstract contract BaseDeployTest is Test {
         return size > 0;
     }
 
-    // ### COMMON TEST FUNCTIONS ###
-    function commonTest_RevertIf_NoPrivateKeyEnv(BaseDeployScript target) public {
+    function test_RevertIf_NoPrivateKeyEnv() public {
         setAllEnvVars();
         vm.setEnv("PRIVATE_KEY", "");
         vm.expectRevert(
@@ -191,7 +192,7 @@ abstract contract BaseDeployTest is Test {
         target.run();
     }
 
-    function commonTest_RevertIf_NoKillSwitchAuthorizerEnv(BaseDeployScript target) public {
+    function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
         setAllEnvVars();
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
@@ -202,7 +203,7 @@ abstract contract BaseDeployTest is Test {
         target.run();
     }
 
-    function commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(BaseDeployScript target) public {
+    function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
         setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
@@ -215,12 +216,9 @@ abstract contract BaseDeployTest is Test {
         target.run();
     }
 
-    function commonTest_DeploymentEvent(
-        BaseDeployScript target,
-        bytes memory eventSignature
-    )
-        public
-    {
+    // ### COMMON TEST FUNCTIONS ###
+
+    function commonTest_DeploymentEvent(bytes memory eventSignature) public {
         setAllEnvVars();
         vm.recordLogs();
         target.run();
@@ -229,7 +227,7 @@ abstract contract BaseDeployTest is Test {
         assertTrue(findEvent(entries, keccak256(eventSignature)), "deploy event not emitted");
     }
 
-    function commonTest_NoVerifierEnv(BaseDeployScript target) public {
+    function commonTest_NoVerifierEnv() public {
         setAllEnvVars();
         vm.setEnv("VERIFIER", "");
 
@@ -251,7 +249,7 @@ abstract contract BaseDeployTest is Test {
         assert(isContractDeployed(proxy));
     }
 
-    function commonTest_NoDkimRegistryEnv(BaseDeployScript target) public {
+    function commonTest_NoDkimRegistryEnv() public {
         setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
 
@@ -276,7 +274,7 @@ abstract contract BaseDeployTest is Test {
         assert(isContractDeployed(proxy));
     }
 
-    function commonTest_NoEmailAuthImplEnv(BaseDeployScript target) public {
+    function commonTest_NoEmailAuthImplEnv() public {
         setAllEnvVars();
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 
