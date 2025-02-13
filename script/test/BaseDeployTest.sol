@@ -8,7 +8,7 @@ import { Test } from "forge-std/Test.sol";
 import { Vm } from "forge-std/Vm.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { BaseDeployScript } from "../BaseDeploy.s.sol";
+import { BaseDeployScript } from "../base/BaseDeploy.s.sol";
 import { ECDSAOwnedDKIMRegistry } from
     "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";

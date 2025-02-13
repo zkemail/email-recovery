@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployEmailRecoveryScript } from "./BaseDeployEmailRecovery.s.sol";
+import { BaseDeployEmailRecoveryScript } from "./base/BaseDeployEmailRecovery.s.sol";
 
 contract DeployEmailRecoveryScript is BaseDeployEmailRecoveryScript {
     function run() public override {

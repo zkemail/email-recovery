@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployUniversalEmailRecoveryScript } from "./BaseDeployUniversalEmailRecovery.s.sol";
+import { BaseDeployUniversalEmailRecoveryScript } from
+    "./base/BaseDeployUniversalEmailRecovery.s.sol";
 
 // 1. `source .env`
 // 2. `forge script
