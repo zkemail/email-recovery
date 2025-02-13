@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeploySafeNativeRecoveryTest } from
-    "script/test/base/BaseDeploySafeNativeRecovery.t.sol";
+    "test/script/base/BaseDeploySafeNativeRecovery.t.sol";
 import { DeploySafeNativeRecoveryWithAccountHidingScript } from
     "script/DeploySafeNativeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from

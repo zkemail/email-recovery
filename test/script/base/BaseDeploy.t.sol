@@ -8,7 +8,7 @@ import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { BaseDeployScript } from "script/base/BaseDeploy.s.sol";
-import { BaseTest } from "script/test/base/Base.t.sol";
+import { BaseTest } from "test/script/base/Base.t.sol";
 
 abstract contract BaseDeployTest is BaseTest {
     BaseDeployScript internal target;
