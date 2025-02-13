@@ -12,7 +12,7 @@ import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHand
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
-contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
+abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
 

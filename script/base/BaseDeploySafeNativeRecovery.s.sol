@@ -11,7 +11,7 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
-contract BaseDeploySafeNativeRecoveryScript is BaseDeployScript {
+abstract contract BaseDeploySafeNativeRecoveryScript is BaseDeployScript {
     address public emailRecoveryModule;
 
     function deploySafeNativeRecovery(CommandHandlerType commandHandlerType) public {

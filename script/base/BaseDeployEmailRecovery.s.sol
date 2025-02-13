@@ -10,7 +10,7 @@ import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHa
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
-contract BaseDeployEmailRecoveryScript is BaseDeployScript {
+abstract contract BaseDeployEmailRecoveryScript is BaseDeployScript {
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
 
