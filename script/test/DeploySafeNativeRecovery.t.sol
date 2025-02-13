@@ -4,8 +4,9 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeploySafeNativeRecoveryTest } from "./base/BaseDeploySafeNativeRecovery.t.sol";
-import { DeploySafeNativeRecoveryScript } from "../DeploySafeNativeRecovery.s.sol";
+import { BaseDeploySafeNativeRecoveryTest } from
+    "script/test/base/BaseDeploySafeNativeRecovery.t.sol";
+import { DeploySafeNativeRecoveryScript } from "script/DeploySafeNativeRecovery.s.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {

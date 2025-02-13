@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployUniversalEmailRecoveryTest } from "./base/BaseDeployUniversalEmailRecovery.t.sol";
-import { DeployUniversalEmailRecoveryScript } from "../DeployUniversalEmailRecovery.s.sol";
+import { BaseDeployUniversalEmailRecoveryTest } from
+    "script/test/base/BaseDeployUniversalEmailRecovery.t.sol";
+import { DeployUniversalEmailRecoveryScript } from "script/DeployUniversalEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 
 contract DeployUniversalEmailRecoveryModuleTest is BaseDeployUniversalEmailRecoveryTest {

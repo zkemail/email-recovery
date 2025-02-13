@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeployScript } from "./BaseDeploy.s.sol";
+import { BaseDeployScript } from "script/base/BaseDeploy.s.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 
 abstract contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {

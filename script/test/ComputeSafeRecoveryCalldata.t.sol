@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
-import { ComputeSafeRecoveryCalldataScript } from "../ComputeSafeRecoveryCalldata.s.sol";
+import { ComputeSafeRecoveryCalldataScript } from "script/ComputeSafeRecoveryCalldata.s.sol";
 
 contract ComputeSafeRecoveryCalldataTest is Test {
     address private envOldOwner;

@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console, gas-custom-errors */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeployScript } from "./BaseDeploy.s.sol";
+import { BaseDeployScript } from "script/base/BaseDeploy.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";

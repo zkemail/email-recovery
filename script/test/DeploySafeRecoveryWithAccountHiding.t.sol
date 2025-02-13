@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployUniversalEmailRecoveryTest } from "./base/BaseDeployUniversalEmailRecovery.t.sol";
+import { BaseDeployUniversalEmailRecoveryTest } from
+    "script/test/base/BaseDeployUniversalEmailRecovery.t.sol";
 import { DeploySafeRecoveryWithAccountHidingScript } from
-    "../DeploySafeRecoveryWithAccountHiding.s.sol";
+    "script/DeploySafeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 

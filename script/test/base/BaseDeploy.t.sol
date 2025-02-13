@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseTest } from "./Base.t.sol";
 import { Vm } from "forge-std/Vm.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { BaseDeployScript } from "../../base/BaseDeploy.s.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { BaseDeployScript } from "script/base/BaseDeploy.s.sol";
+import { BaseTest } from "script/test/base/Base.t.sol";
 
 abstract contract BaseDeployTest is BaseTest {
     BaseDeployScript internal target;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeployTest } from "./BaseDeploy.t.sol";
+import { BaseDeployTest } from "script/test/base/BaseDeploy.t.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";

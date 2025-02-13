@@ -6,10 +6,10 @@ pragma solidity ^0.8.25;
 import { console } from "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 
 abstract contract BaseDeployScript is Script {
     error MissingRequiredParameter(string param);

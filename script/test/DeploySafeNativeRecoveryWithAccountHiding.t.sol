@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeploySafeNativeRecoveryTest } from "./base/BaseDeploySafeNativeRecovery.t.sol";
+import { BaseDeploySafeNativeRecoveryTest } from
+    "script/test/base/BaseDeploySafeNativeRecovery.t.sol";
 import { DeploySafeNativeRecoveryWithAccountHidingScript } from
-    "../DeploySafeNativeRecoveryWithAccountHiding.s.sol";
+    "script/DeploySafeNativeRecoveryWithAccountHiding.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 

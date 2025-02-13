@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeploySafeNativeRecoveryScript } from "./base/BaseDeploySafeNativeRecovery.s.sol";
+import { BaseDeploySafeNativeRecoveryScript } from "script/base/BaseDeploySafeNativeRecovery.s.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 

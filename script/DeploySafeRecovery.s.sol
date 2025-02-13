@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployUniversalEmailRecoveryScript } from
-    "./base/BaseDeployUniversalEmailRecovery.s.sol";
+    "script/base/BaseDeployUniversalEmailRecovery.s.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
 // 1. `source .env`
