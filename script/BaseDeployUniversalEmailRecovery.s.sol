@@ -4,17 +4,35 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console, gas-custom-errors */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeployScript } from "./BaseDeployScript.s.sol";
+import { BaseDeployScript } from "./BaseDeploy.s.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
-import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
-import { OwnableValidator } from "src/test/OwnableValidator.sol";
+import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
+import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
+import { AccountHidingRecoveryCommandHandler } from
+    "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 
-contract BaseDeployEmailRecoveryModuleScript is BaseDeployScript {
+contract BaseDeployUniversalEmailRecoveryScript is BaseDeployScript {
     address public emailRecoveryModule;
     address public emailRecoveryHandler;
 
-    function deployEmailRecoveryModule() public {
+    function getCommandHandlerBytecode(CommandHandlerType commandHandlerType)
+        public
+        pure
+        returns (bytes memory)
+    {
+        if (commandHandlerType == CommandHandlerType.AccountHidingRecovery) {
+            return type(AccountHidingRecoveryCommandHandler).creationCode;
+        } else if (commandHandlerType == CommandHandlerType.EmailRecovery) {
+            return type(EmailRecoveryCommandHandler).creationCode;
+        } else if (commandHandlerType == CommandHandlerType.SafeRecovery) {
+            return type(SafeRecoveryCommandHandler).creationCode;
+        } else {
+            revert InvalidCommandHandlerType();
+        }
+    }
+
+    function deployUniversalEmailRecovery(CommandHandlerType commandHandlerType) public {
         address initialOwner = vm.addr(config.privateKey);
 
         if (config.verifier == address(0)) {
@@ -32,30 +50,24 @@ contract BaseDeployEmailRecoveryModuleScript is BaseDeployScript {
             console.log("Deployed Email Auth at", config.emailAuthImpl);
         }
 
-        if (config.validator == address(0)) {
-            config.validator = address(new OwnableValidator{ salt: config.create2Salt }());
-            console.log("Deployed Ownable Validator at", config.validator);
-        }
-
         if (config.recoveryFactory == address(0)) {
             config.recoveryFactory = address(
-                new EmailRecoveryFactory{ salt: config.create2Salt }(
+                new EmailRecoveryUniversalFactory{ salt: config.create2Salt }(
                     config.verifier, config.emailAuthImpl
                 )
             );
             console.log("Deployed Email Recovery Factory at", config.recoveryFactory);
         }
 
-        (emailRecoveryModule, emailRecoveryHandler) = EmailRecoveryFactory(config.recoveryFactory)
-            .deployEmailRecoveryModule(
+        EmailRecoveryUniversalFactory factory =
+            EmailRecoveryUniversalFactory(config.recoveryFactory);
+        (emailRecoveryModule, emailRecoveryHandler) = factory.deployUniversalEmailRecoveryModule(
             config.create2Salt,
             config.create2Salt,
-            type(EmailRecoveryCommandHandler).creationCode,
+            getCommandHandlerBytecode(commandHandlerType),
             config.minimumDelay,
             config.killSwitchAuthorizer,
-            config.dkimRegistry,
-            config.validator,
-            bytes4(keccak256(bytes("changeOwner(address)")))
+            config.dkimRegistry
         );
 
         console.log("Deployed Email Recovery Module at", vm.toString(emailRecoveryModule));

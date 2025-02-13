@@ -2,20 +2,19 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
-import { DeployUniversalEmailRecoveryModuleScript } from
-    "../DeployUniversalEmailRecoveryModule.s.sol";
+import { DeployUniversalEmailRecoveryScript } from "../DeployUniversalEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryUniversalFactory } from "src/factories/EmailRecoveryUniversalFactory.sol";
 import { UniversalEmailRecoveryModule } from "src/modules/UniversalEmailRecoveryModule.sol";
 
 contract DeployUniversalEmailRecoveryModuleTest is BaseDeployTest {
-    DeployUniversalEmailRecoveryModuleScript private target;
+    DeployUniversalEmailRecoveryScript private target;
 
     function setUp() public override {
         super.setUp();
         config.recoveryFactory = deployRecoveryUniversalFactory();
 
-        target = new DeployUniversalEmailRecoveryModuleScript();
+        target = new DeployUniversalEmailRecoveryScript();
     }
 
     function deployRecoveryUniversalFactory() internal returns (address) {

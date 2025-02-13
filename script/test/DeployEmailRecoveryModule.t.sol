@@ -2,20 +2,20 @@
 pragma solidity ^0.8.25;
 
 import { BaseDeployTest } from "./BaseDeployTest.sol";
-import { DeployEmailRecoveryModuleScript } from "../DeployEmailRecoveryModule.s.sol";
+import { DeployEmailRecoveryScript } from "../DeployEmailRecovery.s.sol";
 import { EmailRecoveryCommandHandler } from "src/handlers/EmailRecoveryCommandHandler.sol";
 import { EmailRecoveryFactory } from "src/factories/EmailRecoveryFactory.sol";
 import { EmailRecoveryModule } from "src/modules/EmailRecoveryModule.sol";
 import { OwnableValidator } from "src/test/OwnableValidator.sol";
 
 contract DeployEmailRecoveryModuleTest is BaseDeployTest {
-    DeployEmailRecoveryModuleScript private target;
+    DeployEmailRecoveryScript private target;
 
     function setUp() public override {
         super.setUp();
         config.recoveryFactory = deployRecoveryFactory();
 
-        target = new DeployEmailRecoveryModuleScript();
+        target = new DeployEmailRecoveryScript();
     }
 
     function deployRecoveryFactory() internal returns (address) {

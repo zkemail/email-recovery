@@ -4,14 +4,14 @@ pragma solidity ^0.8.25;
 /* solhint-disable no-console, gas-custom-errors */
 
 import { console } from "forge-std/console.sol";
-import { BaseDeployScript } from "./BaseDeployScript.s.sol";
+import { BaseDeployScript } from "./BaseDeploy.s.sol";
 import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { SafeEmailRecoveryModule } from "src/modules/SafeEmailRecoveryModule.sol";
 
-contract BaseDeploySafeNativeScript is BaseDeployScript {
+contract BaseDeploySafeNativeRecoveryScript is BaseDeployScript {
     address public emailRecoveryModule;
 
     function deploySafeNativeRecovery(CommandHandlerType commandHandlerType) public {

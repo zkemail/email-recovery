@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { BaseDeploySafeNativeScript } from "./BaseDeploySafeNative.s.sol";
+import { BaseDeploySafeNativeRecoveryScript } from "./BaseDeploySafeNativeRecovery.s.sol";
 
-contract DeploySafeNativeRecoveryScript is BaseDeploySafeNativeScript {
+contract DeploySafeNativeRecoveryScript is BaseDeploySafeNativeRecoveryScript {
     address public module;
 
     function run() public override {
