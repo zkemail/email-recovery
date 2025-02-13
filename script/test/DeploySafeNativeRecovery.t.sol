@@ -11,17 +11,9 @@ contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {
 
     function setUp() public override {
         super.setUp();
-        config.zkVerifier = deployVerifier(vm.addr(config.privateKey));
         config.commandHandler = deploySafeRecoveryCommandHandler(config.create2Salt);
 
         target = new DeploySafeNativeRecoveryScript();
-    }
-
-    function setAllEnvVars() internal override {
-        super.setAllEnvVars();
-
-        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
-        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
     }
 
     function deploySafeRecoveryCommandHandler(bytes32 salt) internal returns (address) {

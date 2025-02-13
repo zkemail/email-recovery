@@ -47,7 +47,7 @@ abstract contract BaseDeployTest is Test {
             killSwitchAuthorizer: vm.addr(1),
             recoveryFactory: address(0),
             verifier: deployVerifier(initialOwner),
-            zkVerifier: address(0),
+            zkVerifier: deployVerifier(initialOwner),
             commandHandler: address(0),
             validator: vm.addr(9)
         });
@@ -66,17 +66,19 @@ abstract contract BaseDeployTest is Test {
      * https://github.com/foundry-rs/foundry/issues/2349
      */
     function setAllEnvVars() internal virtual {
-        vm.setEnv("PRIVATE_KEY", vm.toString(config.privateKey));
-        vm.setEnv("VERIFIER", vm.toString(config.verifier));
-        vm.setEnv("DKIM_SIGNER", vm.toString(config.dkimSigner));
-        vm.setEnv("DKIM_REGISTRY", vm.toString(config.dkimRegistry));
+        vm.setEnv("CREATE2_SALT", vm.toString(config.create2Salt));
         vm.setEnv("DKIM_DELAY", vm.toString(config.dkimDelay));
         vm.setEnv("MINIMUM_DELAY", vm.toString(config.minimumDelay));
-        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(config.killSwitchAuthorizer));
+        vm.setEnv("PRIVATE_KEY", vm.toString(config.privateKey));
+        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
+        vm.setEnv("DKIM_REGISTRY", vm.toString(config.dkimRegistry));
+        vm.setEnv("DKIM_SIGNER", vm.toString(config.dkimSigner));
         vm.setEnv("EMAIL_AUTH_IMPL", vm.toString(config.emailAuthImpl));
-        vm.setEnv("VALIDATOR", vm.toString(config.validator));
-        vm.setEnv("CREATE2_SALT", vm.toString(config.create2Salt));
+        vm.setEnv("KILL_SWITCH_AUTHORIZER", vm.toString(config.killSwitchAuthorizer));
         vm.setEnv("RECOVERY_FACTORY", vm.toString(config.recoveryFactory));
+        vm.setEnv("VALIDATOR", vm.toString(config.validator));
+        vm.setEnv("VERIFIER", vm.toString(config.verifier));
+        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
     }
 
     function deployVerifier(address initialOwner) internal returns (address verifier) {

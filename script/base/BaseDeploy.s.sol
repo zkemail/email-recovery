@@ -25,15 +25,15 @@ abstract contract BaseDeployScript is Script {
         uint256 dkimDelay;
         uint256 minimumDelay;
         uint256 privateKey;
+        address commandHandler;
         address dkimRegistry;
         address dkimSigner;
         address emailAuthImpl;
         address killSwitchAuthorizer;
         address recoveryFactory;
+        address validator;
         address verifier;
         address zkVerifier;
-        address commandHandler;
-        address validator;
     }
 
     DeploymentConfig public config;
@@ -49,15 +49,15 @@ abstract contract BaseDeployScript is Script {
             dkimDelay: vm.envOr("DKIM_DELAY", uint256(0)),
             minimumDelay: vm.envOr("MINIMUM_DELAY", uint256(0)),
             privateKey: vm.envOr("PRIVATE_KEY", uint256(0)),
+            commandHandler: vm.envOr("COMMAND_HANDLER", address(0)),
             dkimRegistry: vm.envOr("DKIM_REGISTRY", address(0)),
             dkimSigner: vm.envOr("DKIM_SIGNER", address(0)),
             emailAuthImpl: vm.envOr("EMAIL_AUTH_IMPL", address(0)),
             killSwitchAuthorizer: vm.envOr("KILL_SWITCH_AUTHORIZER", address(0)),
             recoveryFactory: vm.envOr("RECOVERY_FACTORY", address(0)),
+            validator: vm.envOr("VALIDATOR", address(0)),
             verifier: vm.envOr("VERIFIER", address(0)),
-            zkVerifier: vm.envOr("ZK_VERIFIER", address(0)),
-            commandHandler: vm.envOr("COMMAND_HANDLER", address(0)),
-            validator: vm.envOr("VALIDATOR", address(0))
+            zkVerifier: vm.envOr("ZK_VERIFIER", address(0))
         });
     }
 

@@ -13,17 +13,9 @@ contract DeploySafeNativeRecoveryWithAccountHidingTest is BaseDeploySafeNativeRe
 
     function setUp() public override {
         super.setUp();
-        config.zkVerifier = deployVerifier(vm.addr(config.privateKey));
         config.commandHandler = deployAccountHidingRecoveryCommandHandler(config.create2Salt);
 
         target = new DeploySafeNativeRecoveryWithAccountHidingScript();
-    }
-
-    function setAllEnvVars() internal override {
-        super.setAllEnvVars();
-
-        vm.setEnv("ZK_VERIFIER", vm.toString(config.zkVerifier));
-        vm.setEnv("COMMAND_HANDLER", vm.toString(config.commandHandler));
     }
 
     function deployAccountHidingRecoveryCommandHandler(bytes32 salt) internal returns (address) {
