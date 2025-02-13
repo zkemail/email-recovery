@@ -179,6 +179,7 @@ abstract contract BaseDeployTest is Test {
 
     // ### COMMON TEST FUNCTIONS ###
     function commonTest_RevertIf_NoPrivateKeyEnv(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("PRIVATE_KEY", "");
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -189,6 +190,7 @@ abstract contract BaseDeployTest is Test {
     }
 
     function commonTest_RevertIf_NoKillSwitchAuthorizerEnv(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("KILL_SWITCH_AUTHORIZER", "");
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -199,6 +201,7 @@ abstract contract BaseDeployTest is Test {
     }
 
     function commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
         vm.setEnv("DKIM_SIGNER", "");
 
@@ -216,6 +219,7 @@ abstract contract BaseDeployTest is Test {
     )
         public
     {
+        setAllEnvVars();
         vm.recordLogs();
         target.run();
 
@@ -224,6 +228,7 @@ abstract contract BaseDeployTest is Test {
     }
 
     function commonTest_NoVerifierEnv(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("VERIFIER", "");
 
         address initialOwner = vm.addr(config.privateKey);
@@ -245,6 +250,7 @@ abstract contract BaseDeployTest is Test {
     }
 
     function commonTest_NoDkimRegistryEnv(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("DKIM_REGISTRY", "");
 
         address initialOwner = vm.addr(config.privateKey);
@@ -269,6 +275,7 @@ abstract contract BaseDeployTest is Test {
     }
 
     function commonTest_NoEmailAuthImplEnv(BaseDeployScript target) public {
+        setAllEnvVars();
         vm.setEnv("EMAIL_AUTH_IMPL", "");
 
         address emailAuthImpl = computeAddress(config.create2Salt, type(EmailAuth).creationCode, "");

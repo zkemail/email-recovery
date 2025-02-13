@@ -9,6 +9,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 
 abstract contract BaseDeploySafeNativeRecoveryTest is BaseDeployTest {
     function commonTest_NoZkVerifierEnv(BaseDeploySafeNativeRecoveryScript target) public {
+        setAllEnvVars();
         vm.setEnv("ZK_VERIFIER", "");
 
         address initialOwner = vm.addr(config.privateKey);

@@ -16,42 +16,34 @@ contract DeploySafeRecoveryTest is BaseDeployUniversalEmailRecoveryTest {
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoPrivateKeyEnv(target);
     }
 
     function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoKillSwitchAuthorizerEnv(target);
     }
 
     function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(target);
     }
 
     function test_NoVerifierEnv() public {
-        setAllEnvVars();
         commonTest_NoVerifierEnv(target);
     }
 
     function test_NoDkimRegistryEnv() public {
-        setAllEnvVars();
         commonTest_NoDkimRegistryEnv(target);
     }
 
     function test_NoEmailAuthImplEnv() public {
-        setAllEnvVars();
         commonTest_NoEmailAuthImplEnv(target);
     }
 
     function test_NoRecoveryFactoryEnv() public {
-        setAllEnvVars();
         commonTest_NoRecoveryFactoryEnv(target);
     }
 
     function test_DeploymentEvent() public {
-        setAllEnvVars();
         commonTest_DeploymentEvent(target);
     }
 

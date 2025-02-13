@@ -29,32 +29,26 @@ contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {
     }
 
     function test_RevertIf_NoPrivateKeyEnv() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoPrivateKeyEnv(target);
     }
 
     function test_RevertIf_NoKillSwitchAuthorizerEnv() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoKillSwitchAuthorizerEnv(target);
     }
 
     function test_RevertIf_NoDkimRegistryAndSignerEnvs() public {
-        setAllEnvVars();
         commonTest_RevertIf_NoDkimRegistryAndSignerEnvs(target);
     }
 
     function test_NoZkVerifierEnv() public {
-        setAllEnvVars();
         commonTest_NoZkVerifierEnv(target);
     }
 
     function test_NoDkimRegistryEnv() public {
-        setAllEnvVars();
         commonTest_NoDkimRegistryEnv(target);
     }
 
     function test_NoEmailAuthImplEnv() public {
-        setAllEnvVars();
         commonTest_NoEmailAuthImplEnv(target);
     }
 
@@ -72,7 +66,6 @@ contract DeploySafeNativeRecoveryTest is BaseDeploySafeNativeRecoveryTest {
 
     function test_Deployment() public {
         setAllEnvVars();
-
         address expectedModuleAddress = computeAddress(
             config.create2Salt,
             type(SafeEmailRecoveryModule).creationCode,

@@ -23,7 +23,6 @@ abstract contract BaseDeployUniversalEmailRecoveryTest is BaseDeployTest {
         public
     {
         setAllEnvVars();
-
         vm.setEnv("RECOVERY_FACTORY", "");
 
         address recoveryFactory = computeAddress(
