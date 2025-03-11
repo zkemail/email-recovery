@@ -6,7 +6,6 @@ import {EmailAccountRecovery} from "./EmailAccountRecovery.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IEmailRecoveryManager} from "./interfaces/IEmailRecoveryManager.sol";
-import {IEmailRecoveryCommandHandler} from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import {GuardianManager} from "./GuardianManager.sol";
 import {GuardianStorage, GuardianStatus} from "./libraries/EnumerableGuardianMap.sol";
 
@@ -49,11 +48,6 @@ abstract contract EmailRecoveryManager is
      * guardian
      */
     uint256 public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
-
-    /**
-     * The command handler that returns and validates the command templates
-     */
-    address public immutable commandHandler;
 
     /**
      * boolean flag for the kill switch being enabled or disabled
@@ -184,84 +178,6 @@ abstract contract EmailRecoveryManager is
         return guardianConfigs[account].threshold > 0;
     }
 
-    // /**
-    //  * @notice Returns a two-dimensional array of strings representing the command templates for an
-    //  * acceptance by a new guardian.
-    //  * @dev This is retrieved from the associated command handler. Developers can write their own
-    //  * command handlers, this is useful for account implementations which require different data in
-    //  * the command or if the email should be in a language that is not English.
-    //  * @return string[][] A two-dimensional array of strings, where each inner array represents a
-    //  * set of fixed strings and matchers for a command template.
-    //  */
-    // function acceptanceCommandTemplates()
-    //     public
-    //     view
-    //     override
-    //     returns (string[][] memory)
-    // {
-    //     return
-    //         IEmailRecoveryCommandHandler(commandHandler)
-    //             .acceptanceCommandTemplates();
-    // }
-
-    // /**
-    //  * @notice Returns a two-dimensional array of strings representing the command templates for
-    //  * email recovery.
-    //  * @dev This is retrieved from the associated command handler. Developers can write their own
-    //  * command handlers, this is useful for account implementations which require different data in
-    //  * the command or if the email should be in a language that is not English.
-    //  * @return string[][] A two-dimensional array of strings, where each inner array represents a
-    //  * set of fixed strings and matchers for a command template.
-    //  */
-    // function recoveryCommandTemplates()
-    //     public
-    //     view
-    //     override
-    //     returns (string[][] memory)
-    // {
-    //     return
-    //         IEmailRecoveryCommandHandler(commandHandler)
-    //             .recoveryCommandTemplates();
-    // }
-
-    // /**
-    //  * @notice Extracts the account address to be recovered from the command parameters of an
-    //  * acceptance email.
-    //  * @dev This is retrieved from the associated command handler.
-    //  * @param commandParams The command parameters of the acceptance email.
-    //  * @param templateIdx The index of the acceptance command template.
-    //  */
-    // function extractRecoveredAccountFromAcceptanceCommand(
-    //     bytes[] memory commandParams,
-    //     uint256 templateIdx
-    // ) public view override returns (address) {
-    //     return
-    //         IEmailRecoveryCommandHandler(commandHandler)
-    //             .extractRecoveredAccountFromAcceptanceCommand(
-    //                 commandParams,
-    //                 templateIdx
-    //             );
-    // }
-
-    // /**
-    //  * @notice Extracts the account address to be recovered from the command parameters of a
-    //  * recovery email.
-    //  * @dev This is retrieved from the associated command handler.
-    //  * @param commandParams The command parameters of the recovery email.
-    //  * @param templateIdx The index of the recovery command template.
-    //  */
-    // function extractRecoveredAccountFromRecoveryCommand(
-    //     bytes[] memory commandParams,
-    //     uint256 templateIdx
-    // ) public view override returns (address) {
-    //     return
-    //         IEmailRecoveryCommandHandler(commandHandler)
-    //             .extractRecoveredAccountFromRecoveryCommand(
-    //                 commandParams,
-    //                 templateIdx
-    //             );
-    // }
-
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                     CONFIGURE RECOVERY                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -365,9 +281,6 @@ abstract contract EmailRecoveryManager is
         address guardian,
         address account
     ) internal override onlyWhenActive {
-        // address account = IEmailRecoveryCommandHandler(commandHandler)
-        //     .validateAcceptanceCommand(templateIdx, commandParams);
-
         if (recoveryRequests[account].currentWeight > 0) {
             revert RecoveryInProcess();
         }
@@ -408,9 +321,6 @@ abstract contract EmailRecoveryManager is
         address account,
         bytes32 recoveryDataHash
     ) internal override onlyWhenActive {
-        // address account = IEmailRecoveryCommandHandler(commandHandler)
-        //     .validateRecoveryCommand(templateIdx, commandParams);
-
         if (!isActivated(account)) {
             revert RecoveryIsNotActivated();
         }
@@ -434,6 +344,8 @@ abstract contract EmailRecoveryManager is
         }
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
+
+        // TODO: Migration
         // bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
         //     .parseRecoveryDataHash(templateIdx, commandParams);
 

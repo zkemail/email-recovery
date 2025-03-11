@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
 /**
  * @title IGuardianVerifier
@@ -55,10 +55,11 @@ interface IGuardianVerifier {
      *
      * @param recoveredAccount Account to be recovered
      * @param proof Proof data
-     * @return true if the proof is valid
+     * @return isVerified if the proof is valid
+     * @return error message if the proof is invalid
      */
     function verifyProof(
         address recoveredAccount,
         ProofData memory proof
-    ) external view returns (bool);
+    ) external returns (bool isVerified, string memory error);
 }
