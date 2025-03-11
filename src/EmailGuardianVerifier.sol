@@ -69,7 +69,11 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     constructor() {}
 
     //TODO: Maybe accountSalt can be passed while intializing the contract
-    function initialize(address, address _controller) public initializer {
+    function initialize(
+        address /* recoveredAccount */,
+        bytes32 /* accountSalt */,
+        address _controller
+    ) public initializer {
         controller = _controller;
         timestampCheckEnabled = true;
     }

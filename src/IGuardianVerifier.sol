@@ -35,7 +35,11 @@ interface IGuardianVerifier {
      * @param recoveredAccount Account to be recovered
      * @param controller Controller address
      */
-    function initialize(address recoveredAccount, address controller) external;
+    function initialize(
+        address recoveredAccount,
+        bytes32 accountSalt,
+        address controller
+    ) external;
 
     /**
      * @dev Initialize the verifier with initialization data

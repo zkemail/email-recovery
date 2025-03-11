@@ -74,12 +74,12 @@ abstract contract EmailAccountRecovery {
     /// auth contract implementation
     /// address and the initialization call data. This ensures that the computed address is
     /// deterministic and unique per account salt.
-    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
     /// @param recoveredAccount The address of the account to be recovered.
+    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
     /// @return address The computed address.
     function computeGuardianVerifierAddress(
-        bytes32 accountSalt,
-        address recoveredAccount
+        address recoveredAccount,
+        bytes32 accountSalt
     ) public view virtual returns (address) {
         return
             Create2.computeAddress(
@@ -91,7 +91,7 @@ abstract contract EmailAccountRecovery {
                             guardianVerifierImplementation,
                             abi.encodeCall(
                                 IGuardianVerifier.initialize,
-                                (recoveredAccount, address(this))
+                                (recoveredAccount, accountSalt, address(this))
                             )
                         )
                     )
@@ -106,14 +106,14 @@ abstract contract EmailAccountRecovery {
     /// @param recoveredAccount The address of the account to be recovered.
     /// @return address The address of the newly deployed proxy contract.
     function deployGuardianVerifierProxy(
-        bytes32 accountSalt,
-        address recoveredAccount
+        address recoveredAccount,
+        bytes32 accountSalt
     ) internal virtual returns (address) {
         ERC1967Proxy proxy = new ERC1967Proxy{salt: accountSalt}(
             guardianVerifierImplementation,
             abi.encodeCall(
                 IGuardianVerifier.initialize,
-                (recoveredAccount, address(this))
+                (recoveredAccount, accountSalt, address(this))
             )
         );
         return address(proxy);
@@ -132,14 +132,14 @@ abstract contract EmailAccountRecovery {
         IGuardianVerifier.ProofData memory proofData
     ) external {
         address guardian = computeGuardianVerifierAddress(
-            accountSalt,
-            recoveredAccount
+            recoveredAccount,
+            accountSalt
         );
 
         if (guardian.code.length == 0) {
             address proxyAddress = deployGuardianVerifierProxy(
-                accountSalt,
-                recoveredAccount
+                recoveredAccount,
+                accountSalt
             );
 
             if (proxyAddress != guardian) {
@@ -182,8 +182,8 @@ abstract contract EmailAccountRecovery {
         IGuardianVerifier.ProofData memory proofData
     ) external {
         address guardian = computeGuardianVerifierAddress(
-            accountSalt,
-            recoveredAccount
+            recoveredAccount,
+            accountSalt
         );
 
         // Check if the guardian is deployed

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailRecoveryManager } from "./EmailRecoveryManager.sol";
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
-import { EmailAccountRecoveryZKSync } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecoveryZKSync.sol";
+import {EmailRecoveryManager} from "./EmailRecoveryManager.sol";
+import {EmailAccountRecovery} from "./EmailAccountRecovery.sol";
+import {EmailAccountRecoveryZKSync} from "./EmailAccountRecoveryZKSync.sol";
 
 /**
  * @title EmailRecoveryManagerZkSync
@@ -13,22 +11,19 @@ import { EmailAccountRecoveryZKSync } from
  * @dev The underlying EmailAccountRecoveryZkSync contract provides some base logic for deploying
  * guardian contracts and handling email verification.
  */
-abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccountRecoveryZKSync {
+abstract contract EmailRecoveryManagerZkSync is
+    EmailRecoveryManager,
+    EmailAccountRecoveryZKSync
+{
     constructor(
-        address _verifier,
-        address _dkimRegistry,
-        address _emailAuthImpl,
-        address _commandHandler,
+        address _guardianVerifierImplementation,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer,
         address _factoryAddr,
         bytes32 _proxyBytecodeHash
     )
         EmailRecoveryManager(
-            _verifier,
-            _dkimRegistry,
-            _emailAuthImpl,
-            _commandHandler,
+            _guardianVerifierImplementation,
             _minimumDelay,
             _killSwitchAuthorizer
         )
@@ -55,7 +50,7 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
     /// and an account code. This is assumed to be unique to a pair of the guardian's email address
     /// and the wallet address to be recovered.
     /// @return address The computed address.
-    function computeEmailAuthAddress(
+    function computeGuardianVerifierAddress(
         address recoveredAccount,
         bytes32 accountSalt
     )
@@ -65,7 +60,11 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
         override(EmailAccountRecovery, EmailAccountRecoveryZKSync)
         returns (address)
     {
-        return EmailAccountRecoveryZKSync.computeEmailAuthAddress(recoveredAccount, accountSalt);
+        return
+            EmailAccountRecoveryZKSync.computeGuardianVerifierAddress(
+                recoveredAccount,
+                accountSalt
+            );
     }
 
     /// @notice Deploys a proxy contract for email authentication using the CREATE2 opcode.
@@ -80,7 +79,7 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
     /// and an account code. This is assumed to be unique to a pair of the guardian's email address
     /// and the wallet address to be recovered.
     /// @return address The address of the deployed proxy contract.
-    function deployEmailAuthProxy(
+    function deployGuardianVerifierProxy(
         address recoveredAccount,
         bytes32 accountSalt
     )
@@ -89,6 +88,10 @@ abstract contract EmailRecoveryManagerZkSync is EmailRecoveryManager, EmailAccou
         override(EmailAccountRecovery, EmailAccountRecoveryZKSync)
         returns (address)
     {
-        return EmailAccountRecoveryZKSync.deployEmailAuthProxy(recoveredAccount, accountSalt);
+        return
+            EmailAccountRecoveryZKSync.deployGuardianVerifierProxy(
+                recoveredAccount,
+                accountSalt
+            );
     }
 }
