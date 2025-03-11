@@ -104,6 +104,7 @@ contract EnumerableGuardianMap_set_Test is UnitBase {
         );
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function test_Set_RevertWhen_MaxNumberOfGuardiansReached() public {
         bool result;
         for (uint256 i = 1; i <= 32; i++) {

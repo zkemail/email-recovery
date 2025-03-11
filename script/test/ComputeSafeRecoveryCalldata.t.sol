@@ -2,19 +2,19 @@
 pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
-import { Compute7579RecoveryDataHashScript } from "script/Compute7579RecoveryDataHash.s.sol";
+import { ComputeSafeRecoveryCalldataScript } from "script/ComputeSafeRecoveryCalldata.s.sol";
 
-contract Compute7579RecoveryDataHashTest is Test {
+contract ComputeSafeRecoveryCalldataTest is Test {
+    address private envOldOwner;
     address private envNewOwner;
-    address private envValidator;
 
-    Compute7579RecoveryDataHashScript private target;
+    ComputeSafeRecoveryCalldataScript private target;
 
     function setUp() public {
-        envNewOwner = vm.addr(1234);
-        envValidator = vm.addr(5678);
+        envOldOwner = vm.addr(1234);
+        envNewOwner = vm.addr(5678);
 
-        target = new Compute7579RecoveryDataHashScript();
+        target = new ComputeSafeRecoveryCalldataScript();
     }
 
     /**
@@ -27,20 +27,20 @@ contract Compute7579RecoveryDataHashTest is Test {
      * of the one set in the setUp() function. For more details, see the closed GitHub issue:
      * https://github.com/foundry-rs/foundry/issues/2349
      */
-    function setEnvVars() private {
-        vm.setEnv("VALIDATOR", vm.toString(envValidator));
+    function setEnvVars() public {
+        vm.setEnv("OLD_OWNER", vm.toString(envOldOwner));
         vm.setEnv("NEW_OWNER", vm.toString(envNewOwner));
     }
 
-    function test_RevertIf_NoValidatorEnv() public {
+    function test_RevertIf_NoOldOwnerEnv() public {
         setEnvVars();
 
-        vm.setEnv("VALIDATOR", "");
+        vm.setEnv("OLD_OWNER", "");
 
         vm.expectRevert(
             abi.encodePacked(
-                "vm.envAddress: failed parsing $VALIDATOR as type `address`: parser error:\n",
-                "$VALIDATOR\n",
+                "vm.envAddress: failed parsing $OLD_OWNER as type `address`: parser error:\n",
+                "$OLD_OWNER\n",
                 "^\n",
                 "expected hex digits or the `0x` prefix for an empty hex string"
             )
@@ -67,14 +67,17 @@ contract Compute7579RecoveryDataHashTest is Test {
     function test_SuccessfulComputation() public {
         setEnvVars();
 
-        bytes memory changeOwnerCalldata =
-            abi.encodeWithSelector(bytes4(keccak256("changeOwner(address)")), envNewOwner);
-        bytes memory expectedData = abi.encode(envValidator, changeOwnerCalldata);
-        bytes32 expectedHash = keccak256(expectedData);
+        address previousOwnerInLinkedList = address(1);
+        bytes memory expectedCalldata = abi.encodeWithSignature(
+            "swapOwner(address,address,address)",
+            previousOwnerInLinkedList,
+            envOldOwner,
+            envNewOwner
+        );
+        bytes32 expectedHash = keccak256(expectedCalldata);
 
         target.run();
 
-        assertEq(keccak256(target.recoveryData()), expectedHash);
-        assertEq(target.recoveryDataHash(), expectedHash);
+        vm.assertEq(keccak256(target.recoveryCalldata()), expectedHash);
     }
 }
