@@ -3,18 +3,29 @@ pragma solidity ^0.8.25;
 
 /* solhint-disable no-console */
 
-import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
+import { Script } from "forge-std/Script.sol";
 
-contract Compute7579RecoveryDataHash is Script {
-    function run() public view {
+contract Compute7579RecoveryDataHashScript is Script {
+    address private newOwner;
+    address private validator;
+
+    bytes public recoveryData;
+    bytes32 public recoveryDataHash;
+
+    function loadEnvVars() private {
+        // revert if these are not set
+        newOwner = vm.envAddress("NEW_OWNER");
+        validator = vm.envAddress("VALIDATOR");
+    }
+
+    function run() public {
+        loadEnvVars();
+
         bytes4 functionSelector = bytes4(keccak256(bytes("changeOwner(address)")));
-        address newOwner = vm.envAddress("NEW_OWNER");
-        address validator = vm.envAddress("VALIDATOR");
-
         bytes memory changeOwnerCalldata = abi.encodeWithSelector(functionSelector, newOwner);
-        bytes memory recoveryData = abi.encode(validator, changeOwnerCalldata);
-        bytes32 recoveryDataHash = keccak256(recoveryData);
+        recoveryData = abi.encode(validator, changeOwnerCalldata);
+        recoveryDataHash = keccak256(recoveryData);
 
         console.log("recoveryData", vm.toString(recoveryData));
         console.log("recoveryDataHash", vm.toString(recoveryDataHash));
