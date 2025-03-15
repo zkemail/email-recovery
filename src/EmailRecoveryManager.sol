@@ -78,17 +78,12 @@ abstract contract EmailRecoveryManager is
         internal previousRecoveryRequests;
 
     constructor(
-        address _guardianVerifierImplementation,
         uint256 _minimumDelay,
         address _killSwitchAuthorizer
     ) Ownable(_killSwitchAuthorizer) {
-        if (_guardianVerifierImplementation == address(0)) {
-            revert InvalidVerifier();
-        }
         if (_killSwitchAuthorizer == address(0)) {
             revert InvalidKillSwitchAuthorizer();
         }
-        guardianVerifierImplementation = _guardianVerifierImplementation;
         minimumDelay = _minimumDelay;
     }
 

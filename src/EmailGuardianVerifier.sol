@@ -20,7 +20,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     // TODO: Check if it's required
     uint8 public constant EMAIL_GUARDIAN_VERIFIER_VERSION_ID = 1;
 
-    address public controller;
     address public commandHandler;
 
     bool public timestampCheckEnabled;
@@ -33,10 +32,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     // TODO: Can we abstracted the main verifier Library as well ?
     IVerifier public verifier;
 
-    error InvalidDkimRegistry();
-    error InvalidCommandHandler();
-    error InvalidVerifier();
-
     struct EmailData {
         uint256 templateIdx;
         bytes[] commandParams;
@@ -47,11 +42,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         bytes32 accountSalt;
         bool isCodeExist;
         bool isRecovery;
-    }
-
-    modifier onlyController() {
-        require(msg.sender == controller, "caller is not the controller");
-        _;
     }
 
     /// @notice Returns the address of the DKIM registry contract.
@@ -69,40 +59,36 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     constructor() {}
 
     //TODO: Maybe accountSalt can be passed while intializing the contract
+    /**
+     * @dev Initializes the contract with the DKIM registry, verifier, and command handler addresses.
+     * @notice Addresses are hardcoded for the initial implementation.
+     *
+     * @param {recoveredAccount} The address of the account to be recovered.
+     * @param {accountSalt} The salt used to derive the account address.
+     * @param {initData} The initialization data.
+     */
     function initialize(
         address /* recoveredAccount */,
         bytes32 /* accountSalt */,
-        address _controller
+        bytes calldata /* initData */
     ) public initializer {
-        controller = _controller;
-        timestampCheckEnabled = true;
-    }
-
-    function initVerifier(
-        address,
-        bytes calldata initData
-    ) public onlyController {
-        // Required initialization variables
-        (
-            address _dkimRegistry,
-            address _commandHandler,
-            address _verifier
-        ) = abi.decode(initData, (address, address, address));
-
-        if (_dkimRegistry == address(0)) {
-            revert InvalidDkimRegistry();
-        }
-        if (_commandHandler == address(0)) {
-            revert InvalidCommandHandler();
-        }
-        if (_verifier == address(0)) {
-            revert InvalidVerifier();
-        }
+        address _dkimRegistry = 0x3D3935B3C030893f118a84C92C66dF1B9E4169d6;
+        address _verifier = 0x3E5f29a7cCeb30D5FCD90078430CA110c2985716;
 
         dkimRegistry = IDKIMRegistry(_dkimRegistry);
         verifier = IVerifier(_verifier);
-        commandHandler = _commandHandler;
 
+        commandHandler = 0x6f114A2628F358eaE4b798aC8803eF7b6F6C4257;
+
+        timestampCheckEnabled = true;
+
+        initCommandTemplates();
+    }
+
+    /**
+     * @dev initialize the command templates from thne command Handler
+     */
+    function initCommandTemplates() public {
         // load the command templates from the command handler
         string[][] memory acceptanceTemplates = acceptanceCommandTemplates();
         string[][] memory recoveryTemplates = recoveryCommandTemplates();
@@ -120,12 +106,20 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         }
     }
 
-    // TODO: Do we make this is a read function ?
-    // Error: Cyclomatic complexity ( too many if else statements )
-    function verifyProof(
+    /**
+     * @dev Verify the proof
+     * Recommended to use when proof verification is done on-chain or when called from another contract
+     *
+     * @notice Reverts if the proof is invalid
+     *
+     * @param recoveredAccount Account to be recovered
+     * @param proof Proof data
+     * @return isVerified if the proof is valid
+     */
+    function verifyProofStrict(
         address recoveredAccount,
         ProofData memory proof
-    ) public returns (bool, string memory) {
+    ) public view returns (bool) {
         // Parse the extra data
         EmailData memory emailData = abi.decode(proof.data, (EmailData));
         address _recoveredAccount = extractRecoveredAccountFromAcceptanceCommand(
@@ -133,9 +127,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
                 emailData.templateIdx
             );
 
-        // if (recoveredAccount != _recoveredAccount) {
-        //     return (false, "invalid account in email");
-        // }
         require(
             recoveredAccount == _recoveredAccount,
             "invalid account in email"
@@ -170,9 +161,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             templateId = computeAcceptanceTemplateId(emailData.templateIdx);
         }
 
-        // if (emailData.isCodeExist == false) {
-        //     return (false, "isCodeExist is false");
-        // }
         require(emailData.isCodeExist == true, "isCodeExist is false");
 
         EmailProof memory emailProof = EmailProof({
@@ -187,19 +175,9 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         });
 
         string[] memory template = commandTemplates[templateId];
-        // if (template.length == 0) {
-        //     return (false, "invalid template id");
-        // }
+
         require(template.length != 0, "invalid template id");
 
-        // if (
-        //     dkimRegistry.isDKIMPublicKeyHashValid(
-        //         emailProof.domainName,
-        //         emailProof.publicKeyHash
-        //     ) == false
-        // ) {
-        //     return (false, "invalid dkim public key hash");
-        // }
         require(
             dkimRegistry.isDKIMPublicKeyHashValid(
                 emailProof.domainName,
@@ -208,9 +186,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             "invalid dkim public key hash"
         );
 
-        // if (usedNullifiers[emailProof.emailNullifier] == true) {
-        //     return (false, "email nullifier already used");
-        // }
         require(
             usedNullifiers[emailProof.emailNullifier] == false,
             "email nullifier already used"
@@ -222,12 +197,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         //     "invalid account salt"
         // );
 
-        // if (
-        //     timestampCheckEnabled == true &&
-        //     emailProof.timestamp < lastTimestamp
-        // ) {
-        //     return (false, "invalid timestamp");
-        // }
         require(
             timestampCheckEnabled == false ||
                 emailProof.timestamp == 0 ||
@@ -235,17 +204,11 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             "invalid timestamp"
         );
 
-        // if (bytes(emailProof.maskedCommand).length > verifier.commandBytes()) {
-        //     return (false, "invalid masked command length");
-        // }
         require(
             bytes(emailProof.maskedCommand).length <= verifier.commandBytes(),
             "invalid masked command length"
         );
 
-        // if (emailData.skippedCommandPrefix >= verifier.commandBytes()) {
-        //     return (false, "invalid size of the skipped command prefix");
-        // }
         require(
             emailData.skippedCommandPrefix < verifier.commandBytes(),
             "invalid size of the skipped command prefix"
@@ -266,9 +229,7 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
                 break;
             }
             if (stringCase == 2) {
-                // revert("invalid command");
-
-                return (false, "invalid command");
+                revert("invalid command");
             }
         }
 
@@ -277,11 +238,152 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             "invalid email proof"
         );
 
-        // TODO: How to handle the update
-        usedNullifiers[emailProof.emailNullifier] = true;
-        if (timestampCheckEnabled && emailProof.timestamp != 0) {
-            lastTimestamp = emailProof.timestamp;
+        // TODO: How to handle the nullifier update
+        // usedNullifiers[emailProof.emailNullifier] = true;
+        // if (timestampCheckEnabled && emailProof.timestamp != 0) {
+        //     lastTimestamp = emailProof.timestamp;
+        // }
+
+        return (true);
+    }
+
+    /**
+     * @dev Verify the proof and return the result and error message
+     * Recommended to use when proof verification is done off-chain
+     *
+     * @notice Can be used to check the proof and get the error message
+     * @notice No revert if the proof is invalid
+     *
+     * @param recoveredAccount Account to be recovered
+     * @param proof Proof data
+     * @return isVerified if the proof is valid
+     * @return error message if the proof is invalid
+     */
+    // Lint Error: Cyclomatic complexity ( too many if else statements )
+    function verifyProof(
+        address recoveredAccount,
+        ProofData memory proof
+    ) public view returns (bool, string memory) {
+        // Parse the extra data
+        EmailData memory emailData = abi.decode(proof.data, (EmailData));
+        address _recoveredAccount = extractRecoveredAccountFromAcceptanceCommand(
+                emailData.commandParams,
+                emailData.templateIdx
+            );
+
+        if (recoveredAccount != _recoveredAccount) {
+            return (false, "invalid account in email");
         }
+
+        uint256 templateId = uint256(0);
+        if (emailData.isRecovery) {
+            address account = IEmailRecoveryCommandHandler(commandHandler)
+                .validateRecoveryCommand(
+                    emailData.templateIdx,
+                    emailData.commandParams
+                );
+
+            if (account != recoveredAccount) {
+                return (false, "invalid account in recovery command");
+            }
+
+            templateId = computeRecoveryTemplateId(emailData.templateIdx);
+        } else {
+            address account = IEmailRecoveryCommandHandler(commandHandler)
+                .validateAcceptanceCommand(
+                    emailData.templateIdx,
+                    emailData.commandParams
+                );
+
+            if (account != recoveredAccount) {
+                return (false, "invalid account in acceptance command");
+            }
+
+            templateId = computeAcceptanceTemplateId(emailData.templateIdx);
+        }
+
+        if (emailData.isCodeExist == false) {
+            return (false, "isCodeExist is false");
+        }
+
+        EmailProof memory emailProof = EmailProof({
+            domainName: emailData.domainName,
+            publicKeyHash: proof.publicInputs[0],
+            timestamp: emailData.timestamp,
+            maskedCommand: emailData.maskedCommand,
+            emailNullifier: proof.publicInputs[1],
+            accountSalt: emailData.accountSalt,
+            isCodeExist: emailData.isCodeExist,
+            proof: proof.proof
+        });
+
+        string[] memory template = commandTemplates[templateId];
+
+        if (template.length == 0) {
+            return (false, "invalid template id");
+        }
+
+        if (
+            dkimRegistry.isDKIMPublicKeyHashValid(
+                emailProof.domainName,
+                emailProof.publicKeyHash
+            ) == false
+        ) {
+            return (false, "invalid dkim public key hash");
+        }
+
+        if (usedNullifiers[emailProof.emailNullifier] == true) {
+            return (false, "email nullifier already used");
+        }
+
+        // TODO: match with the accountSalt added during initialization
+        // if (emailProof.accountSalt != emailData.accountSalt) {
+        //     return (false, "invalid account salt");
+        // }
+
+        if (
+            timestampCheckEnabled == true &&
+            emailProof.timestamp < lastTimestamp
+        ) {
+            return (false, "invalid timestamp");
+        }
+
+        if (bytes(emailProof.maskedCommand).length > verifier.commandBytes()) {
+            return (false, "invalid masked command length");
+        }
+
+        if (emailData.skippedCommandPrefix >= verifier.commandBytes()) {
+            return (false, "invalid size of the skipped command prefix");
+        }
+
+        string memory trimmedMaskedCommand = removePrefix(
+            emailProof.maskedCommand,
+            emailData.skippedCommandPrefix
+        );
+        string memory expectedCommand = "";
+        for (uint stringCase = 0; stringCase < 3; stringCase++) {
+            expectedCommand = CommandUtils.computeExpectedCommand(
+                emailData.commandParams,
+                template,
+                stringCase
+            );
+            if (Strings.equal(expectedCommand, trimmedMaskedCommand)) {
+                break;
+            }
+            if (stringCase == 2) {
+                return (false, "invalid command");
+            }
+        }
+
+        if (verifier.verifyEmailProof(emailProof) == false) {
+            return (false, "invalid email proof");
+        }
+
+        // TODO: How to handle the nullifier update
+        // usedNullifiers[emailProof.emailNullifier] = true;
+        // if (timestampCheckEnabled && emailProof.timestamp != 0) {
+        //     lastTimestamp = emailProof.timestamp;
+        // }
 
         return (true, "");
     }
@@ -408,7 +510,7 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     /// @notice Enables or disables the timestamp check.
     /// @dev This function can only be called by the controller.
     /// @param _enabled Boolean flag to enable or disable the timestamp check.
-    function setTimestampCheckEnabled(bool _enabled) public onlyController {
+    function setTimestampCheckEnabled(bool _enabled) public {
         timestampCheckEnabled = _enabled;
     }
 

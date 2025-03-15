@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {IGuardianVerifier} from "./IGuardianVerifier.sol";
+import {IGuardianVerifier} from "./interfaces/IGuardianVerifier.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -12,28 +12,19 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 /// new guardian and recovering an account contract.
 abstract contract EmailAccountRecovery {
     uint8 public constant EMAIL_ACCOUNT_RECOVERY_VERSION_ID = 2;
-    address public guardianVerifierImplementation;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    ERRORS                                  */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    error InvalidGuardianAddress();
+    error InvalidGuardianImplementation();
+    error InvalidProxyDeployment();
     error GuardianNotDeployed();
-
     error ProofVerificationFailed(string);
 
-    /// @notice Returns the address of the verifier contract.
-    /// @dev This function is virtual and can be overridden by inheriting contracts.
-    /// @return address The address of the verifier contract.
-    function guardianVerifierImplementationAddress()
-        public
-        view
-        virtual
-        returns (address)
-    {
-        return guardianVerifierImplementation;
-    }
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                    Functions                               */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /// @notice Returns if the account to be recovered has already activated the controller (this
     /// contract).
@@ -69,18 +60,28 @@ abstract contract EmailAccountRecovery {
 
     /// @notice Computes the address for guardian verifier contract using the CREATE2 opcode.
     /// @dev This function utilizes the `Create2` library to compute the address. The computation
-    /// uses a provided account address to be recovered, account salt,
-    /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded email
-    /// auth contract implementation
+    /// uses a provided account address to be recovered, account salt, and
+    /// the hash of the encoded ERC1967Proxy creation code concatenated with the encoded guardian verifier implementation
     /// address and the initialization call data. This ensures that the computed address is
     /// deterministic and unique per account salt.
+    /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
     /// @param recoveredAccount The address of the account to be recovered.
     /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
+    /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The computed address.
     function computeGuardianVerifierAddress(
+        address guardianVerifierImplementation,
         address recoveredAccount,
-        bytes32 accountSalt
+        bytes32 accountSalt,
+        bytes memory verifierInitData
     ) public view virtual returns (address) {
+        if (
+            guardianVerifierImplementation == address(0) ||
+            guardianVerifierImplementation.code.length == 0
+        ) {
+            revert InvalidGuardianImplementation();
+        }
+
         return
             Create2.computeAddress(
                 accountSalt,
@@ -91,7 +92,11 @@ abstract contract EmailAccountRecovery {
                             guardianVerifierImplementation,
                             abi.encodeCall(
                                 IGuardianVerifier.initialize,
-                                (recoveredAccount, accountSalt, address(this))
+                                (
+                                    recoveredAccount,
+                                    accountSalt,
+                                    verifierInitData
+                                )
                             )
                         )
                     )
@@ -102,18 +107,29 @@ abstract contract EmailAccountRecovery {
     /// @notice Deploys a new proxy contract for guardian verification.
     /// @dev This function uses the CREATE2 opcode to deploy a new ERC1967Proxy contract with a
     /// deterministic address.
+    /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
     /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
     /// @param recoveredAccount The address of the account to be recovered.
+    /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The address of the newly deployed proxy contract.
     function deployGuardianVerifierProxy(
+        address guardianVerifierImplementation,
         address recoveredAccount,
-        bytes32 accountSalt
+        bytes32 accountSalt,
+        bytes memory verifierInitData
     ) internal virtual returns (address) {
+        if (
+            guardianVerifierImplementation == address(0) ||
+            guardianVerifierImplementation.code.length == 0
+        ) {
+            revert InvalidGuardianImplementation();
+        }
+
         ERC1967Proxy proxy = new ERC1967Proxy{salt: accountSalt}(
             guardianVerifierImplementation,
             abi.encodeCall(
                 IGuardianVerifier.initialize,
-                (recoveredAccount, accountSalt, address(this))
+                (recoveredAccount, accountSalt, verifierInitData)
             )
         );
         return address(proxy);
@@ -122,49 +138,43 @@ abstract contract EmailAccountRecovery {
     /// @notice Handles an acceptance by a new guardian.
     /// @dev This function validates the email auth message, deploys a new EmailAuth contract as a
     /// proxy if validations pass and initializes the contract.
-    //  /// @param emailAuthMsg The email auth message for the email send from the guardian.
-    //  /// @param templateIdx The index of the command template for acceptance, which should match with
+    /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
+    /// @param recoveredAccount The address of the account to be recovered.
+    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed guardian verifier.
+    /// @param verifierInitData The initialization data for the guardian verifier.
+    /// @param proofData The proof data required for the guardian verifier.
     /// the command in the given email auth message.
     function handleAcceptance(
+        address guardianVerifierImplementation,
         address recoveredAccount,
         bytes32 accountSalt,
         bytes memory verifierInitData,
         IGuardianVerifier.ProofData memory proofData
     ) external {
         address guardian = computeGuardianVerifierAddress(
+            guardianVerifierImplementation,
             recoveredAccount,
-            accountSalt
+            accountSalt,
+            verifierInitData
         );
 
         if (guardian.code.length == 0) {
             address proxyAddress = deployGuardianVerifierProxy(
+                guardianVerifierImplementation,
                 recoveredAccount,
-                accountSalt
+                accountSalt,
+                verifierInitData
             );
 
             if (proxyAddress != guardian) {
-                revert InvalidGuardianAddress();
+                revert InvalidProxyDeployment();
             }
-
-            IGuardianVerifier(guardian).initVerifier(
-                recoveredAccount,
-                verifierInitData
-            );
         }
 
-        // TODO: Do we need this check still ?
-        //     guardianEmailAuth = EmailAuth(payable(address(guardian)));
-        //     require(
-        //         guardianEmailAuth.controller() == address(this),
-        //         "invalid controller"
-        //     );
-
-        (bool isVerified, string memory err) = IGuardianVerifier(guardian)
-            .verifyProof(recoveredAccount, proofData);
-
-        if (!isVerified) {
-            revert ProofVerificationFailed(err);
-        }
+        bool isVerified = IGuardianVerifier(guardian).verifyProofStrict(
+            recoveredAccount,
+            proofData
+        );
 
         acceptGuardian(guardian, recoveredAccount);
     }
@@ -172,53 +182,35 @@ abstract contract EmailAccountRecovery {
     /// @notice Processes the recovery based on an email from the guardian.
     /// @dev Verify the provided email auth message for a deployed guardian's EmailAuth contract and
     /// a specific command template for recovery.
-    /// Requires that the guardian is already deployed, and the template ID corresponds to the
-    /// `templateId` in the given email auth message. Once validated.
+    /// Requires that the guardian is already deployed
+    /// @param guardian The address of the guardian who is processing the recovery request
+    /// @param recoveredAccount The address of the account to be recovered.
+    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness while deploying the guardian verifier
+    /// @param recoveryDataHash The hash of the recovery data
     /// @param proofData The proof data for the guardian verifier.
     function handleRecovery(
+        address guardian,
         address recoveredAccount,
         bytes32 accountSalt,
         bytes32 recoveryDataHash,
         IGuardianVerifier.ProofData memory proofData
     ) external {
-        address guardian = computeGuardianVerifierAddress(
-            recoveredAccount,
-            accountSalt
-        );
+        // TODO: Do we need to compute the guardian in handleRecovery as well, or just take the address as an input
+        // address guardian = computeGuardianVerifierAddress(
+        //     guardianVerifierImplementation,
+        //     recoveredAccount,
+        //     accountSalt,
+        //     verifierInitData
+        // );
 
-        // Check if the guardian is deployed
         if (address(guardian).code.length == 0) {
             revert GuardianNotDeployed();
         }
 
-        // TODO: Migration
-        // address recoveredAccount = extractRecoveredAccountFromRecoveryCommand(
-        //     emailAuthMsg.commandParams,
-        //     templateIdx
-        // );
-        // require(recoveredAccount != address(0), "invalid account in email");
-        // address guardian = computeEmailAuthAddress(
-        //     recoveredAccount,
-        //     emailAuthMsg.proof.accountSalt
-        // );
-
-        // uint256 templateId = uint256(
-        //     keccak256(
-        //         abi.encode(
-        //             EMAIL_ACCOUNT_RECOVERY_VERSION_ID,
-        //             "RECOVERY",
-        //             templateIdx
-        //         )
-        //     )
-        // );
-        // require(templateId == emailAuthMsg.templateId, "invalid template id");
-
-        (bool isVerified, string memory err) = IGuardianVerifier(guardian)
-            .verifyProof(recoveredAccount, proofData);
-
-        if (!isVerified) {
-            revert ProofVerificationFailed(err);
-        }
+        bool isVerified = IGuardianVerifier(guardian).verifyProofStrict(
+            recoveredAccount,
+            proofData
+        );
 
         processRecovery(guardian, recoveredAccount, recoveryDataHash);
     }

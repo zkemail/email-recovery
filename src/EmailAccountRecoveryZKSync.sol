@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {IGuardianVerifier} from "./IGuardianVerifier.sol";
+import {IGuardianVerifier} from "./interfaces/IGuardianVerifier.sol";
 import {EmailAccountRecovery} from "./EmailAccountRecovery.sol";
 import {ZKSyncCreate2Factory} from "@zk-email/ether-email-auth-contracts/src/utils/ZKSyncCreate2Factory.sol";
 
@@ -25,14 +25,18 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
     /// @dev This function utilizes the `ZKSyncCreate2Factory` to compute the address. The computation uses a provided account address to be recovered, account salt,
-    /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded email auth contract implementation
+    /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded guardian verifier implementation
     /// address and the initialization call data. This ensures that the computed address is deterministic and unique per account salt.
+    /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
     /// @param recoveredAccount The address of the account to be recovered.
-    /// @param accountSalt A bytes32 salt value defined as a hash of the guardian's email address and an account code. This is assumed to be unique to a pair of the guardian's email address and the wallet address to be recovered.
+    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
+    /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The computed address.
     function computeGuardianVerifierAddress(
+        address guardianVerifierImplementation,
         address recoveredAccount,
-        bytes32 accountSalt
+        bytes32 accountSalt,
+        bytes memory verifierInitData
     ) public view virtual override returns (address) {
         // If on zksync, we use another logic to calculate create2 address.
         return
@@ -40,10 +44,10 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
                 accountSalt,
                 proxyBytecodeHash,
                 abi.encode(
-                    guardianVerifierImplementationAddress(),
+                    guardianVerifierImplementation,
                     abi.encodeCall(
                         IGuardianVerifier.initialize,
-                        (recoveredAccount, accountSalt, address(this))
+                        (recoveredAccount, accountSalt, verifierInitData)
                     )
                 )
             );
@@ -51,14 +55,18 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
 
     /// @notice Deploys a proxy contract for email authentication using the CREATE2 opcode.
     /// @dev This function utilizes the `ZKSyncCreate2Factory` to deploy the proxy contract. The deployment uses a provided account address to be recovered, account salt,
-    /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded email auth contract implementation
+    /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded guardian verifier implementation
     /// address and the initialization call data. This ensures that the deployed address is deterministic and unique per account salt.
+    /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
+    /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
     /// @param recoveredAccount The address of the account to be recovered.
-    /// @param accountSalt A bytes32 salt value defined as a hash of the guardian's email address and an account code. This is assumed to be unique to a pair of the guardian's email address and the wallet address to be recovered.
+    /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The address of the deployed proxy contract.
     function deployGuardianVerifierProxy(
+        address guardianVerifierImplementation,
         address recoveredAccount,
-        bytes32 accountSalt
+        bytes32 accountSalt,
+        bytes memory verifierInitData
     ) internal virtual override returns (address) {
         (bool success, bytes memory returnData) = ZKSyncCreate2Factory(
             factory()
@@ -66,10 +74,10 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
                 accountSalt,
                 proxyBytecodeHash,
                 abi.encode(
-                    guardianVerifierImplementationAddress(),
+                    guardianVerifierImplementation,
                     abi.encodeCall(
                         IGuardianVerifier.initialize,
-                        (recoveredAccount, accountSalt, address(this))
+                        (recoveredAccount, accountSalt, verifierInitData)
                     )
                 )
             );

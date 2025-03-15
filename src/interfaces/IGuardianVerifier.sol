@@ -29,33 +29,36 @@ interface IGuardianVerifier {
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /**
-     * @dev Initialize the contract initialised with ERC1967 proxy deployement
-     * controller can be set to gate the access to initVerifier
+     * @dev Initialize the contract with ERC1967 proxy deployement
+     * Deployer is AccountRecovery module contract
      *
      * @param recoveredAccount Account to be recovered
-     * @param controller Controller address
+     * @param accountSalt Account salt
+     * @param initData Initialization data
      */
     function initialize(
         address recoveredAccount,
         bytes32 accountSalt,
-        address controller
-    ) external;
-
-    /**
-     * @dev Initialize the verifier with initialization data
-     *
-     * @param recoveredAccount Account to be recovered
-     * @param initData Initialization data
-     *
-     * @notice This function should be only allowed to be called by the controller
-     */
-    function initVerifier(
-        address recoveredAccount,
         bytes calldata initData
     ) external;
 
     /**
      * @dev Verification logic of the proof
+     * @notice Reverts if the proof is invalid
+     *
+     * @param recoveredAccount Account to be recovered
+     * @param proof Proof data
+     * @return isVerified if the proof is valid
+     *
+     */
+    function verifyProofStrict(
+        address recoveredAccount,
+        ProofData memory proof
+    ) external view returns (bool isVerified);
+
+    /**
+     * @dev Verification logic of the proof
+     * @notice Returns error message if the proof is invalid
      *
      * @param recoveredAccount Account to be recovered
      * @param proof Proof data
@@ -65,5 +68,5 @@ interface IGuardianVerifier {
     function verifyProof(
         address recoveredAccount,
         ProofData memory proof
-    ) external returns (bool isVerified, string memory error);
+    ) external view returns (bool isVerified, string memory error);
 }
