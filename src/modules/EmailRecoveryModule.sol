@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
-import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { ISafe } from "../interfaces/ISafe.sol";
-import { IEmailRecoveryModule } from "../interfaces/IEmailRecoveryModule.sol";
-import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
+import {IERC7579Account} from "erc7579-implementation/src/interfaces/IERC7579Account.sol";
+import {IModule} from "erc7579-implementation/src/interfaces/IERC7579Module.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
+import {IEmailRecoveryModule} from "../interfaces/IEmailRecoveryModule.sol";
+import {EmailRecoveryManager} from "../EmailRecoveryManager.sol";
 
 /**
  * @title EmailRecoveryModule
@@ -18,7 +18,11 @@ import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
  * This recovery module targets a specific validator, so this contract should be deployed per
  * validator
  */
-contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmailRecoveryModule {
+contract EmailRecoveryModule is
+    EmailRecoveryManager,
+    ERC7579ExecutorBase,
+    IEmailRecoveryModule
+{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -40,20 +44,14 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
     error InvalidValidator(address validator);
 
     constructor(
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl,
-        address commandHandler,
+        address guardianVerifierImplementation,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
         address _validator,
         bytes4 _selector
     )
         EmailRecoveryManager(
-            verifier,
-            dkimRegistry,
-            emailAuthImpl,
-            commandHandler,
+            guardianVerifierImplementation,
             minimumDelay,
             killSwitchAuthorizer
         )
@@ -63,16 +61,18 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
         }
         if (_validator == msg.sender) {
             if (
-                _selector != ISafe.addOwnerWithThreshold.selector
-                    && _selector != ISafe.removeOwner.selector && _selector != ISafe.swapOwner.selector
-                    && _selector != ISafe.changeThreshold.selector
+                _selector != ISafe.addOwnerWithThreshold.selector &&
+                _selector != ISafe.removeOwner.selector &&
+                _selector != ISafe.swapOwner.selector &&
+                _selector != ISafe.changeThreshold.selector
             ) {
                 revert InvalidSelector(_selector);
             }
         } else {
             if (
-                _selector == IModule.onInstall.selector || _selector == IModule.onUninstall.selector
-                    || _selector == bytes4(0)
+                _selector == IModule.onInstall.selector ||
+                _selector == IModule.onUninstall.selector ||
+                _selector == bytes4(0)
             ) {
                 revert InvalidSelector(_selector);
             }
@@ -104,11 +104,16 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
             uint256 threshold,
             uint256 delay,
             uint256 expiry
-        ) = abi.decode(data, (bytes, address[], uint256[], uint256, uint256, uint256));
+        ) = abi.decode(
+                data,
+                (bytes, address[], uint256[], uint256, uint256, uint256)
+            );
 
         if (
             !IERC7579Account(msg.sender).isModuleInstalled(
-                TYPE_VALIDATOR, validator, isInstalledContext
+                TYPE_VALIDATOR,
+                validator,
+                isInstalledContext
             )
         ) {
             revert InvalidValidator(validator);
@@ -120,7 +125,7 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * @notice Handles the uninstallation of the module and clears the recovery configuration
      * @param {data} Unused parameter.
      */
-    function onUninstall(bytes calldata /* data */ ) external {
+    function onUninstall(bytes calldata /* data */) external {
         deInitRecoveryModule();
     }
 
@@ -138,11 +143,14 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * @param account The smart account to check
      * @return bool True if the recovery request can be started, false otherwise
      */
-    function canStartRecoveryRequest(address account) external view returns (bool) {
+    function canStartRecoveryRequest(
+        address account
+    ) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.threshold > 0
-            && guardianConfig.acceptedWeight >= guardianConfig.threshold;
+        return
+            guardianConfig.threshold > 0 &&
+            guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -156,8 +164,14 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
      * @param recoveryData The recovery data that should be executed on the validator
      * being recovered. recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
-    function recover(address account, bytes calldata recoveryData) internal override {
-        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
+    function recover(
+        address account,
+        bytes calldata recoveryData
+    ) internal override {
+        (, bytes memory recoveryCalldata) = abi.decode(
+            recoveryData,
+            (address, bytes)
+        );
 
         bytes4 calldataSelector;
         // solhint-disable-next-line no-inline-assembly
@@ -168,7 +182,12 @@ contract EmailRecoveryModule is EmailRecoveryManager, ERC7579ExecutorBase, IEmai
             revert InvalidSelector(calldataSelector);
         }
 
-        _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
+        _execute({
+            account: account,
+            to: validator,
+            value: 0,
+            data: recoveryCalldata
+        });
 
         emit RecoveryExecuted(account, validator);
     }
