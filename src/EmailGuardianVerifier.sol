@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 import {IDKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-import {IGuardianVerifier} from "./IGuardianVerifier.sol";
+import {IGuardianVerifier} from "./interfaces/IGuardianVerifier.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IEmailRecoveryCommandHandler} from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import {EmailAuthMsg} from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
