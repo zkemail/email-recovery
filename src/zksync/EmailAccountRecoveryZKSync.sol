@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {EmailAuth} from "./EmailAuth.sol";
-import {EmailAccountRecovery} from "./EmailAccountRecovery.sol";
-import {ZKSyncCreate2Factory} from "./utils/ZKSyncCreate2Factory.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import {EmailAccountRecovery} from "../EmailAccountRecovery.sol";
+import {ZKSyncCreate2Factory} from "./ZKSyncCreate2Factory.sol";
 
 /// @title Email Account Recovery Contract
 /// @notice Provides mechanisms for email-based account recovery, leveraging guardians and template-based email verification.
