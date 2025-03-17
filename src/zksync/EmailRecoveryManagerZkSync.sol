@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailRecoveryManager } from "./EmailRecoveryManager.sol";
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
-import { EmailAccountRecoveryZKSync } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecoveryZKSync.sol";
+import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import { EmailAccountRecovery } from "../EmailAccountRecovery.sol";
+import { EmailAccountRecoveryZKSync } from "./EmailAccountRecoveryZKSync.sol";
 
 /**
  * @title EmailRecoveryManagerZkSync

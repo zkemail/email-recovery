@@ -4,8 +4,7 @@ pragma solidity ^0.8.25;
 import { ModuleKitHelpers, AccountInstance } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
 import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from "src/EmailAccountRecovery.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IEmailRecoveryManager } from "src/interfaces/IEmailRecoveryManager.sol";

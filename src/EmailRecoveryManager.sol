@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from "./EmailAccountRecovery.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
