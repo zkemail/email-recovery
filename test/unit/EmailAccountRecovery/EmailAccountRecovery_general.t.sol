@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "../helpers/StructHelper.sol";
+import { Test } from "forge-std/Test.sol";
+import { StructHelper } from "../helpers/StructHelper.sol";
 
 contract EmailAccountRecoveryTest_general is Test, StructHelper {
-    function test_erifier() public {
+    function test_Verifier() public view {
         assertEq(recoveryController.verifier(), address(verifier));
     }
 
-    function test_DKIM() public {
+    function test_DKIM() public view {
         assertEq(recoveryController.dkim(), address(dkim));
     }
 
-    function test_EmailAuthImplementation() public {
+    function test_EmailAuthImplementation() public view {
         assertEq(recoveryController.emailAuthImplementation(), address(emailAuth));
     }
 }

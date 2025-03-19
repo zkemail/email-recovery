@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -18,8 +18,6 @@ contract EmailAccountRecoveryTest_withdraw is StructHelper {
     }
 
     function testWithdraw() public {
-        setUp();
-
         assertEq(address(simpleWallet).balance, 1 ether);
         assertEq(deployer.balance, 0 ether);
 
@@ -32,8 +30,6 @@ contract EmailAccountRecoveryTest_withdraw is StructHelper {
     }
 
     function testExpectRevertWithdrawOnlyOwner() public {
-        setUp();
-
         assertEq(address(simpleWallet).balance, 1 ether);
         assertEq(deployer.balance, 0 ether);
 
@@ -48,8 +44,6 @@ contract EmailAccountRecoveryTest_withdraw is StructHelper {
     }
 
     function testExpectRevertWithdrawInsufficientBalance() public {
-        setUp();
-
         assertEq(address(simpleWallet).balance, 1 ether);
         assertEq(deployer.balance, 0 ether);
 

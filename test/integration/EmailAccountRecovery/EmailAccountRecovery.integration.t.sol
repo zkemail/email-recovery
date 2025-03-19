@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@zk-email/contracts/DKIMRegistry.sol";
@@ -14,9 +14,9 @@ import {
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import "../../unit/helpers/SimpleWallet.sol";
-import "../../unit/helpers/RecoveryController.sol";
-import "forge-std/console.sol";
+import { SimpleWallet } from "../../unit/helpers/SimpleWallet.sol";
+import { RecoveryController } from "../../unit/helpers/RecoveryController.sol";
+import { console } from "forge-std/console.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
@@ -40,14 +40,12 @@ contract IntegrationTest is Test {
     string selector = "12345";
     string domainName = "gmail.com";
     bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
-    // uint256 startTimestamp = 1729512214;
     uint256 recoveryTimelock = 5 days;
     uint256 setTimeDelay = 3 days;
 
     function setUp() public {
         vm.createSelectFork("https://mainnet.base.org", 22_739_283);
-
-        // vm.warp(startTimestamp);
+        vm.rollFork(22_739_283);
 
         vm.startPrank(deployer);
         address signer = deployer;
@@ -105,10 +103,6 @@ contract IntegrationTest is Test {
             abi.encodeCall(simpleWalletImpl.initialize, (signer, address(recoveryController)))
         );
         simpleWallet = SimpleWallet(payable(address(simpleWalletProxy)));
-        // console.log(
-        //     "emailAuthImplementation",
-        //     simpleWallet.emailAuthImplementation()
-        // );
         vm.stopPrank();
         vm.startPrank(address(simpleWallet));
         recoveryController.configureTimelockPeriod(recoveryTimelock);

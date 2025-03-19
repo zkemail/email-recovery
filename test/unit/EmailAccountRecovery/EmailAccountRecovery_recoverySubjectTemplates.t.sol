@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -18,7 +18,6 @@ contract EmailAccountRecoveryTest_recoveryCommandTemplates is StructHelper {
     }
 
     function testRecoveryCommandTemplates() public {
-        setUp();
         string[][] memory res = recoveryController.recoveryCommandTemplates();
         assertEq(res[0][0], "Set");
         assertEq(res[0][1], "the");

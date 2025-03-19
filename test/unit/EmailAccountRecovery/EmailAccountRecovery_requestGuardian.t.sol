@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { StdStorage, stdStorage } from "forge-std/StdStorage.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -20,7 +21,6 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     }
 
     function testExpectRevertRequestGuardianRecoveryInProgress() public {
-        setUp();
         vm.startPrank(deployer);
         recoveryController.requestGuardian(guardian);
 
@@ -35,8 +35,6 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     }
 
     function testExpectRevertRequestGuardianInvalidGuardian() public {
-        setUp();
-
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
         vm.startPrank(deployer);
@@ -46,8 +44,6 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     }
 
     function testExpectRevertRequestGuardianGuardianStatusMustBeNone() public {
-        setUp();
-
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
         vm.startPrank(deployer);
@@ -58,7 +54,6 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     }
 
     function testRequestGuardian() public {
-        setUp();
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
         vm.startPrank(deployer);
@@ -72,7 +67,6 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
 
     function testMultipleGuardianRequests() public {
         address anotherGuardian = vm.addr(9);
-        setUp();
         vm.startPrank(deployer);
         recoveryController.requestGuardian(guardian);
         recoveryController.requestGuardian(anotherGuardian); // Assuming anotherGuardian is defined
