@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -21,8 +21,6 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is StructHelpe
      * Set up functions
      */
     function requestGuardian() public {
-        setUp();
-
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
         vm.startPrank(deployer);
@@ -41,7 +39,6 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is StructHelpe
             recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
         );
 
-        console.log("guardian", guardian);
         uint256 templateIdx = 0;
 
         EmailAuthMsg memory emailAuthMsg = buildEmailAuthMsg();
@@ -51,10 +48,6 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is StructHelpe
         address recoveredAccount = recoveryController.extractRecoveredAccountFromAcceptanceCommand(
             emailAuthMsg.commandParams, templateIdx
         );
-        address computedGuardian = recoveryController.computeEmailAuthAddress(
-            recoveredAccount, emailAuthMsg.proof.accountSalt
-        );
-        console.log("computed guardian", computedGuardian);
         uint256 templateId = recoveryController.computeAcceptanceTemplateId(templateIdx);
         emailAuthMsg.templateId = templateId;
 

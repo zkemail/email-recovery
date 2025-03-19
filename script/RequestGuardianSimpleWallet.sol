@@ -1,16 +1,17 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
-
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { Script } from "forge-std/Script.sol";
+import { console } from "forge-std/console.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SimpleWallet } from "test/unit/helpers/SimpleWallet.sol";
-import "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
+import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
+import { ECDSAOwnedDKIMRegistry } from
+    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
+import { EmailAuth } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "test/unit/helpers/RecoveryController.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract RequestGuardian is Script {
     using ECDSA for *;
@@ -45,10 +46,7 @@ contract RequestGuardian is Script {
         console.log("Initial owner: %s", vm.toString(initialOwner));
 
         RecoveryController controller = RecoveryController(controllerAddr);
-        address guardian = controller.computeEmailAuthAddress(
-            simpleWalletAddr,
-            accountSalt
-        );
+        address guardian = controller.computeEmailAuthAddress(simpleWalletAddr, accountSalt);
         console.log("Guardian: %s", vm.toString(guardian));
         SimpleWallet wallet = SimpleWallet(payable(simpleWalletAddr));
         wallet.requestGuardian(guardian);

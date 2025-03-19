@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController, EmailAccountRecovery } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -32,8 +32,6 @@ contract EmailAccountRecoveryTest_handleRecovery is StructHelper {
 
     function handleAcceptance() public {
         requestGuardian();
-
-        console.log("guardian", guardian);
 
         require(
             recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
@@ -272,9 +270,6 @@ contract EmailAccountRecoveryTest_handleRecovery is StructHelper {
         vm.stopPrank();
     }
 
-    // Can not test recovery in progress using handleRecovery
-    // Can not test invalid guardian using handleRecovery
-
     function testExpectRevertHandleRecoveryGuardianStatusMustBeAccepted() public {
         handleAcceptance();
 
@@ -295,25 +290,6 @@ contract EmailAccountRecoveryTest_handleRecovery is StructHelper {
         commandParamsForRecovery[1] = abi.encode(newSigner);
         emailAuthMsg.commandParams = commandParamsForRecovery;
         emailAuthMsg.proof.accountSalt = 0x0;
-
-        // vm.mockCall(
-        //     address(simpleWallet.emailAuthImplementationAddr()),
-        //     abi.encodeWithSelector(EmailAuth.authEmail.selector, emailAuthMsg),
-        //     abi.encode(0x0)
-        // );
-
-        // // Deploy mock guardian, that status is NONE
-        // address mockCallAddress;
-        // if(block.chainid == 300) {
-        //     mockCallAddress = address(0x889170C6bEe9053626f8460A9875d22Cf6DE0782);
-        // } else {
-        //     mockCallAddress = address(0x2Cfb66029975B1c8881adaa3b79c5Caa4FEB84B5);
-        // }
-        // vm.mockCall(
-        //     mockCallAddress,
-        //     abi.encodeWithSelector(EmailAuth.authEmail.selector, emailAuthMsg),
-        //     abi.encode(0x0)
-        // );
 
         vm.startPrank(someRelayer);
         vm.expectRevert(bytes("guardian is not deployed"));
@@ -383,41 +359,6 @@ contract EmailAccountRecoveryTest_handleRecovery is StructHelper {
         recoveryController.handleRecovery(emailAuthMsg, templateIdx);
         vm.stopPrank();
     }
-
-    // function testExpectRevertHandleRecoveryInvalidGuardianInEmail() public {
-    //     handleAcceptance();
-
-    //     assertEq(recoveryController.isRecovering(address(simpleWallet)), false);
-    //     assertEq(
-    //         recoveryController.currentTimelockOfAccount(address(simpleWallet)),
-    //         0
-    //     );
-    //     assertEq(simpleWallet.owner(), deployer);
-    //     assertEq(
-    //         recoveryController.newSignerCandidateOfAccount(address(simpleWallet)),
-    //         address(0x0)
-    //     );
-    //     uint templateIdx = 0;
-
-    //     EmailAuthMsg memory emailAuthMsg = buildEmailAuthMsg();
-    //     uint templateId = recoveryController.computeRecoveryTemplateId(templateIdx);
-    //     emailAuthMsg.templateId = templateId;
-    //     bytes[] memory commandParamsForRecovery = new bytes[](2);
-    //     commandParamsForRecovery[0] = abi.encode(address(0x0));
-    //     commandParamsForRecovery[1] = abi.encode(newSigner);
-    //     emailAuthMsg.commandParams = commandParamsForRecovery;
-
-    //     vm.mockCall(
-    //         address(recoveryController.emailAuthImplementationAddr()),
-    //         abi.encodeWithSelector(EmailAuth.authEmail.selector, emailAuthMsg),
-    //         abi.encode(0x0)
-    //     );
-
-    //     vm.startPrank(someRelayer);
-    //     vm.expectRevert(bytes("invalid guardian in email"));
-    //     recoveryController.handleRecovery(emailAuthMsg, templateIdx);
-    //     vm.stopPrank();
-    // }
 
     function testExpectRevertHandleRecoveryInvalidNewSigner() public {
         handleAcceptance();

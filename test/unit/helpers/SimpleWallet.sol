@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {RecoveryController} from "./RecoveryController.sol";
-import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { OwnableUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { RecoveryController } from "./RecoveryController.sol";
+import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract SimpleWallet is OwnableUpgradeable, IERC1271 {
     using ECDSA for *;
@@ -17,19 +18,16 @@ contract SimpleWallet is OwnableUpgradeable, IERC1271 {
     }
 
     /// @notice Fallback function to receive ETH
-    fallback() external payable {}
+    fallback() external payable { }
 
     /// @notice Function to receive ETH
-    receive() external payable {}
+    receive() external payable { }
 
     address public recoveryController;
 
-    constructor() {}
+    constructor() { }
 
-    function initialize(
-        address _initialOwner,
-        address _recoveryController
-    ) public initializer {
+    function initialize(address _initialOwner, address _recoveryController) public initializer {
         __Ownable_init(_initialOwner);
         recoveryController = _recoveryController;
         RecoveryController(_recoveryController).configureTimelockPeriod(
@@ -65,7 +63,12 @@ contract SimpleWallet is OwnableUpgradeable, IERC1271 {
     function isValidSignature(
         bytes32 _hash,
         bytes calldata _signature
-    ) external view override returns (bytes4) {
+    )
+        external
+        view
+        override
+        returns (bytes4)
+    {
         // Validate signatures
         if (_hash.recover(_signature) == owner()) {
             return 0x1626ba7e;

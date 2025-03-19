@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import { Test } from "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "../helpers/RecoveryController.sol";
 import { StructHelper } from "../helpers/StructHelper.sol";
@@ -43,10 +43,7 @@ contract EmailAccountRecoveryTest_handleAcceptance is StructHelper {
     }
 
     function testExpectRevertHandleAcceptanceInvalidTemplateId() public {
-        uint256 templateIdx = 0;
-
         EmailAuthMsg memory emailAuthMsg = buildEmailAuthMsg();
-        uint256 templateId = recoveryController.computeAcceptanceTemplateId(templateIdx);
         emailAuthMsg.templateId = 999; // invalid template id
         bytes[] memory commandParamsForAcceptance = new bytes[](1);
         commandParamsForAcceptance[0] = abi.encode(address(simpleWallet));
@@ -248,9 +245,6 @@ contract EmailAccountRecoveryTest_handleAcceptance is StructHelper {
             recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.ACCEPTED
         );
     }
-
-    // Can not test recovery in progress using handleAcceptance
-    // Can not test invalid guardian using handleAcceptance
 
     function testExpectRevertHandleAcceptanceGuardianStatusMustBeRequested() public {
         requestGuardian();
