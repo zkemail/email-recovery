@@ -32,41 +32,45 @@ interface IGuardianVerifier {
      * @dev Initialize the contract with ERC1967 proxy deployement
      * Deployer is AccountRecovery module contract
      *
-     * @param recoveredAccount Account to be recovered
+     * @param account Account to be recovered
      * @param accountSalt Account salt
      * @param initData Initialization data
      */
     function initialize(
-        address recoveredAccount,
+        address account,
         bytes32 accountSalt,
         bytes calldata initData
     ) external;
 
     /**
      * @dev Verification logic of the proof
+     * Recommended to use when proof verification is done on-chain or when called from another contract
+     *
      * @notice Reverts if the proof is invalid
      *
-     * @param recoveredAccount Account to be recovered
+     * @param account Account to be recovered
      * @param proof Proof data
      * @return isVerified if the proof is valid
      *
      */
     function verifyProofStrict(
-        address recoveredAccount,
+        address account,
         ProofData memory proof
     ) external view returns (bool isVerified);
 
     /**
      * @dev Verification logic of the proof
+     * Recommended to use when proof verification is done off-chain, saves gas cost
+     *
      * @notice Returns error message if the proof is invalid
      *
-     * @param recoveredAccount Account to be recovered
+     * @param account Account to be recovered
      * @param proof Proof data
      * @return isVerified if the proof is valid
      * @return error message if the proof is invalid
      */
     function verifyProof(
-        address recoveredAccount,
+        address account,
         ProofData memory proof
     ) external view returns (bool isVerified, string memory error);
 }

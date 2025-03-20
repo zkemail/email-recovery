@@ -28,13 +28,13 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
     /// and the hash of the encoded ERC1967Proxy creation code concatenated with the encoded guardian verifier implementation
     /// address and the initialization call data. This ensures that the computed address is deterministic and unique per account salt.
     /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
-    /// @param recoveredAccount The address of the account to be recovered.
+    /// @param account The address of the account to be recovered.
     /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
     /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The computed address.
     function computeGuardianVerifierAddress(
         address guardianVerifierImplementation,
-        address recoveredAccount,
+        address account,
         bytes32 accountSalt,
         bytes memory verifierInitData
     ) public view virtual override returns (address) {
@@ -47,7 +47,7 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
                     guardianVerifierImplementation,
                     abi.encodeCall(
                         IGuardianVerifier.initialize,
-                        (recoveredAccount, accountSalt, verifierInitData)
+                        (account, accountSalt, verifierInitData)
                     )
                 )
             );
@@ -59,12 +59,12 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
     /// address and the initialization call data. This ensures that the deployed address is deterministic and unique per account salt.
     /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
     /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed proxy address.
-    /// @param recoveredAccount The address of the account to be recovered.
+    /// @param account The address of the account to be recovered.
     /// @param verifierInitData The initialization data for the guardian verifier.
     /// @return address The address of the deployed proxy contract.
     function deployGuardianVerifierProxy(
         address guardianVerifierImplementation,
-        address recoveredAccount,
+        address account,
         bytes32 accountSalt,
         bytes memory verifierInitData
     ) internal virtual override returns (address) {
@@ -77,7 +77,7 @@ abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
                     guardianVerifierImplementation,
                     abi.encodeCall(
                         IGuardianVerifier.initialize,
-                        (recoveredAccount, accountSalt, verifierInitData)
+                        (account, accountSalt, verifierInitData)
                     )
                 )
             );

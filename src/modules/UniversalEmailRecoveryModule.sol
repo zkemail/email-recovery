@@ -107,16 +107,9 @@ contract UniversalEmailRecoveryModule is
     }
 
     constructor(
-        address guardianVerifierImplementation,
         uint256 minimumDelay,
         address killSwitchAuthorizer
-    )
-        EmailRecoveryManager(
-            guardianVerifierImplementation,
-            minimumDelay,
-            killSwitchAuthorizer
-        )
-    {}
+    ) EmailRecoveryManager(minimumDelay, killSwitchAuthorizer) {}
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          CONFIG                            */

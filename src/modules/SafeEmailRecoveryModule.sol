@@ -28,16 +28,9 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     error ResetFailed(address account);
 
     constructor(
-        address guardianVerifierImplementation,
         uint256 minimumDelay,
         address killSwitchAuthorizer
-    )
-        EmailRecoveryManager(
-            guardianVerifierImplementation,
-            minimumDelay,
-            killSwitchAuthorizer
-        )
-    {}
+    ) EmailRecoveryManager(minimumDelay, killSwitchAuthorizer) {}
 
     /**
      * @notice Initializes the module with the threshold, guardians and other configuration

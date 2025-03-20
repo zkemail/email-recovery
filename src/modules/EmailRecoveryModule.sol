@@ -44,18 +44,11 @@ contract EmailRecoveryModule is
     error InvalidValidator(address validator);
 
     constructor(
-        address guardianVerifierImplementation,
         uint256 minimumDelay,
         address killSwitchAuthorizer,
         address _validator,
         bytes4 _selector
-    )
-        EmailRecoveryManager(
-            guardianVerifierImplementation,
-            minimumDelay,
-            killSwitchAuthorizer
-        )
-    {
+    ) EmailRecoveryManager(minimumDelay, killSwitchAuthorizer) {
         if (_validator == address(0)) {
             revert InvalidValidator(_validator);
         }
