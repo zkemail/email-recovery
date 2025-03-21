@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {UniversalEmailRecoveryModule} from "../modules/UniversalEmailRecoveryModule.sol";
 
 /**
@@ -12,10 +11,7 @@ import {UniversalEmailRecoveryModule} from "../modules/UniversalEmailRecoveryMod
  * attestations
  */
 contract EmailRecoveryUniversalFactory {
-    event UniversalEmailRecoveryModuleDeployed(
-        address emailRecoveryModule,
-        address commandHandler
-    );
+    event UniversalEmailRecoveryModuleDeployed(address emailRecoveryModule);
 
     /**
      * @notice Deploys a universal email recovery module along with its command handler
@@ -30,28 +26,16 @@ contract EmailRecoveryUniversalFactory {
      * target verifier, dkim registry, EmailAuth implementation and command handler. The target
      * validator and target function selector are set when a module is installed. This is part of
      * what makes the module generic for recovering any validator
-     * @param commandHandlerSalt Salt for the command handler deployment
      * @param recoveryModuleSalt Salt for the recovery module deployment
-     * @param commandHandlerBytecode Bytecode of the command handler contract
      * @param minimumDelay Minimum delay for recovery requests
      * @param killSwitchAuthorizer Address of the kill switch authorizer
      * @return emailRecoveryModule The deployed email recovery module
-     * @return commandHandler The deployed command handler
      */
     function deployUniversalEmailRecoveryModule(
-        bytes32 commandHandlerSalt,
         bytes32 recoveryModuleSalt,
-        bytes calldata commandHandlerBytecode,
         uint256 minimumDelay,
         address killSwitchAuthorizer
-    ) external returns (address, address) {
-        // Deploy command handler
-        address commandHandler = Create2.deploy(
-            0,
-            commandHandlerSalt,
-            commandHandlerBytecode
-        );
-
+    ) external returns (address) {
         // Deploy recovery module
         address emailRecoveryModule = address(
             new UniversalEmailRecoveryModule{salt: recoveryModuleSalt}(
@@ -60,11 +44,8 @@ contract EmailRecoveryUniversalFactory {
             )
         );
 
-        emit UniversalEmailRecoveryModuleDeployed(
-            emailRecoveryModule,
-            commandHandler
-        );
+        emit UniversalEmailRecoveryModuleDeployed(emailRecoveryModule);
 
-        return (emailRecoveryModule, commandHandler);
+        return emailRecoveryModule;
     }
 }
