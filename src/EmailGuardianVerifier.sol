@@ -17,6 +17,9 @@ import {IVerifier, EmailProof} from "@zk-email/ether-email-auth-contracts/src/in
  * @dev The underlying IGuardianVerifier provides the interface for proof verification.
  */
 contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
+    // NOTE: Temporary bypass, remove after the upgrade
+    address _owner;
+
     // TODO: Check if it's required
     uint8 public constant EMAIL_GUARDIAN_VERIFIER_VERSION_ID = 1;
 
@@ -70,19 +73,34 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     function initialize(
         address /* recoveredAccount */,
         bytes32 /* accountSalt */,
-        bytes calldata /* initData */
+        bytes calldata initData
     ) public initializer {
-        address _dkimRegistry = 0x3D3935B3C030893f118a84C92C66dF1B9E4169d6;
-        address _verifier = 0x3E5f29a7cCeb30D5FCD90078430CA110c2985716;
+        // NOTE: Temporary bypass, remove after the upgrade
+        _owner = msg.sender;
+
+        // address _dkimRegistry = 0x3D3935B3C030893f118a84C92C66dF1B9E4169d6;
+        // address _verifier = 0x3E5f29a7cCeb30D5FCD90078430CA110c2985716;
+
+        (
+            address _dkimRegistry,
+            address _verifier,
+            address _commandHandler
+        ) = abi.decode(initData, (address, address, address));
 
         dkimRegistry = IDKIMRegistry(_dkimRegistry);
         verifier = IVerifier(_verifier);
 
-        commandHandler = 0x6f114A2628F358eaE4b798aC8803eF7b6F6C4257;
+        commandHandler = _commandHandler;
+        // commandHandler = 0x6f114A2628F358eaE4b798aC8803eF7b6F6C4257;
 
         timestampCheckEnabled = true;
 
         initCommandTemplates();
+    }
+
+    // NOTE: Temporary bypass, remove after the upgrade
+    function owner() public view returns (address) {
+        return _owner;
     }
 
     /**
