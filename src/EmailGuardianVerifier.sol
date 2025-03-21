@@ -132,6 +132,10 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
      *
      * @param recoveredAccount Account to be recovered
      * @param proof Proof data
+     * proof.data: EmailData
+     * proof.publicInputs: [publicKeyHash, emailNullifier]
+     * proof.proof: zk-SNARK proof
+     *
      * @return isVerified if the proof is valid
      */
     function verifyProofStrict(
@@ -274,6 +278,10 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
      *
      * @param recoveredAccount Account to be recovered
      * @param proof Proof data
+     * proof.data: EmailData
+     * proof.publicInputs: [publicKeyHash, emailNullifier]
+     * proof.proof: zk-SNARK proof
+     *
      * @return isVerified if the proof is valid
      * @return error message if the proof is invalid
      */
