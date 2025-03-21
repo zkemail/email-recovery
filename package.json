@@ -37,7 +37,6 @@
     "@safe-global/safe-contracts": "1.4.1-2",
     "@zk-email/contracts": "6.3.2",
     "@zk-email/ether-email-auth-contracts": "1.1.0",
-    "erc7579-implementation": "^0.3.1",
     "solidity-stringutils": "github:LayerZero-Labs/solidity-stringutils"
   },
   "files": [
