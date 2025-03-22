@@ -1,8 +1,9 @@
 [profile.default]
 evm_version = "cancun"
 src = "src"
+test="test-new"
 out = "out"
-script = "script"
+script = "scripts"
 libs = ["node_modules", "lib"]
 fs_permissions = [
     { access = "read", path = "out-optimized" },
