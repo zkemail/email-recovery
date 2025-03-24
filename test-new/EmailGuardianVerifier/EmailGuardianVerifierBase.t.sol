@@ -3,15 +3,28 @@ pragma solidity ^0.8.25;
 
 import {ModuleKitHelpers} from "modulekit/ModuleKit.sol";
 import {MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR} from "modulekit/accounts/common/interfaces/IERC7579Module.sol";
+
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {AccountHidingRecoveryCommandHandler} from "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import {EmailRecoveryFactory} from "src/factories/EmailRecoveryFactory.sol";
 import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
-import {BaseTest, CommandHandlerType} from "./Base.t.sol";
+
+import {BaseTest} from "../Base.t.sol";
+
 import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IVerifier.sol";
+
 import {EmailGuardianVerifier} from "src/EmailGuardianVerifier.sol";
-import {CommandUtils} from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import {IGuardianVerifier} from "src/interfaces/IGuardianVerifier.sol";
+import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+
+import {CommandUtils} from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
+import {EmailRecoveryCommandHandler} from "src/handlers/EmailRecoveryCommandHandler.sol";
+import {AccountHidingRecoveryCommandHandler} from "src/handlers/AccountHidingRecoveryCommandHandler.sol";
+import {SafeRecoveryCommandHandler} from "src/handlers/SafeRecoveryCommandHandler.sol";
+
+import {UserOverrideableDKIMRegistry} from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
 interface IEmailRecoveryModule {
     function handleAcceptance(
@@ -36,6 +49,12 @@ interface IEmailRecoveryModule {
     ) external;
 }
 
+enum CommandHandlerType {
+    EmailRecoveryCommandHandler,
+    AccountHidingRecoveryCommandHandler,
+    SafeRecoveryCommandHandler
+}
+
 /**
  * Base setup for Email Guardian verifier
  */
@@ -45,6 +64,11 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     using ModuleKitHelpers for *;
     using Strings for uint256;
     using Strings for address;
+
+    UserOverrideableDKIMRegistry public dkimRegistry;
+    MockGroth16Verifier public verifier;
+
+    address public commandHandler;
 
     EmailRecoveryFactory public emailRecoveryFactory;
     address public commandHandlerAddress;
@@ -64,6 +88,33 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     function setUp() public virtual override {
         super.setUp();
+
+        vm.startPrank(zkEmailDeployer);
+        uint256 setTimeDelay = 0;
+        UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
+        ERC1967Proxy dkimProxy = new ERC1967Proxy(
+            address(overrideableDkimImpl),
+            abi.encodeCall(
+                overrideableDkimImpl.initialize,
+                (zkEmailDeployer, zkEmailDeployer, setTimeDelay)
+            )
+        );
+        dkimRegistry = UserOverrideableDKIMRegistry(address(dkimProxy));
+
+        dkimRegistry.setDKIMPublicKeyHash(
+            domainName,
+            publicKeyHash,
+            zkEmailDeployer,
+            new bytes(0)
+        );
+        verifier = new MockGroth16Verifier();
+
+        // Deploying command handler
+        bytes memory handlerBytecode = getHandlerBytecode();
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandler = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
+
+        vm.stopPrank();
 
         // Setup for the email guardian verifier
         bytes memory initData = abi.encode(
@@ -138,6 +189,65 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             module: emailRecoveryModuleAddress,
             data: recoveryModuleInstallData1
         });
+    }
+
+    /**
+     * Returns the commmand handler type
+     */
+    function getCommandHandlerType() public view returns (CommandHandlerType) {
+        return CommandHandlerType(vm.envOr("COMMAND_HANDLER_TYPE", uint256(0)));
+    }
+
+    /**
+     * Return the command handler bytecode based on the command handler type
+     */
+    function getHandlerBytecode() public view returns (bytes memory) {
+        CommandHandlerType commandHandlerType = getCommandHandlerType();
+
+        if (
+            commandHandlerType == CommandHandlerType.EmailRecoveryCommandHandler
+        ) {
+            return type(EmailRecoveryCommandHandler).creationCode;
+        }
+        if (
+            commandHandlerType ==
+            CommandHandlerType.AccountHidingRecoveryCommandHandler
+        ) {
+            return type(AccountHidingRecoveryCommandHandler).creationCode;
+        }
+        if (
+            commandHandlerType == CommandHandlerType.SafeRecoveryCommandHandler
+        ) {
+            return type(SafeRecoveryCommandHandler).creationCode;
+        }
+
+        revert("Invalid command handler type");
+    }
+
+    /**
+     * Skip the test if command handler type is not the expected type
+     */
+    function skipIfNotCommandHandlerType(
+        CommandHandlerType commandHandlerType
+    ) public {
+        if (getCommandHandlerType() == commandHandlerType) {
+            vm.skip(false);
+        } else {
+            vm.skip(true);
+        }
+    }
+
+    /**
+     * Skip the test if command handler type is the expected type
+     */
+    function skipIfCommandHandlerType(
+        CommandHandlerType commandHandlerType
+    ) public {
+        if (getCommandHandlerType() == commandHandlerType) {
+            vm.skip(true);
+        } else {
+            vm.skip(false);
+        }
     }
 
     // Helper functions

@@ -11,8 +11,8 @@ import {IEmailRecoveryManager} from "src/interfaces/IEmailRecoveryManager.sol";
 import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
 import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
 
-import {CommandHandlerType} from "./Base.t.sol";
-import {OwnableValidatorRecovery_AbstractedRecoveryModule_Base} from "./AccountRecoveryModuleBase.t.sol";
+import {CommandHandlerType} from "./EmailGuardianVerifierBase.t.sol";
+import {OwnableValidatorRecovery_AbstractedRecoveryModule_Base} from "./EmailGuardianVerifierBase.t.sol";
 
 /**
  * Test the abstracted recovery module with email based guardians
