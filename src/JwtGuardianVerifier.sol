@@ -137,17 +137,17 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         //     "invalid account salt"
         // );
 
-        require(
-            timestampCheckEnabled == false ||
-                jwtProof.timestamp == 0 ||
-                jwtProof.timestamp > lastTimestamp,
-            "invalid timestamp"
-        );
+        // require(
+        //     timestampCheckEnabled == false ||
+        //         jwtProof.timestamp == 0 ||
+        //         jwtProof.timestamp > lastTimestamp,
+        //     "invalid timestamp"
+        // );
 
-        require(
-            bytes(jwtProof.maskedCommand).length <= verifier.getCommandBytes(),
-            "invalid masked command length"
-        );
+        // require(
+        //     bytes(jwtProof.maskedCommand).length <= verifier.getCommandBytes(),
+        //     "invalid masked command length"
+        // );
 
         require(
             verifier.verifyEmailProof(jwtProof) == true,
@@ -226,15 +226,15 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         //     return (false, "invalid account salt");
         // }
 
-        if (
-            timestampCheckEnabled == true && jwtProof.timestamp < lastTimestamp
-        ) {
-            return (false, "invalid timestamp");
-        }
+        // if (
+        //     timestampCheckEnabled == true && jwtProof.timestamp < lastTimestamp
+        // ) {
+        //     return (false, "invalid timestamp");
+        // }
 
-        if (bytes(jwtProof.maskedCommand).length > verifier.getCommandBytes()) {
-            return (false, "invalid masked command length");
-        }
+        // if (bytes(jwtProof.maskedCommand).length > verifier.getCommandBytes()) {
+        //     return (false, "invalid masked command length");
+        // }
 
         if (verifier.verifyEmailProof(jwtProof) == false) {
             return (false, "invalid email proof");

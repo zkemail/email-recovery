@@ -10,6 +10,7 @@ import {IGuardianManager} from "src/interfaces/IGuardianManager.sol";
 import {GuardianStorage, GuardianStatus} from "src/libraries/EnumerableGuardianMap.sol";
 
 import {OwnableValidatorRecovery_AbstractedRecoveryModule_Base} from "./JwtGuardianVerifierBase.t.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * Test the abstracted recovery module with jwt based guardians
@@ -32,20 +33,20 @@ contract OwnableValidatorRecovery_AbstractedRecoveryModule_Test is
         bytes memory recoveryData
     ) internal {
         acceptGuardian(
-            emailGuardianVerifierImplementation,
+            jwtGuardianVerifierImplementation,
             account,
             guardians[0],
             emailRecoveryModuleAddress,
             accountSalt1,
-            emailGuardianVerifierInitData
+            jwtGuardianVerifierInitData
         );
         acceptGuardian(
-            emailGuardianVerifierImplementation,
+            jwtGuardianVerifierImplementation,
             account,
             guardians[1],
             emailRecoveryModuleAddress,
             accountSalt2,
-            emailGuardianVerifierInitData
+            jwtGuardianVerifierInitData
         );
         vm.warp(block.timestamp + 12 seconds);
         handleRecovery(
@@ -68,8 +69,6 @@ contract OwnableValidatorRecovery_AbstractedRecoveryModule_Test is
 
     // End to end test
     function test_Recover_RotatesOwnerSuccessfully() public {
-        skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
-
         // Accept guardian 1
         acceptGuardian(
             jwtGuardianVerifierImplementation,

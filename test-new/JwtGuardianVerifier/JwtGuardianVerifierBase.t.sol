@@ -8,7 +8,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {EmailRecoveryFactory} from "src/factories/EmailRecoveryFactory.sol";
 import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
 
-import {BaseTest, CommandHandlerType} from "../Base.t.sol";
+import {BaseTest} from "../Base.t.sol";
 
 import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IVerifier.sol";
 
@@ -49,7 +49,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     BaseTest
 {
     UserOverrideableDKIMRegistry public dkimRegistry;
-    MockGroth16Verifier public verifier;
+    MockJwtVerifier public verifier;
 
     using ModuleKitHelpers for *;
     using Strings for uint256;
@@ -75,6 +75,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
         vm.startPrank(zkEmailDeployer);
 
+        // TODO: JWT Registry is not yet implemented in test
         uint256 setTimeDelay = 0;
         UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
@@ -200,18 +201,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 functionSelector
             );
         emailRecoveryModule = EmailRecoveryModule(emailRecoveryModuleAddress);
-
-        if (
-            getCommandHandlerType() ==
-            CommandHandlerType.AccountHidingRecoveryCommandHandler
-        ) {
-            AccountHidingRecoveryCommandHandler(commandHandlerAddress)
-                .storeAccountHash(accountAddress1);
-            AccountHidingRecoveryCommandHandler(commandHandlerAddress)
-                .storeAccountHash(accountAddress2);
-            AccountHidingRecoveryCommandHandler(commandHandlerAddress)
-                .storeAccountHash(accountAddress3);
-        }
     }
 
     // Helper functions
@@ -229,7 +218,10 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         bytes32 accountSalt
     ) public view returns (EmailProof memory) {
         EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
+        emailProof
+            .domainName = "ee193d4647ab4a3585aa9b2b3b484a87aa68bb42|https://accounts.google.com|397234807794-fh6mhl0jppgtt0ak5cgikhlesbe8f7si.apps.googleusercontent.com";
+
+        // TODO: Public key hash is not derived from decoded jwt
         emailProof.publicKeyHash = bytes32(
             vm.parseUint(
                 "6632353713085157925504008443078919716322386156160602218536961028046468237192"
@@ -253,7 +245,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         bytes32 accountSalt,
         bytes memory verifierInitData
     ) public {
-        EmailGuardianVerifier.ProofData
+        JwtGuardianVerifier.ProofData
             memory proofData = getAcceptanceJwtProofData(
                 account,
                 guardian,
@@ -277,13 +269,15 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
         bytes32 nullifier = generateNewNullifier();
 
+        string memory command = "Accept being a guardian for account 0x..123";
+
         EmailProof memory jwtProof = generateMockJwtProof(
             command,
             nullifier,
             accountSalt
         );
 
-        JwtGuardianVerifier.JwtData memory jwtData = EmailGuardianVerifier
+        JwtGuardianVerifier.JwtData memory jwtData = JwtGuardianVerifier
             .JwtData({
                 domainName: jwtProof.domainName,
                 timestamp: jwtProof.timestamp,
@@ -298,7 +292,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         acceptancePublicInputs[1] = jwtProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
-            proof: emailProof.proof,
+            proof: jwtProof.proof,
             publicInputs: acceptancePublicInputs,
             data: abi.encode(jwtData)
         });
@@ -311,7 +305,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public {
-        EmailGuardianVerifier.ProofData
+        JwtGuardianVerifier.ProofData
             memory proofData = getRecoveryJwtProofData(
                 account,
                 guardian,
@@ -338,13 +332,16 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
         bytes32 nullifier = generateNewNullifier();
 
+        string
+            memory command = "Recver account 0x..123 using recovery hash 0x..123";
+
         EmailProof memory jwtProof = generateMockJwtProof(
             command,
             nullifier,
             accountSalt
         );
 
-        JwtGuardianVerifier.JwtData memory jwtData = EmailGuardianVerifier
+        JwtGuardianVerifier.JwtData memory jwtData = JwtGuardianVerifier
             .JwtData({
                 domainName: jwtProof.domainName,
                 timestamp: jwtProof.timestamp,
@@ -355,11 +352,11 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             });
 
         bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = emailProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = emailProof.emailNullifier; // emailNullifier
+        acceptancePublicInputs[0] = jwtProof.publicKeyHash; // publicKeyHash
+        acceptancePublicInputs[1] = jwtProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
-            proof: emailProof.proof,
+            proof: jwtProof.proof,
             publicInputs: acceptancePublicInputs,
             data: abi.encode(jwtData)
         });
