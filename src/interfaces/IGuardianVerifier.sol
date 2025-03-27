@@ -8,6 +8,10 @@ pragma solidity ^0.8.25;
  *
  * This contract contains the logic for the verifier initialisation & verification
  * It's developed to support proof schemes like zkEmail groth16, zkEmail.nr, zk JWT, but not limited to these
+ *
+ * @dev This contract is deployed as a minimal proxy contract (Clones: EIP1167) for a new guardian specific to
+ * a recovered account. Thus the guardian verifier is recommend to implement
+ * Initializable(https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable)
  */
 interface IGuardianVerifier {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -44,8 +48,10 @@ interface IGuardianVerifier {
 
     /**
      * @dev Verification logic of the proof
-     * Recommended to use when proof verification is done on-chain or when called from another contract
+     * To be used when nullifier based check for replay protection are required & not handeled at higher level
+     * e.g. Email recovery functions ( handleAcceptance & handleRecovery )
      *
+     * @notice Replay protection is handled by the verifier
      * @notice Reverts if the proof is invalid
      *
      * @param account Account to be recovered
@@ -53,24 +59,25 @@ interface IGuardianVerifier {
      * @return isVerified if the proof is valid
      *
      */
-    function verifyProofStrict(
+    function verifyProof(
         address account,
         ProofData memory proof
     ) external view returns (bool isVerified);
 
     /**
      * @dev Verification logic of the proof
-     * Recommended to use when proof verification is done off-chain, saves gas cost
+     * Recommended to use when only proof verification is required
+     * View function to check if the proof is valid
      *
-     * @notice Returns error message if the proof is invalid
+     * @notice Replay protection is assumed to be handled by the caller
+     * @notice Reverts if the proof is invalid
      *
      * @param account Account to be recovered
      * @param proof Proof data
      * @return isVerified if the proof is valid
-     * @return error message if the proof is invalid
      */
-    function verifyProof(
+    function tryVerifyProof(
         address account,
         ProofData memory proof
-    ) external view returns (bool isVerified, string memory error);
+    ) external view returns (bool isVerified);
 }

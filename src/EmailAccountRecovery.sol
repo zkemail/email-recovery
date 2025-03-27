@@ -20,7 +20,7 @@ abstract contract EmailAccountRecovery {
     error InvalidGuardianImplementation();
     error InvalidProxyDeployment();
     error GuardianNotDeployed();
-    error ProofVerificationFailed(string);
+    error ProofVerificationFailed();
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                    Functions                               */
@@ -162,10 +162,15 @@ abstract contract EmailAccountRecovery {
             }
         }
 
-        bool isVerified = IGuardianVerifier(guardian).verifyProofStrict(
+        // Nullifier check is handles by the verifier in this case
+        bool isVerified = IGuardianVerifier(guardian).verifyProof(
             account,
             proofData
         );
+
+        if (!isVerified) {
+            revert ProofVerificationFailed();
+        }
 
         acceptGuardian(guardian, account);
     }
@@ -190,10 +195,15 @@ abstract contract EmailAccountRecovery {
             revert GuardianNotDeployed();
         }
 
-        bool isVerified = IGuardianVerifier(guardian).verifyProofStrict(
+        // Nullifier check is handles by the verifier in this case
+        bool isVerified = IGuardianVerifier(guardian).verifyProof(
             account,
             proofData
         );
+
+        if (!isVerified) {
+            revert ProofVerificationFailed();
+        }
 
         processRecovery(guardian, account, recoveryDataHash);
     }
