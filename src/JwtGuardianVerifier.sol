@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.27;
 
 import {IDKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
 
@@ -14,7 +14,9 @@ import {IVerifier, EmailProof} from "./interfaces/IJwtVerifier.sol";
  */
 contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
     // NOTE: Temporary bypass, remove after the upgrade
-    address _owner;
+    address private _owner;
+
+    bytes32 public accountSalt;
 
     bool public timestampCheckEnabled;
     uint256 public lastTimestamp;
@@ -34,6 +36,63 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         bool isRecovery;
     }
 
+    // isCodeExit == false in the proof
+    error CodeDoesNotExist();
+
+    // TODO: Update according to JWT Registry
+    // DKIM public key hash is not valid
+    error InvalidDKIMPublicKeyHash();
+
+    // Account salt is not the same as the salt used to derive the account address
+    error InvalidAccountSalt(bytes32 accontSalt, bytes32 expectedAccountSalt);
+
+    // Timestamp is invalid
+    error InvalidTimestamp();
+
+    // JWT nullifier is already used
+    error JWTNullifierAlreadyUsed();
+
+    // JWT proof is invalid
+    error InvalidJWTProof();
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initializes the contract with the JWT registry, verifier addresses.
+     * @notice Addresses are hardcoded for the initial implementation.
+     *
+     * @param {account} The address of the account to be recovered.
+     * @param _accountSalt The salt used to derive the account address.
+     * @param initData The initialization data.
+     */
+    function initialize(
+        address /* account */,
+        bytes32 _accountSalt,
+        bytes calldata initData
+    ) public initializer {
+        // NOTE: Temporary bypass, remove after the upgrade
+        _owner = msg.sender;
+
+        (address _jwtRegistry, address _verifier) = abi.decode(
+            initData,
+            (address, address)
+        );
+
+        jwtRegistry = IDKIMRegistry(_jwtRegistry);
+        verifier = IVerifier(_verifier);
+
+        timestampCheckEnabled = true;
+
+        accountSalt = _accountSalt;
+    }
+
+    // NOTE: Temporary bypass, remove after the upgrade
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
     /// @notice Returns the address of the JWT registry contract.
     /// @return address The address of the DKIM registry contract.
     function jwtRegistryAddr() public view returns (address) {
@@ -46,51 +105,68 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         return address(verifier);
     }
 
-    constructor() {}
-
-    //TODO: Maybe accountSalt can be passed while intializing the contract
     /**
-     * @dev Initializes the contract with the JWT registry, verifier addresses.
-     * @notice Addresses are hardcoded for the initial implementation.
+     * @dev Verify the proof
+     * Recommended to be used when nullifier based check for replay protection are required & not handeled at higher level
+     * e.g. Email recovery functions ( handleAcceptance & handleRecovery )
      *
-     * @param {recoveredAccount} The address of the account to be recovered.
-     * @param {accountSalt} The salt used to derive the account address.
-     * @param {initData} The initialization data.
+     * @notice Nullifier based check is handled here
+     * @notice Timestamp check of when the proof was generated is handled here
+     * @notice Reverts if the proof is invalid
+     *
+     * @param account Account to be recovered
+     * @param proof Proof data
+     * proof.data: JwtData
+     * proof.publicInputs: [publicKeyHash, emailNullifier]
+     * proof.proof: zk-SNARK proof
+     *
+     * NOTE: Specific claim is not yet verified
+     * NOTE: JWTRegistry check is disabled
+     * NOTE: Gas optimisation possible by only decoding the proof data once in this function rather in tryVerify as well
+     *
+     * @return isVerified if the proof is valid
      */
-    function initialize(
-        address /* recoveredAccount */,
-        bytes32 /* accountSalt */,
-        bytes calldata initData
-    ) public initializer {
-        // NOTE: Temporary bypass, remove after the upgrade
-        _owner = msg.sender;
+    // Lint Error: Cyclomatic complexity ( too many if else statements )
+    function verifyProof(
+        address account,
+        ProofData memory proof
+    ) public returns (bool) {
+        JwtData memory jwtData = abi.decode(proof.data, (JwtData));
 
-        // address _dkimRegistry = 0x3D3935B3C030893f118a84C92C66dF1B9E4169d6;
-        // address _verifier = 0x3E5f29a7cCeb30D5FCD90078430CA110c2985716;
-
-        (address _jwtRegistry, address _verifier) = abi.decode(
-            initData,
-            (address, address)
+        bytes32 jwtNullifier = proof.publicInputs[1];
+        require(
+            usedNullifiers[jwtNullifier] == false,
+            JWTNullifierAlreadyUsed()
         );
 
-        jwtRegistry = IDKIMRegistry(_jwtRegistry);
-        verifier = IVerifier(_verifier);
+        require(
+            timestampCheckEnabled == false ||
+                jwtData.timestamp == 0 ||
+                jwtData.timestamp > lastTimestamp,
+            InvalidTimestamp()
+        );
 
-        timestampCheckEnabled = true;
-    }
+        bool isVerified = tryVerifyProof(account, proof);
 
-    // NOTE: Temporary bypass, remove after the upgrade
-    function owner() public view returns (address) {
-        return _owner;
+        if (isVerified) {
+            usedNullifiers[jwtNullifier] = true;
+            if (timestampCheckEnabled && jwtData.timestamp != 0) {
+                lastTimestamp = jwtData.timestamp;
+            }
+        }
+
+        return isVerified;
     }
 
     /**
      * @dev Verify the proof
-     * Recommended to use when proof verification is done on-chain or when called from another contract
+     * Recommended to use when only proof verification is required
+     * View function to check if the proof is valid
      *
+     * @notice Replay protection is assumed to be handled by the caller
      * @notice Reverts if the proof is invalid
      *
-     * @param recoveredAccount Account to be recovered
+     * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: JwtData
      * proof.publicInputs: [publicKeyHash, emailNullifier]
@@ -98,14 +174,14 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
      *
      * @return isVerified if the proof is valid
      */
-    function verifyProofStrict(
-        address recoveredAccount,
+    function tryVerifyProof(
+        address account,
         ProofData memory proof
     ) public view returns (bool) {
         // Parse the extra data
         JwtData memory jwtData = abi.decode(proof.data, (JwtData));
 
-        require(jwtData.isCodeExist == true, "isCodeExist is false");
+        require(jwtData.isCodeExist == true, CodeDoesNotExist());
 
         EmailProof memory jwtProof = EmailProof({
             domainName: jwtData.domainName,
@@ -118,6 +194,7 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
             proof: proof.proof
         });
 
+        // TODO: Handle JWT Registry check
         // require(
         //     jwtRegistry.isDKIMPublicKeyHashValid(
         //         jwtProof.domainName,
@@ -127,126 +204,19 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         // );
 
         require(
-            usedNullifiers[jwtProof.emailNullifier] == false,
-            "email nullifier already used"
+            accountSalt == jwtProof.accountSalt,
+            InvalidAccountSalt(jwtProof.accountSalt, accountSalt)
         );
 
-        // TODO: match with the accountSalt added during initialization
-        // require(
-        //     accountSalt == jwtProof.accountSalt,
-        //     "invalid account salt"
-        // );
-
-        // require(
-        //     timestampCheckEnabled == false ||
-        //         jwtProof.timestamp == 0 ||
-        //         jwtProof.timestamp > lastTimestamp,
-        //     "invalid timestamp"
-        // );
-
+        // TODO: Handle the specific claim (command) check
         // require(
         //     bytes(jwtProof.maskedCommand).length <= verifier.getCommandBytes(),
         //     "invalid masked command length"
         // );
 
-        require(
-            verifier.verifyEmailProof(jwtProof) == true,
-            "invalid email proof"
-        );
-
-        // TODO: How to handle the nullifier update
-        // usedNullifiers[jwtProof.emailNullifier] = true;
-        // if (timestampCheckEnabled && jwtProof.timestamp != 0) {
-        //     lastTimestamp = jwtProof.timestamp;
-        // }
+        require(verifier.verifyEmailProof(jwtProof) == true, InvalidJWTProof());
 
         return (true);
-    }
-
-    /**
-     * @dev Verify the proof and return the result and error message
-     * Recommended to use when proof verification is done off-chain
-     *
-     * @notice Can be used to check the proof and get the error message
-     * @notice No revert if the proof is invalid
-     *
-     * @param recoveredAccount Account to be recovered
-     * @param proof Proof data
-     * proof.data: JwtData
-     * proof.publicInputs: [publicKeyHash, emailNullifier]
-     * proof.proof: zk-SNARK proof
-     *
-     * @return isVerified if the proof is valid
-     * @return error message if the proof is invalid
-     */
-    // Lint Error: Cyclomatic complexity ( too many if else statements )
-    function verifyProof(
-        address recoveredAccount,
-        ProofData memory proof
-    ) public view returns (bool, string memory) {
-        JwtData memory jwtData = abi.decode(proof.data, (JwtData));
-
-        if (jwtData.isCodeExist == false) {
-            return (false, "isCodeExist is false");
-        }
-
-        EmailProof memory jwtProof = EmailProof({
-            domainName: jwtData.domainName,
-            publicKeyHash: proof.publicInputs[0],
-            timestamp: jwtData.timestamp,
-            maskedCommand: jwtData.maskedCommand,
-            emailNullifier: proof.publicInputs[1],
-            accountSalt: jwtData.accountSalt,
-            isCodeExist: jwtData.isCodeExist,
-            proof: proof.proof
-        });
-
-        if (
-            jwtRegistry.isDKIMPublicKeyHashValid(
-                jwtProof.domainName,
-                jwtProof.publicKeyHash
-            ) == false
-        ) {
-            return (false, "invalid dkim public key hash");
-        }
-        // require(
-        //     jwtRegistry.isDKIMPublicKeyHashValid(
-        //         jwtProof.domainName,
-        //         jwtProof.publicKeyHash
-        //     ) == true,
-        //     "invalid dkim public key hash"
-        // );
-
-        if (usedNullifiers[jwtProof.emailNullifier] == true) {
-            return (false, "email nullifier already used");
-        }
-
-        // TODO: match with the accountSalt added during initialization
-        // if (emailProof.accountSalt != emailData.accountSalt) {
-        //     return (false, "invalid account salt");
-        // }
-
-        // if (
-        //     timestampCheckEnabled == true && jwtProof.timestamp < lastTimestamp
-        // ) {
-        //     return (false, "invalid timestamp");
-        // }
-
-        // if (bytes(jwtProof.maskedCommand).length > verifier.getCommandBytes()) {
-        //     return (false, "invalid masked command length");
-        // }
-
-        if (verifier.verifyEmailProof(jwtProof) == false) {
-            return (false, "invalid email proof");
-        }
-
-        // TODO: How to handle the nullifier update
-        // usedNullifiers[jwtProof.emailNullifier] = true;
-        // if (timestampCheckEnabled && jwtProof.timestamp != 0) {
-        //     lastTimestamp = jwtProof.timestamp;
-        // }
-
-        return (true, "");
     }
 
     /// @notice Enables or disables the timestamp check.

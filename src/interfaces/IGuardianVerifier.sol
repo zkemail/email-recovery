@@ -48,7 +48,7 @@ interface IGuardianVerifier {
 
     /**
      * @dev Verification logic of the proof
-     * To be used when nullifier based check for replay protection are required & not handeled at higher level
+     * Recommended to be used when nullifier based check for replay protection are required & not handeled at higher level
      * e.g. Email recovery functions ( handleAcceptance & handleRecovery )
      *
      * @notice Replay protection is handled by the verifier
@@ -62,7 +62,7 @@ interface IGuardianVerifier {
     function verifyProof(
         address account,
         ProofData memory proof
-    ) external view returns (bool isVerified);
+    ) external returns (bool isVerified);
 
     /**
      * @dev Verification logic of the proof
