@@ -62,7 +62,7 @@ interface IGuardianVerifier {
     function verifyProof(
         address account,
         ProofData memory proof
-    ) external view returns (bool isVerified);
+    ) external returns (bool isVerified);
 
     /**
      * @dev Verification logic of the proof
