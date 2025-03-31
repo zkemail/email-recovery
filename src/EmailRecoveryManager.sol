@@ -340,10 +340,6 @@ abstract contract EmailRecoveryManager is
 
         RecoveryRequest storage recoveryRequest = recoveryRequests[account];
 
-        // TODO: Migration
-        // bytes32 recoveryDataHash = IEmailRecoveryCommandHandler(commandHandler)
-        //     .parseRecoveryDataHash(templateIdx, commandParams);
-
         if (hasGuardianVoted(account, guardian)) {
             revert GuardianAlreadyVoted();
         }
