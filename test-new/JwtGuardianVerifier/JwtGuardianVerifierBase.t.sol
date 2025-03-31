@@ -188,7 +188,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     // Helper functions
     function deployModule() public override {
-        // Deploy the email recovery factory after removing email guardian verifier related logic
         emailRecoveryFactory = new EmailRecoveryFactory();
 
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
@@ -284,12 +283,12 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: jwtProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: jwtProof.isCodeExist,
-                isRecovery: false // Acceptance
+                isRecovery: false
             });
 
         bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = jwtProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = jwtProof.emailNullifier; // emailNullifier
+        acceptancePublicInputs[0] = jwtProof.publicKeyHash;
+        acceptancePublicInputs[1] = jwtProof.emailNullifier;
 
         proofData = IGuardianVerifier.ProofData({
             proof: jwtProof.proof,
@@ -348,12 +347,12 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: jwtProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: jwtProof.isCodeExist,
-                isRecovery: false // Acceptance
+                isRecovery: true
             });
 
         bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = jwtProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = jwtProof.emailNullifier; // emailNullifier
+        acceptancePublicInputs[0] = jwtProof.publicKeyHash;
+        acceptancePublicInputs[1] = jwtProof.emailNullifier;
 
         proofData = IGuardianVerifier.ProofData({
             proof: jwtProof.proof,

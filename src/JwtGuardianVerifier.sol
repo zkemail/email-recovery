@@ -13,28 +13,55 @@ import {IVerifier, EmailProof} from "./interfaces/IJwtVerifier.sol";
  * @dev The underlying IGuardianVerifier provides the interface for proof verification.
  */
 contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
-    // NOTE: Temporary bypass, remove after the upgrade
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                         STORAGE                            */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    // Owner of the contract
+    // NOTE: Temporary bypass, recommended to use Ownable.sol or remove in the final version
     address private _owner;
 
+    // Salt used to derive the account address
     bytes32 public accountSalt;
 
+    // Boolean flag to enable or disable timestamp check
     bool public timestampCheckEnabled;
+
+    // Last timestamp when a proof was verified
     uint256 public lastTimestamp;
 
-    mapping(bytes32 emailNullifier => bool used) public usedNullifiers;
+    // Mapping to store used nullifiers
+    mapping(bytes32 nullifier => bool used) public usedNullifiers;
 
+    // JWT registry contract
     IDKIMRegistry public jwtRegistry;
 
+    // ZK JWT verifier contract
     IVerifier public verifier;
 
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     TYPE DECLARATIONS                      */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    // Proof data structure
     struct JwtData {
+        // The domain name for jwt
         string domainName;
+        // Timestamp of the proof
         uint256 timestamp;
+        // The jwt claim
         string maskedCommand;
+        // Account salt used to derive the account address
         bytes32 accountSalt;
+        // If the code exists
         bool isCodeExist;
+        // If the proof is a recovery proof
         bool isRecovery;
     }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                           ERRORS                           */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     // isCodeExit == false in the proof
     error CodeDoesNotExist();
@@ -55,8 +82,43 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
     // JWT proof is invalid
     error InvalidJWTProof();
 
+    /**
+     * @dev The initializer is disabled to prevent the implementation contract from being initialized
+     */
     constructor() {
         _disableInitializers();
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                          FUNCTIONS                         */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @dev Returns the owner of the contract.
+     *
+     * @return address The address of the owner.
+     * @notice This function is a temporary bypass and should be removed after the upgrade.
+     */
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Returns the address of the JWT registry contract.
+     *
+     * @return address The address of the JWT registry contract.
+     */
+    function jwtRegistryAddr() public view returns (address) {
+        return address(jwtRegistry);
+    }
+
+    /**
+     * @dev Returns the address of the verifier contract.
+     *
+     * @return address The address of the verifier contract.
+     */
+    function verifierAddr() public view returns (address) {
+        return address(verifier);
     }
 
     /**
@@ -86,23 +148,6 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         timestampCheckEnabled = true;
 
         accountSalt = _accountSalt;
-    }
-
-    // NOTE: Temporary bypass, remove after the upgrade
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    /// @notice Returns the address of the JWT registry contract.
-    /// @return address The address of the DKIM registry contract.
-    function jwtRegistryAddr() public view returns (address) {
-        return address(jwtRegistry);
-    }
-
-    /// @notice Returns the address of the verifier contract.
-    /// @return address The Address of the verifier contract.
-    function verifierAddr() public view returns (address) {
-        return address(verifier);
     }
 
     /**
@@ -219,10 +264,18 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         return (true);
     }
 
-    /// @notice Enables or disables the timestamp check.
-    /// @dev This function can only be called by the controller.
-    /// @param _enabled Boolean flag to enable or disable the timestamp check.
+    /**
+     * @dev Enables or disables the timestamp check.
+     * @notice This function can only be called by the owner.
+     *
+     * @param _enabled Boolean flag to enable or disable the timestamp check.
+     */
     function setTimestampCheckEnabled(bool _enabled) public {
+        require(
+            msg.sender == _owner,
+            "Only the owner can set the timestamp check"
+        );
+
         timestampCheckEnabled = _enabled;
     }
 }
