@@ -268,7 +268,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     // Helper functions
     function deployModule() public override {
-        // Deploy the email recovery factory after removing email guardian verifier related logic
         emailRecoveryFactory = new EmailRecoveryFactory();
 
         bytes32 recoveryModuleSalt = bytes32(uint256(0));

@@ -16,24 +16,44 @@ import {IVerifier, EmailProof} from "@zk-email/ether-email-auth-contracts/src/in
  * @dev The underlying IGuardianVerifier provides the interface for proof verification.
  */
 contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
-    // NOTE: Temporary bypass, remove after the upgrade
-    address private _owner;
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                    CONSTANTS & STORAGE                     */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    bytes32 public accountSalt;
-
-    // TODO: Check if it's required
+    // Version ID for the email guardian verifier, required for template ID computation
     uint8 public constant EMAIL_GUARDIAN_VERIFIER_VERSION_ID = 1;
 
+    // Owner of the contract
+    // NOTE: Temporary bypass, recommended to use Ownable.sol or remove in the final version
+    address private _owner;
+
+    // Command handler address
     address public commandHandler;
 
+    // Salt used to derive the account address
+    bytes32 public accountSalt;
+
+    // Boolean flag to enable or disable timestamp check
     bool public timestampCheckEnabled;
+
+    // Last timestamp when a proof was verified
     uint256 public lastTimestamp;
 
+    // Mapping to store the command templates for acceptance and recovery
     mapping(uint256 templateId => string[] template) public commandTemplates;
+
+    // Mapping to store the used email nullifiers for replay protection
     mapping(bytes32 emailNullifier => bool used) public usedNullifiers;
 
+    // DKIM registry contract
     IDKIMRegistry public dkimRegistry;
+
+    // ZK Email Verifier contract
     IVerifier public verifier;
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                     TYPE DECLARATIONS                      */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     struct EmailData {
         uint256 templateIdx;
@@ -46,6 +66,10 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         bool isCodeExist;
         bool isRecovery;
     }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                           ERRORS                           */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     // Account in the email command is not the same as the account to be recovered
     error InvalidAccountInCommand(
@@ -84,8 +108,43 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     // Email proof is invalid
     error InvalidEmailProof();
 
+    /**
+     * @dev The initializer is disabled to prevent the implementation contract from being initialized
+     */
     constructor() {
         _disableInitializers();
+    }
+
+    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
+    /*                          FUNCTIONS                         */
+    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
+
+    /**
+     * @dev Returns the owner of the contract.
+     *
+     * @return address The address of the owner.
+     * @notice This function is a temporary bypass and should be removed after the upgrade.
+     */
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Returns the address of the command handler contract.
+     *
+     * @return address The address of the command handler contract.
+     */
+    function dkimRegistryAddr() public view returns (address) {
+        return address(dkimRegistry);
+    }
+
+    /**
+     * @dev Returns the address of the verifier contract.
+     *
+     * @return address The address of the verifier contract.
+     */
+    function verifierAddr() public view returns (address) {
+        return address(verifier);
     }
 
     /**
@@ -93,8 +152,8 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
      * @notice Addresses are hardcoded for the initial implementation.
      *
      * @param {account} The address of the account to be recovered.
-     * @param {accountSalt} The salt used to derive the account address.
-     * @param {initData} The initialization data.
+     * @param _accountSalt The salt used to derive the account address.
+     * @param initData The initialization data.
      */
     function initialize(
         address /* account */,
@@ -121,32 +180,13 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         initCommandTemplates();
     }
 
-    // NOTE: Temporary bypass, remove after the upgrade
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    /// @notice Returns the address of the DKIM registry contract.
-    /// @return address The address of the DKIM registry contract.
-    function dkimRegistryAddr() public view returns (address) {
-        return address(dkimRegistry);
-    }
-
-    /// @notice Returns the address of the verifier contract.
-    /// @return address The Address of the verifier contract.
-    function verifierAddr() public view returns (address) {
-        return address(verifier);
-    }
-
     /**
-     * @dev initialize the command templates from thne command Handler
+     * @dev initialize the command templates by retrieving the tempaltes from the command Handler
      */
     function initCommandTemplates() public {
-        // load the command templates from the command handler
         string[][] memory acceptanceTemplates = acceptanceCommandTemplates();
         string[][] memory recoveryTemplates = recoveryCommandTemplates();
 
-        // store the command templates
         for (uint256 idx = 0; idx < acceptanceTemplates.length; idx++) {
             commandTemplates[
                 computeAcceptanceTemplateId(idx)
@@ -162,7 +202,7 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     /**
      * @dev Verify the proof
      * Recommended to be used when nullifier based check for replay protection are required & not handeled at higher level
-     * e.g. Email recovery functions ( handleAcceptance & handleRecovery )
+     * e.g. Recovery functions ( handleAcceptance & handleRecovery )
      *
      * @notice Nullifier based check is handled here
      * @notice Timestamp check of when the proof was generated is handled here
@@ -406,10 +446,15 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             );
     }
 
-    /// @notice Enables or disables the timestamp check.
-    /// @dev This function can only be called by the controller.
-    /// @param _enabled Boolean flag to enable or disable the timestamp check.
+    /**
+     * @dev Sets the timestamp check enabled or disabled.
+     *
+     * @param _enabled bool to enable or disable the timestamp check.
+     * @notice This function is currently restricted to the owner of the contract.
+     */
     function setTimestampCheckEnabled(bool _enabled) public {
+        require(msg.sender == _owner, "Only owner can set this");
+
         timestampCheckEnabled = _enabled;
     }
 
