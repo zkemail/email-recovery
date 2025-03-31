@@ -8,13 +8,13 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {EmailRecoveryFactory} from "src/factories/EmailRecoveryFactory.sol";
 import {EmailRecoveryModule} from "src/modules/EmailRecoveryModule.sol";
 
-import {BaseTest} from "../Base.t.sol";
+import {BaseTest} from "../../Base.t.sol";
 
 import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IVerifier.sol";
 
 import {EmailNrGuardianVerifier} from "src/EmailNrGuardianVerifier.sol";
 import {IGuardianVerifier} from "src/interfaces/IGuardianVerifier.sol";
-import {HonkVerifier} from "src/test/HonkVerifier.sol";
+import {MockHonkVerifier} from "src/test/MockHonkVerifier.sol";
 
 import {CommandUtils} from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import {EmailRecoveryCommandHandler} from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -58,7 +58,7 @@ enum CommandHandlerType {
 /**
  * Base setup for Email Guardian verifier
  */
-abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
+abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifierMock_Base is
     BaseTest
 {
     using ModuleKitHelpers for *;
@@ -66,7 +66,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
     using Strings for address;
 
     UserOverrideableDKIMRegistry public dkimRegistry;
-    HonkVerifier public verifier;
+    MockHonkVerifier public verifier;
 
     EmailRecoveryFactory public emailRecoveryFactory;
     address public commandHandlerAddress;
@@ -106,7 +106,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
             new bytes(0)
         );
 
-        verifier = new HonkVerifier();
+        verifier = new MockHonkVerifier();
 
         vm.stopPrank();
 
@@ -270,41 +270,23 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         recoveryDataHash = keccak256(recoveryData);
     }
 
-    // bytes32 pubKey;
-    // bytes32 nullifier;
-    struct NoirProof {
-        bytes proof;
-    }
-
-    function generateEmailNrProof(
+    function generateMockEmailProof(
         bytes32 nullifier,
         bytes32 accountSalt
     ) public view returns (EmailProof memory) {
         EmailProof memory emailProof;
         emailProof.domainName = "gmail.com";
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = "";
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/EmailNrGuardianVerifier/noirProof.json"
+        emailProof.publicKeyHash = bytes32(
+            vm.parseUint(
+                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
             )
         );
-
-        NoirProof memory proof = abi.decode(
-            vm.parseJson(proofFile),
-            (NoirProof)
-        );
-
-        emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubKey;
-        emailProof
-            .publicKeyHash = 0x0a4494930909f5b7c4177796ef1e9222ef61e9e8712d2c33321a2f8860fa8d9c;
-        emailProof
-            .emailNullifier = 0x0314d89609fb7b5565200c7d52d25a63c4088eddcf4d193a63d7ed9cb67ac3d5;
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedCommand = "";
+        emailProof.emailNullifier = nullifier;
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
+        emailProof.proof = bytes("0");
 
         return emailProof;
     }
@@ -341,7 +323,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
         bytes32 nullifier = generateNewNullifier();
 
-        EmailProof memory emailProof = generateEmailNrProof(
+        EmailProof memory emailProof = generateMockEmailProof(
             nullifier,
             accountSalt
         );
@@ -398,7 +380,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
         bytes32 nullifier = generateNewNullifier();
 
-        EmailProof memory emailProof = generateEmailNrProof(
+        EmailProof memory emailProof = generateMockEmailProof(
             nullifier,
             accountSalt
         );
