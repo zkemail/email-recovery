@@ -3,7 +3,6 @@ pragma solidity ^0.8.27;
 
 import {IDKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
 import {IGuardianVerifier} from "./interfaces/IGuardianVerifier.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IEmailRecoveryCommandHandler} from "./interfaces/IEmailRecoveryCommandHandler.sol";
@@ -55,15 +54,25 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     /*                     TYPE DECLARATIONS                      */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    // Struct to hold proof data
     struct EmailData {
+        // Template index for the command
         uint256 templateIdx;
+        // Command parameters for the email
         bytes[] commandParams;
+        // Skipped command prefix
         uint256 skippedCommandPrefix;
+        // Domain name for the email
         string domainName;
+        // Timestamp of the email
         uint256 timestamp;
+        // Masked command for the email
         string maskedCommand;
+        // Account salt used to derive the account address
         bytes32 accountSalt;
+        // If the code exists
         bool isCodeExist;
+        // If the email is for recovery
         bool isRecovery;
     }
 
@@ -130,9 +139,9 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     }
 
     /**
-     * @dev Returns the address of the command handler contract.
+     * @dev Returns the address of the DKIM registry contract.
      *
-     * @return address The address of the command handler contract.
+     * @return address The address of the DKIM registry contract.
      */
     function dkimRegistryAddr() public view returns (address) {
         return address(dkimRegistry);
