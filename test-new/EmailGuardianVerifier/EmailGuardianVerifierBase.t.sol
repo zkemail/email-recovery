@@ -86,8 +86,12 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     address public emailGuardianVerifierImplementation;
     bytes public emailGuardianVerifierInitData;
 
+    uint256 public templateIdx;
+
     function setUp() public virtual override {
         super.setUp();
+
+        templateIdx = 0;
 
         vm.startPrank(zkEmailDeployer);
         uint256 setTimeDelay = 0;
