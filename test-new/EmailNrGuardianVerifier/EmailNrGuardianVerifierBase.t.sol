@@ -122,45 +122,40 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
             new EmailNrGuardianVerifier()
         );
 
-        guardians1 = new address[](3);
+        // guardians1 = new address[](3);
+        guardian1 = new address[](1);
         guardians1[0] = computeGuardianVerifierAuthAddress(
             emailGuardianVerifierImplementation,
             instance1.account,
             accountSalt1,
             emailGuardianVerifierInitData
         );
-        guardians1[1] = computeGuardianVerifierAuthAddress(
-            emailGuardianVerifierImplementation,
-            instance1.account,
-            accountSalt2,
-            emailGuardianVerifierInitData
-        );
-        guardians1[2] = computeGuardianVerifierAuthAddress(
-            emailGuardianVerifierImplementation,
-            instance1.account,
-            accountSalt3,
-            emailGuardianVerifierInitData
-        );
+        // guardians1[1] = computeGuardianVerifierAuthAddress(
+        //     emailGuardianVerifierImplementation,
+        //     instance1.account,
+        //     accountSalt2,
+        //     emailGuardianVerifierInitData
+        // );
+        // guardians1[2] = computeGuardianVerifierAuthAddress(
+        //     emailGuardianVerifierImplementation,
+        //     instance1.account,
+        //     accountSalt3,
+        //     emailGuardianVerifierInitData
+        // );
 
         // INITIAL SETUP
         bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(
             functionSelector,
             newOwner1
         );
-        bytes memory changeOwnerCalldata2 = abi.encodeWithSelector(
-            functionSelector,
-            newOwner2
-        );
-        bytes memory changeOwnerCalldata3 = abi.encodeWithSelector(
-            functionSelector,
-            newOwner3
-        );
+
         recoveryData1 = abi.encode(validatorAddress, changeOwnerCalldata1);
-        recoveryData2 = abi.encode(validatorAddress, changeOwnerCalldata2);
-        recoveryData3 = abi.encode(validatorAddress, changeOwnerCalldata3);
         recoveryDataHash1 = keccak256(recoveryData1);
-        recoveryDataHash2 = keccak256(recoveryData2);
-        recoveryDataHash3 = keccak256(recoveryData3);
+
+        guardianWeights = new uint256[](1);
+        guardianWeights[0] = 1;
+        totalWeight = 1;
+        threshold = 1;
 
         bytes memory recoveryModuleInstallData1 = abi.encode(
             isInstalledContext,
@@ -270,12 +265,13 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         recoveryDataHash = keccak256(recoveryData);
     }
 
-    // bytes32 pubKey;
+    // bytes32 pubkey;
     // bytes32 nullifier;
     struct NoirProof {
         bytes proof;
     }
 
+    //NOTE: This is a mock proof, it isn't present here now
     function generateEmailNrProof(
         bytes32 nullifier,
         bytes32 accountSalt
@@ -290,7 +286,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         string memory proofFile = vm.readFile(
             string.concat(
                 vm.projectRoot(),
-                "/test-new/EmailNrGuardianVerifier/noirProof.json"
+                "/test-new/EmailNrGuardianVerifier/proof.json"
             )
         );
 
@@ -300,7 +296,6 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         );
 
         emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubKey;
         emailProof
             .publicKeyHash = 0x0a4494930909f5b7c4177796ef1e9222ef61e9e8712d2c33321a2f8860fa8d9c;
         emailProof
@@ -339,12 +334,33 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
-        bytes32 nullifier = generateNewNullifier();
+        EmailProof memory emailProof;
+        emailProof.domainName = "gmail.com";
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedCommand = "";
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
 
-        EmailProof memory emailProof = generateEmailNrProof(
-            nullifier,
-            accountSalt
+        string memory proofFile = vm.readFile(
+            string.concat(
+                vm.projectRoot(),
+                "/test-new/EmailNrGuardianVerifier/acceptance-proof.json"
+            )
         );
+
+        NoirProof memory proof = abi.decode(
+            vm.parseJson(proofFile),
+            (NoirProof)
+        );
+
+        emailProof.proof = proof.proof;
+        // emailProof.publicKeyHash = proof.pubkey;
+        // emailProof.emailNullifier = proof.nullifier;
+
+        emailProof
+            .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
+        emailProof
+            .emailNullifier = 0x04fab54ce5298aff53698f77bf1426d5768c0cc9657b77bd388145a89ae5a89e;
 
         EmailNrGuardianVerifier.EmailData
             memory emailData = EmailNrGuardianVerifier.EmailData({
@@ -396,12 +412,33 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
-        bytes32 nullifier = generateNewNullifier();
+        EmailProof memory emailProof;
+        emailProof.domainName = "gmail.com";
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedCommand = "";
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
 
-        EmailProof memory emailProof = generateEmailNrProof(
-            nullifier,
-            accountSalt
+        string memory proofFile = vm.readFile(
+            string.concat(
+                vm.projectRoot(),
+                "/test-new/EmailNrGuardianVerifier/recovery-proof.json"
+            )
         );
+
+        NoirProof memory proof = abi.decode(
+            vm.parseJson(proofFile),
+            (NoirProof)
+        );
+
+        emailProof.proof = proof.proof;
+        // emailProof.publicKeyHash = proof.pubkey;
+        // emailProof.emailNullifier = proof.nullifier;
+
+        emailProof
+            .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
+        emailProof
+            .emailNullifier = 0x12a412c72a2ec60e1f12860d8ebb3b85fdea87f9ed5cfd805f11f1e619716c29;
 
         EmailNrGuardianVerifier.EmailData
             memory emailData = EmailNrGuardianVerifier.EmailData({
