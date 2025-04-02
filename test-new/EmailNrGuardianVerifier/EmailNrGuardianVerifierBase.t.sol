@@ -127,7 +127,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         );
 
         // guardians1 = new address[](3);
-        guardian1 = new address[](1);
+        guardians1 = new address[](1);
         guardians1[0] = computeGuardianVerifierAuthAddress(
             emailGuardianVerifierImplementation,
             instance1.account,
