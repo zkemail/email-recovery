@@ -1,34 +1,26 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.12;
 
-import {EmailRecoveryManager} from "./EmailRecoveryManager.sol";
+import {IGuardianVerifier} from "./interfaces/IGuardianVerifier.sol";
 import {EmailAccountRecovery} from "./EmailAccountRecovery.sol";
-import {EmailAccountRecoveryZKSync} from "./EmailAccountRecoveryZKSync.sol";
+import {ZKSyncCreate2Factory} from "@zk-email/ether-email-auth-contracts/src/utils/ZKSyncCreate2Factory.sol";
 
-/**
- * @title EmailRecoveryManagerZkSync
- * @notice Provides a mechanism for account recovery using email guardians on ZKSync networks.
- * @dev The underlying EmailAccountRecoveryZkSync contract provides some base logic for deploying
- * guardian contracts and handling email verification.
- */
-abstract contract EmailRecoveryManagerZkSync is
-    EmailRecoveryManager,
-    EmailAccountRecoveryZKSync
-{
-    constructor(
-        uint256 _minimumDelay,
-        address _killSwitchAuthorizer,
-        address _factoryAddr,
-        bytes32 _proxyBytecodeHash
-    ) EmailRecoveryManager(_minimumDelay, _killSwitchAuthorizer) {
-        if (_factoryAddr == address(0)) {
-            revert InvalidFactory();
-        }
-        if (_proxyBytecodeHash == bytes32(0)) {
-            revert InvalidProxyBytecodeHash();
-        }
-        factoryAddr = _factoryAddr;
-        proxyBytecodeHash = _proxyBytecodeHash;
+/// @title Email Account Recovery Contract
+/// @notice Provides mechanisms for email-based account recovery, leveraging guardians and template-based email verification.
+/// @dev This contract is abstract and requires implementation of several methods for configuring a new guardian and recovering an account contract.
+abstract contract EmailAccountRecoveryZKSync is EmailAccountRecovery {
+    // This is the address of the zkSync factory contract
+    address public factoryAddr;
+    // The bytecodeHash is assumed to be provided as an initialization parameter because type(ERC1967Proxy).creationCode doesn't work on eraVM currently
+    // If you failed some test cases, check the bytecodeHash by yourself
+    // see, test/ComputeCreate2Address.t.sol
+    bytes32 public proxyBytecodeHash;
+
+    /// @notice Returns the address of the zkSyncfactory contract.
+    /// @dev This function is virtual and can be overridden by inheriting contracts.
+    /// @return address The address of the zkSync factory contract.
+    function factory() public view virtual returns (address) {
+        return factoryAddr;
     }
 
     /// @notice Computes the address for email auth contract using the CREATE2 opcode.
@@ -45,19 +37,19 @@ abstract contract EmailRecoveryManagerZkSync is
         address account,
         bytes32 accountSalt,
         bytes memory verifierInitData
-    )
-        public
-        view
-        virtual
-        override(EmailAccountRecovery, EmailAccountRecoveryZKSync)
-        returns (address)
-    {
+    ) public view virtual override returns (address) {
+        // If on zksync, we use another logic to calculate create2 address.
         return
-            EmailAccountRecoveryZKSync.computeGuardianVerifierAddress(
-                guardianVerifierImplementation,
-                account,
+            ZKSyncCreate2Factory(factory()).computeAddress(
                 accountSalt,
-                verifierInitData
+                proxyBytecodeHash,
+                abi.encode(
+                    guardianVerifierImplementation,
+                    abi.encodeCall(
+                        IGuardianVerifier.initialize,
+                        (account, accountSalt, verifierInitData)
+                    )
+                )
             );
     }
 
@@ -75,18 +67,22 @@ abstract contract EmailRecoveryManagerZkSync is
         address account,
         bytes32 accountSalt,
         bytes memory verifierInitData
-    )
-        internal
-        virtual
-        override(EmailAccountRecovery, EmailAccountRecoveryZKSync)
-        returns (address)
-    {
-        return
-            EmailAccountRecoveryZKSync.deployGuardianVerifierProxy(
-                guardianVerifierImplementation,
-                account,
+    ) internal virtual override returns (address) {
+        (bool success, bytes memory returnData) = ZKSyncCreate2Factory(
+            factory()
+        ).deploy(
                 accountSalt,
-                verifierInitData
+                proxyBytecodeHash,
+                abi.encode(
+                    guardianVerifierImplementation,
+                    abi.encodeCall(
+                        IGuardianVerifier.initialize,
+                        (account, accountSalt, verifierInitData)
+                    )
+                )
             );
+        require(success, "zksync deploy failed");
+        address payable proxyAddress = abi.decode(returnData, (address));
+        return proxyAddress;
     }
 }

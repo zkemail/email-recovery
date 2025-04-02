@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ERC7579ExecutorBase } from "@rhinestone/modulekit/src/Modules.sol";
-import { IERC7579Account } from "erc7579/interfaces/IERC7579Account.sol";
-import { IModule } from "erc7579/interfaces/IERC7579Module.sol";
-import { ISafe } from "../interfaces/ISafe.sol";
-import { SentinelListLib, SENTINEL } from "sentinellist/SentinelList.sol";
-import { IUniversalEmailRecoveryModule } from "../interfaces/IUniversalEmailRecoveryModule.sol";
-import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import {ERC7579ExecutorBase} from "@rhinestone/modulekit/src/Modules.sol";
+import {IERC7579Account} from "erc7579/interfaces/IERC7579Account.sol";
+import {IModule} from "erc7579/interfaces/IERC7579Module.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
+import {SentinelListLib, SENTINEL} from "sentinellist/SentinelList.sol";
+import {IUniversalEmailRecoveryModule} from "../interfaces/IUniversalEmailRecoveryModule.sol";
+import {EmailRecoveryManager} from "../EmailRecoveryManager.sol";
 
 /**
  * @title UniversalEmailRecoveryModule
@@ -36,10 +36,14 @@ contract UniversalEmailRecoveryModule is
     uint256 public constant MAX_VALIDATORS = 32;
 
     event NewValidatorRecovery(
-        address indexed account, address indexed validator, bytes4 recoverySelector
+        address indexed account,
+        address indexed validator,
+        bytes4 recoverySelector
     );
     event RemovedValidatorRecovery(
-        address indexed account, address indexed validator, bytes4 recoverySelector
+        address indexed account,
+        address indexed validator,
+        bytes4 recoverySelector
     );
     event RecoveryExecuted(address indexed account, address indexed validator);
 
@@ -52,7 +56,8 @@ contract UniversalEmailRecoveryModule is
     /**
      * Account address to validator list
      */
-    mapping(address account => SentinelListLib.SentinelList validatorList) internal validators;
+    mapping(address account => SentinelListLib.SentinelList validatorList)
+        internal validators;
     /**
      * Account address to validator count
      */
@@ -61,8 +66,8 @@ contract UniversalEmailRecoveryModule is
     /**
      * validator address to account address to function selector
      */
-    mapping(address validatorModule => mapping(address account => bytes4 allowedSelector)) internal
-        allowedSelectors;
+    mapping(address validatorModule => mapping(address account => bytes4 allowedSelector))
+        internal allowedSelectors;
 
     /**
      * @notice Modifier to check whether the selector is safe
@@ -72,16 +77,18 @@ contract UniversalEmailRecoveryModule is
     modifier withoutUnsafeSelector(address validator, bytes4 selector) {
         if (validator == msg.sender) {
             if (
-                selector != ISafe.addOwnerWithThreshold.selector
-                    && selector != ISafe.removeOwner.selector && selector != ISafe.swapOwner.selector
-                    && selector != ISafe.changeThreshold.selector
+                selector != ISafe.addOwnerWithThreshold.selector &&
+                selector != ISafe.removeOwner.selector &&
+                selector != ISafe.swapOwner.selector &&
+                selector != ISafe.changeThreshold.selector
             ) {
                 revert InvalidSelector(selector);
             }
         } else {
             if (
-                selector == IModule.onInstall.selector || selector == IModule.onUninstall.selector
-                    || selector == bytes4(0)
+                selector == IModule.onInstall.selector ||
+                selector == IModule.onUninstall.selector ||
+                selector == bytes4(0)
             ) {
                 revert InvalidSelector(selector);
             }
@@ -100,22 +107,9 @@ contract UniversalEmailRecoveryModule is
     }
 
     constructor(
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl,
-        address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer
-    )
-        EmailRecoveryManager(
-            verifier,
-            dkimRegistry,
-            emailAuthImpl,
-            commandHandler,
-            minimumDelay,
-            killSwitchAuthorizer
-        )
-    { }
+    ) EmailRecoveryManager(minimumDelay, killSwitchAuthorizer) {}
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          CONFIG                            */
@@ -142,8 +136,18 @@ contract UniversalEmailRecoveryModule is
             uint256 delay,
             uint256 expiry
         ) = abi.decode(
-            data, (address, bytes, bytes4, address[], uint256[], uint256, uint256, uint256)
-        );
+                data,
+                (
+                    address,
+                    bytes,
+                    bytes4,
+                    address[],
+                    uint256[],
+                    uint256,
+                    uint256,
+                    uint256
+                )
+            );
 
         validators[msg.sender].init();
         allowValidatorRecovery(validator, isInstalledContext, initialSelector);
@@ -171,7 +175,9 @@ contract UniversalEmailRecoveryModule is
     {
         if (
             !IERC7579Account(msg.sender).isModuleInstalled(
-                TYPE_VALIDATOR, validator, isInstalledContext
+                TYPE_VALIDATOR,
+                validator,
+                isInstalledContext
             )
         ) {
             revert InvalidValidator(validator);
@@ -201,10 +207,7 @@ contract UniversalEmailRecoveryModule is
         address validator,
         address prevValidator,
         bytes4 recoverySelector
-    )
-        public
-        onlyWhenInitialized
-    {
+    ) public onlyWhenInitialized {
         validators[msg.sender].pop(prevValidator, validator);
         validatorCount[msg.sender]--;
 
@@ -225,7 +228,7 @@ contract UniversalEmailRecoveryModule is
      * @notice Handles the uninstallation of the module and clears the recovery configuration
      * @param {data} Unused parameter.
      */
-    function onUninstall(bytes calldata /* data */ ) external {
+    function onUninstall(bytes calldata /* data */) external {
         address[] memory allowedValidators = getAllowedValidators(msg.sender);
 
         for (uint256 i; i < allowedValidators.length; i++) {
@@ -256,16 +259,13 @@ contract UniversalEmailRecoveryModule is
     function canStartRecoveryRequest(
         address account,
         address validator
-    )
-        external
-        view
-        returns (bool)
-    {
+    ) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.threshold > 0
-            && guardianConfig.acceptedWeight >= guardianConfig.threshold
-            && validators[account].contains(validator);
+        return
+            guardianConfig.threshold > 0 &&
+            guardianConfig.acceptedWeight >= guardianConfig.threshold &&
+            validators[account].contains(validator);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -280,9 +280,14 @@ contract UniversalEmailRecoveryModule is
      * recovered, along with the target validator.
      * recoveryData = abi.encode(validator, recoveryFunctionCalldata)
      */
-    function recover(address account, bytes calldata recoveryData) internal override {
-        (address validator, bytes memory recoveryCalldata) =
-            abi.decode(recoveryData, (address, bytes));
+    function recover(
+        address account,
+        bytes calldata recoveryData
+    ) internal override {
+        (address validator, bytes memory recoveryCalldata) = abi.decode(
+            recoveryData,
+            (address, bytes)
+        );
 
         if (validator == address(0)) {
             revert InvalidValidator(validator);
@@ -299,7 +304,12 @@ contract UniversalEmailRecoveryModule is
             revert InvalidSelector(selector);
         }
 
-        _execute({ account: account, to: validator, value: 0, data: recoveryCalldata });
+        _execute({
+            account: account,
+            to: validator,
+            value: 0,
+            data: recoveryCalldata
+        });
 
         emit RecoveryExecuted(account, validator);
     }
@@ -309,9 +319,11 @@ contract UniversalEmailRecoveryModule is
      * @param account The address of the account.
      * @return address[] An array of the allowed validator addresses.
      */
-    function getAllowedValidators(address account) public view returns (address[] memory) {
-        (address[] memory allowedValidators,) =
-            validators[account].getEntriesPaginated(SENTINEL, MAX_VALIDATORS);
+    function getAllowedValidators(
+        address account
+    ) public view returns (address[] memory) {
+        (address[] memory allowedValidators, ) = validators[account]
+            .getEntriesPaginated(SENTINEL, MAX_VALIDATORS);
 
         return allowedValidators;
     }
@@ -321,7 +333,9 @@ contract UniversalEmailRecoveryModule is
      * @param account The address of the account.
      * @return address[] An array of allowed function selectors.
      */
-    function getAllowedSelectors(address account) external view returns (bytes4[] memory) {
+    function getAllowedSelectors(
+        address account
+    ) external view returns (bytes4[] memory) {
         address[] memory allowedValidators = getAllowedValidators(account);
         uint256 validatorsLength = allowedValidators.length;
 

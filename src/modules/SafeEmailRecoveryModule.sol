@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { ISafe } from "../interfaces/ISafe.sol";
-import { Enum } from "@safe-global/safe-contracts/contracts/common/Enum.sol";
-import { EmailRecoveryManager } from "../EmailRecoveryManager.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
+import {Enum} from "@safe-global/safe-contracts/contracts/common/Enum.sol";
+import {EmailRecoveryManager} from "../EmailRecoveryManager.sol";
 
 /**
  * @title SafeEmailRecoveryModule
@@ -16,7 +16,8 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     /*
      * The function selector for rotating an owner on a Safe
      */
-    bytes4 public constant selector = bytes4(keccak256(bytes("swapOwner(address,address,address)")));
+    bytes4 public constant selector =
+        bytes4(keccak256(bytes("swapOwner(address,address,address)")));
 
     event RecoveryExecuted(address indexed account);
 
@@ -27,22 +28,9 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
     error ResetFailed(address account);
 
     constructor(
-        address verifier,
-        address dkimRegistry,
-        address emailAuthImpl,
-        address commandHandler,
         uint256 minimumDelay,
         address killSwitchAuthorizer
-    )
-        EmailRecoveryManager(
-            verifier,
-            dkimRegistry,
-            emailAuthImpl,
-            commandHandler,
-            minimumDelay,
-            killSwitchAuthorizer
-        )
-    { }
+    ) EmailRecoveryManager(minimumDelay, killSwitchAuthorizer) {}
 
     /**
      * @notice Initializes the module with the threshold, guardians and other configuration
@@ -60,9 +48,7 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
         uint256 threshold,
         uint256 delay,
         uint256 expiry
-    )
-        public
-    {
+    ) public {
         if (!ISafe(msg.sender).isModuleEnabled(address(this))) {
             revert ModuleNotInstalled(msg.sender);
         }
@@ -74,11 +60,14 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
      * @param account The smart account to check
      * @return true if the recovery request can be started, false otherwise
      */
-    function canStartRecoveryRequest(address account) external view returns (bool) {
+    function canStartRecoveryRequest(
+        address account
+    ) external view returns (bool) {
         GuardianConfig memory guardianConfig = getGuardianConfig(account);
 
-        return guardianConfig.threshold > 0
-            && guardianConfig.acceptedWeight >= guardianConfig.threshold;
+        return
+            guardianConfig.threshold > 0 &&
+            guardianConfig.acceptedWeight >= guardianConfig.threshold;
     }
 
     /**
@@ -88,8 +77,14 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
      * @param recoveryData The recovery data that should be executed on the Safe
      * being recovered. recoveryData = abi.encode(safeAccount, recoveryFunctionCalldata)
      */
-    function recover(address account, bytes calldata recoveryData) internal override {
-        (, bytes memory recoveryCalldata) = abi.decode(recoveryData, (address, bytes));
+    function recover(
+        address account,
+        bytes calldata recoveryData
+    ) internal override {
+        (, bytes memory recoveryCalldata) = abi.decode(
+            recoveryData,
+            (address, bytes)
+        );
 
         bytes4 calldataSelector;
         // solhint-disable-next-line no-inline-assembly
@@ -100,12 +95,13 @@ contract SafeEmailRecoveryModule is EmailRecoveryManager {
             revert InvalidSelector(calldataSelector);
         }
 
-        (bool success, bytes memory returnData) = ISafe(account).execTransactionFromModuleReturnData({
-            to: account,
-            value: 0,
-            data: recoveryCalldata,
-            operation: uint8(Enum.Operation.Call)
-        });
+        (bool success, bytes memory returnData) = ISafe(account)
+            .execTransactionFromModuleReturnData({
+                to: account,
+                value: 0,
+                data: recoveryCalldata,
+                operation: uint8(Enum.Operation.Call)
+            });
         if (!success) {
             revert RecoveryFailed(account, returnData);
         }
