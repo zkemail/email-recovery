@@ -66,9 +66,8 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
     // isCodeExit == false in the proof
     error CodeDoesNotExist();
 
-    // TODO: Update according to JWT Registry
-    // DKIM public key hash is not valid
-    error InvalidDKIMPublicKeyHash();
+    // public key hash is not valid
+    error InvalidPublicKeyHash();
 
     // Account salt is not the same as the salt used to derive the account address
     error InvalidAccountSalt(bytes32 accontSalt, bytes32 expectedAccountSalt);
@@ -171,7 +170,6 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
      *
      * @return isVerified if the proof is valid
      */
-    // Lint Error: Cyclomatic complexity ( too many if else statements )
     function verifyProof(
         address account,
         ProofData memory proof
@@ -239,14 +237,13 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
             proof: proof.proof
         });
 
-        // TODO: Handle JWT Registry check
-        // require(
-        //     jwtRegistry.isDKIMPublicKeyHashValid(
-        //         jwtProof.domainName,
-        //         jwtProof.publicKeyHash
-        //     ) == true,
-        //     "invalid dkim public key hash"
-        // );
+        require(
+            jwtRegistry.isDKIMPublicKeyHashValid(
+                jwtProof.domainName,
+                jwtProof.publicKeyHash
+            ) == true,
+            InvalidPublicKeyHash()
+        );
 
         require(
             accountSalt == jwtProof.accountSalt,

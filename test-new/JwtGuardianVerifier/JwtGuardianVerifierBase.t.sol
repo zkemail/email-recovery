@@ -75,7 +75,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
         vm.startPrank(zkEmailDeployer);
 
-        // TODO: JWT Registry is not yet implemented in test
         uint256 setTimeDelay = 0;
         UserOverrideableDKIMRegistry overrideableDkimImpl = new UserOverrideableDKIMRegistry();
         ERC1967Proxy dkimProxy = new ERC1967Proxy(
@@ -87,8 +86,11 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         );
         dkimRegistry = UserOverrideableDKIMRegistry(address(dkimProxy));
 
+        string
+            memory jwtDomainName = "12345|https://example.com|client-id-12345";
+
         dkimRegistry.setDKIMPublicKeyHash(
-            domainName,
+            jwtDomainName,
             publicKeyHash,
             zkEmailDeployer,
             new bytes(0)
@@ -210,22 +212,16 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         recoveryDataHash = keccak256(recoveryData);
     }
 
-    // TODO: Implement the following function
     function generateMockJwtProof(
         string memory command,
         bytes32 nullifier,
         bytes32 accountSalt
     ) public view returns (EmailProof memory) {
         EmailProof memory emailProof;
-        emailProof
-            .domainName = "ee193d4647ab4a3585aa9b2b3b484a87aa68bb42|https://accounts.google.com|397234807794-fh6mhl0jppgtt0ak5cgikhlesbe8f7si.apps.googleusercontent.com";
+        emailProof.domainName = "12345|https://example.com|client-id-12345";
 
-        // TODO: Public key hash is not derived from decoded jwt
-        emailProof.publicKeyHash = bytes32(
-            vm.parseUint(
-                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
-            )
-        );
+        emailProof
+            .publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
         emailProof.timestamp = block.timestamp;
         emailProof.maskedCommand = command;
         emailProof.emailNullifier = nullifier;
