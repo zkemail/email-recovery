@@ -74,6 +74,8 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         bool isCodeExist;
         // If the email is for recovery
         bool isRecovery;
+        // Recovery data hash ( only required for recovery verification )
+        bytes32 recoveryDataHash;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -116,6 +118,9 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
 
     // Email proof is invalid
     error InvalidEmailProof();
+
+    // Recovery data hash is invalid
+    error InvalidRecoveryDataHash();
 
     /**
      * @dev The initializer is disabled to prevent the implementation contract from being initialized
@@ -306,6 +311,18 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             );
 
             templateId = computeRecoveryTemplateId(emailData.templateIdx);
+
+            bytes32 _recoveryDataHash = IEmailRecoveryCommandHandler(
+                commandHandler
+            ).parseRecoveryDataHash(
+                    emailData.templateIdx,
+                    emailData.commandParams
+                );
+
+            require(
+                emailData.recoveryDataHash == _recoveryDataHash,
+                InvalidRecoveryDataHash()
+            );
         } else {
             address _account = IEmailRecoveryCommandHandler(commandHandler)
                 .validateAcceptanceCommand(
@@ -319,9 +336,9 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             );
 
             templateId = computeAcceptanceTemplateId(emailData.templateIdx);
-        }
 
-        require(emailData.isCodeExist == true, CodeDoesNotExist());
+            require(emailData.isCodeExist == true, CodeDoesNotExist());
+        }
 
         string[] memory template = commandTemplates[templateId];
         require(template.length != 0, InvalidTemplateId(templateId));
@@ -373,7 +390,7 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             InvalidEmailProof()
         );
 
-        return (true);
+        return true;
     }
 
     /**

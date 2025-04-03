@@ -397,7 +397,8 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: emailProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: emailProof.isCodeExist,
-                isRecovery: false // Acceptance
+                isRecovery: false, // Acceptance
+                recoveryDataHash: bytes32(0) // Not used in acceptance
             });
 
         bytes32[] memory acceptancePublicInputs = new bytes32[](2);
@@ -535,7 +536,8 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: emailProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: emailProof.isCodeExist,
-                isRecovery: true // Acceptance
+                isRecovery: true, // Acceptance
+                recoveryDataHash: _recoveryDataHash
             });
 
         bytes32[] memory acceptancePublicInputs = new bytes32[](2);
