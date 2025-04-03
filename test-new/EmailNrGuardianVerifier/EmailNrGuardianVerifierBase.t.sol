@@ -271,39 +271,6 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         bytes proof;
     }
 
-    //NOTE: This is a mock proof, it isn't present here now
-    function generateEmailNrProof(
-        bytes32 nullifier,
-        bytes32 accountSalt
-    ) public view returns (EmailProof memory) {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = "";
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/EmailNrGuardianVerifier/proof.json"
-            )
-        );
-
-        NoirProof memory proof = abi.decode(
-            vm.parseJson(proofFile),
-            (NoirProof)
-        );
-
-        emailProof.proof = proof.proof;
-        emailProof
-            .publicKeyHash = 0x0a4494930909f5b7c4177796ef1e9222ef61e9e8712d2c33321a2f8860fa8d9c;
-        emailProof
-            .emailNullifier = 0x0314d89609fb7b5565200c7d52d25a63c4088eddcf4d193a63d7ed9cb67ac3d5;
-
-        return emailProof;
-    }
-
     function acceptGuardian(
         address guardianVerifierImplementation,
         address account,
