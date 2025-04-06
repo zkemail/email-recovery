@@ -319,9 +319,9 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
             );
 
             templateId = computeAcceptanceTemplateId(emailData.templateIdx);
-        }
 
-        require(emailData.isCodeExist == true, CodeDoesNotExist());
+            require(emailData.isCodeExist == true, CodeDoesNotExist());
+        }
 
         string[] memory template = commandTemplates[templateId];
         require(template.length != 0, InvalidTemplateId(templateId));

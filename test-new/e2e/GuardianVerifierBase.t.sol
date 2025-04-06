@@ -16,6 +16,8 @@ import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IV
 import {EmailGuardianVerifier} from "src/EmailGuardianVerifier.sol";
 import {IGuardianVerifier} from "src/interfaces/IGuardianVerifier.sol";
 import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+import {Groth16Verifier as EmailGroth16Verifier} from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
+import {Verifier as EmailVerifier} from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
 // JWT Guardian verifier
 import {MockJwtVerifier} from "src/test/MockJwtVerifier.sol";
@@ -35,6 +37,8 @@ import {UserOverrideableDKIMRegistry} from "@zk-email/contracts/UserOverrideable
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+
+import {stdJson} from "forge-std/StdJson.sol";
 
 interface IEmailRecoveryModule {
     function handleAcceptance(
@@ -141,7 +145,10 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             zkEmailDeployer,
             new bytes(0)
         );
-        MockGroth16Verifier emailVerifier = new MockGroth16Verifier();
+        // MockGroth16Verifier emailVerifier = new MockGroth16Verifier();
+        address groth16Verifier = address(new EmailGroth16Verifier());
+        EmailVerifier emailVerifier = new EmailVerifier();
+        emailVerifier.initialize(zkEmailDeployer, groth16Verifier);
 
         // Deploying command handler
         bytes memory handlerBytecode = getHandlerBytecode();
@@ -191,6 +198,9 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         emailGuardianNrVerifierImplementation = address(
             new EmailNrGuardianVerifier()
         );
+
+        // Setting the account Salt to the one with original email proof
+        accountSalt1 = 0x0c8bcb1fddf39104a4d8241cf60ef7fefce083bde07bfa100768e73436e4e145;
 
         guardians1 = new address[](3);
 
@@ -360,25 +370,24 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         recoveryDataHash = keccak256(recoveryData);
     }
 
-    function generateMockEmailProof(
-        string memory command,
-        bytes32 nullifier,
-        bytes32 accountSalt
+    function getEmailProof(
+        string memory proofFile
     ) public view returns (EmailProof memory) {
         EmailProof memory emailProof;
         emailProof.domainName = "gmail.com";
-        emailProof.publicKeyHash = bytes32(
-            vm.parseUint(
-                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
-            )
+        emailProof.publicKeyHash = publicKeyHash;
+        emailProof.timestamp = vm.parseJsonUint(proofFile, ".timestamp");
+        emailProof.maskedCommand = vm.parseJsonString(
+            proofFile,
+            ".maskedCommand"
         );
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = command;
-        emailProof.emailNullifier = nullifier;
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
-        emailProof.proof = bytes("0");
-
+        emailProof.emailNullifier = vm.parseJsonBytes32(
+            proofFile,
+            ".emailNullifier"
+        );
+        emailProof.accountSalt = vm.parseJsonBytes32(proofFile, ".accountSalt");
+        emailProof.isCodeExist = vm.parseJsonBool(proofFile, ".isCodeExist");
+        emailProof.proof = vm.parseJsonBytes(proofFile, ".proof");
         return emailProof;
     }
 
@@ -518,13 +527,14 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             commandParamsForAcceptance[0] = abi.encode(account);
         }
 
-        bytes32 nullifier = generateNewNullifier();
-
-        EmailProof memory emailProof = generateMockEmailProof(
-            command,
-            nullifier,
-            accountSalt
+        string memory proofFile = vm.readFile(
+            string.concat(
+                vm.projectRoot(),
+                "/test-new/e2e/email-acceptance-proof.json"
+            )
         );
+
+        EmailProof memory emailProof = getEmailProof(proofFile);
 
         EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
             .EmailData({
@@ -534,7 +544,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 domainName: emailProof.domainName,
                 timestamp: emailProof.timestamp,
                 maskedCommand: emailProof.maskedCommand,
-                accountSalt: accountSalt,
+                accountSalt: emailProof.accountSalt,
                 isCodeExist: emailProof.isCodeExist,
                 isRecovery: false // Acceptance
             });
@@ -576,8 +586,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         );
 
         emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubkey;
-        // emailProof.emailNullifier = proof.nullifier;
 
         emailProof
             .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
@@ -768,13 +776,14 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             commandParamsForRecovery[2] = abi.encode(newOwner1);
         }
 
-        bytes32 nullifier = generateNewNullifier();
-
-        EmailProof memory emailProof = generateMockEmailProof(
-            command,
-            nullifier,
-            accountSalt
+        string memory proofFile = vm.readFile(
+            string.concat(
+                vm.projectRoot(),
+                "/test-new/e2e/email-recovery-proof.json"
+            )
         );
+
+        EmailProof memory emailProof = getEmailProof(proofFile);
 
         EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
             .EmailData({
@@ -827,8 +836,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         );
 
         emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubkey;
-        // emailProof.emailNullifier = proof.nullifier;
 
         emailProof
             .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
