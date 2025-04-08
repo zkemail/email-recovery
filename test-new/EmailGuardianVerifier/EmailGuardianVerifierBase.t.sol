@@ -12,9 +12,9 @@ import {BaseTest} from "../Base.t.sol";
 
 import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IVerifier.sol";
 
-import {EmailNrGuardianVerifier} from "src/EmailNrGuardianVerifier.sol";
+import {EmailGuardianVerifier} from "src/EmailGuardianVerifier.sol";
 import {IGuardianVerifier} from "src/interfaces/IGuardianVerifier.sol";
-import {HonkVerifier} from "src/test/HonkVerifier.sol";
+import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
 
 import {CommandUtils} from "@zk-email/ether-email-auth-contracts/src/libraries/CommandUtils.sol";
 import {EmailRecoveryCommandHandler} from "src/handlers/EmailRecoveryCommandHandler.sol";
@@ -58,7 +58,7 @@ enum CommandHandlerType {
 /**
  * Base setup for Email Guardian verifier
  */
-abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
+abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     BaseTest
 {
     using ModuleKitHelpers for *;
@@ -66,7 +66,9 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
     using Strings for address;
 
     UserOverrideableDKIMRegistry public dkimRegistry;
-    HonkVerifier public verifier;
+    MockGroth16Verifier public verifier;
+
+    address public commandHandler;
 
     EmailRecoveryFactory public emailRecoveryFactory;
     address public commandHandlerAddress;
@@ -105,57 +107,67 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
             zkEmailDeployer,
             new bytes(0)
         );
+        verifier = new MockGroth16Verifier();
 
-        verifier = new HonkVerifier();
+        // Deploying command handler
+        bytes memory handlerBytecode = getHandlerBytecode();
+        bytes32 commandHandlerSalt = bytes32(uint256(0));
+        commandHandler = Create2.deploy(0, commandHandlerSalt, handlerBytecode);
 
         vm.stopPrank();
 
         // Setup for the email guardian verifier
         bytes memory initData = abi.encode(
             address(dkimRegistry),
-            address(verifier)
+            address(verifier),
+            address(commandHandler)
         );
         emailGuardianVerifierInitData = initData;
 
         // Deploy the email guardian verifier
         emailGuardianVerifierImplementation = address(
-            new EmailNrGuardianVerifier()
+            new EmailGuardianVerifier()
         );
 
-        // guardians1 = new address[](3);
-        guardians1 = new address[](1);
+        guardians1 = new address[](3);
         guardians1[0] = computeGuardianVerifierAuthAddress(
             emailGuardianVerifierImplementation,
             instance1.account,
             accountSalt1,
             emailGuardianVerifierInitData
         );
-        // guardians1[1] = computeGuardianVerifierAuthAddress(
-        //     emailGuardianVerifierImplementation,
-        //     instance1.account,
-        //     accountSalt2,
-        //     emailGuardianVerifierInitData
-        // );
-        // guardians1[2] = computeGuardianVerifierAuthAddress(
-        //     emailGuardianVerifierImplementation,
-        //     instance1.account,
-        //     accountSalt3,
-        //     emailGuardianVerifierInitData
-        // );
+        guardians1[1] = computeGuardianVerifierAuthAddress(
+            emailGuardianVerifierImplementation,
+            instance1.account,
+            accountSalt2,
+            emailGuardianVerifierInitData
+        );
+        guardians1[2] = computeGuardianVerifierAuthAddress(
+            emailGuardianVerifierImplementation,
+            instance1.account,
+            accountSalt3,
+            emailGuardianVerifierInitData
+        );
 
         // INITIAL SETUP
         bytes memory changeOwnerCalldata1 = abi.encodeWithSelector(
             functionSelector,
             newOwner1
         );
-
+        bytes memory changeOwnerCalldata2 = abi.encodeWithSelector(
+            functionSelector,
+            newOwner2
+        );
+        bytes memory changeOwnerCalldata3 = abi.encodeWithSelector(
+            functionSelector,
+            newOwner3
+        );
         recoveryData1 = abi.encode(validatorAddress, changeOwnerCalldata1);
+        recoveryData2 = abi.encode(validatorAddress, changeOwnerCalldata2);
+        recoveryData3 = abi.encode(validatorAddress, changeOwnerCalldata3);
         recoveryDataHash1 = keccak256(recoveryData1);
-
-        guardianWeights = new uint256[](1);
-        guardianWeights[0] = 1;
-        totalWeight = 1;
-        threshold = 1;
+        recoveryDataHash2 = keccak256(recoveryData2);
+        recoveryDataHash3 = keccak256(recoveryData3);
 
         bytes memory recoveryModuleInstallData1 = abi.encode(
             isInstalledContext,
@@ -184,6 +196,32 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
      */
     function getCommandHandlerType() public view returns (CommandHandlerType) {
         return CommandHandlerType(vm.envOr("COMMAND_HANDLER_TYPE", uint256(0)));
+    }
+
+    /**
+     * Return the command handler bytecode based on the command handler type
+     */
+    function getHandlerBytecode() public view returns (bytes memory) {
+        CommandHandlerType commandHandlerType = getCommandHandlerType();
+
+        if (
+            commandHandlerType == CommandHandlerType.EmailRecoveryCommandHandler
+        ) {
+            return type(EmailRecoveryCommandHandler).creationCode;
+        }
+        if (
+            commandHandlerType ==
+            CommandHandlerType.AccountHidingRecoveryCommandHandler
+        ) {
+            return type(AccountHidingRecoveryCommandHandler).creationCode;
+        }
+        if (
+            commandHandlerType == CommandHandlerType.SafeRecoveryCommandHandler
+        ) {
+            return type(SafeRecoveryCommandHandler).creationCode;
+        }
+
+        revert("Invalid command handler type");
     }
 
     /**
@@ -230,7 +268,6 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
 
     // Helper functions
     function deployModule() public override {
-        // Deploy the email recovery factory after removing email guardian verifier related logic
         emailRecoveryFactory = new EmailRecoveryFactory();
 
         bytes32 recoveryModuleSalt = bytes32(uint256(0));
@@ -265,10 +302,26 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         recoveryDataHash = keccak256(recoveryData);
     }
 
-    // bytes32 pubkey;
-    // bytes32 nullifier;
-    struct NoirProof {
-        bytes proof;
+    function generateMockEmailProof(
+        string memory command,
+        bytes32 nullifier,
+        bytes32 accountSalt
+    ) public view returns (EmailProof memory) {
+        EmailProof memory emailProof;
+        emailProof.domainName = "gmail.com";
+        emailProof.publicKeyHash = bytes32(
+            vm.parseUint(
+                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
+            )
+        );
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedCommand = command;
+        emailProof.emailNullifier = nullifier;
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
+        emailProof.proof = bytes("0");
+
+        return emailProof;
     }
 
     function acceptGuardian(
@@ -279,7 +332,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         bytes32 accountSalt,
         bytes memory verifierInitData
     ) public {
-        EmailNrGuardianVerifier.ProofData
+        EmailGuardianVerifier.ProofData
             memory proofData = getAcceptanceEmailProofData(
                 account,
                 guardian,
@@ -301,37 +354,51 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = "";
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
+        string memory command;
+        bytes[] memory commandParamsForAcceptance = new bytes[](1);
+        if (
+            getCommandHandlerType() ==
+            CommandHandlerType.AccountHidingRecoveryCommandHandler
+        ) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(
+                32
+            );
+            command = string.concat(
+                "Accept guardian request for ",
+                accountHashString
+            );
+            commandParamsForAcceptance[0] = abi.encode(accountHashString);
+        } else {
+            string memory accountString = CommandUtils
+                .addressToChecksumHexString(account);
+            command = string.concat(
+                "Accept guardian request for ",
+                accountString
+            );
+            commandParamsForAcceptance[0] = abi.encode(account);
+        }
 
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/EmailNrGuardianVerifier/acceptance-proof.json"
-            )
+        bytes32 nullifier = generateNewNullifier();
+
+        EmailProof memory emailProof = generateMockEmailProof(
+            command,
+            nullifier,
+            accountSalt
         );
 
-        NoirProof memory proof = abi.decode(
-            vm.parseJson(proofFile),
-            (NoirProof)
-        );
-
-        emailProof.proof = proof.proof;
-
-        emailProof
-            .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
-        emailProof
-            .emailNullifier = 0x04fab54ce5298aff53698f77bf1426d5768c0cc9657b77bd388145a89ae5a89e;
-
-        EmailNrGuardianVerifier.EmailData
-            memory emailData = EmailNrGuardianVerifier.EmailData({
+        EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
+            .EmailData({
+                templateIdx: 0,
+                commandParams: commandParamsForAcceptance,
+                skippedCommandPrefix: 0,
                 domainName: emailProof.domainName,
                 timestamp: emailProof.timestamp,
+                maskedCommand: emailProof.maskedCommand,
                 accountSalt: accountSalt,
+                isCodeExist: emailProof.isCodeExist,
+                isRecovery: false, // Acceptance
+                recoveryDataHash: bytes32(0), // Not used in acceptance
                 publicKeyHash: emailProof.publicKeyHash,
                 emailNullifier: emailProof.emailNullifier
             });
@@ -349,7 +416,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public {
-        EmailNrGuardianVerifier.ProofData
+        EmailGuardianVerifier.ProofData
             memory emailProofData = getRecoveryEmailProofData(
                 account,
                 guardian,
@@ -374,37 +441,100 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         address emailRecoveryModule,
         bytes32 accountSalt
     ) public returns (IGuardianVerifier.ProofData memory proofData) {
-        EmailProof memory emailProof;
-        emailProof.domainName = "gmail.com";
-        emailProof.timestamp = block.timestamp;
-        emailProof.maskedCommand = "";
-        emailProof.accountSalt = accountSalt;
-        emailProof.isCodeExist = true;
+        string memory command;
+        bytes[] memory commandParamsForRecovery = new bytes[](2);
 
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/EmailNrGuardianVerifier/recovery-proof.json"
-            )
+        if (
+            getCommandHandlerType() ==
+            CommandHandlerType.AccountHidingRecoveryCommandHandler
+        ) {
+            bytes32 accountHash = keccak256(abi.encodePacked(account));
+            string memory accountHashString = uint256(accountHash).toHexString(
+                32
+            );
+            string memory recoveryDataHashString = uint256(_recoveryDataHash)
+                .toHexString(32);
+            string memory commandPart1 = string.concat(
+                "Recover account ",
+                accountHashString
+            );
+            string memory commandPart2 = string.concat(
+                " using recovery hash ",
+                recoveryDataHashString
+            );
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(accountHashString);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
+        if (
+            getCommandHandlerType() ==
+            CommandHandlerType.EmailRecoveryCommandHandler
+        ) {
+            string memory accountString = CommandUtils
+                .addressToChecksumHexString(account);
+            string memory recoveryDataHashString = uint256(_recoveryDataHash)
+                .toHexString(32);
+            string memory commandPart1 = string.concat(
+                "Recover account ",
+                accountString
+            );
+            string memory commandPart2 = string.concat(
+                " using recovery hash ",
+                recoveryDataHashString
+            );
+            command = string.concat(commandPart1, commandPart2);
+
+            commandParamsForRecovery = new bytes[](2);
+            commandParamsForRecovery[0] = abi.encode(account);
+            commandParamsForRecovery[1] = abi.encode(recoveryDataHashString);
+        }
+        if (
+            getCommandHandlerType() ==
+            CommandHandlerType.SafeRecoveryCommandHandler
+        ) {
+            string memory accountString = CommandUtils
+                .addressToChecksumHexString(account);
+            string memory oldOwnerString = CommandUtils
+                .addressToChecksumHexString(owner1);
+            string memory newOwnerString = CommandUtils
+                .addressToChecksumHexString(newOwner1);
+            command = string.concat(
+                "Recover account ",
+                accountString,
+                " from old owner ",
+                oldOwnerString,
+                " to new owner ",
+                newOwnerString
+            );
+
+            commandParamsForRecovery = new bytes[](3);
+            commandParamsForRecovery[0] = abi.encode(accountAddress1);
+            commandParamsForRecovery[1] = abi.encode(owner1);
+            commandParamsForRecovery[2] = abi.encode(newOwner1);
+        }
+
+        bytes32 nullifier = generateNewNullifier();
+
+        EmailProof memory emailProof = generateMockEmailProof(
+            command,
+            nullifier,
+            accountSalt
         );
 
-        NoirProof memory proof = abi.decode(
-            vm.parseJson(proofFile),
-            (NoirProof)
-        );
-
-        emailProof.proof = proof.proof;
-
-        emailProof
-            .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
-        emailProof
-            .emailNullifier = 0x12a412c72a2ec60e1f12860d8ebb3b85fdea87f9ed5cfd805f11f1e619716c29;
-
-        EmailNrGuardianVerifier.EmailData
-            memory emailData = EmailNrGuardianVerifier.EmailData({
+        EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
+            .EmailData({
+                templateIdx: 0,
+                commandParams: commandParamsForRecovery,
+                skippedCommandPrefix: 0,
                 domainName: emailProof.domainName,
                 timestamp: emailProof.timestamp,
+                maskedCommand: emailProof.maskedCommand,
                 accountSalt: accountSalt,
+                isCodeExist: emailProof.isCodeExist,
+                isRecovery: true, // Acceptance
+                recoveryDataHash: _recoveryDataHash,
                 publicKeyHash: emailProof.publicKeyHash,
                 emailNullifier: emailProof.emailNullifier
             });

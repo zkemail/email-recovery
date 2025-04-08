@@ -55,6 +55,10 @@ contract EmailNrGuardianVerifier is IGuardianVerifier, Initializable {
         uint256 timestamp;
         // Account salt used to derive the account address
         bytes32 accountSalt;
+        // Public key hash for the email
+        bytes32 publicKeyHash;
+        // Email nullifier
+        bytes32 emailNullifier;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -156,8 +160,7 @@ contract EmailNrGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: EmailData
-     * proof.publicInputs: [publicKey, emailNullifier]
-     * proof.proof: zk-SNARK proof
+     * proof.proof: zk proof
      *
      * NOTE: Gas optimisation possible by only decoding the proof data once in this function rather in tryVerify as well
      *
@@ -169,7 +172,7 @@ contract EmailNrGuardianVerifier is IGuardianVerifier, Initializable {
     ) public returns (bool) {
         EmailData memory emailData = abi.decode(proof.data, (EmailData));
 
-        bytes32 emailNullifier = proof.publicInputs[1];
+        bytes32 emailNullifier = emailData.emailNullifier;
         require(
             usedNullifiers[emailNullifier] == false,
             EmailNullifierAlreadyUsed()
@@ -205,8 +208,7 @@ contract EmailNrGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: EmailData
-     * proof.publicInputs: [publicKey, emailNullifier]
-     * proof.proof: zk-SNARK proof
+     * proof.proof: zk proof
      *
      * @return isVerified if the proof is valid
      */
@@ -231,8 +233,12 @@ contract EmailNrGuardianVerifier is IGuardianVerifier, Initializable {
             InvalidAccountSalt(emailData.accountSalt, accountSalt)
         );
 
+        bytes32[] memory publicInputs = new bytes32[](2);
+        publicInputs[0] = emailData.publicKeyHash;
+        publicInputs[1] = emailData.emailNullifier;
+
         require(
-            verifier.verify(proof.proof, proof.publicInputs) == true,
+            verifier.verify(proof.proof, publicInputs) == true,
             InvalidEmailProof()
         );
 
