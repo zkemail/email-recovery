@@ -76,6 +76,10 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
         bool isRecovery;
         // Recovery data hash ( only required for recovery verification )
         bytes32 recoveryDataHash;
+        // Public key hash for the email
+        bytes32 publicKeyHash;
+        // Email nullifier
+        bytes32 emailNullifier;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -225,7 +229,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: EmailData
-     * proof.publicInputs: [publicKeyHash, emailNullifier]
      * proof.proof: zk-SNARK proof
      *
      * NOTE: Gas optimisation possible by only decoding the proof data once in this function rather in tryVerify as well
@@ -238,7 +241,7 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
     ) public returns (bool) {
         EmailData memory emailData = abi.decode(proof.data, (EmailData));
 
-        bytes32 emailNullifier = proof.publicInputs[1];
+        bytes32 emailNullifier = emailData.emailNullifier;
         require(
             usedNullifiers[emailNullifier] == false,
             EmailNullifierAlreadyUsed()
@@ -274,7 +277,6 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: EmailData
-     * proof.publicInputs: [publicKeyHash, emailNullifier]
      * proof.proof: zk-SNARK proof
      *
      * @return isVerified if the proof is valid
@@ -288,10 +290,10 @@ contract EmailGuardianVerifier is IGuardianVerifier, Initializable {
 
         EmailProof memory emailProof = EmailProof({
             domainName: emailData.domainName,
-            publicKeyHash: proof.publicInputs[0],
+            publicKeyHash: emailData.publicKeyHash,
             timestamp: emailData.timestamp,
             maskedCommand: emailData.maskedCommand,
-            emailNullifier: proof.publicInputs[1],
+            emailNullifier: emailData.emailNullifier,
             accountSalt: emailData.accountSalt,
             isCodeExist: emailData.isCodeExist,
             proof: proof.proof

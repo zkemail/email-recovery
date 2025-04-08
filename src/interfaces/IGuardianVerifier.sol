@@ -22,9 +22,7 @@ interface IGuardianVerifier {
     struct ProofData {
         /// @dev Proof
         bytes proof;
-        /// @dev Public inputs required for verification
-        bytes32[] publicInputs;
-        /// @dev Additional Data required for verification
+        /// @dev Arbitrary Data required for verification
         bytes data;
     }
 

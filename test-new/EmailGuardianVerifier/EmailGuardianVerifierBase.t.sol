@@ -398,16 +398,13 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 accountSalt: accountSalt,
                 isCodeExist: emailProof.isCodeExist,
                 isRecovery: false, // Acceptance
-                recoveryDataHash: bytes32(0) // Not used in acceptance
+                recoveryDataHash: bytes32(0), // Not used in acceptance
+                publicKeyHash: emailProof.publicKeyHash,
+                emailNullifier: emailProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = emailProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = emailProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
             proof: emailProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(emailData)
         });
     }
@@ -537,16 +534,13 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 accountSalt: accountSalt,
                 isCodeExist: emailProof.isCodeExist,
                 isRecovery: true, // Acceptance
-                recoveryDataHash: _recoveryDataHash
+                recoveryDataHash: _recoveryDataHash,
+                publicKeyHash: emailProof.publicKeyHash,
+                emailNullifier: emailProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = emailProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = emailProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
             proof: emailProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(emailData)
         });
     }
