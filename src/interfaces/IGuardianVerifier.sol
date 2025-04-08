@@ -49,7 +49,7 @@ interface IGuardianVerifier {
     /**
      * @dev Verification logic of the proof
      * To be used when nullifier based check for replay protection are required & not handeled at higher level
-     * e.g. Email recovery functions ( handleAcceptance & handleRecovery )
+     * e.g. Recovery functions ( handleAcceptance & handleRecovery )
      *
      * @notice Replay protection is handled by the verifier
      * @notice Reverts if the proof is invalid
