@@ -11,6 +11,8 @@
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "clean": "rm -rf artifacts broadcast cache docs out out-optimized out-svg",
+    "fmt": "forge fmt",
+    "fmt:check": "forge fmt --check",
     "gas:report": "forge test --gas-report --mp \"./test/integration/**/*.sol\"",
     "gas:snapshot": "forge snapshot --mp \"./test/integration/**/*.sol\"",
     "gas:snapshot:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge snapshot --mp \"./test/integration/**/*.sol\"",
