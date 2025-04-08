@@ -48,6 +48,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
     uint256 public expiry;
     uint256 public threshold;
     uint256 public templateIdx;
+
     bytes public isInstalledContext;
 
     string public selector = "12345";
@@ -111,6 +112,7 @@ abstract contract BaseTest is RhinestoneModuleKit, Test {
         expiry = 2 weeks;
         threshold = 3;
         templateIdx = 0;
+
         isInstalledContext = bytes("0");
     }
 

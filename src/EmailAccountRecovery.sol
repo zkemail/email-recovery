@@ -6,8 +6,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /// @title Email Account Recovery Contract
-/// @notice Provides mechanisms for email-based account recovery, leveraging guardians and
-/// template-based email verification.
+/// @notice Provides mechanisms for account recovery, leveraging guardian verifiers.
 /// @dev This contract is abstract and requires implementation of several methods for configuring a
 /// new guardian and recovering an account contract.
 abstract contract EmailAccountRecovery {
@@ -127,8 +126,8 @@ abstract contract EmailAccountRecovery {
     }
 
     /// @notice Handles an acceptance by a new guardian.
-    /// @dev This function validates the email auth message, deploys a new EmailAuth contract as a
-    /// proxy if validations pass and initializes the contract.
+    /// @dev This function deploys a new guardian verifier contract as a
+    /// proxy if validations pass and initializes the contract, finally validates the proof.
     /// @param guardianVerifierImplementation The address of the guardian verifier implementation.
     /// @param account The address of the account to be recovered.
     /// @param accountSalt A bytes32 salt value used to ensure the uniqueness of the deployed guardian verifier.
@@ -175,9 +174,8 @@ abstract contract EmailAccountRecovery {
         acceptGuardian(guardian, account);
     }
 
-    /// @notice Processes the recovery based on an email from the guardian.
-    /// @dev Verify the provided email auth message for a deployed guardian's EmailAuth contract and
-    /// a specific command template for recovery.
+    /// @notice Processes the recovery based on the guardian's proof .
+    /// @dev Verify the provided proof for a deployed guardian's verifier contract specifically for recovery.
     /// Requires that the guardian is already deployed
     /// @param guardian The address of the guardian who is processing the recovery request
     /// @param account The address of the account to be recovered.
