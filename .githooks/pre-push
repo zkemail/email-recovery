@@ -1,0 +1,15 @@
+#!/bin/sh
+
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+NC='\033[0m' # No Colour
+
+check_lint (){
+    if ! pnpm lint:check > /dev/null 2>&1; then
+        echo "${RED}Push error! Cannot push unlinted code!${NC}"
+        echo "Lint errors found. Please lint the code via ${CYAN}pnpm lint${NC} and/or fix the errors manually!"
+        exit 1
+    fi
+}
+
+check_lint
