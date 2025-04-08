@@ -1,0 +1,10 @@
+# Ignore artifacts
+cache/
+out/
+
+# Ignore Solidity files
+**/*.sol
+
+# Ignore dependencies and lock file
+node_modules/
+pnpm-lock.yaml
