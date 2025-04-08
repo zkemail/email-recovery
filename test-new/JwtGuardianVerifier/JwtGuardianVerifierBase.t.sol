@@ -279,16 +279,13 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: jwtProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: jwtProof.isCodeExist,
-                isRecovery: false
+                isRecovery: false,
+                publicKeyHash: jwtProof.publicKeyHash,
+                jwtNullifier: jwtProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = jwtProof.publicKeyHash;
-        acceptancePublicInputs[1] = jwtProof.emailNullifier;
 
         proofData = IGuardianVerifier.ProofData({
             proof: jwtProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(jwtData)
         });
     }
@@ -343,16 +340,13 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 maskedCommand: jwtProof.maskedCommand,
                 accountSalt: accountSalt,
                 isCodeExist: jwtProof.isCodeExist,
-                isRecovery: true
+                isRecovery: true,
+                publicKeyHash: jwtProof.publicKeyHash,
+                jwtNullifier: jwtProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = jwtProof.publicKeyHash;
-        acceptancePublicInputs[1] = jwtProof.emailNullifier;
 
         proofData = IGuardianVerifier.ProofData({
             proof: jwtProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(jwtData)
         });
     }

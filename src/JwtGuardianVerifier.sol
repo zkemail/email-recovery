@@ -57,6 +57,10 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         bool isCodeExist;
         // If the proof is a recovery proof
         bool isRecovery;
+        // Public key hash for the email
+        bytes32 publicKeyHash;
+        // Email nullifier
+        bytes32 jwtNullifier;
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -161,7 +165,6 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: JwtData
-     * proof.publicInputs: [publicKeyHash, emailNullifier]
      * proof.proof: zk-SNARK proof
      *
      * NOTE: Specific claim is not yet verified
@@ -176,7 +179,7 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
     ) public returns (bool) {
         JwtData memory jwtData = abi.decode(proof.data, (JwtData));
 
-        bytes32 jwtNullifier = proof.publicInputs[1];
+        bytes32 jwtNullifier = jwtData.jwtNullifier;
         require(
             usedNullifiers[jwtNullifier] == false,
             JWTNullifierAlreadyUsed()
@@ -212,7 +215,6 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
      * @param account Account to be recovered
      * @param proof Proof data
      * proof.data: JwtData
-     * proof.publicInputs: [publicKeyHash, emailNullifier]
      * proof.proof: zk-SNARK proof
      *
      * @return isVerified if the proof is valid
@@ -228,10 +230,10 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
 
         EmailProof memory jwtProof = EmailProof({
             domainName: jwtData.domainName,
-            publicKeyHash: proof.publicInputs[0],
+            publicKeyHash: jwtData.publicKeyHash,
             timestamp: jwtData.timestamp,
             maskedCommand: jwtData.maskedCommand,
-            emailNullifier: proof.publicInputs[1],
+            emailNullifier: jwtData.jwtNullifier,
             accountSalt: jwtData.accountSalt,
             isCodeExist: jwtData.isCodeExist,
             proof: proof.proof

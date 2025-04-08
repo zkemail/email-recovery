@@ -123,7 +123,7 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         );
 
         // guardians1 = new address[](3);
-        guardian1 = new address[](1);
+        guardians1 = new address[](1);
         guardians1[0] = computeGuardianVerifierAuthAddress(
             emailGuardianVerifierImplementation,
             instance1.account,
@@ -321,8 +321,6 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         );
 
         emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubkey;
-        // emailProof.emailNullifier = proof.nullifier;
 
         emailProof
             .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
@@ -333,16 +331,13 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
             memory emailData = EmailNrGuardianVerifier.EmailData({
                 domainName: emailProof.domainName,
                 timestamp: emailProof.timestamp,
-                accountSalt: accountSalt
+                accountSalt: accountSalt,
+                publicKeyHash: emailProof.publicKeyHash,
+                emailNullifier: emailProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = emailProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = emailProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
             proof: emailProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(emailData)
         });
     }
@@ -399,8 +394,6 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
         );
 
         emailProof.proof = proof.proof;
-        // emailProof.publicKeyHash = proof.pubkey;
-        // emailProof.emailNullifier = proof.nullifier;
 
         emailProof
             .publicKeyHash = 0x1087f6b1ab2993e76027710b0cd25085b759aaffda8f8aefe04eeaa4df14fccf;
@@ -411,16 +404,13 @@ abstract contract OwnableValidatorRecovery_EmailNrGuardianVerifier_Base is
             memory emailData = EmailNrGuardianVerifier.EmailData({
                 domainName: emailProof.domainName,
                 timestamp: emailProof.timestamp,
-                accountSalt: accountSalt
+                accountSalt: accountSalt,
+                publicKeyHash: emailProof.publicKeyHash,
+                emailNullifier: emailProof.emailNullifier
             });
-
-        bytes32[] memory acceptancePublicInputs = new bytes32[](2);
-        acceptancePublicInputs[0] = emailProof.publicKeyHash; // publicKeyHash
-        acceptancePublicInputs[1] = emailProof.emailNullifier; // emailNullifier
 
         proofData = IGuardianVerifier.ProofData({
             proof: emailProof.proof,
-            publicInputs: acceptancePublicInputs,
             data: abi.encode(emailData)
         });
     }
