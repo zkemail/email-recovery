@@ -15,7 +15,7 @@ import {EmailProof} from "@zk-email/ether-email-auth-contracts/src/interfaces/IV
 // Email Guardian verifier
 import {EmailGuardianVerifier} from "src/EmailGuardianVerifier.sol";
 import {IGuardianVerifier} from "src/interfaces/IGuardianVerifier.sol";
-import {MockGroth16Verifier} from "src/test/MockGroth16Verifier.sol";
+import {MockGroth16Verifier as MockEmailVerifier} from "src/test/MockGroth16Verifier.sol";
 import {Groth16Verifier as EmailGroth16Verifier} from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
 import {Verifier as EmailVerifier} from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 
@@ -71,6 +71,7 @@ enum CommandHandlerType {
 
 enum GuardianType {
     EmailGuardian,
+    MockEmailGuardian,
     EmailNrGuardian,
     JwtGuardian
 }
@@ -109,6 +110,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     address public emailGuardianVerifierImplementation;
     bytes public emailGuardianVerifierInitData;
+    bytes public mockEmailGuardianVerifierInitData;
 
     address public jwtGuardianVerifierImplementation;
     bytes public jwtGuardianVerifierInitData;
@@ -145,10 +147,11 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             zkEmailDeployer,
             new bytes(0)
         );
-        // MockGroth16Verifier emailVerifier = new MockGroth16Verifier();
         address groth16Verifier = address(new EmailGroth16Verifier());
         EmailVerifier emailVerifier = new EmailVerifier();
         emailVerifier.initialize(zkEmailDeployer, groth16Verifier);
+
+        MockEmailVerifier mockEmailVerifier = new MockEmailVerifier();
 
         // Deploying command handler
         bytes memory handlerBytecode = getHandlerBytecode();
@@ -177,6 +180,13 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         // Deploy the email guardian verifier
         emailGuardianVerifierImplementation = address(
             new EmailGuardianVerifier()
+        );
+
+        // Setup for the Mock email guardian verifier
+        mockEmailGuardianVerifierInitData = abi.encode(
+            address(dkimRegistry),
+            address(mockEmailVerifier),
+            address(commandHandler)
         );
 
         // Setup for the jwt guardian verifier
@@ -235,11 +245,21 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         );
 
         recoveryData1 = abi.encode(validatorAddress, changeOwnerCalldata1);
+
         recoveryDataHash1 = keccak256(recoveryData1);
 
         bytes memory recoveryModuleInstallData1 = abi.encode(
             isInstalledContext,
             guardians1,
+            guardianWeights,
+            threshold,
+            delay,
+            expiry
+        );
+
+        bytes memory recoveryModuleInstallData2 = abi.encode(
+            isInstalledContext,
+            guardians2,
             guardianWeights,
             threshold,
             delay,
@@ -391,6 +411,28 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         return emailProof;
     }
 
+    function generateMockEmailProof(
+        string memory command,
+        bytes32 nullifier,
+        bytes32 accountSalt
+    ) public view returns (EmailProof memory) {
+        EmailProof memory emailProof;
+        emailProof.domainName = "gmail.com";
+        emailProof.publicKeyHash = bytes32(
+            vm.parseUint(
+                "6632353713085157925504008443078919716322386156160602218536961028046468237192"
+            )
+        );
+        emailProof.timestamp = block.timestamp;
+        emailProof.maskedCommand = command;
+        emailProof.emailNullifier = nullifier;
+        emailProof.accountSalt = accountSalt;
+        emailProof.isCodeExist = true;
+        emailProof.proof = bytes("0");
+
+        return emailProof;
+    }
+
     function generateMockJwtProof(
         string memory command,
         bytes32 nullifier,
@@ -427,6 +469,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     ) public {
         IGuardianVerifier.ProofData
             memory proofData = getAcceptanceEmailProofData(
+                guardianType,
                 account,
                 guardian,
                 emailRecoveryModule,
@@ -442,6 +485,14 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             );
         } else if (guardianType == GuardianType.EmailNrGuardian) {
             proofData = getAcceptanceEmailNrProofData(
+                account,
+                guardian,
+                emailRecoveryModule,
+                accountSalt
+            );
+        } else if (guardianType == GuardianType.MockEmailGuardian) {
+            proofData = getAcceptanceEmailProofData(
+                guardianType,
                 account,
                 guardian,
                 emailRecoveryModule,
@@ -494,6 +545,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     // Email based acceptance proof
     function getAcceptanceEmailProofData(
+        GuardianType guardianType,
         address account,
         address guardian,
         address emailRecoveryModule,
@@ -524,14 +576,26 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             commandParamsForAcceptance[0] = abi.encode(account);
         }
 
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/e2e/email-acceptance-proof.json"
-            )
-        );
+        EmailProof memory emailProof;
 
-        EmailProof memory emailProof = getEmailProof(proofFile);
+        if (guardianType == GuardianType.MockEmailGuardian) {
+            bytes32 nullifier = generateNewNullifier();
+
+            emailProof = generateMockEmailProof(
+                command,
+                nullifier,
+                accountSalt
+            );
+        } else if (guardianType == GuardianType.EmailGuardian) {
+            string memory proofFile = vm.readFile(
+                string.concat(
+                    vm.projectRoot(),
+                    "/test-new/e2e/email-acceptance-proof.json"
+                )
+            );
+
+            emailProof = getEmailProof(proofFile);
+        }
 
         EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
             .EmailData({
@@ -612,6 +676,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
     ) public {
         IGuardianVerifier.ProofData
             memory proofData = getRecoveryEmailProofData(
+                guardianType,
                 account,
                 guardian,
                 _recoveryDataHash,
@@ -629,6 +694,15 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             );
         } else if (guardianType == GuardianType.EmailNrGuardian) {
             proofData = getRecoveryEmailNrProofData(
+                account,
+                guardian,
+                _recoveryDataHash,
+                emailRecoveryModule,
+                accountSalt
+            );
+        } else if (guardianType == GuardianType.MockEmailGuardian) {
+            proofData = getRecoveryEmailProofData(
+                guardianType,
                 account,
                 guardian,
                 _recoveryDataHash,
@@ -657,7 +731,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
         bytes32 nullifier = generateNewNullifier();
 
         string
-            memory command = "Recver account 0x..123 using recovery hash 0x..123";
+            memory command = "Recover account 0x..123 using recovery hash 0x..123";
 
         EmailProof memory jwtProof = generateMockJwtProof(
             command,
@@ -685,6 +759,7 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
 
     // WithAccountSalt variation - used for creating incorrect recovery setups
     function getRecoveryEmailProofData(
+        GuardianType guardianType,
         address account,
         address guardian,
         bytes32 _recoveryDataHash,
@@ -765,14 +840,26 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             commandParamsForRecovery[2] = abi.encode(newOwner1);
         }
 
-        string memory proofFile = vm.readFile(
-            string.concat(
-                vm.projectRoot(),
-                "/test-new/e2e/email-recovery-proof.json"
-            )
-        );
+        EmailProof memory emailProof;
 
-        EmailProof memory emailProof = getEmailProof(proofFile);
+        if (guardianType == GuardianType.EmailGuardian) {
+            string memory proofFile = vm.readFile(
+                string.concat(
+                    vm.projectRoot(),
+                    "/test-new/e2e/email-recovery-proof.json"
+                )
+            );
+
+            emailProof = getEmailProof(proofFile);
+        } else if (guardianType == GuardianType.MockEmailGuardian) {
+            bytes32 nullifier = generateNewNullifier();
+
+            emailProof = generateMockEmailProof(
+                command,
+                nullifier,
+                accountSalt
+            );
+        }
 
         EmailGuardianVerifier.EmailData memory emailData = EmailGuardianVerifier
             .EmailData({
