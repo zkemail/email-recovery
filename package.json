@@ -14,7 +14,7 @@
     "test": "forge test --match-path \"test/**/*.sol\""
   },
   "dependencies": {
-    "@rhinestone/modulekit": "0.5.2"
+    "@rhinestone/modulekit": "0.5.9"
   },
   "files": [
     "src",
