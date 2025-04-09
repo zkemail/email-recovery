@@ -1,4 +1,4 @@
-name: Test multi account
+name: Account tests
 
 on:
   workflow_call:
