@@ -1,0 +1,55 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Check formatting
+        run: pnpm fmt:check
+
+      - name: Check linting
+        run: pnpm lint:check
+
+  build:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Show Foundry config
+        run: forge config
+
+      - name: Build contracts
+        run: forge build
+
+      - name: Save build artifacts cache
+        uses: actions/cache/save@v4
+        with:
+          key: build-artifacts-${{ github.sha }}
+          path: |
+            cache
+            out
+
+  test:
+    needs: ["build"]
+    uses: "./.github/workflows/test.yaml"
+    with:
+      foundry-profile: "test"
+      match-path: "test/**/*.sol"
