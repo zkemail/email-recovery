@@ -1,38 +1,9 @@
 [profile.default]
-evm_version = "cancun"
 src = "src"
 out = "out"
-script = "script"
-libs = ["node_modules", "lib"]
-fs_permissions = [
-    { access = "read", path = "out-optimized" },
-    { access = "read-write", path = "gas_calculations" },
-]
-allow_paths = ["*", "/"]
-ignored_warnings_from = [
-    "node_modules",
-    "node_modules/@rhinestone/modulekit/src/**/*.sol",
-    "lib",
-]
-threads = 1
-gas_limit = "18446744073709551615"
-memory_limit = 1844674407370955161
-optimizer=true
-optimizer_runs=200
+libs = ["node_modules"]
 
-[rpc_endpoints]
-sepolia = "${BASE_SEPOLIA_RPC_URL}"
+optimizer = true
+optimizer_runs = 200
 
-[etherscan]
-sepolia = { key = "${BASE_SCAN_API_KEY}" }
-
-[fmt]
-bracket_spacing = true
-int_types = "long"
-line_length = 100
-multiline_func_header = "all"
-number_underscore = "thousands"
-quote_style = "double"
-tab_width = 4
-wrap_comments = true
-ignore = ["./src/libraries/L2ContractHelper.sol"]
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
