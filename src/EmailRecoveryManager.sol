@@ -106,9 +106,9 @@ abstract contract EmailRecoveryManager is
         if (_killSwitchAuthorizer == address(0)) {
             revert InvalidKillSwitchAuthorizer();
         }
-        verifierAddr = _verifier;
+                    verifierAddr = _verifier;
         dkimAddr = _dkimRegistry;
-        emailAuthImplementationAddr = _emailAuthImpl;
+                emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
     }
