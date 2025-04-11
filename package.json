@@ -11,13 +11,14 @@
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "clean": "rm -rf artifacts broadcast cache docs out out-optimized out-svg",
+    "fmt": "forge fmt && prettier --write .",
+    "fmt:check": "forge fmt --check && prettier --check .",
     "gas:report": "forge test --gas-report --mp \"./test/integration/**/*.sol\"",
     "gas:snapshot": "forge snapshot --mp \"./test/integration/**/*.sol\"",
     "gas:snapshot:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge snapshot --mp \"./test/integration/**/*.sol\"",
-    "lint": "forge fmt --check && pnpm solhint \"{script,src,test}/**/*.sol\"",
+    "lint": "pnpm solhint --fix \"{script,src,test}/**/*.sol\"",
+    "lint:check": "pnpm solhint \"{script,src,test}/**/*.sol\"",
     "prepack": "pnpm install",
-    "prettier:check": "prettier --check \"**/*.{json,md,svg,yml}\"",
-    "prettier:write": "prettier --write \"**/*.{json,md,svg,yml}\"",
     "test": " COMMAND_HANDLER_TYPE=0 forge test --match-path \"test/**/*.sol\"",
     "test:email-recovery-command-handler": "COMMAND_HANDLER_TYPE=0 forge test --match-path \"test/**/*.sol\" ",
     "test:address-hiding-command-handler": "COMMAND_HANDLER_TYPE=1 forge test --match-path \"test/**/*.sol\"",
@@ -28,7 +29,8 @@
     "test:all-safe": "pnpm test:safe-email-recovery-command-handler && pnpm test:safe-address-hiding-command-handler && pnpm test:safe-recovery-command-handler",
     "test:script": "forge test --match-path \"script/test/**/*.sol\" --threads 1",
     "test:lite": "FOUNDRY_PROFILE=lite forge test",
-    "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test"
+    "test:optimized": "pnpm run build:optimized && FOUNDRY_PROFILE=test-optimized forge test",
+    "prepare": "husky"
   },
   "dependencies": {
     "@matterlabs/era-contracts": "github:matter-labs/era-contracts",
@@ -62,5 +64,9 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "prettier": "^3.5.3"
   }
 }
