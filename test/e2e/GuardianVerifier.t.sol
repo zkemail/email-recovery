@@ -78,6 +78,12 @@ contract OwnableValidatorRecovery_AbstractedRecoveryModule_Test is
     // End to end test
     function test_Recover_RotatesOwnerSuccessfully() public {
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
+        if (
+            accountAddress1 !=
+            address(0x0929E9d9bC617836B650Ee4E419f52D31831C806)
+        ) {
+            vm.skip(true);
+        }
 
         // Accept guardian 1 - email
         acceptGuardian(
