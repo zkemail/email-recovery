@@ -148,7 +148,6 @@ abstract contract EmailRecoveryManager is
      * attempt
      */
     function getRecoveryRequest(address account)
-        external
         view
         returns (
             uint256 executeAfter,
