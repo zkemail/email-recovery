@@ -12,7 +12,16 @@ import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianM
 
 /**
  * @title EmailRecoveryManager
- * @notice Provides a mechanism for account recovery using email guardians
+ * @notice Provides a mechanism for account recovery using email guardians* @notice Provides a
+ * mechanism for account recovery using email guardians* @notice Provides a mechanism for account
+ * recovery using email guardians* @notice Provides a mechanism for account recovery using email
+ * guardians* @notice Provides a mechanism for account recovery using email guardians* @notice
+ * Provides a mechanism for account recovery using email guardians* @notice Provides a mechanism for
+ * account recovery using email guardians* @notice Provides a mechanism for account recovery using
+ * email guardians* @notice Provides a mechanism for account recovery using email guardians* @notice
+ * Provides a mechanism for account recovery using email guardians* @notice Provides a mechanism for
+ * account recovery using email guardians* @notice Provides a mechanism for account recovery using
+ * email guardians
  * @dev The underlying EmailAccountRecovery contract provides some base logic for deploying
  * guardian contracts and handling email verification.
  *
@@ -42,7 +51,7 @@ abstract contract EmailRecoveryManager is
      * Minimum required time window between when a recovery attempt becomes valid and when it
      * becomes invalid
      */
-    uint256 public constant MINIMUM_RECOVERY_WINDOW = 2 days;
+    uint256 constant MINIMUM_RECOVERY_WINDOW = 2 days;
 
     /**
      * The cooldown period after which a subsequent recovery attempt can be initiated by the same
