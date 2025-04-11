@@ -48,7 +48,7 @@ abstract contract EmailRecoveryManager is
      * The cooldown period after which a subsequent recovery attempt can be initiated by the same
      * guardian
      */
-    uint public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
+    uint256 public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
 
     /**
      * The command handler that returns and validates the command templates
