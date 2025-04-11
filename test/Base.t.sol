@@ -20,8 +20,6 @@ import { AccountHidingRecoveryCommandHandler } from
     "src/handlers/AccountHidingRecoveryCommandHandler.sol";
 import { SafeRecoveryCommandHandler } from "src/handlers/SafeRecoveryCommandHandler.sol";
 
-/* solhint-disable gas-custom-errors, custom-errors, reason-string, max-states-count */
-
 interface IEmailRecoveryModule {
     function computeAcceptanceTemplateId(uint256 templateIdx) external pure returns (uint256);
 
