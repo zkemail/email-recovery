@@ -10,8 +10,6 @@ import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommand
 import { GuardianManager } from "./GuardianManager.sol";
 import { GuardianStorage, GuardianStatus } from "./libraries/EnumerableGuardianMap.sol";
 
-// over max line length ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /**
  * @title EmailRecoveryManager
  * @notice Provides a mechanism for account recovery using email guardians
