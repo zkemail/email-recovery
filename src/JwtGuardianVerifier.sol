@@ -226,8 +226,6 @@ contract JwtGuardianVerifier is IGuardianVerifier, Initializable {
         // Parse the extra data
         JwtData memory jwtData = abi.decode(proof.data, (JwtData));
 
-        require(jwtData.isCodeExist == true, CodeDoesNotExist());
-
         EmailProof memory jwtProof = EmailProof({
             domainName: jwtData.domainName,
             publicKeyHash: jwtData.publicKeyHash,
