@@ -490,14 +490,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
                 emailRecoveryModule,
                 accountSalt
             );
-        } else if (guardianType == GuardianType.MockEmailGuardian) {
-            proofData = getAcceptanceEmailProofData(
-                guardianType,
-                account,
-                guardian,
-                emailRecoveryModule,
-                accountSalt
-            );
         }
 
         IEmailRecoveryModule(emailRecoveryModule).handleAcceptance(
@@ -694,15 +686,6 @@ abstract contract OwnableValidatorRecovery_AbstractedRecoveryModule_Base is
             );
         } else if (guardianType == GuardianType.EmailNrGuardian) {
             proofData = getRecoveryEmailNrProofData(
-                account,
-                guardian,
-                _recoveryDataHash,
-                emailRecoveryModule,
-                accountSalt
-            );
-        } else if (guardianType == GuardianType.MockEmailGuardian) {
-            proofData = getRecoveryEmailProofData(
-                guardianType,
                 account,
                 guardian,
                 _recoveryDataHash,
