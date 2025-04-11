@@ -195,7 +195,6 @@ abstract contract BaseTest is Test {
      */
     function isContractDeployed(address addr) internal view returns (bool) {
         uint256 size;
-        /* solhint-disable-next-line no-inline-assembly */
         assembly {
             size := extcodesize(addr)
         }
