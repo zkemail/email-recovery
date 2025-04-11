@@ -154,6 +154,9 @@ abstract contract EmailRecoveryManager is
             recoveryRequests[account].executeAfter,
             recoveryRequests[account].executeBefore,
             recoveryRequests[account].currentWeight,
+
+
+
             recoveryRequests[account].recoveryDataHash
         );
     }
@@ -293,7 +296,7 @@ abstract contract EmailRecoveryManager is
         // Threshold can only be 0 at initialization.
         // Check ensures that setup function can only be called once.
         if (guardianConfigs[account].threshold > 0) {
-            revert SetupAlreadyCalled();
+            revert               SetupAlreadyCalled();
         }
 
         (uint256 guardianCount, uint256 totalWeight) =
