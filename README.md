@@ -127,7 +127,7 @@ Once a new command has been written and audited, the deployment bytecode of the 
 
 The generic command handler supported out of the box is sufficiently generic for recovering any modular account via the use of a recovery hash in the command, which is validated against when executing recovery. A modular account developer may want to provide a more specifc and human readable command handler for their users. It's also possible to write a command template in a non-english language to support non-english speakers.
 
-It is important to re-iterate that modular accounts already get account recovery out of the box with these contracts, via the use of the unviversal email recovery module.
+It is important to re-iterate that modular accounts already get account recovery out of the box with these contracts, via the use of the universal email recovery module.
 
 ### EmailRecoveryCommandHandler.sol
 
