@@ -68,6 +68,9 @@ abstract contract BaseTest is RhinestoneModuleKit, Test, ERC7579Precompiles {
         0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
     uint256 public minimumDelay = 12 hours;
 
+    address public EMAIL_PROOF_ACCOUNT_ADDRESS =
+        0x0929E9d9bC617836B650Ee4E419f52D31831C806;
+
     bytes4 public functionSelector;
     bytes public recoveryCalldata;
     bytes public recoveryData;

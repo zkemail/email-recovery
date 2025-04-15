@@ -81,6 +81,11 @@ contract OwnableValidatorRecovery_AbstractedRecoveryModule_Test is
     function test_Recover_RotatesOwnerSuccessfully() public {
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
 
+        // Check for the address that is in email proof, otherwise skip the test
+        if (accountAddress1 != EMAIL_PROOF_ACCOUNT_ADDRESS) {
+            vm.skip(true);
+        }
+
         // Accept guardian 1 - email
         acceptGuardian(
             GuardianType.EmailGuardian,
