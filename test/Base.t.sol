@@ -190,10 +190,10 @@ abstract contract BaseTest is RhinestoneModuleKit, Test, ERC7579Precompiles {
             eoaWallet.privateKey
         );
 
-        /// Prepare the initData with the bootstrap contract call along with the, can go with the generic one
         address erc7579Factory = getFactory("DEFAULT");
         address helper = ModuleKitHelpers.getHelper(AccountType.DEFAULT);
 
+        /// Prepare the initData for the the erc7579 bootstrap call
         bytes memory initData = ERC7579Factory(erc7579Factory).getInitData(
             address(_defaultValidator),
             ""

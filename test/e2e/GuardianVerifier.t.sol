@@ -75,15 +75,11 @@ contract OwnableValidatorRecovery_AbstractedRecoveryModule_Test is
         emailRecoveryModule.completeRecovery(account, recoveryData);
     }
 
-    // End to end test
+    // End to end test with real email, email.nr proofs and mock JWT
+    // @note : Test will only succeed for account 0x0929E9d9bC617836B650Ee4E419f52D31831C806
+    // as the static email proof is generated to recover that account
     function test_Recover_RotatesOwnerSuccessfully() public {
         skipIfCommandHandlerType(CommandHandlerType.SafeRecoveryCommandHandler);
-        if (
-            accountAddress1 !=
-            address(0x0929E9d9bC617836B650Ee4E419f52D31831C806)
-        ) {
-            vm.skip(true);
-        }
 
         // Accept guardian 1 - email
         acceptGuardian(
