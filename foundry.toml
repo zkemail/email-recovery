@@ -1,13 +1,13 @@
 [profile.default]
 evm_version = "cancun"
 src = "src"
-test="test-new"
+test="test"
 out = "out"
-script = "scripts"
+script = "script"
 libs = ["node_modules", "lib"]
 fs_permissions = [
     { access = "read", path = "out-optimized" },
-    { access = "read", path = "test-new" },
+    { access = "read", path = "test/bin" },
     { access = "read-write", path = "gas_calculations" },
 ]
 allow_paths = ["*", "/"]

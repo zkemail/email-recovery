@@ -9,7 +9,7 @@ import {EmailRecoveryCommandHandler} from "src/handlers/EmailRecoveryCommandHand
 import {EmailRecoveryFactory} from "src/factories/EmailRecoveryFactory.sol";
 import {OwnableValidator} from "src/test/OwnableValidator.sol";
 
-abstract contract BaseDeployEmailRecoveryScript is BaseDeployScript {
+abstract contract BaseDeployEmailGuardianVerifier is BaseDeployScript {
     function deployValidator() private returns (address validator) {
         validator = address(new OwnableValidator{salt: config.create2Salt}());
         console.log("Deployed Ownable Validator at", validator);
