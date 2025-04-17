@@ -14,6 +14,8 @@
     "test": "forge test --match-path \"test/**/*.sol\""
   },
   "dependencies": {
+    "@openzeppelin/community-contracts": "github:OpenZeppelin/openzeppelin-community-contracts",
+    "@rhinestone/core-modules": "github:rhinestonewtf/core-modules",
     "@rhinestone/modulekit": "0.5.9"
   },
   "files": [
