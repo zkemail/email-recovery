@@ -8,11 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@openzeppelin/community-contracts':
+        specifier: github:OpenZeppelin/openzeppelin-community-contracts
+        version: https://codeload.github.com/OpenZeppelin/openzeppelin-community-contracts/tar.gz/e46e538e4fc7ce13986f1547e42f1b0eb4a81c8a
+      '@rhinestone/core-modules':
+        specifier: github:rhinestonewtf/core-modules
+        version: https://codeload.github.com/rhinestonewtf/core-modules/tar.gz/e123a910ba6e5e81878a1aea7265c2fa7815b90b(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
       '@rhinestone/modulekit':
         specifier: 0.5.9
         version: 0.5.9(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
 
 packages:
+
+  '@axelar-network/axelar-gmp-sdk-solidity@6.0.6':
+    resolution: {integrity: sha512-XIcDlr1HoYSqcxuvvusILmiqerh2bL9NJLwU4lFBAJK5E/st/q3Em9ropBBZML9iuUZ+hDsch8Ev9rMO+ulaSQ==}
+    engines: {node: '>=18'}
 
   '@babel/code-frame@7.25.7':
     resolution: {integrity: sha512-0xZJFNE5XMpENsgfHYTw8FbX4kv53mFLn2i3XPoq69LyhYSCBJtitaHx9QnsVTrsogI4Z3+HtEfZ2/GFPOtf5g==}
@@ -267,6 +277,15 @@ packages:
     peerDependencies:
       hardhat: ^2.0.4
 
+  '@openzeppelin/community-contracts@https://codeload.github.com/OpenZeppelin/openzeppelin-community-contracts/tar.gz/e46e538e4fc7ce13986f1547e42f1b0eb4a81c8a':
+    resolution: {tarball: https://codeload.github.com/OpenZeppelin/openzeppelin-community-contracts/tar.gz/e46e538e4fc7ce13986f1547e42f1b0eb4a81c8a}
+    version: 0.0.1
+
+  '@openzeppelin/contracts-upgradeable@5.3.0':
+    resolution: {integrity: sha512-yVzSSyTMWO6rapGI5tuqkcLpcGGXA0UA1vScyV5EhE5yw8By3Ewex9rDUw8lfVw0iTkvR/egjfcW5vpk03lqZg==}
+    peerDependencies:
+      '@openzeppelin/contracts': 5.3.0
+
   '@openzeppelin/contracts@4.9.6':
     resolution: {integrity: sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==}
 
@@ -291,8 +310,20 @@ packages:
   '@prb/math@4.1.0':
     resolution: {integrity: sha512-ef5Xrlh3BeX4xT5/Wi810dpEPq2bYPndRxgFIaKSU1F/Op/s8af03kyom+mfU7gEpvfIZ46xu8W0duiHplbBMg==}
 
+  '@rhinestone/checknsignatures@https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/f8389c186fb58480a9a42d598adebaa1a557762d':
+    resolution: {tarball: https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/f8389c186fb58480a9a42d598adebaa1a557762d}
+    version: 0.0.1
+
+  '@rhinestone/core-modules@https://codeload.github.com/rhinestonewtf/core-modules/tar.gz/e123a910ba6e5e81878a1aea7265c2fa7815b90b':
+    resolution: {tarball: https://codeload.github.com/rhinestonewtf/core-modules/tar.gz/e123a910ba6e5e81878a1aea7265c2fa7815b90b}
+    version: 1.0.0
+
   '@rhinestone/erc4337-validation@0.0.5':
     resolution: {integrity: sha512-+WzDOn7Cp7DGw4oLsnWtcfqMkLTJAfC3qdTCYcZdDuBuSNST/E+7Gsau+5Uu97IYgTc7suTo+5OiP5k+E2q79A==}
+
+  '@rhinestone/flatbytes@https://codeload.github.com/rhinestonewtf/flatbytes/tar.gz/8182dc7353bef886be234c54ae36b1e33d6bf8ee':
+    resolution: {tarball: https://codeload.github.com/rhinestonewtf/flatbytes/tar.gz/8182dc7353bef886be234c54ae36b1e33d6bf8ee}
+    version: 0.0.1
 
   '@rhinestone/modulekit@0.5.9':
     resolution: {integrity: sha512-Zc5Qo3dkyVhBo7OQRKOltYd+jlGCtV18TWSmpSvIdXKwUgo5xj8zL73wAwFKTww00zt/wXMbW6Z6ysIQWH3Ezw==}
@@ -412,6 +443,9 @@ packages:
 
   '@types/secp256k1@4.0.6':
     resolution: {integrity: sha512-hHxJU6PAEUn0TP4S/ZOzuTUvJWuZ6eIKeNKb5RBpODvSl6hp1Wrw4s7ATY50rklRCScUDpHzVA/DQdSjJ3UoYQ==}
+
+  '@zk-email/contracts@6.3.2':
+    resolution: {integrity: sha512-+JW0aZMlcrT66lsLqpyxHoGrOT3cMsfBnRinJ8wgXJit4rbZSRYKqVi42dGMyJVvpiJ8O9VQ5hbeYn/fpQKUxw==}
 
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
@@ -755,6 +789,10 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
+
+  dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
+    engines: {node: '>=12'}
 
   ds-test@https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0:
     resolution: {tarball: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0}
@@ -1699,6 +1737,10 @@ packages:
     peerDependencies:
       hardhat: ^2.11.0
 
+  solmate@https://codeload.github.com/transmissions11/solmate/tar.gz/c93f7716c9909175d45f6ef80a34a650e2d24e56:
+    resolution: {tarball: https://codeload.github.com/transmissions11/solmate/tar.gz/c93f7716c9909175d45f6ef80a34a650e2d24e56}
+    version: 6.8.0
+
   source-map-support@0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
 
@@ -1960,6 +2002,8 @@ packages:
       ethers: ^5.7.0
 
 snapshots:
+
+  '@axelar-network/axelar-gmp-sdk-solidity@6.0.6': {}
 
   '@babel/code-frame@7.25.7':
     dependencies:
@@ -2367,6 +2411,15 @@ snapshots:
       - encoding
       - supports-color
 
+  '@openzeppelin/community-contracts@https://codeload.github.com/OpenZeppelin/openzeppelin-community-contracts/tar.gz/e46e538e4fc7ce13986f1547e42f1b0eb4a81c8a':
+    dependencies:
+      '@axelar-network/axelar-gmp-sdk-solidity': 6.0.6
+      '@zk-email/contracts': 6.3.2
+
+  '@openzeppelin/contracts-upgradeable@5.3.0(@openzeppelin/contracts@5.1.0)':
+    dependencies:
+      '@openzeppelin/contracts': 5.1.0
+
   '@openzeppelin/contracts@4.9.6': {}
 
   '@openzeppelin/contracts@5.0.1': {}
@@ -2387,6 +2440,30 @@ snapshots:
 
   '@prb/math@4.1.0': {}
 
+  '@rhinestone/checknsignatures@https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/f8389c186fb58480a9a42d598adebaa1a557762d':
+    dependencies:
+      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/6abf66980050ab03a35b52bdab814f55001d6929
+      solady: https://codeload.github.com/vectorized/solady/tar.gz/dcdfab80f4e6cb9ac35c91610b2a2ec42689ec79
+
+  '@rhinestone/core-modules@https://codeload.github.com/rhinestonewtf/core-modules/tar.gz/e123a910ba6e5e81878a1aea7265c2fa7815b90b(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)':
+    dependencies:
+      '@rhinestone/checknsignatures': https://codeload.github.com/rhinestonewtf/checknsignatures/tar.gz/f8389c186fb58480a9a42d598adebaa1a557762d
+      '@rhinestone/flatbytes': https://codeload.github.com/rhinestonewtf/flatbytes/tar.gz/8182dc7353bef886be234c54ae36b1e33d6bf8ee
+      '@rhinestone/modulekit': 0.5.9(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)
+      ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
+      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/6abf66980050ab03a35b52bdab814f55001d6929
+      solmate: https://codeload.github.com/transmissions11/solmate/tar.gz/c93f7716c9909175d45f6ef80a34a650e2d24e56
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - ethers
+      - hardhat
+      - lodash
+      - supports-color
+      - typechain
+      - typescript
+      - utf-8-validate
+
   '@rhinestone/erc4337-validation@0.0.5(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))':
     dependencies:
       '@openzeppelin/contracts': 5.0.1
@@ -2405,6 +2482,10 @@ snapshots:
       - supports-color
       - typechain
       - utf-8-validate
+
+  '@rhinestone/flatbytes@https://codeload.github.com/rhinestonewtf/flatbytes/tar.gz/8182dc7353bef886be234c54ae36b1e33d6bf8ee':
+    dependencies:
+      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/6abf66980050ab03a35b52bdab814f55001d6929
 
   '@rhinestone/modulekit@0.5.9(ethers@5.7.2)(hardhat@2.22.14(typescript@4.9.5))(lodash@4.17.21)(typechain@5.2.0(typescript@4.9.5))(typescript@4.9.5)':
     dependencies:
@@ -2578,6 +2659,12 @@ snapshots:
   '@types/secp256k1@4.0.6':
     dependencies:
       '@types/node': 22.7.8
+
+  '@zk-email/contracts@6.3.2':
+    dependencies:
+      '@openzeppelin/contracts': 5.1.0
+      '@openzeppelin/contracts-upgradeable': 5.3.0(@openzeppelin/contracts@5.1.0)
+      dotenv: 16.5.0
 
   abbrev@1.0.9: {}
 
@@ -2975,6 +3062,8 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
+
+  dotenv@16.5.0: {}
 
   ds-test@https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0: {}
 
@@ -4105,6 +4194,8 @@ snapshots:
       semver: 7.6.3
       shelljs: 0.8.5
       web3-utils: 1.10.4
+
+  solmate@https://codeload.github.com/transmissions11/solmate/tar.gz/c93f7716c9909175d45f6ef80a34a650e2d24e56: {}
 
   source-map-support@0.5.21:
     dependencies:
