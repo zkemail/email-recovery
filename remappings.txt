@@ -16,3 +16,6 @@ solarray/=node_modules/solarray/src/
 ExcessivelySafeCall/=node_modules/excessively-safe-call/src/
 
 checknsignatures/=node_modules/@rhinestone/checknsignatures/src/
+@zk-email/contracts/=node_modules/@zk-email/contracts/
+@zk-email/email-tx-builder/=node_modules/@zk-email/email-tx-builder/packages/contracts/src/
+@zk-email/email-tx-builder-fixtures/=node_modules/@zk-email/email-tx-builder/packages/contracts/test/fixtures/

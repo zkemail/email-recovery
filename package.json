@@ -15,8 +15,10 @@
   },
   "dependencies": {
     "@openzeppelin/community-contracts": "github:OpenZeppelin/openzeppelin-community-contracts",
+    "@openzeppelin/contracts": "v5.3.0",
     "@rhinestone/core-modules": "github:rhinestonewtf/core-modules",
-    "@rhinestone/modulekit": "0.5.9"
+    "@rhinestone/modulekit": "0.5.9",
+    "@zk-email/email-tx-builder": "github:zkemail/email-tx-builder"
   },
   "files": [
     "src",
