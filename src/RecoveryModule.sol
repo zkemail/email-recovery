@@ -194,10 +194,6 @@ contract RecoveryModule is ERC7579ExecutorBase, IRecoveryModule {
             validator
         ];
 
-        if (recoveryRequest.approvals > 0) {
-            revert RecoveryInProcess();
-        }
-
         if (threshold == 0) {
             revert NoRecoveryConfigured();
         }
