@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
-import { StdStorage, stdStorage } from "forge-std/StdStorage.sol";
-import { console } from "forge-std/console.sol";
-import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "src/test/RecoveryController.sol";
+import { StdStorage, stdStorage } from "forge-std/StdStorage.sol";
 import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
-import { SimpleWallet } from "src/test/SimpleWallet.sol";
-import { OwnableUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
     using stdStorage for StdStorage;
-
-    constructor() { }
 
     function setUp() public override {
         super.setUp();
@@ -35,7 +27,10 @@ contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
     }
 
     function testExpectRevertRequestGuardianInvalidGuardian() public {
-        require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.NONE)
+        );
 
         vm.startPrank(zkEmailDeployer);
         vm.expectRevert(bytes("invalid guardian"));
@@ -44,7 +39,10 @@ contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
     }
 
     function testExpectRevertRequestGuardianGuardianStatusMustBeNone() public {
-        require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.NONE)
+        );
 
         vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
@@ -54,14 +52,18 @@ contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
     }
 
     function testRequestGuardian() public {
-        require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.NONE)
+        );
 
         vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
     }
 
@@ -72,12 +74,13 @@ contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
         recoveryController.requestGuardian(anotherGuardian); // Assuming anotherGuardian is defined
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
-        require(
-            recoveryController.guardians(anotherGuardian)
-                == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(anotherGuardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
     }
 }

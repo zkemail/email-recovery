@@ -1,7 +1,5 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "solidity.compileUsingRemoteVersion": "v0.8.25+commit.b61c2a91",
-  "solidity.formatter": "forge",
-  "solidity.packageDefaultDependenciesDirectory": "node_modules"
+  "solidity.formatter": "forge"
 }

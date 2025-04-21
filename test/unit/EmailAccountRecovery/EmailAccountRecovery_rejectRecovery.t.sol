@@ -1,18 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "src/test/RecoveryController.sol";
+import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
-import { SimpleWallet } from "src/test/SimpleWallet.sol";
-import { OwnableUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is EmailAccountRecoveryBase {
-    constructor() { }
-
     function setUp() public override {
         super.setUp();
     }
@@ -21,22 +14,27 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is EmailAccoun
      * Set up functions
      */
     function requestGuardian() public {
-        require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.NONE)
+        );
 
         vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
     }
 
     function handleAcceptance() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -45,9 +43,6 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is EmailAccoun
         bytes[] memory commandParamsForAcceptance = new bytes[](1);
         commandParamsForAcceptance[0] = abi.encode(address(simpleWallet));
         emailAuthMsg.commandParams = commandParamsForAcceptance;
-        address recoveredAccount = recoveryController.extractRecoveredAccountFromAcceptanceCommand(
-            emailAuthMsg.commandParams, templateIdx
-        );
         uint256 templateId = recoveryController.computeAcceptanceTemplateId(templateIdx);
         emailAuthMsg.templateId = templateId;
 
@@ -63,8 +58,9 @@ contract EmailAccountRecoveryForRejectRecoveryTest_rejectRecovery is EmailAccoun
         recoveryController.handleAcceptance(emailAuthMsg, templateIdx);
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.ACCEPTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.ACCEPTED)
         );
     }
 

@@ -1,21 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
+import { EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Verifier, EmailProof } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
-import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import { ECDSAOwnedDKIMRegistry } from
-    "@zk-email/ether-email-auth-contracts/src/utils/ECDSAOwnedDKIMRegistry.sol";
-import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
-import { EmailAccountRecovery } from
-    "@zk-email/ether-email-auth-contracts/src/EmailAccountRecovery.sol";
+import { EmailAccountRecovery } from "src/EmailAccountRecovery.sol";
 import { SimpleWallet } from "src/test/SimpleWallet.sol";
 import { RecoveryController } from "src/test/RecoveryController.sol";
-import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { UnitBase } from "../UnitBase.t.sol";
 
@@ -27,9 +17,6 @@ contract EmailAccountRecoveryBase is UnitBase {
     address receiver = vm.addr(3);
     address newSigner = vm.addr(4);
     address someRelayer = vm.addr(5);
-
-    bytes mockProof = abi.encodePacked(bytes1(0x01));
-    bytes32 emailNullifier = 0x00a83fce3d4b1c9ef0f600644c1ecc6c8115b57b1596e0e3295e2c5105fbfd8a;
 
     function setUp() public virtual override {
         super.setUp();
@@ -79,6 +66,7 @@ contract EmailAccountRecoveryBase is UnitBase {
         string memory maskedCommand = "Send 1 ETH to 0x0000000000000000000000000000000000000020";
         bytes32 emailNullifier = 0x00a83fce3d4b1c9ef0f600644c1ecc6c8115b57b1596e0e3295e2c5105fbfd8a;
         bool isCodeExist = true;
+        bytes memory mockProof = abi.encodePacked(bytes1(0x01));
 
         EmailProof memory emailProof = EmailProof({
             domainName: domainName,

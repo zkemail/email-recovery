@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
 import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
 
 contract EmailAccountRecoveryTest_general is EmailAccountRecoveryBase {

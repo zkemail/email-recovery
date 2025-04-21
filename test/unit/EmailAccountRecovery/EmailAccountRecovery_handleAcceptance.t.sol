@@ -1,32 +1,29 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.25;
 
-import { Test } from "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { RecoveryController } from "src/test/RecoveryController.sol";
+import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
-import { SimpleWallet } from "src/test/SimpleWallet.sol";
-import { OwnableUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
 contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
-    constructor() { }
-
     function setUp() public override {
         super.setUp();
     }
 
     function requestGuardian() public {
-        require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.NONE)
+        );
 
         vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
     }
 
@@ -57,8 +54,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidEmailAuthMsgStructure() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -83,8 +81,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidVerifier() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -112,8 +111,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidDKIMRegistry() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -142,8 +142,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidEmailAuthImplementationAddr() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -191,8 +192,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
         vm.prank(someRelayer);
         recoveryController.handleAcceptance(emailAuthMsg, templateIdx);
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.ACCEPTED,
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.ACCEPTED),
             "Guardian should be accepted"
         );
 
@@ -213,10 +215,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testHandleAcceptance() public {
         requestGuardian();
 
-        console.log("guardian", guardian);
-
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -240,16 +241,18 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
         recoveryController.handleAcceptance(emailAuthMsg, templateIdx);
         vm.stopPrank();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.ACCEPTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.ACCEPTED)
         );
     }
 
     function testExpectRevertHandleAcceptanceGuardianStatusMustBeRequested() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -277,8 +280,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidTemplateIndex() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 1;
@@ -305,8 +309,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidCommandParams() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
@@ -334,8 +339,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     function testExpectRevertHandleAcceptanceInvalidWalletAddressInEmail() public {
         requestGuardian();
 
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         uint256 templateIdx = 0;
