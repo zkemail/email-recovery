@@ -6,8 +6,11 @@ import { OwnableUpgradeable } from
 import { EmailAccountRecovery } from "src/EmailAccountRecovery.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SimpleWallet } from "./SimpleWallet.sol";
-import { console } from "forge-std/console.sol";
 
+/**
+ * @title RecoveryController
+ * @dev a test contract for EmailAccountRecovery
+ */
 contract RecoveryController is OwnableUpgradeable, EmailAccountRecovery {
     enum GuardianStatus {
         NONE,

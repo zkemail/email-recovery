@@ -4,14 +4,14 @@ pragma solidity ^0.8.12;
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { RecoveryController } from "../helpers/RecoveryController.sol";
-import { StructHelper } from "../helpers/StructHelper.sol";
-import { SimpleWallet } from "../helpers/SimpleWallet.sol";
+import { RecoveryController } from "src/test/RecoveryController.sol";
+import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
+import { SimpleWallet } from "src/test/SimpleWallet.sol";
 import { OwnableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ERC1967Utils } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
-contract EmailAccountRecoveryTest_handleAcceptance is StructHelper {
+contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
     constructor() { }
 
     function setUp() public override {
@@ -19,10 +19,9 @@ contract EmailAccountRecoveryTest_handleAcceptance is StructHelper {
     }
 
     function requestGuardian() public {
-        setUp();
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 

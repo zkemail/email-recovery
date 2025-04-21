@@ -8,6 +8,10 @@ import { RecoveryController } from "./RecoveryController.sol";
 import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+/**
+ * @title SimpleWallet
+ * @dev a test contract for RecoveryController
+ */
 contract SimpleWallet is OwnableUpgradeable, IERC1271 {
     using ECDSA for *;
 

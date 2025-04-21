@@ -5,13 +5,13 @@ import { Test } from "forge-std/Test.sol";
 import { StdStorage, stdStorage } from "forge-std/StdStorage.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { RecoveryController } from "../helpers/RecoveryController.sol";
-import { StructHelper } from "../helpers/StructHelper.sol";
-import { SimpleWallet } from "../helpers/SimpleWallet.sol";
+import { RecoveryController } from "src/test/RecoveryController.sol";
+import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
+import { SimpleWallet } from "src/test/SimpleWallet.sol";
 import { OwnableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
+contract EmailAccountRecoveryTest_requestGuardian is EmailAccountRecoveryBase {
     using stdStorage for StdStorage;
 
     constructor() { }
@@ -21,12 +21,12 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     }
 
     function testExpectRevertRequestGuardianRecoveryInProgress() public {
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
 
         // Simulate recovery in progress
         stdstore.target(address(recoveryController)).sig("isRecovering(address)").with_key(
-            address(deployer)
+            address(zkEmailDeployer)
         ).checked_write(true);
 
         vm.expectRevert(bytes("recovery in progress"));
@@ -37,7 +37,7 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     function testExpectRevertRequestGuardianInvalidGuardian() public {
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         vm.expectRevert(bytes("invalid guardian"));
         recoveryController.requestGuardian(address(0x0));
         vm.stopPrank();
@@ -46,7 +46,7 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     function testExpectRevertRequestGuardianGuardianStatusMustBeNone() public {
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.expectRevert(bytes("guardian status must be NONE"));
         recoveryController.requestGuardian(guardian);
@@ -56,7 +56,7 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
     function testRequestGuardian() public {
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 
@@ -67,7 +67,7 @@ contract EmailAccountRecoveryTest_requestGuardian is StructHelper {
 
     function testMultipleGuardianRequests() public {
         address anotherGuardian = vm.addr(9);
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         recoveryController.requestGuardian(anotherGuardian); // Assuming anotherGuardian is defined
         vm.stopPrank();

@@ -4,13 +4,13 @@ pragma solidity ^0.8.12;
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { EmailAuth, EmailAuthMsg } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
-import { RecoveryController } from "../helpers/RecoveryController.sol";
-import { StructHelper } from "../helpers/StructHelper.sol";
-import { SimpleWallet } from "../helpers/SimpleWallet.sol";
+import { RecoveryController } from "src/test/RecoveryController.sol";
+import { EmailAccountRecoveryBase } from "./EmailAccountRecoveryBase.t.sol";
+import { SimpleWallet } from "src/test/SimpleWallet.sol";
 import { OwnableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
+contract EmailAccountRecoveryTest_completeRecovery is EmailAccountRecoveryBase {
     constructor() { }
 
     function setUp() public override {
@@ -20,7 +20,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
     function requestGuardian() public {
         require(recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.NONE);
 
-        vm.startPrank(deployer);
+        vm.startPrank(zkEmailDeployer);
         recoveryController.requestGuardian(guardian);
         vm.stopPrank();
 
@@ -69,7 +69,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
 
         assertEq(recoveryController.isRecovering(address(simpleWallet)), false);
         assertEq(recoveryController.currentTimelockOfAccount(address(simpleWallet)), 0);
-        assertEq(simpleWallet.owner(), deployer);
+        assertEq(simpleWallet.owner(), zkEmailDeployer);
         assertEq(
             recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), address(0x0)
         );
@@ -95,7 +95,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
         vm.stopPrank();
 
         assertEq(recoveryController.isRecovering(address(simpleWallet)), true);
-        assertEq(simpleWallet.owner(), deployer);
+        assertEq(simpleWallet.owner(), zkEmailDeployer);
         assertEq(recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), newSigner);
         assertEq(
             recoveryController.currentTimelockOfAccount(address(simpleWallet)),
@@ -111,7 +111,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
             recoveryController.currentTimelockOfAccount(address(simpleWallet)),
             block.timestamp + recoveryController.timelockPeriodOfAccount(address(simpleWallet))
         );
-        assertEq(simpleWallet.owner(), deployer);
+        assertEq(simpleWallet.owner(), zkEmailDeployer);
         assertEq(recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), newSigner);
 
         vm.startPrank(someRelayer);
@@ -132,7 +132,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
 
         assertEq(recoveryController.isRecovering(address(simpleWallet)), false);
         assertEq(recoveryController.currentTimelockOfAccount(address(simpleWallet)), 0);
-        assertEq(simpleWallet.owner(), deployer);
+        assertEq(simpleWallet.owner(), zkEmailDeployer);
         assertEq(
             recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), address(0x0)
         );
@@ -156,7 +156,7 @@ contract EmailAccountRecoveryTest_completeRecovery is StructHelper {
             recoveryController.currentTimelockOfAccount(address(simpleWallet)),
             block.timestamp + recoveryController.timelockPeriodOfAccount(address(simpleWallet))
         );
-        assertEq(simpleWallet.owner(), deployer);
+        assertEq(simpleWallet.owner(), zkEmailDeployer);
         assertEq(recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), newSigner);
 
         vm.warp(0);

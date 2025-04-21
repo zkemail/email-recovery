@@ -14,8 +14,8 @@ import {
 } from "@zk-email/ether-email-auth-contracts/src/EmailAuth.sol";
 import { Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Verifier.sol";
 import { Groth16Verifier } from "@zk-email/ether-email-auth-contracts/src/utils/Groth16Verifier.sol";
-import { SimpleWallet } from "../../unit/helpers/SimpleWallet.sol";
-import { RecoveryController } from "../../unit/helpers/RecoveryController.sol";
+import { SimpleWallet } from "src/test/SimpleWallet.sol";
+import { RecoveryController } from "src/test/RecoveryController.sol";
 import { console } from "forge-std/console.sol";
 import { UserOverrideableDKIMRegistry } from "@zk-email/contracts/UserOverrideableDKIMRegistry.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -26,7 +26,7 @@ contract IntegrationTest is Test {
 
     EmailAuth emailAuth;
     Verifier verifier;
-    UserOverrideableDKIMRegistry dkim;
+    UserOverrideableDKIMRegistry dkimRegistry;
 
     RecoveryController recoveryController;
     SimpleWallet simpleWallet;
@@ -57,15 +57,15 @@ contract IntegrationTest is Test {
                 address(overrideableDkimImpl),
                 abi.encodeCall(overrideableDkimImpl.initialize, (msg.sender, signer, setTimeDelay))
             );
-            dkim = UserOverrideableDKIMRegistry(address(overrideableDkimProxy));
+            dkimRegistry = UserOverrideableDKIMRegistry(address(overrideableDkimProxy));
         }
         {
             string memory signedMsg =
-                dkim.computeSignedMsg(dkim.SET_PREFIX(), domainName, publicKeyHash);
+                dkimRegistry.computeSignedMsg(dkimRegistry.SET_PREFIX(), domainName, publicKeyHash);
             bytes32 digest = MessageHashUtils.toEthSignedMessageHash(bytes(signedMsg));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(1, digest);
             bytes memory signature = abi.encodePacked(r, s, v);
-            dkim.setDKIMPublicKeyHash(domainName, publicKeyHash, signer, signature);
+            dkimRegistry.setDKIMPublicKeyHash(domainName, publicKeyHash, signer, signature);
             vm.warp(block.timestamp + setTimeDelay + 1);
         }
 
@@ -91,7 +91,7 @@ contract IntegrationTest is Test {
             address(recoveryControllerImpl),
             abi.encodeCall(
                 recoveryControllerImpl.initialize,
-                (signer, address(verifier), address(dkim), address(emailAuthImpl))
+                (signer, address(verifier), address(dkimRegistry), address(emailAuthImpl))
             )
         );
         recoveryController = RecoveryController(payable(address(recoveryControllerProxy)));
