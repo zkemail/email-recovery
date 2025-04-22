@@ -272,7 +272,7 @@ contract EmailAccountRecoveryTest_handleAcceptance is EmailAccountRecoveryBase {
         );
 
         vm.startPrank(someRelayer);
-        vm.expectRevert(bytes("guardian status must be REQUESTED"));
+        vm.expectRevert(bytes("status must be REQUESTED"));
         recoveryController.handleAcceptance(emailAuthMsg, templateIdx);
         vm.stopPrank();
     }
