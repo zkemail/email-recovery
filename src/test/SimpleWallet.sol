@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable gas-custom-errors */
+
 import { OwnableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
@@ -50,8 +52,7 @@ contract SimpleWallet is OwnableUpgradeable, IERC1271 {
 
     function changeOwner(address newOwner) public {
         require(
-            msg.sender == owner() || msg.sender == recoveryController,
-            "only owner or recovery controller"
+            msg.sender == owner() || msg.sender == recoveryController, "only owner or controller"
         );
         _transferOwnership(newOwner);
     }

@@ -10,13 +10,13 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { UnitBase } from "../UnitBase.t.sol";
 
 contract EmailAccountRecoveryBase is UnitBase {
-    RecoveryController recoveryController;
-    SimpleWallet simpleWallet;
+    RecoveryController public recoveryController;
+    SimpleWallet public simpleWallet;
 
-    address guardian;
-    address receiver = vm.addr(3);
-    address newSigner = vm.addr(4);
-    address someRelayer = vm.addr(5);
+    address public guardian;
+    address public receiver = vm.addr(3);
+    address public newSigner = vm.addr(4);
+    address public someRelayer = vm.addr(5);
 
     function setUp() public virtual override {
         super.setUp();

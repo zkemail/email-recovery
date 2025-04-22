@@ -2,14 +2,8 @@
   "extends": "solhint:recommended",
   "rules": {
     "avoid-low-level-calls": "off",
-    "code-complexity": [
-      "error",
-      9
-    ],
-    "compiler-version": [
-      "error",
-      ">=0.8.0"
-    ],
+    "code-complexity": ["error", 9],
+    "compiler-version": ["error", ">=0.8.0"],
     "contract-name-capwords": "off",
     "const-name-snakecase": "off",
     "func-name-mixedcase": "off",
@@ -19,17 +13,13 @@
         "ignoreConstructors": true
       }
     ],
-    "max-line-length": [
-      "error",
-      123
-    ],
+    "max-line-length": ["error", 123],
     "named-parameters-mapping": "warn",
     "no-empty-blocks": "off",
     "not-rely-on-time": "off",
     "one-contract-per-file": "off",
     "var-name-mixedcase": "off",
     "immutable-vars-naming": "off",
-    "no-console": "warn",
-    "contract-name-camelcase": "off"
+    "no-console": "warn"
   }
 }

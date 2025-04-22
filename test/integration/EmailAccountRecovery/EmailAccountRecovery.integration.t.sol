@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable no-console  */
+
 import { Test } from "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "@zk-email/contracts/DKIMRegistry.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {
     EmailAuth,
     EmailAuthMsg,
@@ -24,24 +24,25 @@ contract IntegrationTest is Test {
     using Strings for *;
     using console for *;
 
-    EmailAuth emailAuth;
-    Verifier verifier;
-    UserOverrideableDKIMRegistry dkimRegistry;
+    EmailAuth public emailAuth;
+    Verifier public verifier;
+    UserOverrideableDKIMRegistry public dkimRegistry;
 
-    RecoveryController recoveryController;
-    SimpleWallet simpleWallet;
+    RecoveryController public recoveryController;
+    SimpleWallet public simpleWallet;
 
-    address deployer = vm.addr(1);
-    address receiver = vm.addr(2);
-    address guardian = vm.addr(3);
-    address relayer = deployer;
+    address public deployer = vm.addr(1);
+    address public receiver = vm.addr(2);
+    address public guardian = vm.addr(3);
+    address public relayer = deployer;
 
-    bytes32 accountSalt;
-    string selector = "12345";
-    string domainName = "gmail.com";
-    bytes32 publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
-    uint256 recoveryTimelock = 5 days;
-    uint256 setTimeDelay = 3 days;
+    bytes32 public accountSalt;
+    string public selector = "12345";
+    string public domainName = "gmail.com";
+    bytes32 public publicKeyHash =
+        0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+    uint256 public recoveryTimelock = 5 days;
+    uint256 public setTimeDelay = 3 days;
 
     function setUp() public {
         vm.createSelectFork("https://mainnet.base.org", 22_739_283);
@@ -164,9 +165,9 @@ contract IntegrationTest is Test {
         // Call Request guardian -> GuardianStatus.REQUESTED
         guardian = recoveryController.computeEmailAuthAddress(address(simpleWallet), accountSalt);
         recoveryController.requestGuardian(guardian);
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.REQUESTED,
-            "GuardianStatus should be REQUESTED"
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.REQUESTED)
         );
 
         // Call handleAcceptance -> GuardianStatus.ACCEPTED
@@ -179,9 +180,9 @@ contract IntegrationTest is Test {
             proof: emailProof
         });
         recoveryController.handleAcceptance(emailAuthMsg, templateIdx);
-        require(
-            recoveryController.guardians(guardian) == RecoveryController.GuardianStatus.ACCEPTED,
-            "GuardianStatus should be ACCEPTED"
+        assertEq(
+            uint256(recoveryController.guardians(guardian)),
+            uint256(RecoveryController.GuardianStatus.ACCEPTED)
         );
 
         // Verify the email proof for recovery
@@ -202,11 +203,13 @@ contract IntegrationTest is Test {
         emailProof.domainName = "gmail.com";
         emailProof.publicKeyHash = bytes32(vm.parseUint(pubSignals[9]));
         emailProof.timestamp = vm.parseUint(pubSignals[11]);
-        emailProof.maskedCommand =
-            "Set the new signer of 0x46080822b1906e932858BB9580A90610b2028e9b to 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720";
+        emailProof.maskedCommand = string.concat(
+            "Set the new signer of 0x46080822b1906e932858BB9580A90610b2028e9b ",
+            "to 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
+        );
         emailProof.emailNullifier = bytes32(vm.parseUint(pubSignals[10]));
         emailProof.accountSalt = bytes32(vm.parseUint(pubSignals[32]));
-        require(emailProof.accountSalt == accountSalt, "accountSalt should be the same");
+        assertEq(emailProof.accountSalt, accountSalt);
         emailProof.isCodeExist = vm.parseUint(pubSignals[33]) == 1;
         emailProof.proof = proofToBytes(
             string.concat(vm.projectRoot(), "/test/build_integration/email_auth_proof.json")
@@ -233,39 +236,22 @@ contract IntegrationTest is Test {
             proof: emailProof
         });
         recoveryController.handleRecovery(emailAuthMsg, templateIdx);
-        require(
-            recoveryController.isRecovering(address(simpleWallet)), "isRecovering should be set"
+        assertTrue(recoveryController.isRecovering(address(simpleWallet)));
+        assertEq(
+            recoveryController.newSignerCandidateOfAccount(address(simpleWallet)),
+            0xa0Ee7A142d267C1f36714E4a8F75612F20a79720
         );
-        require(
-            recoveryController.newSignerCandidateOfAccount(address(simpleWallet))
-                == 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720,
-            "newSignerCandidate should be set"
-        );
-        require(
-            recoveryController.currentTimelockOfAccount(address(simpleWallet)) > 0,
-            "timelock should be set"
-        );
-        require(simpleWallet.owner() == simpleWalletOwner, "simpleWallet owner should be old one");
+        assertGt(recoveryController.currentTimelockOfAccount(address(simpleWallet)), 0);
+        assertEq(simpleWallet.owner(), simpleWalletOwner);
 
         // Call completeRecovery
         vm.warp(block.timestamp + recoveryTimelock + 1);
         recoveryController.completeRecovery(address(simpleWallet), new bytes(0));
         console.log("simpleWallet owner: ", simpleWallet.owner());
-        require(
-            !recoveryController.isRecovering(address(simpleWallet)), "isRecovering should be reset"
-        );
-        require(
-            recoveryController.newSignerCandidateOfAccount(address(simpleWallet)) == address(0),
-            "newSignerCandidate should be reset"
-        );
-        require(
-            recoveryController.currentTimelockOfAccount(address(simpleWallet)) == 0,
-            "timelock should be reset"
-        );
-        require(
-            simpleWallet.owner() == 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720,
-            "simpleWallet owner should be new one"
-        );
+        assertFalse(recoveryController.isRecovering(address(simpleWallet)));
+        assertEq(recoveryController.newSignerCandidateOfAccount(address(simpleWallet)), address(0));
+        assertEq(recoveryController.currentTimelockOfAccount(address(simpleWallet)), 0);
+        assertEq(simpleWallet.owner(), 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720);
         vm.stopPrank();
     }
 

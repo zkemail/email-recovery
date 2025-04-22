@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+/* solhint-disable gas-custom-errors */
+
 import { OwnableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { EmailAccountRecovery } from "src/EmailAccountRecovery.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SimpleWallet } from "./SimpleWallet.sol";
 
 /**
@@ -20,12 +21,12 @@ contract RecoveryController is OwnableUpgradeable, EmailAccountRecovery {
 
     uint256 public constant DEFAULT_TIMELOCK_PERIOD = 3 days;
 
-    mapping(address => bool) public isActivatedOfAccount;
-    mapping(address => bool) public isRecovering;
-    mapping(address => address) public newSignerCandidateOfAccount;
-    mapping(address => GuardianStatus) public guardians;
-    mapping(address => uint256) public timelockPeriodOfAccount;
-    mapping(address => uint256) public currentTimelockOfAccount;
+    mapping(address account => bool isActivated) public isActivatedOfAccount;
+    mapping(address account => bool recovering) public isRecovering;
+    mapping(address account => address newSignerCandidate) public newSignerCandidateOfAccount;
+    mapping(address guardian => GuardianStatus guardianStatus) public guardians;
+    mapping(address account => uint256 timelockPeriod) public timelockPeriodOfAccount;
+    mapping(address account => uint256 currentTimelock) public currentTimelockOfAccount;
 
     constructor() { }
 
@@ -129,9 +130,7 @@ contract RecoveryController is OwnableUpgradeable, EmailAccountRecovery {
         require(!isRecovering[account], "recovery in progress");
         require(guardian != address(0), "invalid guardian");
 
-        require(
-            guardians[guardian] == GuardianStatus.REQUESTED, "guardian status must be REQUESTED"
-        );
+        require(guardians[guardian] == GuardianStatus.REQUESTED, "status must be REQUESTED");
         require(templateIdx == 0, "invalid template index");
         require(commandParams.length == 1, "invalid command params");
         guardians[guardian] = GuardianStatus.ACCEPTED;

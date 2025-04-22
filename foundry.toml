@@ -32,4 +32,4 @@ number_underscore = "thousands"
 quote_style = "double"
 tab_width = 4
 wrap_comments = true
-ignore = ["./src/libraries/L2ContractHelper.sol"]
+ignore = ["./src/libraries/L2ContractHelper.sol", "./src/EmailAccountRecovery.sol"]
