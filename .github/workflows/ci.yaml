@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -49,7 +46,38 @@ jobs:
 
   test:
     needs: ["build"]
-    uses: "./.github/workflows/test.yaml"
-    with:
-      foundry-profile: "test"
-      match-path: "test/**/*.sol"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Restore the cached build and the node modules
+        uses: actions/cache/restore@v4
+        with:
+          key: build-artifacts-${{ github.sha }}
+          path: |
+            cache
+            out
+
+      - name: Test DEFAULT account
+        run: forge test --threads 1 --match-path "test/**/*.sol"
+        env:
+          ACCOUNT_TYPE: DEFAULT
+
+      - name: Test SAFE account
+        run: forge test --threads 1 --match-path "test/**/*.sol"
+        env:
+          ACCOUNT_TYPE: SAFE
+
+      - name: Test KERNEL account
+        run: forge test --threads 1 --match-path "test/**/*.sol"
+        env:
+          ACCOUNT_TYPE: KERNEL
+
+      - name: Test NEXUS account
+        run: forge test --threads 1 --match-path "test/**/*.sol"
+        env:
+          ACCOUNT_TYPE: NEXUS
