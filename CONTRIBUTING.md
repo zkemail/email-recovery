@@ -42,7 +42,7 @@ This includes, but is not limited to:
 
 ### Moderation
 
-These are the policies for upholding our community’s standards of conduct. If you feel that a thread needs moderation, please contact the community team at [paradox@pse.dev](mailto:paradox@pse.dev).
+These are the policies for upholding our community’s standards of conduct. If you feel that a thread needs moderation, please contact the community team at [support@zk.email](mailto:support@zk.email).
 
 1. **Remarks that violate the Relayer Utils standards of conduct, including hateful, hurtful, oppressive, or exclusionary remarks, are not allowed.** (Cursing is allowed, but never targeting another user, and never in a hateful manner.)
 2. **Remarks that moderators find inappropriate, whether listed in the code of conduct or not, are also not allowed.**
@@ -110,6 +110,6 @@ For more information, see [Conventional Commits](https://www.conventionalcommits
 
 ## 7. Contact
 
-If you have any questions or need further assistance, feel free to open an issue or contact us at [paradox@pse.dev](mailto:paradox@pse.dev).
+If you have any questions or need further assistance, feel free to open an issue or contact us at [support@zk.email](mailto:support@zk.email).
 
 Thank you for your contributions!
