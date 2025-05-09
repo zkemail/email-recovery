@@ -1,24 +1,21 @@
 [profile.default]
+solc_version = "0.8.28"
 evm_version = "cancun"
 src = "src"
 out = "out"
 script = "script"
-libs = ["node_modules", "lib"]
+libs = ["node_modules"]
 fs_permissions = [
     { access = "read", path = "out-optimized" },
     { access = "read-write", path = "gas_calculations" },
 ]
 allow_paths = ["*", "/"]
-ignored_warnings_from = [
-    "node_modules",
-    "node_modules/@rhinestone/modulekit/src/**/*.sol",
-    "lib",
-]
+ignored_warnings_from = ["src/EmailAccountRecovery.sol", "node_modules"]
 threads = 1
 gas_limit = "18446744073709551615"
 memory_limit = 1844674407370955161
-optimizer=true
-optimizer_runs=200
+optimizer = true
+optimizer_runs = 200
 
 [rpc_endpoints]
 sepolia = "${BASE_SEPOLIA_RPC_URL}"
@@ -35,4 +32,4 @@ number_underscore = "thousands"
 quote_style = "double"
 tab_width = 4
 wrap_comments = true
-ignore = ["./src/libraries/L2ContractHelper.sol"]
+ignore = ["./src/libraries/L2ContractHelper.sol", "./src/EmailAccountRecovery.sol"]

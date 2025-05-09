@@ -7,7 +7,12 @@
     "contract-name-capwords": "off",
     "const-name-snakecase": "off",
     "func-name-mixedcase": "off",
-    "func-visibility": ["error", { "ignoreConstructors": true }],
+    "func-visibility": [
+      "error",
+      {
+        "ignoreConstructors": true
+      }
+    ],
     "max-line-length": ["error", 123],
     "named-parameters-mapping": "warn",
     "no-empty-blocks": "off",
