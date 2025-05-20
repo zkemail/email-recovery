@@ -275,7 +275,7 @@ If the `UserOverrideableDKIMRegistry`, `Groth16Verifier`, `Verifier` and `EmailA
 
 If the `UserOverrideableDKIMRegistry`, `Groth16Verifier`, `Verifier` and `EmailAuth` have not been deployed on your chosen network, you can run everything from one script in this repo.
 
-1. Run the following script in [email-recovery](https://github.com/zkemail/email-recovery/blob/main/script/DeployUniversalEmailRecoveryModule.s.sol). Set the required environment variables in your `.env` file.
+1. Set the required environment variables in your `.env` file. Run the following script in [email-recovery](https://github.com/zkemail/email-recovery/blob/main/script/DeployUniversalEmailRecoveryModule.s.sol).
 2. Once everything is deployed, you will have a new instance of the `UniversalEmailRecoveryModule` along with the accomanying ZK Email contracts. To see a working example of how you can add the module to a 7579 account and execute recovery, you can check out the permissionless scripts [here](https://github.com/zkemail/email-recovery-example-scripts), which has an [accompanying guide](https://docs.zk.email/account-recovery/permissionless-guide).
 
 ### Relayer
