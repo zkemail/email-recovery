@@ -257,6 +257,31 @@ The deployment function for this factory deploys an `UniversalEmailRecoveryModul
 
 While the command handler for `EmailRecoveryUniversalFactory` will be more stable in comparison to a command handlers used for `EmailRecoveryModule`, developers may want to write a generic command handler in a slightly different way, or even in a non-english lanaguage, so the bytecode is still passed in here directly. The security of each module deployment and associated contracts can then be attested to via an ERC7484 registry.
 
+## How to deploy to a new network
+
+To deploy a recovery module and associated contracts to a new network you'll need to run either one or two deployment scripts. First, check out the [deployed contracts page](https://docs.zk.email/account-recovery/deployed-contracts) on our website. Make a note of the deployed contracts, you'll need to reference them to decide which deployment option to choose below.
+
+### Contracts
+
+### Option 1. Deploying all contracts - `email-tx-builder` and `email-recovery`
+
+If the `UserOverrideableDKIMRegistry`, `Groth16Verifier`, `Verifier` and `EmailAuth` have not been deployed on your chosen network, you'll need to run two scripts (linked below). You'll need to clone [email-tx-builder/email-recovery](https://github.com/zkemail/email-tx-builder/tree/email-recovery), and then this repo [email-recovery](https://github.com/zkemail/email-recovery). `email-tx-builder` includes the deployment scripts to deploy the DKIM regsitry, the Verifer and the generic ZK Email contracts that the recovery module uses. This repo `email-recovery` holds the recovery-specific contracts.
+
+1. Run the [DeployRecoveryController.s.sol](https://github.com/zkemail/email-tx-builder/blob/email-recovery/packages/contracts/script/DeployRecoveryController.s.sol) script in `email-tx-builder/email-recovery`. The key values you want here are the `UseroverrideableDKIMRegistry`, `Verifier` (not `Groth16Verifier`), and the`EmailAuth` implementation address - save these and add them to your `.env` in this repo - `email-recovery`
+2. Once you have those 3 addresses, you need to run the following script in [email-recovery](https://github.com/zkemail/email-recovery/blob/main/script/DeployUniversalEmailRecoveryModule.s.sol).
+3. Then you will have a new instance of the `UniversalEmailRecoveryModule` deployed and you are ready to test it. To see a working example of how you can add the module to a 7579 account and execute recovery, you can check out the permissionless scripts [here](https://github.com/zkemail/email-recovery-example-scripts), which has an [accompanying guide](https://docs.zk.email/account-recovery/permissionless-guide).
+
+### Option 2. Deploying `email-recovery` contracts
+
+If the `UserOverrideableDKIMRegistry`, `Groth16Verifier`, `Verifier` and `EmailAuth` have already been deployed on your chosen network, you can run everything from one script in this repo (linked below).
+
+1. Set the required environment variables in your `.env` file. Run the following script in [email-recovery](https://github.com/zkemail/email-recovery/blob/main/script/DeployUniversalEmailRecoveryModule.s.sol).
+2. Once everything is deployed, you will have a new instance of the `UniversalEmailRecoveryModule` along with the accomanying ZK Email contracts. To see a working example of how you can add the module to a 7579 account and execute recovery, you can check out the permissionless scripts [here](https://github.com/zkemail/email-recovery-example-scripts), which has an [accompanying guide](https://docs.zk.email/account-recovery/permissionless-guide).
+
+### Relayer
+
+If a relayer is not running on the new network, you'll need to run that also. For the relayer, here are the [instructions](https://github.com/zkemail/email-tx-builder/blob/email-recovery/packages/relayer/README.md).
+
 ## Threat model
 
 Importantly this contract offers the functonality to recover an account via email in a scenario where a private key has been lost. This contract does NOT provide an adequate mechanism to protect an account from a stolen private key by a malicious actor. This attack vector requires a holistic approach to security that takes specific implementation details of an account into consideration. For example, adding additional access control when cancelling recovery to prevent a malicious actor stopping recovery attempts, and adding spending limits to prevent account draining. Additionally, the current 7579 spec allows accounts to forcefully uninstall modules in the case of a malicious module, this means an attacker could forcefully uninstall a recovery module anyway. This is expected to be addressed in the future. This contract is designed to recover modular accounts in the case of a lost device/authentication method (private key), but does not provide adequate security for a scenario in which a malicious actor has control of the lost device/authentication method (private key).
