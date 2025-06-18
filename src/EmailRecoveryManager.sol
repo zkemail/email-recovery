@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import { EmailAccountRecovery } from "./EmailAccountRecovery.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import { IEmailRecoveryManager } from "./interfaces/IEmailRecoveryManager.sol";
 import { IEmailRecoveryCommandHandler } from "./interfaces/IEmailRecoveryCommandHandler.sol";
 import { GuardianManager } from "./GuardianManager.sol";
@@ -36,6 +37,7 @@ abstract contract EmailRecoveryManager is
     /*                    CONSTANTS & STORAGE                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
     using EnumerableSet for EnumerableSet.AddressSet;
+    using Time for Time.Delay;
 
     /**
      * Minimum required time window between when a recovery attempt becomes valid and when it
@@ -48,6 +50,16 @@ abstract contract EmailRecoveryManager is
      * guardian
      */
     uint256 public constant CANCEL_EXPIRED_RECOVERY_COOLDOWN = 1 days;
+
+    /**
+     * The delay period for the kill switch
+     */
+    uint32 public constant KILL_SWITCH_DELAY_PERIOD = 2 days;
+
+    /**
+     * The minimum setback period for the kill switch
+     */
+    uint32 public constant KILL_SWITCH_MIN_SETBACK = 7 days;
 
     /**
      * The command handler that returns and validates the command templates
@@ -80,6 +92,11 @@ abstract contract EmailRecoveryManager is
     mapping(address account => PreviousRecoveryRequest previousRecoveryRequest) internal
         previousRecoveryRequests;
 
+    /**
+     * The delay for the kill switch
+     */
+    Time.Delay private _killSwitchDelay;
+
     constructor(
         address _verifier,
         address _dkimRegistry,
@@ -110,6 +127,7 @@ abstract contract EmailRecoveryManager is
         emailAuthImplementationAddr = _emailAuthImpl;
         commandHandler = _commandHandler;
         minimumDelay = _minimumDelay;
+        _killSwitchDelay = Time.toDelay(KILL_SWITCH_DELAY_PERIOD);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
@@ -644,10 +662,27 @@ abstract contract EmailRecoveryManager is
     }
 
     /**
-     * @notice Toggles the kill switch on the manager
-     * @dev Can only be called by the kill switch authorizer
+     * @notice Schedules a kill switch toggle
+     * @dev Can only be called by the owner
      */
-    function toggleKillSwitch() external onlyOwner {
+    function scheduleKillSwitchToggle() external onlyOwner {
+        uint48 effectiveTime;
+        (_killSwitchDelay, effectiveTime) =
+            _killSwitchDelay.withUpdate(_killSwitchDelay.get(), KILL_SWITCH_MIN_SETBACK);
+
+        emit KillSwitchScheduled(!killSwitchEnabled, effectiveTime);
+    }
+
+    /**
+     * @notice Executes a kill switch toggle
+     * @dev Can be called by anyone after the delay has passed
+     */
+    function executeKillSwitchToggle() external {
+        (,, uint48 killSwitchDelayEffect) = _killSwitchDelay.getFull();
+        if (Time.timestamp() < killSwitchDelayEffect) {
+            revert KillSwitchDelayNotElapsed();
+        }
         killSwitchEnabled = !killSwitchEnabled;
+        emit KillSwitchToggled(killSwitchEnabled);
     }
 }

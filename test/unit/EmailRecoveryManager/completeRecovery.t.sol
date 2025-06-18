@@ -12,7 +12,9 @@ contract EmailRecoveryManager_completeRecovery_Test is UnitBase {
 
     function test_CompleteRecovery_RevertWhen_KillSwitchEnabled() public {
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
 
         vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);

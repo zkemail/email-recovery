@@ -14,7 +14,9 @@ contract GuardianManager_removeGuardian_Test is UnitBase {
         address guardian = guardians1[0];
 
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
 
         vm.startPrank(accountAddress1);

@@ -20,7 +20,9 @@ contract EmailRecoveryManager_updateRecoveryConfig_Test is UnitBase {
             IEmailRecoveryManager.RecoveryConfig(delay, expiry);
 
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
 
         vm.startPrank(accountAddress1);

@@ -424,8 +424,11 @@ contract EmailRecoveryManager_Integration_Test is
     }
 
     function test_Ownable_renounceOwnership() public {
+        // Enable kill switch
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
         assertTrue(emailRecoveryModule.killSwitchEnabled());
 
@@ -437,21 +440,25 @@ contract EmailRecoveryManager_Integration_Test is
         address owner = emailRecoveryModule.owner();
         assertEq(owner, address(0));
 
+        // Cannot schedule kill switch toggle after renouncing ownership
         vm.prank(killSwitchAuthorizer);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Ownable.OwnableUnauthorizedAccount.selector, killSwitchAuthorizer
             )
         );
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
         vm.stopPrank();
     }
 
     function test_Ownable_transferOwnership() public {
         address newOwner = vm.addr(99);
 
+        // Enable kill switch
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
         assertTrue(emailRecoveryModule.killSwitchEnabled());
 
@@ -463,18 +470,22 @@ contract EmailRecoveryManager_Integration_Test is
         address owner = emailRecoveryModule.owner();
         assertEq(owner, newOwner);
 
+        // New owner can schedule kill switch toggle
         vm.prank(newOwner);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
         assertFalse(emailRecoveryModule.killSwitchEnabled());
 
+        // Old owner cannot schedule kill switch toggle
         vm.prank(killSwitchAuthorizer);
         vm.expectRevert(
             abi.encodeWithSelector(
                 Ownable.OwnableUnauthorizedAccount.selector, killSwitchAuthorizer
             )
         );
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
         vm.stopPrank();
         assertFalse(emailRecoveryModule.killSwitchEnabled());
     }

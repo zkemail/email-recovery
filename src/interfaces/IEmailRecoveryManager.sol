@@ -86,6 +86,8 @@ interface IEmailRecoveryManager {
     event RecoveryCompleted(address indexed account);
     event RecoveryCancelled(address indexed account);
     event RecoveryDeInitialized(address indexed account);
+    event KillSwitchScheduled(bool enabled, uint48 effectiveTime);
+    event KillSwitchToggled(bool enabled);
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                           ERRORS                           */
@@ -118,6 +120,7 @@ interface IEmailRecoveryManager {
     error NoRecoveryInProcess();
     error RecoveryHasNotExpired(address account, uint256 blockTimestamp, uint256 executeBefore);
     error RecoveryIsNotActivated();
+    error KillSwitchDelayNotElapsed();
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          FUNCTIONS                         */
@@ -150,5 +153,7 @@ interface IEmailRecoveryManager {
 
     function cancelExpiredRecovery(address account) external;
 
-    function toggleKillSwitch() external;
+    function scheduleKillSwitchToggle() external;
+
+    function executeKillSwitchToggle() external;
 }

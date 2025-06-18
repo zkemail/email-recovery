@@ -15,7 +15,9 @@ contract EmailRecoveryManager_cancelExpiredRecovery_Test is UnitBase {
 
     function test_CancelExpiredRecovery_RevertWhen_KillSwitchEnabled() public {
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.toggleKillSwitch();
+        emailRecoveryModule.scheduleKillSwitchToggle();
+        vm.warp(block.timestamp + 7 days);
+        emailRecoveryModule.executeKillSwitchToggle();
         vm.stopPrank();
 
         vm.expectRevert(IGuardianManager.KillSwitchEnabled.selector);
