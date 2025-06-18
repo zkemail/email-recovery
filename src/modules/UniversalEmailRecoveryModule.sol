@@ -288,11 +288,15 @@ contract UniversalEmailRecoveryModule is
             revert InvalidValidator(validator);
         }
 
-        bytes4 selector;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            selector := mload(add(recoveryCalldata, 32))
+        // The calldata must be at least 4 bytes to contain a function selector
+        // This check prevents an out-of-bounds read
+        if (recoveryCalldata.length < 4) {
+            revert InvalidSelector(bytes4(0));
         }
+
+        // Safely extract the selector by casting the first 4 bytes of the calldata
+        // This is a safe operation due to the length check above
+        bytes4 selector = bytes4(recoveryCalldata);
 
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {

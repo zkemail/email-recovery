@@ -38,8 +38,34 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
     }
 
+    function test_Recover_RevertWhen_EmptyCalldata() public {
+        bytes memory emptyCalldata = bytes("");
+        bytes memory invalidCalldata = abi.encode(accountAddress1, emptyCalldata);
+
+        vm.startPrank(emailRecoveryModuleAddress);
+        vm.expectRevert(
+            abi.encodeWithSelector(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0))
+        );
+        emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
+    }
+
+    function test_Recover_RevertWhen_CalldataLessThan4Bytes() public {
+        // Create a 3-byte calldata (less than 4 bytes required for a selector)
+        bytes memory shortCalldata = new bytes(3);
+        shortCalldata[0] = 0x12;
+        shortCalldata[1] = 0x34;
+        shortCalldata[2] = 0x56;
+        bytes memory invalidCalldata = abi.encode(validatorAddress, shortCalldata);
+
+        vm.startPrank(emailRecoveryModuleAddress);
+        vm.expectRevert(
+            abi.encodeWithSelector(UniversalEmailRecoveryModule.InvalidSelector.selector, bytes4(0))
+        );
+        emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
+    }
+
     function test_Recover_RevertWhen_InvalidZeroCalldataSelector() public {
-        bytes memory invalidChangeOwnerCaldata = bytes("0x");
+        bytes memory invalidChangeOwnerCaldata = bytes("0x00000000");
         bytes memory invalidCalldata = abi.encode(accountAddress1, invalidChangeOwnerCaldata);
 
         bytes4 expectedSelector;
