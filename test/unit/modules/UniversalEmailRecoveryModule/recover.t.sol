@@ -53,46 +53,13 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         // The implementation reads recoveryData[96:100] to get the selector
         // But if recoveryData is between 96-100 bytes, this will cause an out-of-bounds access
 
-        // Create a recoveryData that's between 96-100 bytes total
-        // We need to manually construct this to avoid ABI encoding padding
+        // Create a bytes array with only 2 bytes (less than the 4 bytes needed for a selector)
+        bytes memory shortCalldata = new bytes(2);
+        shortCalldata[0] = 0x12;
+        shortCalldata[1] = 0x34;
 
-        // ABI encoding of (address, bytes) requires at least:
-        // - 32 bytes: address
-        // - 32 bytes: offset to calldata (64 = 0x40)
-        // - 32 bytes: length of calldata (2 = 0x02)
-        // - calldata bytes (2 bytes)
-        // Total: 96 bytes + calldata length (2 bytes) = 98 bytes
-
-        // Create a recoveryData that's exactly 98 bytes (between 96-100)
-        // This will cause recoveryData[96:100] to read beyond the available data
-        bytes memory recoveryData = new bytes(98);
-
-        // Read state variable into local variable for assembly
-        address validatorAddr = accountAddress1;
-
-        // Set the validator address in the first 32 bytes
-        assembly {
-            mstore(add(recoveryData, 32), validatorAddr)
-        }
-
-        // Set the offset to calldata (64 = 0x40) in the next 32 bytes
-        assembly {
-            mstore(add(recoveryData, 64), 64)
-        }
-
-        // Set a calldata length that makes total length 98 bytes
-        // 98 = 32 + 32 + 32 + calldata_length
-        // calldata_length = 98 - 96 = 2 bytes
-        assembly {
-            mstore(add(recoveryData, 96), 2) // Only 2 bytes of calldata
-        }
-
-        // Set 2 bytes of calldata at position 96-97
-        recoveryData[96] = 0x12;
-        recoveryData[97] = 0x34;
-
-        // Now recoveryData[96:100] tries to read 4 bytes starting at position 96
-        // But we only have 98 bytes total, so positions 98-99 are out of bounds
+        // Encode this into recovery data format
+        bytes memory recoveryData = abi.encode(accountAddress1, shortCalldata);
 
         vm.startPrank(emailRecoveryModuleAddress);
         // This should revert due to unsafe memory access when reading recoveryData[96:100]
