@@ -344,9 +344,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         });
 
         vm.prank(killSwitchAuthorizer);
-        IEmailRecoveryManager(newRecoveryModuleAddress).scheduleKillSwitchToggle();
-        vm.warp(block.timestamp + 7 days);
-        IEmailRecoveryManager(newRecoveryModuleAddress).executeKillSwitchToggle();
+        IEmailRecoveryManager(newRecoveryModuleAddress).toggleKillSwitch();
         vm.stopPrank();
 
         // toggling kill switch for one module does not inpact other modules
@@ -382,9 +380,7 @@ contract OwnableValidatorRecovery_EmailRecoveryModule_Integration_Test is
         assertEq(updatedOwner, newOwner1);
 
         vm.prank(killSwitchAuthorizer);
-        IEmailRecoveryManager(emailRecoveryModuleAddress).scheduleKillSwitchToggle();
-        vm.warp(block.timestamp + 7 days);
-        IEmailRecoveryManager(emailRecoveryModuleAddress).executeKillSwitchToggle();
+        IEmailRecoveryManager(emailRecoveryModuleAddress).toggleKillSwitch();
         vm.stopPrank();
 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");

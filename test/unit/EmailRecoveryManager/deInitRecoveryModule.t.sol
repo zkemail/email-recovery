@@ -96,9 +96,7 @@ contract EmailRecoveryManager_deInitRecoveryModule_Test is UnitBase {
         assertTrue(isActivated);
 
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.scheduleKillSwitchToggle();
-        vm.warp(block.timestamp + 7 days);
-        emailRecoveryModule.executeKillSwitchToggle();
+        emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
         vm.prank(accountAddress1);

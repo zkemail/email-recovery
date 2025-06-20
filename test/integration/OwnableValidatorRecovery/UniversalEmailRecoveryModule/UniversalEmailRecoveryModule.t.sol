@@ -497,9 +497,7 @@ contract OwnableValidatorRecovery_UniversalEmailRecoveryModule_Integration_Test 
         instance1.uninstallModule(MODULE_TYPE_EXECUTOR, emailRecoveryModuleAddress, "");
 
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.scheduleKillSwitchToggle();
-        vm.warp(block.timestamp + 7 days);
-        emailRecoveryModule.executeKillSwitchToggle();
+        IEmailRecoveryManager(emailRecoveryModuleAddress).toggleKillSwitch();
         vm.stopPrank();
 
         instance1.expect4337Revert(IGuardianManager.KillSwitchEnabled.selector);

@@ -11,9 +11,7 @@ contract GuardianManager_changeThreshold_Test is UnitBase {
 
     function test_RevertWhen_KillSwitchEnabled() public {
         vm.prank(killSwitchAuthorizer);
-        emailRecoveryModule.scheduleKillSwitchToggle();
-        vm.warp(block.timestamp + 7 days);
-        emailRecoveryModule.executeKillSwitchToggle();
+        emailRecoveryModule.toggleKillSwitch();
         vm.stopPrank();
 
         vm.startPrank(accountAddress1);
