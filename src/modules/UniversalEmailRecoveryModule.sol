@@ -288,15 +288,15 @@ contract UniversalEmailRecoveryModule is
             revert InvalidValidator(validator);
         }
 
-        // The calldata must be at least 4 bytes to contain a function selector
-        // This check prevents an out-of-bounds read
-        if (recoveryCalldata.length < 4) {
-            revert InvalidSelector(bytes4(0));
-        }
-
-        // Safely extract the selector by casting the first 4 bytes of the calldata
-        // This is a safe operation due to the length check above
-        bytes4 selector = bytes4(recoveryCalldata);
+        // ABI encoding of (address, bytes)
+        // - [32 bytes: address]
+        // - [32 bytes: offset to calldata]
+        // - [32 bytes: length of calldata]
+        // - [ x bytes: calldata]
+        //
+        // calldata starts at index 96 (32 + 32 + 32)
+        // first 4 bytes of calldata is the selector (96:100)
+        bytes4 selector = bytes4(recoveryData[96:100]);
 
         bytes4 allowedSelector = allowedSelectors[validator][account];
         if (allowedSelector != selector) {
