@@ -43,13 +43,13 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         bytes memory invalidCalldata = abi.encode(accountAddress1, emptyCalldata);
 
         vm.startPrank(emailRecoveryModuleAddress);
-        // This should revert due to unsafe memory access when reading recoveryData[96:100]
+        // This should revert due to unsafe calldata access when reading recoveryData[96:100]
         vm.expectRevert();
         emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
     }
 
     function test_Recover_RevertWhen_CalldataLessThan4Bytes() public {
-        // Create a scenario that triggers unsafe memory access
+        // Create a scenario that triggers unsafe calldata access
         // The implementation reads recoveryData[96:100] to get the selector
         // But if recoveryData is between 96-100 bytes, this will cause an out-of-bounds access
 
@@ -62,7 +62,7 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         bytes memory recoveryData = abi.encode(accountAddress1, shortCalldata);
 
         vm.startPrank(emailRecoveryModuleAddress);
-        // This should revert due to unsafe memory access when reading recoveryData[96:100]
+        // This should revert due to unsafe calldata access when reading recoveryData[96:100]
         vm.expectRevert();
         emailRecoveryModule.exposed_recover(accountAddress1, recoveryData);
     }
