@@ -38,14 +38,43 @@ contract UniversalEmailRecoveryModule_recover_Test is UnitBase {
         emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
     }
 
+    function test_Recover_RevertWhen_EmptyCalldata() public {
+        bytes memory emptyCalldata = bytes("");
+        bytes memory invalidCalldata = abi.encode(accountAddress1, emptyCalldata);
+
+        vm.startPrank(emailRecoveryModuleAddress);
+        // This should revert due to unsafe calldata access when reading recoveryData[96:100]
+        vm.expectRevert();
+        emailRecoveryModule.exposed_recover(accountAddress1, invalidCalldata);
+    }
+
+    function test_Recover_RevertWhen_CalldataLessThan4Bytes() public {
+        // Create a scenario that triggers unsafe calldata access
+        // The implementation reads recoveryData[96:100] to get the selector
+        // But if recoveryData is between 96-100 bytes, this will cause an out-of-bounds access
+
+        // Create a bytes array with only 2 bytes (less than the 4 bytes needed for a selector)
+        bytes memory shortCalldata = new bytes(2);
+        shortCalldata[0] = 0x12;
+        shortCalldata[1] = 0x34;
+
+        // Encode this into recovery data format
+        bytes memory recoveryData = abi.encode(accountAddress1, shortCalldata);
+
+        vm.startPrank(emailRecoveryModuleAddress);
+        // This should revert due to unsafe calldata access when reading recoveryData[96:100]
+        vm.expectRevert();
+        emailRecoveryModule.exposed_recover(accountAddress1, recoveryData);
+    }
+
     function test_Recover_RevertWhen_InvalidZeroCalldataSelector() public {
-        bytes memory invalidChangeOwnerCaldata = bytes("0x");
-        bytes memory invalidCalldata = abi.encode(accountAddress1, invalidChangeOwnerCaldata);
+        bytes memory invalidChangeOwnerCalldata = bytes("0x");
+        bytes memory invalidCalldata = abi.encode(accountAddress1, invalidChangeOwnerCalldata);
 
         bytes4 expectedSelector;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            expectedSelector := mload(add(invalidChangeOwnerCaldata, 32))
+            expectedSelector := mload(add(invalidChangeOwnerCalldata, 32))
         }
 
         vm.startPrank(emailRecoveryModuleAddress);
